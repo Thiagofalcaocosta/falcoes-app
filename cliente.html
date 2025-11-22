@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falcões App</title>
+    <style>
+        /* --- IDENTIDADE VISUAL FALCÕES (DARK MODE OFICIAL - PRESERVADO) --- */
+        :root {
+            --bg-color: #121212; --card-color: #1e1e1e; --neon-green: #00e640;
+            --text-color: #ffffff; --input-bg: #2c2c2c; --border-color: #333;
+            --error-color: #ff4444;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color); 
+            color: var(--text-color); padding: 20px; margin: 0; 
+        }
+
+        .container { 
+            max-width: 500px; margin: 0 auto; background: var(--card-color); 
+            padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0, 230, 64, 0.1); 
+            position: relative; border: 1px solid var(--border-color);
+        }
+        
+        .logo-area { text-align: center; margin-bottom: 20px; }
+        .logo-area img { max-height: 100px; filter: drop-shadow(0 0 5px rgba(0,230,64,0.5)); }
+
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px;}
+        .user-info { font-weight: 600; color: #ccc; }
+        .estrelas { background-color: rgba(255, 215, 0, 0.2); color: #ffd700; padding: 4px 10px; border-radius: 15px; font-weight: bold; }
+        .logout a { color: var(--error-color); text-decoration: none; font-weight: 600; }
+
+        h2 { text-align: center; margin-bottom: 20px; font-weight: 700; color: var(--neon-green); letter-spacing: 1px;}
+        
+        .opcoes-servico { display: flex; gap: 15px; margin-bottom: 25px; }
+        .card {
+            flex: 1; padding: 20px 15px; border: 2px solid var(--border-color); 
+            border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s;
+            background: #252525; color: #aaa;
+        }
+        .card:hover { border-color: var(--neon-green); color: white; }
+        .card.selecionado {
+            border-color: var(--neon-green); background-color: rgba(0, 230, 64, 0.1); 
+            color: var(--neon-green); box-shadow: 0 0 15px rgba(0, 230, 64, 0.2);
+        }
+        .icon { font-size: 32px; display: block; margin-bottom: 8px; }
+        .preco { font-size: 15px; font-weight: 500; }
+
+        label { display: block; margin-top: 20px; font-weight: 600; color: #ddd; margin-bottom: 8px;}
+        .input-group { position: relative; }
+        input { 
+            width: 100%; padding: 14px; background-color: var(--input-bg); 
+            border: 1px solid var(--border-color); color: white; border-radius: 10px; 
+            box-sizing: border-box; font-size: 16px; transition: 0.3s;
+        }
+        input:focus { border-color: var(--neon-green); outline: none; }
+        input.erro { border-color: var(--error-color); }
+
+        .sugestoes-lista {
+            position: absolute; top: 105%; left: 0; right: 0;
+            background: var(--card-color); border: 1px solid var(--border-color); 
+            border-radius: 10px; max-height: 300px; overflow-y: auto; z-index: 1000; 
+            display: none; box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+        .sugestao-item { padding: 15px; border-bottom: 1px solid #333; cursor: pointer; }
+        .sugestao-item:hover { background-color: #2c2c2c; }
+        .rua-texto { font-size: 16px; font-weight: 600; color: var(--neon-green); }
+        .bairro-texto { font-size: 13px; color: #aaa; }
+
+        .resumo-final {
+            margin-top: 25px; padding: 18px;
+            background-color: rgba(0, 230, 64, 0.15); color: var(--neon-green); 
+            border: 1px solid var(--neon-green); text-align: center; border-radius: 10px;
+            font-size: 20px; font-weight: 700; display: none; 
+        }
+
+        button {
+            width: 100%; padding: 16px; margin-top: 20px;
+            background-color: var(--neon-green); color: black; border: none;
+            border-radius: 10px; font-size: 18px; font-weight: 800; cursor: pointer; 
+            transition: 0.3s; text-transform: uppercase;
+        }
+        button:hover { transform: scale(1.02); box-shadow: 0 0 15px var(--neon-green); }
+        button:disabled { background-color: #444; color: #888; cursor: not-allowed; }
+
+        /* --- MODAL (MANTIDO O DESIGN DARK) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); display: none; 
+            justify-content: center; align-items: center; z-index: 9999;
+        }
+        .modal-content {
+            background: var(--card-color); padding: 40px; border-radius: 20px;
+            text-align: center; width: 85%; max-width: 350px;
+            border: 1px solid var(--border-color); box-shadow: 0 0 40px rgba(0, 230, 64, 0.15);
+        }
+        .spinner {
+            border: 6px solid #333; border-top: 6px solid var(--neon-green);
+            border-radius: 50%; width: 60px; height: 60px;
+            animation: girar 1s linear infinite; margin: 0 auto 20px auto;
+        }
+        @keyframes girar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .status-texto { font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px;}
+        .sub-status { font-size: 14px; color: #aaa; line-height: 1.4;}
+        
+        /* Botão Cancelar Vermelho (Novo) */
+        .btn-cancelar {
+            background-color: transparent; border: 1px solid var(--error-color);
+            color: var(--error-color); font-size: 14px; margin-top: 20px; padding: 10px;
+        }
+        .btn-cancelar:hover { background-color: var(--error-color); color: white; box-shadow: none;}
+
+        #info-motoboy { 
+            background: rgba(255,255,255,0.05); padding: 15px; 
+            border-radius: 10px; margin-top: 20px; display: none; 
+            border: 1px solid var(--neon-green);
+        }
+        .moto-nome { font-size: 20px; color: var(--neon-green); font-weight: 800; text-transform: uppercase; margin-top: 5px;}
+        .moto-fone { color: white; margin-top: 5px; display: block; font-size: 16px;}
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #121212; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-green); }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="modal-busca">
+        <div class="modal-content">
+            <div id="area-spinner" class="spinner"></div>
+            
+            <div id="status-titulo" class="status-texto">BUSCANDO FALCÃO...</div>
+            <div id="status-desc" class="sub-status">Notificando os pilotos mais próximos.</div>
+
+            <div id="info-motoboy">
+                <div style="font-size: 40px; margin-bottom: 10px;">🏍️</div>
+                <div style="font-size: 12px; color: #aaa;">SEU PILOTO:</div>
+                <div class="moto-nome" id="nome-motoboy">--</div>
+                <span class="moto-fone" id="fone-motoboy">--</span>
+                <br>
+                <button onclick="window.location.reload()" style="margin-top: 15px; font-size: 14px; padding: 10px;">FECHAR / NOVO PEDIDO</button>
+            </div>
+
+            <button id="btn-cancelar-pedido" class="btn-cancelar" onclick="cancelarPedido()">CANCELAR PEDIDO</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="logo-area"><img src="assets/logo.png" alt="Logo"></div>
+
+        <div class="header-top">
+            <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
+            <div class="logout"><a href="index.html" onclick="localStorage.clear()">SAIR</a></div>
+        </div>
+
+        <h2>NOVA CORRIDA</h2>
+
+        <div class="opcoes-servico">
+            <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.00)">
+                <span class="icon">🏍️</span>
+                <div class="card-title">MOTO TÁXI</div>
+                <div class="preco">R$ 10,00</div>
+            </div>
+            <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 12.00)">
+                <span class="icon">📦</span>
+                <div class="card-title">ENTREGA</div>
+                <div class="preco">R$ 12,00</div>
+            </div>
+        </div>
+
+        <div id="form-endereco">
+            <label>📍 LOCAL DE BUSCA (ORIGEM)</label>
+            <div class="input-group">
+                <input type="text" id="origem" placeholder="Digite o nome da rua..." oninput="limparErro(this); buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
+                <div id="lista-origem" class="sugestoes-lista"></div>
+            </div>
+
+            <label>🏁 LOCAL DE ENTREGA (DESTINO)</label>
+            <div class="input-group">
+                <input type="text" id="destino" placeholder="Digite o nome da rua..." oninput="limparErro(this); buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
+                <div id="lista-destino" class="sugestoes-lista"></div>
+            </div>
+        </div>
+
+        <div class="resumo-final" id="resumo">Total: R$ 0,00</div>
+
+        <button onclick="pedir()" id="btn-pedir" disabled>SELECIONE O SERVIÇO</button>
+    </div>
+
+    <script>
+        // --- ⚠️ COLOQUE SUA API KEY AQUI ---
+        const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijg2N2E2MTBhODg4ODQxNmVhYThlNjJmYWM4N2VkNjVlIiwiaCI6Im11cm11cjY0In0='; 
+        
+        // ⚠️ SEU IP AQUI
+        const MEU_IP = 'https://falcoes-app.onrender.com';
+
+        const LAT_TC = -21.69; const LON_TC = -45.25;
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        if (!usuario) window.location.href = 'index.html';
+        document.getElementById('msg-ola').innerText = "OLÁ, " + usuario.nome.split(' ')[0].toUpperCase();
+
+        let servicoSelecionado = '', valorFinal = 0, timeoutBusca = null, intervaloVerificacao = null;
+        let idPedidoAtual = null; // Guarda o ID para poder cancelar
+
+        function selecionarServico(tipo, valor) {
+            servicoSelecionado = tipo; valorFinal = valor;
+            document.getElementById('card-moto').classList.remove('selecionado');
+            document.getElementById('card-entrega').classList.remove('selecionado');
+            if (tipo === 'moto-taxi') document.getElementById('card-moto').classList.add('selecionado');
+            else document.getElementById('card-entrega').classList.add('selecionado');
+            const resumo = document.getElementById('resumo');
+            resumo.style.display = 'block';
+            resumo.innerText = `TOTAL A PAGAR: R$ ${valor.toFixed(2)}`;
+            document.getElementById('btn-pedir').disabled = false;
+            document.getElementById('btn-pedir').innerText = "CHAMAR FALCÃO AGORA";
+        }
+
+        function buscarEndereco(texto, idLista, idInput) {
+            const lista = document.getElementById(idLista);
+            if (texto.length < 3) { lista.style.display = 'none'; return; }
+            clearTimeout(timeoutBusca);
+            timeoutBusca = setTimeout(async () => {
+                const url = `https://api.openrouteservice.org/geocode/autocomplete?api_key=${ORS_API_KEY}&text=${texto}&focus.point.lat=${LAT_TC}&focus.point.lon=${LON_TC}&boundary.country=BR`;
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    lista.innerHTML = '';
+                    let encontrou = false;
+                    if (data.features && data.features.length > 0) {
+                        data.features.forEach(local => {
+                            const props = local.properties;
+                            const textoCompleto = props.label || "";
+                            const textoNormalizado = textoCompleto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                            if (textoNormalizado.includes("Tres Coracoes")) {
+                                encontrou = true;
+                                const nomeRua = props.street || props.name || textoCompleto.split(',')[0];
+                                const bairroDoMapa = props.neighbourhood; 
+                                const detalheLista = bairroDoMapa ? `${bairroDoMapa} - Três Corações` : "Três Corações - MG";
+                                const div = document.createElement('div');
+                                div.className = 'sugestao-item';
+                                div.innerHTML = `<span class="rua-texto">${nomeRua}</span><span class="bairro-texto">${detalheLista}</span>`;
+                                div.onclick = () => {
+                                    const inputField = document.getElementById(idInput);
+                                    if (bairroDoMapa) inputField.value = `${nomeRua}, Nº , Bairro ${bairroDoMapa}`;
+                                    else inputField.value = `${nomeRua}, Nº , Bairro `;
+                                    const posCursor = nomeRua.length + 5;
+                                    inputField.focus();
+                                    inputField.setSelectionRange(posCursor, posCursor);
+                                    lista.style.display = 'none';
+                                };
+                                lista.appendChild(div);
+                            }
+                        });
+                    } 
+                    lista.style.display = encontrou ? 'block' : 'none';
+                } catch (error) { console.error("Erro API:", error); }
+            }, 400);
+        }
+
+        function limparErro(input) { input.classList.remove('erro'); }
+        function verificarNumero(texto) {
+            if (!texto.includes('Nº')) return false;
+            const partes = texto.split('Nº');
+            if (partes.length < 2) return false; 
+            const trechoNumero = partes[1].split(',')[0].trim();
+            if (trechoNumero.length === 0) return false;
+            return true;
+        }
+
+        async function pedir() {
+            const origemInput = document.getElementById('origem');
+            const destinoInput = document.getElementById('destino');
+            const origem = origemInput.value;
+            const destino = destinoInput.value;
+            let erro = false;
+            if (!origem || !verificarNumero(origem)) { origemInput.classList.add('erro'); erro = true; }
+            if (!destino || !verificarNumero(destino)) { destinoInput.classList.add('erro'); erro = true; }
+            if (erro) { alert("⚠️ Você esqueceu de digitar o NÚMERO da casa."); return; }
+
+            // Reset do Modal
+            document.getElementById('area-spinner').style.display = 'block';
+            document.getElementById('btn-cancelar-pedido').style.display = 'block';
+            document.getElementById('status-titulo').innerText = "BUSCANDO FALCÃO...";
+            document.getElementById('status-titulo').style.color = "white";
+            document.getElementById('status-desc').innerText = "Notificando os pilotos mais próximos.";
+            document.getElementById('info-motoboy').style.display = 'none';
+            
+            document.getElementById('modal-busca').style.display = 'flex';
+
+            const bodyData = {
+                cliente_id: usuario.id,
+                origem: origem,
+                destino: destino,
+                valor: valorFinal,
+                tipo_servico: servicoSelecionado
+            };
+
+            try {
+                const response = await fetch(`${MEU_IP}/pedir-corrida`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bodyData)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    idPedidoAtual = result.id;
+                    intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+                } else {
+                    document.getElementById('modal-busca').style.display = 'none';
+                    alert("Erro no servidor: " + result.message);
+                }
+            } catch (err) {
+                document.getElementById('modal-busca').style.display = 'none';
+                alert("Erro de conexão.");
+            }
+        }
+
+        // --- FUNÇÃO DE CANCELAR (NOVA) ---
+        async function cancelarPedido() {
+            if(!idPedidoAtual) return;
+
+            const motivo = prompt("Qual o motivo do cancelamento?");
+            if(motivo === null) return; // Clicou em cancelar no prompt
+
+            // Para de buscar
+            clearInterval(intervaloVerificacao);
+
+            try {
+                await fetch(`${MEU_IP}/cancelar-pedido`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: idPedidoAtual, motivo: motivo || "Sem motivo" })
+                });
+                
+                alert("Pedido cancelado.");
+                window.location.reload(); // Recarrega para limpar tudo
+            } catch(err) {
+                alert("Erro ao cancelar.");
+            }
+        }
+
+        async function verificarStatus(idPedido) {
+            try {
+                const response = await fetch(`${MEU_IP}/status-pedido/${idPedido}`);
+                const data = await response.json();
+                if(data.success) {
+                    const pedido = data.pedido;
+                    if (pedido.status === 'aceita') {
+                        clearInterval(intervaloVerificacao); 
+                        document.getElementById('area-spinner').style.display = 'none';
+                        // Esconde botão cancelar quando aceita (ou deixa, você decide. Aqui escondi para evitar conflito)
+                        document.getElementById('btn-cancelar-pedido').style.display = 'none';
+                        
+                        document.getElementById('status-titulo').innerText = "FALCÃO LOCALIZADO!";
+                        document.getElementById('status-titulo').style.color = "var(--neon-green)";
+                        document.getElementById('status-desc').innerText = "Seu piloto está a caminho do ponto de coleta.";
+                        document.getElementById('info-motoboy').style.display = 'block';
+                        
+                        const nomeM = pedido.nome_motoboy ? pedido.nome_motoboy.toUpperCase() : "MOTOBOY";
+                        const foneM = pedido.telefone_motoboy ? pedido.telefone_motoboy : "Não informado";
+                        document.getElementById('nome-motoboy').innerText = nomeM;
+                        document.getElementById('fone-motoboy').innerText = foneM;
+                    }
+                }
+            } catch (err) { console.error("Erro verificação", err); }
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.input-group')) {
+                document.querySelectorAll('.sugestoes-lista').forEach(el => el.style.display = 'none');
+            }
+        });
+    </script>
+</body>
+</html>

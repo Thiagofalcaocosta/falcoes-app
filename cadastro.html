@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta - Falcões</title>
+    <style>
+        /* --- DESIGN DARK LIMPO --- */
+        :root {
+            --bg-color: #121212; --card-color: #1e1e1e; --neon-green: #00e640;
+            --text-color: #ffffff; --input-bg: #2c2c2c; --border-color: #333;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-color);
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
+        }
+
+        .container { 
+            background: var(--card-color); padding: 40px 30px; border-radius: 15px; width: 100%; max-width: 400px; 
+            border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0, 230, 64, 0.1);
+        }
+
+        .logo-area { text-align: center; margin-bottom: 20px; }
+        .logo-area img { max-height: 80px; filter: drop-shadow(0 0 5px rgba(0,230,64,0.5)); }
+
+        h2 { text-align: center; color: var(--neon-green); margin-bottom: 25px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;}
+
+        /* FORMULÁRIO */
+        .grupo-tipo { margin-bottom: 15px; }
+        label { font-size: 14px; color: #aaa; margin-bottom: 5px; display: block; font-weight: bold;}
+        
+        select {
+            width: 100%; padding: 12px; background-color: #000; border: 1px solid var(--neon-green); 
+            color: var(--neon-green); border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;
+        }
+
+        input { 
+            width: 100%; padding: 14px; margin-bottom: 15px; background-color: var(--input-bg); border: 1px solid var(--border-color);
+            color: white; border-radius: 8px; box-sizing: border-box; font-size: 15px; transition: 0.3s;
+        }
+        input:focus { border-color: var(--neon-green); outline: none; box-shadow: 0 0 5px rgba(0,230,64,0.2); }
+
+        #area-motoboy { display: none; border-top: 1px solid #333; padding-top: 15px; margin-top: 5px; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .aviso-forms {
+            background: rgba(255, 215, 0, 0.1); border: 1px solid #ffd700; color: #ffd700;
+            padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 15px; text-align: center;
+        }
+
+        button {
+            width: 100%; padding: 15px; margin-top: 10px; background-color: var(--neon-green); color: #000; border: none;
+            border-radius: 8px; font-size: 16px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.3s;
+        }
+        button:hover { box-shadow: 0 0 15px rgba(0, 230, 64, 0.4); transform: scale(1.01); }
+
+        .link-login { text-align: center; margin-top: 20px; font-size: 14px; color: #777; }
+        .link-login a { color: var(--neon-green); text-decoration: none; font-weight: bold; }
+
+        /* --- MODAL DE SUCESSO (NOVO) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-box {
+            background: var(--card-color); padding: 30px; border-radius: 15px; 
+            width: 85%; max-width: 320px; text-align: center; border: 1px solid var(--neon-green);
+            box-shadow: 0 0 30px rgba(0, 230, 64, 0.2); animation: popIn 0.3s ease;
+        }
+        .modal-icone { font-size: 50px; margin-bottom: 15px; display: block; }
+        .modal-titulo { font-size: 20px; font-weight: 800; margin-bottom: 10px; color: var(--neon-green); text-transform: uppercase;}
+        .modal-msg { font-size: 15px; color: #ddd; margin-bottom: 25px; line-height: 1.5; }
+        
+        .btn-sucesso {
+            width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none;
+            background-color: var(--neon-green); color: black;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="modal-sucesso" class="modal-overlay">
+        <div class="modal-box">
+            <span class="modal-icone">✅</span>
+            <div class="modal-titulo">TUDO CERTO!</div>
+            <div class="modal-msg" id="msg-sucesso-texto">Seu cadastro foi realizado com sucesso.</div>
+            <button class="btn-sucesso" onclick="irParaLogin()">FAZER LOGIN AGORA</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="logo-area"><img src="assets/logo.png" alt="Logo"></div>
+        <h2 id="titulo-form">NOVO CADASTRO</h2>
+
+        <div class="grupo-tipo">
+            <label>PERFIL DE USUÁRIO:</label>
+            <select id="select-tipo" onchange="mudarFormulario()">
+                <option value="cliente">SOU CLIENTE (PEDIR)</option>
+                <option value="entregas">MOTOBOY - ENTREGAS</option>
+                <option value="moto_taxi">MOTO TÁXI - PASSAGEIRO</option>
+            </select>
+        </div>
+
+        <input type="text" id="nome" placeholder="Nome Completo">
+        <input type="text" id="telefone" placeholder="Celular / WhatsApp">
+        <input type="email" id="email" placeholder="Seu E-mail">
+        <input type="password" id="senha" placeholder="Crie uma Senha">
+
+        <div id="area-motoboy">
+            <div class="aviso-forms">
+                ⚠️ Após cadastrar, enviaremos um link do <b>Google Forms</b> para envio da CNH e fotos da moto.
+            </div>
+            <label style="color: #ddd;">DADOS DA MOTO:</label>
+            <input type="text" id="modelo" placeholder="Modelo (Ex: Honda Fan 160)">
+            <input type="text" id="cor" placeholder="Cor (Ex: Vermelha)">
+            <input type="text" id="placa" placeholder="Placa (Ex: ABC-1234)">
+        </div>
+
+        <button onclick="cadastrar()" id="btn-acao">CRIAR CONTA</button>
+
+        <div class="link-login">
+            Já tem conta? <a href="index.html">Fazer Login</a>
+        </div>
+    </div>
+
+    <script>
+        function mudarFormulario() {
+            const selecao = document.getElementById('select-tipo').value;
+            const areaMoto = document.getElementById('area-motoboy');
+            const btn = document.getElementById('btn-acao');
+
+            if (selecao === 'cliente') {
+                areaMoto.style.display = 'none';
+                btn.innerText = "CRIAR CONTA CLIENTE";
+            } else {
+                areaMoto.style.display = 'block';
+                btn.innerText = selecao === 'moto_taxi' ? "CADASTRAR MOTO TÁXI" : "CADASTRAR ENTREGADOR";
+            }
+        }
+
+        function irParaLogin() {
+            window.location.href = 'index.html';
+        }
+
+        async function cadastrar() {
+            const selecao = document.getElementById('select-tipo').value;
+            const nome = document.getElementById('nome').value;
+            const telefone = document.getElementById('telefone').value;
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+
+            if(!nome || !email || !senha) return alert("Preencha os dados obrigatórios.");
+
+            let tipoParaBanco = 'cliente';
+            let categoriaParaBanco = 'cliente';
+
+            if (selecao !== 'cliente') {
+                tipoParaBanco = 'motoboy'; 
+                categoriaParaBanco = (selecao === 'moto_taxi') ? 'Passageiro' : 'Entregas';
+            }
+
+            const bodyData = {
+                tipo: tipoParaBanco,
+                categoria: categoriaParaBanco,
+                nome, telefone, email, senha
+            };
+
+            if (selecao !== 'cliente') {
+                const modelo = document.getElementById('modelo').value;
+                const cor = document.getElementById('cor').value;
+                const placa = document.getElementById('placa').value;
+
+                if (!modelo || !cor || !placa) return alert("Preencha os dados da moto!");
+
+                bodyData.modelo_moto = modelo;
+                bodyData.cor_moto = cor;
+                bodyData.placa = placa;
+            }
+
+            const btn = document.getElementById('btn-acao');
+            btn.innerText = "SALVANDO...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('https://falcoes-app.onrender.com', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bodyData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // AQUI É O PULO DO GATO: Abre o modal em vez de alert+redirect
+                    const modal = document.getElementById('modal-sucesso');
+                    const msg = document.getElementById('msg-sucesso-texto');
+
+                    if (selecao !== 'cliente') {
+                        msg.innerHTML = "Cadastro enviado!<br>Sua conta está <b>em análise</b>. Aguarde contato.";
+                    } else {
+                        msg.innerHTML = "Conta criada com sucesso!<br>Faça login para pedir.";
+                    }
+                    
+                    modal.style.display = 'flex';
+                    
+                } else {
+                    alert("Erro: " + data.message);
+                    btn.innerText = "TENTAR NOVAMENTE";
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert("Erro de conexão.");
+                btn.innerText = "TENTAR NOVAMENTE";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
