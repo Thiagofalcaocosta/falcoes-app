@@ -86,21 +86,46 @@ initDB();
 
 // --- ROTAS DO APP ---
 
+// ROTA DE CADASTRO INTELIGENTE
 app.post('/cadastro', async (req, res) => {
     const { nome, email, senha, tipo, telefone, placa, modelo_moto, cor_moto, categoria } = req.body;
-    const aprovado = false; 
+    
     try {
-        await pool.query(
-            'INSERT INTO usuarios (nome, email, senha, tipo, telefone, placa, modelo_moto, cor_moto, categoria, aprovado) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-            [nome, email, senha, tipo, telefone, placa, modelo_moto, cor_moto, categoria, aprovado]
+        // 1. Verifica quantos usuários existem no banco
+        const contagem = await pool.query("SELECT COUNT(*) FROM usuarios");
+        const totalUsuarios = parseInt(contagem.rows[0].count);
+
+        let ehAdmin = false;
+        let estaAprovado = false;
+        let tipoFinal = tipo; // O tipo que a pessoa escolheu
+
+        // 2. SE FOR O PRIMEIRO DO MUNDO, VIRA CHEFE
+        if (totalUsuarios === 0) {
+            tipoFinal = 'admin';
+            estaAprovado = true; // O primeiro já entra aprovado
+            console.log("👑 PRIMEIRO USUÁRIO DETECTADO: Criando Admin Supremo.");
+        } else {
+            // Se não for o primeiro, segue a regra normal (cliente aprova direto?, aqui deixei false pra segurança)
+            // Se você quiser que cliente entre direto, mude para: tipo === 'cliente' ? true : false;
+            estaAprovado = false; 
+        }
+
+        const result = await pool.query(
+            'INSERT INTO usuarios (nome, email, senha, tipo, telefone, placa, modelo_moto, cor_moto, categoria, aprovado) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id',
+            [nome, email, senha, tipoFinal, telefone, placa, modelo_moto, cor_moto, categoria, estaAprovado]
         );
-        res.json({ success: true });
-    } catch (err) { 
+
+        if (estaAprovado) {
+            res.json({ success: true, message: 'Conta Criada com Sucesso!' });
+        } else {
+            res.json({ success: true, message: 'Cadastro enviado! Aguarde aprovação.' });
+        }
+
+    } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: "Erro ao salvar no banco" }); 
+        res.status(500).json({ success: false, message: 'Erro ao cadastrar. Email já existe?' });
     }
 });
-
 app.post('/login', async (req, res) => {
     const { email, senha } = req.body;
     try {
