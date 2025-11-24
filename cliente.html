@@ -22,7 +22,7 @@
             --input-bg: #2c2c2c;
             --border-color: #333;
             --error-color: #ff4444;
-            --dica-color: #555; /* dica mais escura e discreta */
+            --dica-color: #888;
         }
 
         body {
@@ -31,6 +31,7 @@
             color: var(--text-color);
             padding: 20px;
             margin: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .container {
@@ -42,6 +43,7 @@
             box-shadow: 0 4px 20px rgba(0, 230, 64, 0.1);
             position: relative;
             border: 1px solid var(--border-color);
+            padding-bottom: 80px; /* Espaço para não cortar conteudo em mobile */
         }
 
         .logo-area {
@@ -85,23 +87,15 @@
             letter-spacing: 1px;
         }
 
+        /* --- SELETOR DE SERVIÇO --- */
         .opcoes-servico {
             display: flex;
             gap: 15px;
             margin-bottom: 10px;
         }
-
-        .instrucao-servico {
-            font-size: 13px;
-            color: var(--dica-color);
-            margin-bottom: 12px;
-            text-align: center;
-            opacity: 0.85;
-        }
-
         .card {
             flex: 1;
-            padding: 20px 15px;
+            padding: 15px;
             border: 2px solid var(--border-color);
             border-radius: 12px;
             text-align: center;
@@ -121,86 +115,170 @@
             box-shadow: 0 0 15px rgba(0, 230, 64, 0.2);
         }
         .icon {
-            font-size: 32px;
+            font-size: 28px;
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
         .preco {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 500;
         }
 
+        /* --- NOVOS CAMPOS DE ENDEREÇO (GRID) --- */
         label {
             display: block;
-            margin-top: 12px;
-            font-weight: 600;
-            color: #ddd;
+            margin-top: 15px;
+            font-weight: 700;
+            color: var(--neon-green); /* Label verde para destaque */
             margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .input-group {
+
+        .address-container {
+            background: rgba(255,255,255,0.03);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Linha 1: Rua + Botão Mapa */
+        .row-rua {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
             position: relative;
-            margin-bottom: 6px;
         }
+        .input-rua-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        .btn-map-icon {
+            background: transparent;
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            border-radius: 8px;
+            width: 44px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-map-icon:hover {
+            background: rgba(0,230,64,0.1);
+        }
+
+        /* Linha 2: Número e Bairro */
+        .row-details {
+            display: flex;
+            gap: 8px;
+        }
+        .input-num-wrapper {
+            flex: 1; /* 25% */
+            max-width: 80px;
+            position: relative;
+        }
+        .input-bairro-wrapper {
+            flex: 3; /* 75% */
+        }
+
         input {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             background-color: var(--input-bg);
             border: 1px solid var(--border-color);
             color: white;
-            border-radius: 10px;
+            border-radius: 8px;
             box-sizing: border-box;
-            font-size: 16px;
+            font-size: 15px;
             transition: 0.3s;
         }
         input:focus {
             border-color: var(--neon-green);
             outline: none;
         }
+        /* Erro específico para número vazio */
         input.erro {
-            border-color: var(--error-color);
+            border-color: var(--error-color) !important;
+            animation: shake 0.4s ease-in-out;
+        }
+        .erro-msg {
+            position: absolute;
+            bottom: -16px;
+            left: 0;
+            font-size: 10px;
+            color: var(--error-color);
+            font-weight: bold;
+            display: none;
+        }
+        input.erro + .erro-msg {
+            display: block;
         }
 
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Campo de detalhes da entrega */
+        #detalhes-entrega-container {
+            display: none; /* Só aparece se for entrega */
+            margin-top: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+
+        /* Lista de Sugestões */
         .sugestoes-lista {
             position: absolute;
-            top: 105%;
+            top: 100%;
             left: 0;
             right: 0;
             background: var(--card-color);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            max-height: 300px;
+            border-radius: 8px;
+            max-height: 250px;
             overflow-y: auto;
             z-index: 1000;
             display: none;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
         .sugestao-item {
-            padding: 15px;
+            padding: 12px 15px;
             border-bottom: 1px solid #333;
             cursor: pointer;
         }
+        .sugestao-item:last-child { border-bottom: none; }
         .sugestao-item:hover {
             background-color: #2c2c2c;
         }
         .rua-texto {
-            font-size: 16px;
+            display: block;
+            font-size: 15px;
             font-weight: 600;
             color: var(--neon-green);
         }
         .bairro-texto {
-            font-size: 13px;
+            display: block;
+            font-size: 12px;
             color: #aaa;
+            margin-top: 2px;
         }
 
+        /* --- RESUMO E BOTÃO --- */
         .resumo-final {
             margin-top: 25px;
-            padding: 18px;
-            background-color: rgba(0, 230, 64, 0.15);
+            padding: 15px;
+            background-color: rgba(0, 230, 64, 0.1);
             color: var(--neon-green);
             border: 1px solid var(--neon-green);
             text-align: center;
             border-radius: 10px;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             display: none;
         }
@@ -227,9 +305,11 @@
             background-color: #444;
             color: #888;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
-        /* --- MODAL (MANTIDO O DESIGN DARK) --- */
+        /* --- MODAL --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -244,7 +324,7 @@
         }
         .modal-content {
             background: var(--card-color);
-            padding: 40px;
+            padding: 30px;
             border-radius: 20px;
             text-align: center;
             width: 85%;
@@ -253,36 +333,16 @@
             box-shadow: 0 0 40px rgba(0, 230, 64, 0.15);
         }
         .spinner {
-            border: 6px solid #333;
-            border-top: 6px solid var(--neon-green);
+            border: 5px solid #333;
+            border-top: 5px solid var(--neon-green);
             border-radius: 50%;
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             animation: girar 1s linear infinite;
             margin: 0 auto 20px auto;
         }
-        @keyframes girar {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
+        @keyframes girar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .status-texto {
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 10px;
-        }
-        .sub-status {
-            font-size: 14px;
-            color: #aaa;
-            line-height: 1.4;
-        }
-
-        /* Botão Cancelar Vermelho (Novo) */
         .btn-cancelar {
             background-color: transparent;
             border: 1px solid var(--error-color);
@@ -290,82 +350,19 @@
             font-size: 14px;
             margin-top: 20px;
             padding: 10px;
-        }
-        .btn-cancelar:hover {
-            background-color: var(--error-color);
-            color: white;
-            box-shadow: none;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
         }
 
-        #info-motoboy {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            display: none;
-            border: 1px solid var(--neon-green);
-        }
-        .moto-nome {
-            font-size: 20px;
-            color: var(--neon-green);
-            font-weight: 800;
-            text-transform: uppercase;
-            margin-top: 5px;
-        }
-        .moto-fone {
-            color: white;
-            margin-top: 5px;
-            display: block;
-            font-size: 16px;
-        }
-
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #121212;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--neon-green);
-        }
-
-        /* Estilos para o mapa e botão toggle */
         #map {
-            height: 150px;
+            height: 180px;
             border-radius: 12px;
             margin-top: 20px;
+            border: 1px solid var(--border-color);
         }
 
-        #btnDefinirOrigem, #btnDefinirDestino {
-            background: transparent;
-            border: 1px solid var(--neon-green);
-            color: var(--neon-green);
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-top: 6px;
-            width: auto;
-            display: inline-block;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        #btnDefinirOrigem:hover, #btnDefinirDestino:hover {
-            background: rgba(0,230,64,0.12);
-        }
-
-        /* dica discreta acima do botão */
-        .dica-mapa {
-            font-size: 12px;
-            margin: 4px 0 6px 0;
-            color: var(--dica-color);
-            opacity: 0.75;
-        }
-
-        /* TOAST posicionado embaixo (voltar ao estilo inicial sugerido) */
+        /* --- TOAST --- */
         .toast-container {
             position: fixed;
             left: 50%;
@@ -377,735 +374,534 @@
             gap: 10px;
             align-items: center;
             pointer-events: none;
+            width: 90%;
         }
         .toast {
-            min-width: 280px;
-            max-width: 520px;
+            width: 100%;
+            max-width: 400px;
             background: #000;
             border-radius: 12px;
             padding: 12px 16px;
             color: #fff;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             display: flex;
             gap: 12px;
             align-items: center;
             opacity: 0;
-            transform: translateY(6px);
-            animation: toast-in 260ms forwards;
-            font-weight: 700;
-            border: 2px solid var(--neon-green);
+            transform: translateY(10px);
+            animation: toast-in 0.3s forwards;
+            font-weight: 600;
+            border: 1px solid var(--neon-green);
             pointer-events: auto;
         }
-        @keyframes toast-in {
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .toast.info { border-color: var(--neon-green); color: #eaffea; }
-        .toast.success { border-color: #00c853; color: #eaffea; }
-        .toast.error { border-color: var(--error-color); color: #ffdede; }
-        .toast .msg { flex: 1; font-size: 15px; color: inherit; }
-        .toast .close {
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            color: inherit;
-            font-weight: 900;
-            font-size: 14px;
-            opacity: 0.95;
-        }
+        @keyframes toast-in { to { opacity: 1; transform: translateY(0); } }
+        .toast.error { border-color: var(--error-color); }
+        .toast .msg { flex: 1; font-size: 14px; }
+        .toast .close { background: none; border: none; color: #fff; cursor: pointer; font-size: 18px; }
 
-        /* Responsividade: reduzir largura do toast em telas pequenas */
-        @media (max-width: 420px) {
-            .toast { min-width: 240px; max-width: 340px; padding: 10px; font-size: 14px; }
-            #map { height: 130px; }
-            .container { padding: 18px; }
-        }
     </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
 </head>
 <body>
-    <!-- Toast embaixo -->
-    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- MODAL DE BUSCA/STATUS -->
     <div class="modal-overlay" id="modal-busca">
         <div class="modal-content">
             <div id="area-spinner" class="spinner"></div>
 
-            <div id="status-titulo" class="status-texto">BUSCANDO PILOTO...</div>
-            <div id="status-desc" class="sub-status">
-                Notificando os pilotos mais próximos.
+            <div id="status-titulo" style="font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px;">BUSCANDO PILOTO...</div>
+            <div id="status-desc" style="font-size: 14px; color: #aaa;">Notificando parceiros próximos.</div>
+
+            <div id="info-motoboy" style="display:none; margin-top:20px; padding:15px; border:1px solid var(--neon-green); border-radius:10px; background:rgba(255,255,255,0.05);">
+                <div style="font-size: 32px; margin-bottom: 5px;">🏍️</div>
+                <div style="font-size: 10px; color: #aaa; text-transform:uppercase;">Seu Piloto</div>
+                <div id="nome-motoboy" style="font-size: 18px; color: var(--neon-green); font-weight: 800; margin: 5px 0;">--</div>
+                <span id="fone-motoboy" style="color: white; font-size: 14px;">--</span>
+                <button onclick="window.location.reload()" class="btn" style="margin-top:15px; font-size:14px; padding:10px;">FECHAR / NOVO</button>
             </div>
 
-            <div id="info-motoboy">
-                <div style="font-size: 40px; margin-bottom: 10px;">🏍️</div>
-                <div style="font-size: 12px; color: #aaa;">SEU PILOTO:</div>
-                <div class="moto-nome" id="nome-motoboy">--</div>
-                <span class="moto-fone" id="fone-motoboy">--</span>
-                <br />
-                <button
-                    onclick="window.location.reload()"
-                    style="margin-top: 15px; font-size: 14px; padding: 10px"
-                >
-                    FECHAR / NOVO PEDIDO
-                </button>
-            </div>
-
-            <!-- inicialmente oculto -->
-            <button id="btn-cancelar-pedido" class="btn-cancelar" onclick="cancelarPedido()" style="display:none;">
-                CANCELAR PEDIDO
-            </button>
+            <button id="btn-cancelar-pedido" class="btn-cancelar" onclick="cancelarPedido()" style="display:none;">CANCELAR PEDIDO</button>
         </div>
     </div>
 
     <div class="container">
-        <div class="logo-area"><img src="assets/logo.png" alt="Logo" /></div>
+        <div class="logo-area"><img src="assets/logo.png" alt="Logo" onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" /></div>
 
         <div class="header-top">
-            <div class="user-info">
-                <span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span>
-            </div>
-            <div class="logout"><a href="index.html" onclick="localStorage.clear()">SAIR</a></div>
+            <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
+            <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
         </div>
 
-        <h2>NOVA CORRIDA</h2>
+        <h2>NOVA SOLICITAÇÃO</h2>
 
+        <!-- SELEÇÃO DE SERVIÇO -->
         <div class="opcoes-servico">
             <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
                 <span class="icon">🏍️</span>
                 <div class="card-title">MOTO TÁXI</div>
-                <div class="preco">R$ 10,00</div>
+                <div class="preco">R$ 10,00 + Km</div>
             </div>
             <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
                 <span class="icon">📦</span>
                 <div class="card-title">ENTREGA</div>
-                <div class="preco">R$ 8,50</div>
+                <div class="preco">R$ 8,50 + Km</div>
             </div>
         </div>
 
-        <!-- instrução geral curta abaixo dos serviços (mais discreta) -->
-        <div class="instrucao-servico">🔹 Obrigatório escolher um serviço acima.</div>
-
+        <!-- FORMULÁRIO DE ENDEREÇO REFATORADO -->
         <div id="form-endereco">
-            <!-- ORIGEM: dica curta (acima do botão), botão e campo -->
-            <div class="dica-mapa">🔹 Toque no botão e depois no mapa.</div>
-            <div style="text-align:right; margin-bottom:6px;">
-                <button id="btnDefinirOrigem">📍 Escolher ORIGEM no mapa</button>
-            </div>
-            <label>📍 LOCAL DE BUSCA (ORIGEM)</label>
-            <div class="input-group">
-                <!-- Campo inicialmente VAZIO; só preenche quando o usuário escolhe a rua -->
-                <input
-                    type="text"
-                    id="origem"
-                    placeholder="Digite o nome da rua..."
-                    oninput="limparErro(this); buscarEndereco(this.value, 'lista-origem', 'origem')"
-                    autocomplete="off"
-                />
-                <div id="lista-origem" class="sugestoes-lista"></div>
+            
+            <!-- ORIGEM -->
+            <label>📍 Onde vamos buscar? (Origem)</label>
+            <div class="address-container">
+                <div class="row-rua">
+                    <div class="input-rua-wrapper">
+                        <input type="text" id="rua-origem" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
+                        <div id="lista-origem" class="sugestoes-lista"></div>
+                    </div>
+                    <button class="btn-map-icon" onclick="ativarMapa('origem')" title="Marcar no mapa">🗺️</button>
+                </div>
+                <div class="row-details">
+                    <div class="input-num-wrapper">
+                        <input type="text" id="num-origem" placeholder="Nº" oninput="removerErro(this)">
+                        <span class="erro-msg">Obrigatório</span>
+                    </div>
+                    <div class="input-bairro-wrapper">
+                        <input type="text" id="bairro-origem" placeholder="Bairro">
+                    </div>
+                </div>
             </div>
 
-            <!-- DESTINO: dica curta (acima do botão), botão e campo -->
-            <div class="dica-mapa">🔹 Toque no botão e depois no mapa.</div>
-            <div style="text-align:right; margin-bottom:6px;">
-                <button id="btnDefinirDestino">🏁 Escolher DESTINO no mapa</button>
+            <!-- DESTINO -->
+            <label>🏁 Onde vamos levar? (Destino)</label>
+            <div class="address-container">
+                <div class="row-rua">
+                    <div class="input-rua-wrapper">
+                        <input type="text" id="rua-destino" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
+                        <div id="lista-destino" class="sugestoes-lista"></div>
+                    </div>
+                    <button class="btn-map-icon" onclick="ativarMapa('destino')" title="Marcar no mapa">🗺️</button>
+                </div>
+                <div class="row-details">
+                    <div class="input-num-wrapper">
+                        <input type="text" id="num-destino" placeholder="Nº" oninput="removerErro(this)">
+                        <span class="erro-msg">Obrigatório</span>
+                    </div>
+                    <div class="input-bairro-wrapper">
+                        <input type="text" id="bairro-destino" placeholder="Bairro">
+                    </div>
+                </div>
             </div>
-            <label>🏁 LOCAL DE ENTREGA (DESTINO)</label>
-            <div class="input-group">
-                <input
-                    type="text"
-                    id="destino"
-                    placeholder="Digite o nome da rua..."
-                    oninput="limparErro(this); buscarEndereco(this.value, 'lista-destino', 'destino')"
-                    autocomplete="off"
-                />
-                <div id="lista-destino" class="sugestoes-lista"></div>
+
+            <!-- DETALHES DA ENTREGA (CONDICIONAL) -->
+            <div id="detalhes-entrega-container">
+                <label>📦 O que vamos levar?</label>
+                <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..." oninput="removerErro(this)">
+                <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
             </div>
+
         </div>
 
-        <!-- Div para o mapa -->
         <div id="map"></div>
+        <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no mapa</p>
 
-        <div class="resumo-final" id="resumo">Total: R$ 0,00</div>
+        <div class="resumo-final" id="resumo"></div>
 
         <button onclick="pedir()" id="btn-pedir" class="btn" disabled>SELECIONE O SERVIÇO</button>
     </div>
 
     <!-- SCRIPTS -->
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
     <script>
-        // TOAST default duration (ms)
-        const TOAST_DEFAULT = 4200;
-
-        function showToast(message, type = "info", duration = TOAST_DEFAULT) {
-            const container = document.getElementById("toast-container");
-            // manter apenas 1 toast visível (interface limpa)
-            container.innerHTML = "";
-            const toast = document.createElement("div");
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `<div class="msg">${message}</div><button class="close" aria-label="Fechar">✕</button>`;
-            container.appendChild(toast);
-
-            const closeBtn = toast.querySelector(".close");
-            let hideTimeout = setTimeout(() => removeToast(toast), duration);
-            closeBtn.addEventListener("click", () => {
-                clearTimeout(hideTimeout);
-                removeToast(toast);
-            });
-
-            function removeToast(node) {
-                node.style.transition = "all 200ms ease";
-                node.style.opacity = "0";
-                node.style.transform = "translateY(8px)";
-                setTimeout(() => {
-                    if (node.parentNode) node.parentNode.removeChild(node);
-                }, 220);
-            }
-        }
-
-        // === CONFIGURAÇÃO ===
-        const ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijg2N2E2MTBhODg4ODQxNmVhYThlNjJmYWM4N2VkNjVlIiwiaCI6Im11cm11cjY0In0=";
+        // === CONFIGURAÇÃO E DADOS ===
         const MEU_IP = 'https://falcoes-app.onrender.com';
-        const LAT_TC = -21.69;
-        const LON_TC = -45.25;
-
+        const LAT_TC = -21.6975;
+        const LON_TC = -45.2556;
+        
+        // Mock de usuário se não existir (para testes)
+        if(!localStorage.getItem("usuario")) {
+            localStorage.setItem("usuario", JSON.stringify({id: 1, nome: "Visitante", telefone: "00000000"}));
+        }
         const usuario = JSON.parse(localStorage.getItem("usuario"));
-        if (!usuario) window.location.href = "index.html";
-        document.getElementById("msg-ola").innerText =
-            "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
+        document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
 
-        const baseFee = { "moto-taxi": 10.0, entrega: 8.50 };
-        const pricePerKm = { "moto-taxi": 3.15, entrega: 2.0 };
+        // Variáveis de Estado
+        let servicoSelecionado = null;
+        let coordsOrigem = null;
+        let coordsDestino = null;
+        let timeoutBusca = null;
+        let mapMode = null; // 'origem' ou 'destino'
+        let markerOrigem = null;
+        let markerDestino = null;
+        let idPedidoAtual = null;
+        let intervaloVerificacao = null;
 
-        let servicoSelecionado = "",
-            valorFinal = 0,
-            timeoutBusca = null,
-            intervaloVerificacao = null,
-            idPedidoAtual = null,
-            coordsOrigem = null,
-            coordsDestino = null,
-            ultimoKmCalculado = null;
+        const precos = {
+            'moto-taxi': { base: 10.0, kmExtra: 3.15, franquia: 3 },
+            'entrega': { base: 8.50, kmExtra: 2.0, franquia: 3 }
+        };
 
-        function selecionarServico(tipo, valor) {
-            servicoSelecionado = tipo;
-            valorFinal = valor;
-            document.getElementById("card-moto").classList.remove("selecionado");
-            document.getElementById("card-entrega").classList.remove("selecionado");
-            if (tipo === "moto-taxi")
-                document.getElementById("card-moto").classList.add("selecionado");
-            else document.getElementById("card-entrega").classList.add("selecionado");
-            const resumo = document.getElementById("resumo");
-            resumo.style.display = "block";
-            if (ultimoKmCalculado !== null && ultimoKmCalculado !== undefined) {
-                const calc = calcularValorPorKm(ultimoKmCalculado, tipo);
-                resumo.innerText = `DIST: ${ultimoKmCalculado.toFixed(
-                    2
-                )} km — TOTAL: R$ ${formatBRL(calc.total)}`;
-                valorFinal = calc.total;
-            } else {
-                resumo.innerText = `TOTAL A PAGAR: R$ ${valor.toFixed(2)}`;
-                valorFinal = valor;
-            }
-            document.getElementById("btn-pedir").disabled = false;
-            document.getElementById("btn-pedir").innerText = "CHAMAR MOTOBOY";
-        }
+        // === INICIALIZAÇÃO DO MAPA ===
+        const map = L.map('map').setView([LAT_TC, LON_TC], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
 
-        function formatBRL(n) {
-            return Number(n).toFixed(2).replace(".", ",");
-        }
-
-        function calcularValorPorKm(km, tipo) {
-            const base = baseFee[tipo] ?? 0;
-            const perKm = pricePerKm[tipo] ?? 0;
-
-            if (tipo === "moto-taxi") {
-                // moto-taxi: apenas acima de 3 km é cobrado por km
-                const kmCobrado = Math.max(0, km - 3); // km acima de 3
-                const total = base + kmCobrado * perKm;
-                return {
-                    total,
-                    base,
-                    perKm,
-                    kmTotal: km,      // km real da corrida
-                    kmCobrado,        // km que gerou cobrança por km
-                    tipo
-                };
-            }
-
-            // entrega: apenas acima de 3 km é cobrado por km
-                const kmCobrado = Math.max(0, km - 3); // km acima de 3
-                const total = base + kmCobrado * perKm;
-                return {
-                    total,
-                    base,
-                    perKm,
-                    kmTotal: km,      // km real da corrida
-                    kmCobrado,        // km que gerou cobrança por km
-                    tipo
-                };
-            }
-
-        // ==== FUNÇÃO ADICIONADA: atualizarResumoComKm (necessária) ====
-        function atualizarResumoComKm(km) {
-            ultimoKmCalculado = km;
-            const resumo = document.getElementById("resumo");
-            resumo.style.display = "block";
-            if (!servicoSelecionado) {
-                resumo.innerText = `DIST: ${km.toFixed(2)} km — Selecione o serviço para ver o total.`;
+        map.on('click', async (e) => {
+            if (!mapMode) {
+                showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
                 return;
             }
-            const calc = calcularValorPorKm(km, servicoSelecionado);
-            valorFinal = calc.total;
 
-            if (servicoSelecionado === "moto-taxi") {
-                resumo.innerText = `DIST: ${calc.kmTotal.toFixed(2)} km (cobrado ${calc.kmCobrado.toFixed(2)} km) — TOTAL: R$ ${formatBRL(calc.total)}`;
-            } else {
-                resumo.innerText = `DIST: ${calc.kmTotal.toFixed(2)} km — TOTAL: R$ ${formatBRL(calc.total)}`;
-            }
-        }
-        // ==== fim função adicionada ====
+            const { lat, lng } = e.latlng;
+            showToast("Buscando endereço...", "info", 1000);
 
-        async function obterDistanciaEmKm(lat1, lon1, lat2, lon2) {
+            // Reverse Geocoding via Nominatim (Gratuito)
             try {
-                const body = {
-                    coordinates: [
-                        [lon1, lat1],
-                        [lon2, lat2],
-                    ],
-                    units: "m",
-                };
-                const response = await fetch(
-                    "https://api.openrouteservice.org/v2/directions/driving-car/geojson",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: ORS_API_KEY,
-                        },
-                        body: JSON.stringify(body),
-                    }
-                );
-                if (!response.ok) {
-                    console.error("ORS directions error status:", response.status);
-                    return null;
-                }
-                const json = await response.json();
-                if (
-                    json &&
-                    json.features &&
-                    json.features.length > 0 &&
-                    json.features[0].properties &&
-                    json.features[0].properties.summary
-                ) {
-                    const meters = json.features[0].properties.summary.distance;
-                    const km = meters / 1000;
-                    return km;
-                } else if (
-                    json &&
-                    json.routes &&
-                    json.routes.length > 0 &&
-                    json.routes[0].summary
-                ) {
-                    const meters = json.routes[0].summary.distance;
-                    return meters / 1000;
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                const data = await res.json();
+                
+                const rua = data.address.road || data.address.pedestrian || "Local Marcado";
+                const bairro = data.address.suburb || data.address.neighbourhood || data.address.city_district || "Três Corações";
+
+                if (mapMode === 'origem') {
+                    document.getElementById('rua-origem').value = rua;
+                    document.getElementById('bairro-origem').value = bairro;
+                    document.getElementById('num-origem').focus();
+                    coordsOrigem = { lat, lon: lng };
+                    if(markerOrigem) map.removeLayer(markerOrigem);
+                    markerOrigem = L.marker([lat, lng]).addTo(map);
                 } else {
-                    console.error("Resposta ORS inesperada:", json);
-                    return null;
+                    document.getElementById('rua-destino').value = rua;
+                    document.getElementById('bairro-destino').value = bairro;
+                    document.getElementById('num-destino').focus();
+                    coordsDestino = { lat, lon: lng };
+                    if(markerDestino) map.removeLayer(markerDestino);
+                    markerDestino = L.marker([lat, lng]).addTo(map);
                 }
-            } catch (err) {
-                console.error("Erro ao chamar ORS Directions:", err);
-                return null;
+
+                showToast("Endereço preenchido! Digite o número.", "success");
+                mapMode = null; // Reset modo
+                calcularRota();
+
+            } catch (error) {
+                showToast("Erro ao obter endereço do mapa.", "error");
             }
+        });
+
+        // === FUNÇÕES DE UI ===
+        function ativarMapa(modo) {
+            mapMode = modo;
+            showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
+            // Rola até o mapa
+            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // buscarEndereco: preenche o campo apenas quando o usuário escolhe a rua (ou o mapa define)
-        function buscarEndereco(texto, idLista, idInput) {
-            const lista = document.getElementById(idLista);
-            if (texto.length < 3) {
-                lista.style.display = "none";
+        function selecionarServico(tipo, valorBase) {
+            servicoSelecionado = tipo;
+            
+            // Visual Cards
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selecionado'));
+            if(tipo === 'moto-taxi') document.getElementById('card-moto').classList.add('selecionado');
+            else document.getElementById('card-entrega').classList.add('selecionado');
+
+            // Campo Detalhes da Entrega
+            const detailsDiv = document.getElementById('detalhes-entrega-container');
+            if(tipo === 'entrega') {
+                detailsDiv.style.display = 'block';
+            } else {
+                detailsDiv.style.display = 'none';
+            }
+
+            document.getElementById('btn-pedir').disabled = false;
+            document.getElementById('btn-pedir').innerText = tipo === 'entrega' ? "SOLICITAR ENTREGA" : "CHAMAR MOTO TÁXI";
+            
+            calcularRota(); // Recalcula preço se já tiver rota
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.reload();
+        }
+
+        function removerErro(input) {
+            input.classList.remove('erro');
+        }
+
+        // Fechar sugestões ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.input-rua-wrapper')) {
+                document.querySelectorAll('.sugestoes-lista').forEach(el => el.style.display = 'none');
+            }
+        });
+
+        // === LÓGICA DE ENDEREÇO (NOMINATIM) ===
+        function buscarEndereco(query, listId, type) {
+            const list = document.getElementById(listId);
+            if (query.length < 3) {
+                list.style.display = 'none';
                 return;
             }
+
             clearTimeout(timeoutBusca);
             timeoutBusca = setTimeout(async () => {
-                const url = `https://api.openrouteservice.org/geocode/autocomplete?text=${encodeURIComponent(
-                    texto
-                )}&focus.point.lat=${LAT_TC}&focus.point.lon=${LON_TC}&boundary.country=BR&size=6`;
                 try {
-                    const response = await fetch(url, {
-                        headers: { Authorization: ORS_API_KEY },
-                    });
-                    if (!response.ok) {
-                        console.error("Erro autocomplete ORS status:", response.status);
-                        lista.style.display = "none";
-                        return;
-                    }
-                    const data = await response.json();
-                    lista.innerHTML = "";
-                    let encontrou = false;
-                    if (data.features && data.features.length > 0) {
-                        data.features.forEach((local) => {
-                            const props = local.properties || {};
-                            const textoCompleto = (props.label || "").toString();
-                            const textoNormalizado = textoCompleto
-                                .normalize("NFD")
-                                .replace(/[\u0300-\u036f]/g, "")
-                                .toLowerCase();
-                            // filtrar para Três Corações
-                            if (
-                                !textoNormalizado.includes("tres coracoes") &&
-                                !textoNormalizado.includes("tres coraçoes") &&
-                                !textoNormalizado.includes("três corações") &&
-                                !textoNormalizado.includes("tres-coroacoes")
-                            ) {
-                                return;
-                            }
-                            let bairroDoMapa =
-                                props.neighbourhood ||
-                                props.suburb ||
-                                props.locality ||
-                                props.county ||
-                                "";
-                            const city = props.city || "";
-                            const cityNorm = city.normalize
-                                ? city.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
-                                : "";
-                            if (!bairroDoMapa && city && cityNorm !== "tres coracoes") {
-                                bairroDoMapa = city;
-                            }
-                            const nomeRua =
-                                props.street ||
-                                props.name ||
-                                textoCompleto.split(",")[0] ||
-                                textoCompleto;
-                            const detalheLista = bairroDoMapa
-                                ? `${bairroDoMapa} - Três Corações`
-                                : "Três Corações - MG";
-                            const coords =
-                                local.geometry && local.geometry.coordinates
-                                    ? {
-                                          lon: local.geometry.coordinates[0],
-                                          lat: local.geometry.coordinates[1],
-                                      }
-                                    : null;
-                            encontrou = true;
-                            const div = document.createElement("div");
-                            div.className = "sugestao-item";
-                            if (coords) {
-                                div.dataset.lat = coords.lat;
-                                div.dataset.lon = coords.lon;
-                            }
-                            if (bairroDoMapa) div.dataset.bairro = bairroDoMapa;
-                            div.innerHTML = `
-                                <div style="display:flex; flex-direction:column;">
-                                    <span class="rua-texto">${nomeRua}</span>
-                                    <span class="bairro-texto">${detalheLista}</span>
-                                </div>
-                            `;
-                            div.onclick = async () => {
-                                const inputField = document.getElementById(idInput);
-                                const bairro = div.dataset.bairro ? div.dataset.bairro : "";
-                                // Preenche o campo apenas quando o usuário escolhe a rua
-                                if (bairro)
-                                    inputField.value = `${nomeRua}, Nº , Bairro ${bairro}`;
-                                else inputField.value = `${nomeRua}, Nº , Bairro `;
-                                const posCursor = nomeRua.length + 5;
-                                inputField.focus();
-                                try {
-                                    inputField.setSelectionRange(posCursor, posCursor);
-                                } catch (e) {}
-                                lista.style.display = "none";
-                                const lat = div.dataset.lat ? parseFloat(div.dataset.lat) : null;
-                                const lon = div.dataset.lon ? parseFloat(div.dataset.lon) : null;
-                                if (idInput === "origem")
-                                    coordsOrigem = lat && lon ? { lat, lon } : null;
-                                else coordsDestino = lat && lon ? { lat, lon } : null;
-                                if (coordsOrigem && coordsDestino) {
-                                    const km = await obterDistanciaEmKm(
-                                        coordsOrigem.lat,
-                                        coordsOrigem.lon,
-                                        coordsDestino.lat,
-                                        coordsDestino.lon
-                                    );
-                                    if (km !== null) atualizarResumoComKm(km);
-                                }
-                                // after selection, show reminder that number and bairro are required
-                                showToast("Preencha Nº e Bairro no campo selecionado.", "info", TOAST_DEFAULT);
+                    // Busca restrita ao Brasil e priorizando área próxima (viewbox)
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Três Corações")}&addressdetails=1&limit=5&countrycodes=br`;
+                    
+                    const res = await fetch(url);
+                    const data = await res.json();
+
+                    list.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            // Filtro simples para manter dentro da cidade (opcional)
+                            const rua = item.address.road || item.address.pedestrian || item.display_name.split(',')[0];
+                            const bairro = item.address.suburb || item.address.neighbourhood || "Centro";
+
+                            const div = document.createElement('div');
+                            div.className = 'sugestao-item';
+                            div.innerHTML = `<span class="rua-texto">${rua}</span><span class="bairro-texto">${bairro}</span>`;
+                            
+                            div.onclick = () => {
+                                document.getElementById(`rua-${type}`).value = rua;
+                                document.getElementById(`bairro-${type}`).value = bairro;
+                                
+                                // Salva coords
+                                const coords = { lat: parseFloat(item.lat), lon: parseFloat(item.lon) };
+                                if(type === 'origem') coordsOrigem = coords;
+                                else coordsDestino = coords;
+
+                                list.style.display = 'none';
+                                
+                                // Pula para o número
+                                const numInput = document.getElementById(`num-${type}`);
+                                numInput.focus();
+                                numInput.classList.add('erro'); // Visual hint que precisa preencher
+                                setTimeout(() => numInput.classList.remove('erro'), 500);
+
+                                calcularRota();
                             };
-                            lista.appendChild(div);
+                            list.appendChild(div);
                         });
+                        list.style.display = 'block';
+                    } else {
+                        list.style.display = 'none';
                     }
-                    lista.style.display = encontrou ? "block" : "none";
-                } catch (error) {
-                    console.error("Erro API (autocomplete):", error);
-                    lista.style.display = "none";
+                } catch (e) {
+                    console.error("Erro busca", e);
                 }
-            }, 400);
+            }, 500); // Debounce
         }
 
-        function limparErro(input) {
-            input.classList.remove("erro");
-        }
-        function verificarNumero(texto) {
-            if (!texto.includes("Nº")) return false;
-            const partes = texto.split("Nº");
-            if (partes.length < 2) return false;
-            const trechoNumero = partes[1].split(",")[0].trim();
-            if (trechoNumero.length === 0) return false;
-            return true;
+        // === CÁLCULO DE ROTA (OSRM) ===
+        async function calcularRota() {
+            if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
+
+            const resumo = document.getElementById('resumo');
+            resumo.style.display = 'block';
+            resumo.innerText = "Calculando...";
+
+            try {
+                // OSRM Public API
+                const url = `https://router.project-osrm.org/route/v1/driving/${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}?overview=false`;
+                const res = await fetch(url);
+                const json = await res.json();
+
+                let distanciaKm = 0;
+                if (json.routes && json.routes.length > 0) {
+                    distanciaKm = json.routes[0].distance / 1000;
+                } else {
+                    // Fallback distância linha reta
+                    distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
+                }
+
+                // Pricing
+                const regra = precos[servicoSelecionado];
+                const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
+                const total = regra.base + (kmCobrado * regra.kmExtra);
+
+                resumo.innerHTML = `
+                    <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km</div>
+                    <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
+                `;
+                
+                // Salva valor global para envio
+                window.valorCalculado = total;
+
+            } catch (e) {
+                console.error("Erro rota", e);
+                resumo.innerText = "Erro ao calcular rota.";
+            }
         }
 
+        function calcDistanciaReta(c1, c2) {
+            const R = 6371; 
+            const dLat = (c2.lat - c1.lat) * Math.PI / 180;
+            const dLon = (c2.lon - c1.lon) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // === ENVIO DE PEDIDO ===
         async function pedir() {
-            const origemInput = document.getElementById("origem");
-            const destinoInput = document.getElementById("destino");
-            const origem = origemInput.value;
-            const destino = destinoInput.value;
-            let erro = false;
-            if (!origem || !verificarNumero(origem)) {
-                origemInput.classList.add("erro");
-                erro = true;
-            }
-            if (!destino || !verificarNumero(destino)) {
-                destinoInput.classList.add("erro");
-                erro = true;
-            }
-            if (erro) {
-                showToast("⚠️ NÚMERO da casa OBRIGATÓRIO.", "error", TOAST_DEFAULT );
+            if (!servicoSelecionado) {
+                showToast("Selecione Moto Táxi ou Entrega", "error");
                 return;
             }
 
-            // Se ainda não calculou km, tenta calcular
-            if ((ultimoKmCalculado === null || ultimoKmCalculado === undefined) && coordsOrigem && coordsDestino) {
-                const km = await obterDistanciaEmKm(
-                    coordsOrigem.lat,
-                    coordsOrigem.lon,
-                    coordsDestino.lat,
-                    coordsDestino.lon
-                );
-                if (km !== null) {
-                    atualizarResumoComKm(km);
-                }
+            // 1. Coletar dados
+            const ruaOrigem = document.getElementById('rua-origem').value;
+            const numOrigem = document.getElementById('num-origem').value;
+            const bairroOrigem = document.getElementById('bairro-origem').value;
+            
+            const ruaDestino = document.getElementById('rua-destino').value;
+            const numDestino = document.getElementById('num-destino').value;
+            const bairroDestino = document.getElementById('bairro-destino').value;
+
+            const detalhes = document.getElementById('detalhes-entrega').value;
+
+            // 2. Validação Rigorosa
+            let erro = false;
+
+            if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
+            if (!numOrigem.trim()) { 
+                document.getElementById('num-origem').classList.add('erro'); 
+                erro = true; 
+            }
+            
+            if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
+            if (!numDestino.trim()) { 
+                document.getElementById('num-destino').classList.add('erro'); 
+                erro = true; 
             }
 
-            // mostra modal e spinner, ativa cancelar
-            document.getElementById("area-spinner").style.display = "block";
-            document.getElementById("btn-cancelar-pedido").style.display = "block";
-            document.getElementById("status-titulo").innerText = "BUSCANDO PILOTO...";
-            document.getElementById("status-titulo").style.color = "white";
-            document.getElementById("status-desc").innerText = "Notificando os pilotos mais próximos.";
-            document.getElementById("info-motoboy").style.display = "none";
+            if (servicoSelecionado === 'entrega' && !detalhes.trim()) {
+                document.getElementById('detalhes-entrega').classList.add('erro');
+                showToast("Descreva o que vamos entregar!", "error");
+                return;
+            }
 
-            document.getElementById("modal-busca").style.display = "flex";
+            if (erro) {
+                showToast("⚠️ Preencha o NÚMERO dos endereços!", "error");
+                return;
+            }
 
-            const bodyData = {
-                cliente_id: usuario.id,
-                origem: origem,
-                destino: destino,
-                valor: valorFinal,
-                tipo_servico: servicoSelecionado,
-            };
+            // 3. Montar Strings para o Backend (Mantendo compatibilidade)
+            // O backend espera "origem" e "destino" como strings completas
+            const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
+            const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
+            
+            // Adicionar detalhes da entrega ao destino se for entrega
+            const strDestinoFinal = servicoSelecionado === 'entrega' 
+                ? `${strDestino} (ITEM: ${detalhes})` 
+                : strDestino;
+
+            // 4. Enviar
+            document.getElementById('modal-busca').style.display = 'flex';
+            document.getElementById('btn-cancelar-pedido').style.display = 'block';
+            document.getElementById('area-spinner').style.display = 'block';
 
             try {
-                const response = await fetch(`${MEU_IP}/pedir-corrida`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(bodyData),
+                const body = {
+                    cliente_id: usuario.id,
+                    origem: strOrigem,
+                    destino: strDestinoFinal,
+                    valor: window.valorCalculado || 10.0,
+                    tipo_servico: servicoSelecionado
+                };
+
+                const res = await fetch(`${MEU_IP}/pedir-corrida`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
                 });
-                if (!response.ok) {
-                    document.getElementById("modal-busca").style.display = "none";
-                    showToast("Erro no servidor: status " + response.status, "error", TOAST_DEFAULT );
-                    return;
-                }
-                const result = await response.json();
-                if (result.success) {
-                    idPedidoAtual = result.id;
-                    // iniciar checagem de status
+
+                const json = await res.json();
+                
+                if (json.success) {
+                    idPedidoAtual = json.id;
+                    showToast("Solicitação enviada!", "success");
                     intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-                    showToast("Pedido enviado. Aguardando piloto...", "success", TOAST_DEFAULT );
                 } else {
-                    document.getElementById("modal-busca").style.display = "none";
-                    showToast("Erro no servidor: " + result.message, "error", TOAST_DEFAULT );
+                    throw new Error(json.message);
                 }
-            } catch (err) {
-                document.getElementById("modal-busca").style.display = "none";
-                showToast("Erro de conexão.", "error", TOAST_DEFAULT );
-                console.error("Erro ao enviar pedido:", err);
+
+            } catch (e) {
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Erro ao enviar: " + e.message, "error");
             }
+        }
+
+        async function verificarStatus(id) {
+            try {
+                const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+                const data = await res.json();
+                
+                if (data.success && data.pedido.status === 'aceita') {
+                    clearInterval(intervaloVerificacao);
+                    
+                    document.getElementById('area-spinner').style.display = 'none';
+                    document.getElementById('btn-cancelar-pedido').style.display = 'none';
+                    
+                    document.getElementById('status-titulo').innerText = "FALCÃO A CAMINHO!";
+                    document.getElementById('status-titulo').style.color = "var(--neon-green)";
+                    document.getElementById('status-desc').innerText = "Seu piloto está indo até você.";
+                    
+                    document.getElementById('info-motoboy').style.display = 'block';
+                    document.getElementById('nome-motoboy').innerText = data.pedido.nome_motoboy || "Piloto Falcões";
+                    document.getElementById('fone-motoboy').innerText = data.pedido.telefone_motoboy || "";
+                    
+                    // Vibrar celular se suportado
+                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                }
+            } catch (e) { console.error(e); }
         }
 
         async function cancelarPedido() {
-            if (!idPedidoAtual) return;
-
-            // Mantive prompt() por enquanto; posso trocar por modal se quiser
-            const motivo = prompt("Qual o motivo do cancelamento?");
-            if (motivo === null) return;
-
-            clearInterval(intervaloVerificacao);
+            if(!idPedidoAtual) return;
+            if(!confirm("Deseja realmente cancelar?")) return;
 
             try {
-                const response = await fetch(`${MEU_IP}/cancelar-pedido`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id: idPedidoAtual, motivo: motivo || "Sem motivo" }),
+                await fetch(`${MEU_IP}/cancelar-pedido`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id: idPedidoAtual, motivo: "Cancelado pelo App" })
                 });
-                if (!response.ok) {
-                    showToast("Erro ao cancelar (status " + response.status + ")", "error", TOAST_DEFAULT + 2000);
-                    return;
-                }
-                showToast("Pedido cancelado.", "success", TOAST_DEFAULT );
                 window.location.reload();
-            } catch (err) {
-                showToast("Erro ao cancelar.", "error", TOAST_DEFAULT );
-                console.error("Erro cancelarPedido:", err);
-            }
-        }
-
-        async function verificarStatus(idPedido) {
-            try {
-                const response = await fetch(`${MEU_IP}/status-pedido/${idPedido}`);
-                if (!response.ok) {
-                    console.error("Erro status-pedido:", response.status);
-                    return;
-                }
-                const data = await response.json();
-                if (data.success) {
-                    const pedido = data.pedido;
-                    if (pedido.status === "aceita") {
-                        clearInterval(intervaloVerificacao);
-                        document.getElementById("area-spinner").style.display = "none";
-                        document.getElementById("btn-cancelar-pedido").style.display = "none";
-
-                        document.getElementById("status-titulo").innerText = "FALCÃO LOCALIZADO!";
-                        document.getElementById("status-titulo").style.color = "var(--neon-green)";
-                        document.getElementById("status-desc").innerText =
-                            "Seu piloto está a caminho do ponto de coleta.";
-                        document.getElementById("info-motoboy").style.display = "block";
-
-                        const nomeM = pedido.nome_motoboy
-                            ? pedido.nome_motoboy.toUpperCase()
-                            : "MOTOBOY";
-                        const foneM = pedido.telefone_motoboy ? pedido.telefone_motoboy : "Não informado";
-                        document.getElementById("nome-motoboy").innerText = nomeM;
-                        document.getElementById("fone-motoboy").innerText = foneM;
-                    }
-                }
-            } catch (err) {
-                console.error("Erro verificação", err);
-            }
-        }
-
-        document.addEventListener("click", function (e) {
-            if (!e.target.closest(".input-group")) {
-                document.querySelectorAll(".sugestoes-lista").forEach((el) => (el.style.display = "none"));
-            }
-        });
-    </script>
-
-    <!-- Leaflet JS para o mapa -->
-    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
-    <script>
-        // Inicializando mapa centralizado em Três Corações
-        const map = L.map("map").setView([-21.69, -45.255], 15);
-
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution: "© OpenStreetMap",
-        }).addTo(map);
-
-        let definirPonto = null; // null | "origem" | "destino"
-        let markerOrigem = null;
-        let markerDestino = null;
-
-        // Botões para selecionar qual ponto será definido no mapa
-        document.getElementById("btnDefinirOrigem").addEventListener("click", () => {
-            definirPonto = "origem";
-            showToast("Toque no mapa para definir a ORIGEM.", "info", TOAST_DEFAULT );
-        });
-
-        document.getElementById("btnDefinirDestino").addEventListener("click", () => {
-            definirPonto = "destino";
-            showToast("Toque no mapa para definir o DESTINO.", "info", TOAST_DEFAULT );
-        });
-
-        map.on("click", async (e) => {
-            const lat = e.latlng.lat;
-            const lon = e.latlng.lng;
-
-            // Se não foi selecionado um botão, avisa e retorna
-            if (!definirPonto) {
-                showToast("Clique primeiro em 'Escolher ORIGEM'.", "info", TOAST_DEFAULT + 2000);
-                return;
-            }
-
-            // Adiciona/atualiza marcador correto
-            if (definirPonto === "origem") {
-                if (markerOrigem) map.removeLayer(markerOrigem);
-                markerOrigem = L.marker(e.latlng).addTo(map);
-            } else if (definirPonto === "destino") {
-                if (markerDestino) map.removeLayer(markerDestino);
-                markerDestino = L.marker(e.latlng).addTo(map);
-            }
-
-            // Geocodificação reversa -> usar header Authorization
-            const url = `https://api.openrouteservice.org/geocode/reverse?point.lat=${lat}&point.lon=${lon}&size=1`;
-            try {
-                const response = await fetch(url, {
-                    headers: {
-                        Authorization: ORS_API_KEY,
-                    },
-                });
-                if (!response.ok) {
-                    console.error("Erro reverse geocode status:", response.status);
-                    showToast("Erro na busca do endereço (geocode).", "error", TOAST_DEFAULT );
-                    return;
-                }
-                const data = await response.json();
-                if (data.features && data.features.length > 0) {
-                    const props = data.features[0].properties;
-                    const street = props.street || props.name || "";
-                    const bairro =
-                        props.neighbourhood ||
-                        props.suburb ||
-                        props.locality ||
-                        props.county ||
-                        "";
-                    if (street) {
-                        if (definirPonto === "origem") {
-                            const origemInput = document.getElementById("origem");
-                            // Preenche com bairro automático
-                            origemInput.value = `${street}, Nº , Bairro ${bairro}`;
-                            origemInput.focus();
-                            try { origemInput.setSelectionRange(street.length + 7, street.length + 7); } catch(e){}
-                            coordsOrigem = { lat, lon };
-                            showToast("Origem definida. Preencha Nº se necessário.", "success", TOAST_DEFAULT );
-                        } else {
-                            const destinoInput = document.getElementById("destino");
-                            destinoInput.value = `${street}, Nº , Bairro ${bairro}`;
-                            destinoInput.focus();
-                            try { destinoInput.setSelectionRange(street.length + 7, street.length + 7); } catch(e){}
-                            coordsDestino = { lat, lon };
-                            showToast("Destino definido. Preencha Nº se necessário.", "success", TOAST_DEFAULT );
-                        }
-
-                        // Depois de definir o ponto, reseta para evitar novo clique acidental
-                        definirPonto = null;
-
-                        // Se já tem origem e destino definidos → calcula km
-                        if (coordsOrigem && coordsDestino) {
-                            const km = await obterDistanciaEmKm(
-                                coordsOrigem.lat,
-                                coordsOrigem.lon,
-                                coordsDestino.lat,
-                                coordsDestino.lon
-                            );
-                            if (km !== null) atualizarResumoComKm(km);
-                        }
-                    } else {
-                        showToast("Endereço não encontrado para esse ponto.", "error", TOAST_DEFAULT );
-                    }
-                } else {
-                    showToast("Endereço não encontrado para esse ponto.", "error", TOAST_DEFAULT );
-                }
             } catch (e) {
-                console.error("Erro na geocodificação reversa:", e);
-                showToast("Erro ao consultar o endereço.", "error", TOAST_DEFAULT );
+                showToast("Erro ao cancelar", "error");
             }
-        });
+        }
+
+        // Toast Helper
+        function showToast(msg, type, duration = 3000) {
+            const container = document.getElementById('toast-container');
+            container.innerHTML = ''; // Limpa anteriores
+            const div = document.createElement('div');
+            div.className = `toast ${type}`;
+            div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
+            container.appendChild(div);
+            setTimeout(() => div.remove(), duration);
+        }
+
     </script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>
