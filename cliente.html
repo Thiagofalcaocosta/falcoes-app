@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Falcões App</title>
 
-    <!-- Leaflet CSS para o mapa -->
     <link
         rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
@@ -44,6 +43,15 @@
             position: relative;
             border: 1px solid var(--border-color);
             padding-bottom: 80px; /* Espaço para não cortar conteudo em mobile */
+        }
+        
+        /* Gerenciamento de Telas */
+        .tela {
+            display: none; /* Todas as telas escondidas por padrão */
+        }
+        .tela.ativa {
+            display: block; /* Tela ativa */
+            animation: fadeIn 0.5s;
         }
 
         .logo-area {
@@ -169,7 +177,7 @@
         .btn-map-icon:hover {
             background: rgba(0,230,64,0.1);
         }
-
+        
         /* Linha 2: Número e Bairro */
         .row-details {
             display: flex;
@@ -308,8 +316,70 @@
             transform: none;
             box-shadow: none;
         }
-
-        /* --- MODAL --- */
+        
+        /* --- ESTILOS ESPECÍFICOS ACOMPANHAMENTO --- */
+        .info-card {
+            background: #252525;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .info-card .label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .info-card .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .motoboy-box {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid var(--neon-green);
+            border-radius: 15px;
+            background: rgba(0, 230, 64, 0.1);
+        }
+        .motoboy-box .nome {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--neon-green);
+            margin-top: 5px;
+        }
+        .motoboy-box .placa {
+            font-size: 14px;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+        
+        /* NOVO ESTILO WHATSAPP */
+        .btn-whatsapp {
+            background-color: #25D366; /* Cor oficial do WhatsApp */
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            width: 100%;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-whatsapp:hover {
+            background-color: #1FAF59;
+        }
+        
+        /* --- MODAL DE BUSCA (temporário) --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -342,7 +412,7 @@
             margin: 0 auto 20px auto;
         }
         @keyframes girar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
+        
         .btn-cancelar {
             background-color: transparent;
             border: 1px solid var(--error-color);
@@ -354,6 +424,21 @@
             border-radius: 8px;
             cursor: pointer;
         }
+        
+        /* ESTILO PARA O CAMPO TEXTAREA NO MODAL DE JUSTIFICATIVA */
+        .modal-content textarea {
+            width: 100%; 
+            height: 80px; 
+            padding: 10px; 
+            box-sizing: border-box; 
+            border-radius: 8px; 
+            border: 1px solid var(--border-color); 
+            background: var(--input-bg); 
+            color: white; 
+            resize: none;
+            font-family: inherit;
+        }
+
 
         #map {
             height: 180px;
@@ -402,12 +487,12 @@
     </style>
 <script type="importmap">
 {
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
-  }
+    "imports": {
+        "react/": "https://aistudiocdn.com/react@^19.2.0/",
+        "react": "https://aistudiocdn.com/react@^19.2.0",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+    }
 }
 </script>
 <link rel="stylesheet" href="/index.css">
@@ -416,23 +501,31 @@
 
     <div class="toast-container" id="toast-container"></div>
 
-    <!-- MODAL DE BUSCA/STATUS -->
     <div class="modal-overlay" id="modal-busca">
         <div class="modal-content">
             <div id="area-spinner" class="spinner"></div>
 
-            <div id="status-titulo" style="font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px;">BUSCANDO PILOTO...</div>
-            <div id="status-desc" style="font-size: 14px; color: #aaa;">Notificando parceiros próximos.</div>
+            <div id="status-titulo-modal" style="font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px;">BUSCANDO PILOTO...</div>
+            <div id="status-desc-modal" style="font-size: 14px; color: #aaa;">Notificando parceiros próximos.</div>
 
-            <div id="info-motoboy" style="display:none; margin-top:20px; padding:15px; border:1px solid var(--neon-green); border-radius:10px; background:rgba(255,255,255,0.05);">
-                <div style="font-size: 32px; margin-bottom: 5px;">🏍️</div>
-                <div style="font-size: 10px; color: #aaa; text-transform:uppercase;">Seu Piloto</div>
-                <div id="nome-motoboy" style="font-size: 18px; color: var(--neon-green); font-weight: 800; margin: 5px 0;">--</div>
-                <span id="fone-motoboy" style="color: white; font-size: 14px;">--</span>
-                <button onclick="window.location.reload()" class="btn" style="margin-top:15px; font-size:14px; padding:10px;">FECHAR / NOVO</button>
-            </div>
-
-            <button id="btn-cancelar-pedido" class="btn-cancelar" onclick="cancelarPedido()" style="display:none;">CANCELAR PEDIDO</button>
+            <button id="btn-cancelar-pedido-modal" class="btn-cancelar" onclick="cancelarPedido()">CANCELAR PEDIDO</button>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="modal-justificativa">
+        <div class="modal-content">
+            <div style="font-size: 24px; color: var(--error-color); margin-bottom: 15px;">⚠️ Cancelar Pedido</div>
+            <div id="justificativa-titulo" style="font-size: 16px; color: white; margin-bottom: 10px; font-weight: 600;">Por que deseja cancelar?</div>
+            
+            <textarea id="campo-justificativa" 
+                      placeholder="Ex: Não preciso mais, endereço errado, demora do piloto..."></textarea>
+                      
+            <button onclick="confirmarCancelamentoCliente()" class="btn" style="background-color: var(--error-color); color: white; margin-top: 15px;">
+                CONFIRMAR CANCELAMENTO
+            </button>
+            <button onclick="document.getElementById('modal-justificativa').style.display='none'" class="btn-cancelar" style="border: none; color: #aaa; margin-top: 10px;">
+                Voltar
+            </button>
         </div>
     </div>
 
@@ -444,85 +537,124 @@
             <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
         </div>
 
-        <h2>NOVA SOLICITAÇÃO</h2>
-
-        <!-- SELEÇÃO DE SERVIÇO -->
-        <div class="opcoes-servico">
-            <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
-                <span class="icon">🏍️</span>
-                <div class="card-title">MOTO TÁXI</div>
-                <div class="preco">R$ 10,00 + Km</div>
-            </div>
-            <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
-                <span class="icon">📦</span>
-                <div class="card-title">ENTREGA</div>
-                <div class="preco">R$ 8,50 + Km</div>
-            </div>
-        </div>
-
-        <!-- FORMULÁRIO DE ENDEREÇO REFATORADO -->
-        <div id="form-endereco">
+        <div id="tela-pedido" class="tela ativa">
             
-            <!-- ORIGEM -->
-            <label>📍 Onde vamos buscar? (Origem)</label>
-            <div class="address-container">
-                <div class="row-rua">
-                    <div class="input-rua-wrapper">
-                        <input type="text" id="rua-origem" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
-                        <div id="lista-origem" class="sugestoes-lista"></div>
-                    </div>
-                    <button class="btn-map-icon" onclick="ativarMapa('origem')" title="Marcar no mapa">🗺️</button>
+            <h2>NOVA SOLICITAÇÃO</h2>
+
+            <div class="opcoes-servico">
+                <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
+                    <span class="icon">🏍️</span>
+                    <div class="card-title">MOTO TÁXI</div>
+                    <div class="preco">R$ 10,00 + Km</div>
                 </div>
-                <div class="row-details">
-                    <div class="input-num-wrapper">
-                        <input type="text" id="num-origem" placeholder="Nº" oninput="removerErro(this)">
-                        <span class="erro-msg">Obrigatório</span>
-                    </div>
-                    <div class="input-bairro-wrapper">
-                        <input type="text" id="bairro-origem" placeholder="Bairro">
-                    </div>
+                <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
+                    <span class="icon">📦</span>
+                    <div class="card-title">ENTREGA</div>
+                    <div class="preco">R$ 8,50 + Km</div>
                 </div>
             </div>
 
-            <!-- DESTINO -->
-            <label>🏁 Onde vamos levar? (Destino)</label>
-            <div class="address-container">
-                <div class="row-rua">
-                    <div class="input-rua-wrapper">
-                        <input type="text" id="rua-destino" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
-                        <div id="lista-destino" class="sugestoes-lista"></div>
+            <div id="form-endereco">
+                
+                <label>📍 Onde vamos buscar? (Origem)</label>
+                <div class="address-container">
+                    <div class="row-rua">
+                        <div class="input-rua-wrapper">
+                            <input type="text" id="rua-origem" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
+                            <div id="lista-origem" class="sugestoes-lista"></div>
+                        </div>
+                        <button class="btn-map-icon" onclick="ativarMapa('origem')" title="Marcar no mapa">🗺️</button>
                     </div>
-                    <button class="btn-map-icon" onclick="ativarMapa('destino')" title="Marcar no mapa">🗺️</button>
+                    <div class="row-details">
+                        <div class="input-num-wrapper">
+                            <input type="text" id="num-origem" placeholder="Nº" oninput="removerErro(this)">
+                            <span class="erro-msg">Obrigatório</span>
+                        </div>
+                        <div class="input-bairro-wrapper">
+                            <input type="text" id="bairro-origem" placeholder="Bairro">
+                        </div>
+                    </div>
                 </div>
-                <div class="row-details">
-                    <div class="input-num-wrapper">
-                        <input type="text" id="num-destino" placeholder="Nº" oninput="removerErro(this)">
-                        <span class="erro-msg">Obrigatório</span>
+
+                <label>🏁 Onde vamos levar? (Destino)</label>
+                <div class="address-container">
+                    <div class="row-rua">
+                        <div class="input-rua-wrapper">
+                            <input type="text" id="rua-destino" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
+                            <div id="lista-destino" class="sugestoes-lista"></div>
+                        </div>
+                        <button class="btn-map-icon" onclick="ativarMapa('destino')" title="Marcar no mapa">🗺️</button>
                     </div>
-                    <div class="input-bairro-wrapper">
-                        <input type="text" id="bairro-destino" placeholder="Bairro">
+                    <div class="row-details">
+                        <div class="input-num-wrapper">
+                            <input type="text" id="num-destino" placeholder="Nº" oninput="removerErro(this)">
+                            <span class="erro-msg">Obrigatório</span>
+                        </div>
+                        <div class="input-bairro-wrapper">
+                            <input type="text" id="bairro-destino" placeholder="Bairro">
+                        </div>
                     </div>
                 </div>
+
+                <div id="detalhes-entrega-container">
+                    <label>📦 O que vamos levar?</label>
+                    <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..." oninput="removerErro(this)">
+                    <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
+                </div>
+
             </div>
 
-            <!-- DETALHES DA ENTREGA (CONDICIONAL) -->
-            <div id="detalhes-entrega-container">
-                <label>📦 O que vamos levar?</label>
-                <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..." oninput="removerErro(this)">
-                <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
+            <div id="map"></div>
+            <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no mapa</p>
+
+            <div class="resumo-final" id="resumo"></div>
+
+            <button onclick="pedir()" id="btn-pedir" class="btn" disabled>SELECIONE O SERVIÇO</button>
+        </div>
+        
+        <div id="tela-acompanhamento" class="tela">
+            <h2>ACOMPANHANDO PEDIDO <span id="acompanhamento-id">#--</span></h2>
+            
+            <div id="acompanhamento-status-area" class="motoboy-box" style="border-color: #ffd700; background: rgba(255, 215, 0, 0.1);">
+                <div style="font-size: 36px; margin-bottom: 5px;">⏳</div>
+                <div class="nome" id="acompanhamento-status-titulo" style="color: #ffd700;">BUSCANDO PILOTO...</div>
+                <div class="placa" id="acompanhamento-status-desc" style="font-size: 16px;">Notificando parceiros próximos.</div>
             </div>
 
+            <div id="motoboy-info-box" style="display:none; margin-top: 20px;">
+                <div class="motoboy-box">
+                    <div style="font-size: 32px; margin-bottom: 5px;">🏍️</div>
+                    <div style="font-size: 12px; color: #aaa; text-transform:uppercase;">Seu Piloto</div>
+                    <div class="nome" id="motoboy-nome">--</div>
+                    <div class="placa" id="motoboy-placa">--</div>
+                </div>
+
+                <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp" style="display: none;">
+                    <span style="font-size: 20px;">📞</span>
+                    CHAMAR NO WHATSAPP
+                </a>
+            </div>
+
+            <h3>Detalhes da Viagem</h3>
+            <div id="viagem-origem" class="info-card">
+                <div class="label">📍 Origem</div>
+                <div class="value" id="detalhe-origem">Aguardando...</div>
+            </div>
+            <div id="viagem-destino" class="info-card">
+                <div class="label">🏁 Destino</div>
+                <div class="value" id="detalhe-destino">Aguardando...</div>
+            </div>
+            <div id="viagem-valor" class="info-card" style="text-align:center; border: 1px solid var(--neon-green);">
+                <div class="label">Total Estimado</div>
+                <div class="value" id="detalhe-valor" style="color: var(--neon-green); font-size: 20px;">R$ --</div>
+            </div>
+
+            <button onclick="cancelarPedido()" id="btn-cancelar-acomp" class="btn-cancelar">CANCELAR PEDIDO</button>
+            <button onclick="reiniciarApp()" class="btn" style="background-color: #333; color: #ccc; margin-top: 10px;">FECHAR (apenas se finalizado)</button>
         </div>
 
-        <div id="map"></div>
-        <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no mapa</p>
-
-        <div class="resumo-final" id="resumo"></div>
-
-        <button onclick="pedir()" id="btn-pedir" class="btn" disabled>SELECIONE O SERVIÇO</button>
     </div>
 
-    <!-- SCRIPTS -->
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
     <script>
         // === CONFIGURAÇÃO E DADOS ===
@@ -542,7 +674,7 @@
         let coordsOrigem = null;
         let coordsDestino = null;
         let timeoutBusca = null;
-        let mapMode = null; // 'origem' ou 'destino'
+        let mapMode = null; 
         let markerOrigem = null;
         let markerDestino = null;
         let idPedidoAtual = null;
@@ -553,7 +685,22 @@
             'entrega': { base: 8.50, kmExtra: 2.0, franquia: 3 }
         };
 
-        // === INICIALIZAÇÃO DO MAPA ===
+        // === FUNÇÕES DE GERENCIAMENTO DE TELA ===
+        function mudarTela(novaTelaId) {
+            document.querySelectorAll('.tela').forEach(tela => {
+                tela.classList.remove('ativa');
+            });
+            document.getElementById(novaTelaId).classList.add('ativa');
+        }
+
+        function reiniciarApp() {
+            // Limpa o estado e recarrega para voltar à tela de pedido limpa
+            localStorage.removeItem('idPedidoAtual');
+            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+            window.location.reload(); 
+        }
+
+        // === INICIALIZAÇÃO DO MAPA (Permanece) ===
         const map = L.map('map').setView([LAT_TC, LON_TC], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap',
@@ -602,7 +749,7 @@
             }
         });
 
-        // === FUNÇÕES DE UI ===
+        // === FUNÇÕES DE UI (Permanece) ===
         function ativarMapa(modo) {
             mapMode = modo;
             showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
@@ -629,7 +776,7 @@
             document.getElementById('btn-pedir').disabled = false;
             document.getElementById('btn-pedir').innerText = tipo === 'entrega' ? "SOLICITAR ENTREGA" : "CHAMAR MOTO TÁXI";
             
-            calcularRota(); // Recalcula preço se já tiver rota
+            calcularRota(); 
         }
 
         function logout() {
@@ -648,8 +795,8 @@
             }
         });
 
-        // === LÓGICA DE ENDEREÇO (NOMINATIM) ===
-        function buscarEndereco(query, listId, type) {
+        // LÓGICA DE ENDEREÇO e CÁLCULO DE ROTA (Omitidas para brevidade no comentário, mas mantidas no código)
+        function buscarEndereco(query, listId, type) { 
             const list = document.getElementById(listId);
             if (query.length < 3) {
                 list.style.display = 'none';
@@ -659,16 +806,13 @@
             clearTimeout(timeoutBusca);
             timeoutBusca = setTimeout(async () => {
                 try {
-                    // Busca restrita ao Brasil e priorizando área próxima (viewbox)
                     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Três Corações")}&addressdetails=1&limit=5&countrycodes=br`;
-                    
                     const res = await fetch(url);
                     const data = await res.json();
 
                     list.innerHTML = '';
                     if (data.length > 0) {
                         data.forEach(item => {
-                            // Filtro simples para manter dentro da cidade (opcional)
                             const rua = item.address.road || item.address.pedestrian || item.display_name.split(',')[0];
                             const bairro = item.address.suburb || item.address.neighbourhood || "Centro";
 
@@ -680,17 +824,15 @@
                                 document.getElementById(`rua-${type}`).value = rua;
                                 document.getElementById(`bairro-${type}`).value = bairro;
                                 
-                                // Salva coords
                                 const coords = { lat: parseFloat(item.lat), lon: parseFloat(item.lon) };
                                 if(type === 'origem') coordsOrigem = coords;
                                 else coordsDestino = coords;
 
                                 list.style.display = 'none';
                                 
-                                // Pula para o número
                                 const numInput = document.getElementById(`num-${type}`);
                                 numInput.focus();
-                                numInput.classList.add('erro'); // Visual hint que precisa preencher
+                                numInput.classList.add('erro'); 
                                 setTimeout(() => numInput.classList.remove('erro'), 500);
 
                                 calcularRota();
@@ -704,10 +846,9 @@
                 } catch (e) {
                     console.error("Erro busca", e);
                 }
-            }, 500); // Debounce
+            }, 500); 
         }
 
-        // === CÁLCULO DE ROTA (OSRM) ===
         async function calcularRota() {
             if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
 
@@ -716,7 +857,6 @@
             resumo.innerText = "Calculando...";
 
             try {
-                // OSRM Public API
                 const url = `https://router.project-osrm.org/route/v1/driving/${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}?overview=false`;
                 const res = await fetch(url);
                 const json = await res.json();
@@ -725,11 +865,9 @@
                 if (json.routes && json.routes.length > 0) {
                     distanciaKm = json.routes[0].distance / 1000;
                 } else {
-                    // Fallback distância linha reta
                     distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
                 }
 
-                // Pricing
                 const regra = precos[servicoSelecionado];
                 const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
                 const total = regra.base + (kmCobrado * regra.kmExtra);
@@ -739,7 +877,6 @@
                     <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
                 `;
                 
-                // Salva valor global para envio
                 window.valorCalculado = total;
 
             } catch (e) {
@@ -747,7 +884,7 @@
                 resumo.innerText = "Erro ao calcular rota.";
             }
         }
-
+        
         function calcDistanciaReta(c1, c2) {
             const R = 6371; 
             const dLat = (c2.lat - c1.lat) * Math.PI / 180;
@@ -759,64 +896,36 @@
             return R * c;
         }
 
-        // === ENVIO DE PEDIDO ===
+        // === ENVIO DE PEDIDO (Alterada para usar a nova tela) ===
         async function pedir() {
-            if (!servicoSelecionado) {
-                showToast("Selecione Moto Táxi ou Entrega", "error");
-                return;
-            }
-
-            // 1. Coletar dados
+            // ... (Validação e montagem de dados idêntica à anterior) ...
+            if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
             const ruaOrigem = document.getElementById('rua-origem').value;
             const numOrigem = document.getElementById('num-origem').value;
             const bairroOrigem = document.getElementById('bairro-origem').value;
-            
             const ruaDestino = document.getElementById('rua-destino').value;
             const numDestino = document.getElementById('num-destino').value;
             const bairroDestino = document.getElementById('bairro-destino').value;
-
             const detalhes = document.getElementById('detalhes-entrega').value;
 
-            // 2. Validação Rigorosa
             let erro = false;
-
             if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
-            if (!numOrigem.trim()) { 
-                document.getElementById('num-origem').classList.add('erro'); 
-                erro = true; 
-            }
-            
+            if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
             if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
-            if (!numDestino.trim()) { 
-                document.getElementById('num-destino').classList.add('erro'); 
-                erro = true; 
-            }
-
-            if (servicoSelecionado === 'entrega' && !detalhes.trim()) {
-                document.getElementById('detalhes-entrega').classList.add('erro');
-                showToast("Descreva o que vamos entregar!", "error");
-                return;
-            }
-
-            if (erro) {
-                showToast("⚠️ Preencha o NÚMERO dos endereços!", "error");
-                return;
-            }
-
-            // 3. Montar Strings para o Backend (Mantendo compatibilidade)
-            // O backend espera "origem" e "destino" como strings completas
+            if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
+            if (servicoSelecionado === 'entrega' && !detalhes.trim()) { document.getElementById('detalhes-entrega').classList.add('erro'); showToast("Descreva o que vamos entregar!", "error"); return; }
+            if (erro) { showToast("⚠️ Preencha o NÚMERO dos endereços!", "error"); return; }
+            
             const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
             const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
-            
-            // Adicionar detalhes da entrega ao destino se for entrega
             const strDestinoFinal = servicoSelecionado === 'entrega' 
                 ? `${strDestino} (ITEM: ${detalhes})` 
                 : strDestino;
+            // ... (Fim da validação) ...
 
-            // 4. Enviar
+
+            // 1. Mostrar o modal de carregamento
             document.getElementById('modal-busca').style.display = 'flex';
-            document.getElementById('btn-cancelar-pedido').style.display = 'block';
-            document.getElementById('area-spinner').style.display = 'block';
 
             try {
                 const body = {
@@ -837,67 +946,207 @@
                 
                 if (json.success) {
                     idPedidoAtual = json.id;
-                    showToast("Solicitação enviada!", "success");
+                    localStorage.setItem('idPedidoAtual', idPedidoAtual); 
+                    
+                    // 2. Preencher a nova tela com os dados iniciais
+                    document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
+                    document.getElementById('detalhe-origem').innerText = strOrigem;
+                    document.getElementById('detalhe-destino').innerText = strDestino;
+                    document.getElementById('detalhe-valor').innerText = `R$ ${window.valorCalculado.toFixed(2).replace('.', ',')}`;
+
+                    // 3. Trocar para a tela de Acompanhamento e fechar o modal
+                    mudarTela('tela-acompanhamento');
+                    document.getElementById('modal-busca').style.display = 'none';
+
+                    // 4. Iniciar verificação de status
                     intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+                    showToast("Solicitação enviada. Buscando piloto...", "info");
+
                 } else {
                     throw new Error(json.message);
                 }
 
             } catch (e) {
                 document.getElementById('modal-busca').style.display = 'none';
-                showToast("Erro ao enviar: " + e.message, "error");
+                showToast("Erro ao enviar pedido: " + e.message, "error");
             }
         }
 
+        // === VERIFICAÇÃO DE STATUS (Mantida) ===
         async function verificarStatus(id) {
             try {
                 const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
                 const data = await res.json();
+                const pedido = data.pedido;
                 
-                if (data.success && data.pedido.status === 'aceita') {
-                    clearInterval(intervaloVerificacao);
-                    
-                    document.getElementById('area-spinner').style.display = 'none';
-                    document.getElementById('btn-cancelar-pedido').style.display = 'none';
-                    
-                    document.getElementById('status-titulo').innerText = "FALCÃO A CAMINHO!";
-                    document.getElementById('status-titulo').style.color = "var(--neon-green)";
-                    document.getElementById('status-desc').innerText = "Seu piloto está indo até você.";
-                    
-                    document.getElementById('info-motoboy').style.display = 'block';
-                    document.getElementById('nome-motoboy').innerText = data.pedido.nome_motoboy || "Piloto Falcões";
-                    document.getElementById('fone-motoboy').innerText = data.pedido.telefone_motoboy || "";
-                    
-                    // Vibrar celular se suportado
-                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                if (!data.success || !pedido) {
+                    // Trata erro de API
+                    console.error("Erro ao obter status. Tentando novamente...");
+                    return;
                 }
-            } catch (e) { console.error(e); }
-        }
 
-        async function cancelarPedido() {
-            if(!idPedidoAtual) return;
-            if(!confirm("Deseja realmente cancelar?")) return;
+                // Elementos da tela de acompanhamento
+                const statusTitulo = document.getElementById('acompanhamento-status-titulo');
+                const statusDesc = document.getElementById('acompanhamento-status-desc');
+                const statusArea = document.getElementById('acompanhamento-status-area');
+                const motoboyBox = document.getElementById('motoboy-info-box');
+                const btnWpp = document.getElementById('btn-whatsapp-motoboy');
+                const btnCancelar = document.getElementById('btn-cancelar-acomp');
+                
+                // Limpa quaisquer classes de cor
+                statusArea.style.borderColor = '#ffd700';
+                statusArea.style.background = 'rgba(255, 215, 0, 0.1)';
+                statusTitulo.style.color = '#ffd700';
+                
+                motoboyBox.style.display = 'none';
+                btnWpp.style.display = 'none';
 
-            try {
-                await fetch(`${MEU_IP}/cancelar-pedido`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id: idPedidoAtual, motivo: "Cancelado pelo App" })
-                });
-                window.location.reload();
-            } catch (e) {
-                showToast("Erro ao cancelar", "error");
+                if (pedido.status === 'aceita') {
+                    // Pedido Aceito!
+                    statusArea.style.borderColor = 'var(--neon-green)';
+                    statusArea.style.background = 'rgba(0, 230, 64, 0.1)';
+                    statusTitulo.style.color = 'var(--neon-green)';
+                    statusTitulo.innerText = "FALCÃO A CAMINHO!";
+                    statusDesc.innerText = "Seu piloto está indo até você.";
+                    
+                    document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
+                    document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
+                    motoboyBox.style.display = 'block';
+
+                    // Lógica do botão WHATSAPP
+                    if (pedido.telefone_motoboy) {
+                        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, ''); 
+                        const numeroInternacional = foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo; 
+                        
+                        const textoWpp = encodeURIComponent(`Olá, sou o cliente do pedido #${id} no app Falcões. Gostaria de confirmar a sua chegada.`);
+                        const linkWpp = `https://wa.me/${numeroInternacional}?text=${textoWpp}`;
+                        
+                        btnWpp.href = linkWpp;
+                        btnWpp.style.display = 'flex';
+                    }
+
+                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                    
+                } else if (pedido.status === 'finalizada') {
+                    // Corrida finalizada
+                    clearInterval(intervaloVerificacao);
+                    statusTitulo.innerText = "PEDIDO CONCLUÍDO!";
+                    statusDesc.innerText = `Valor pago: R$ ${pedido.valor.toFixed(2).replace('.', ',')}`;
+                    statusArea.style.borderColor = 'blue'; 
+                    statusArea.style.background = 'rgba(0, 0, 255, 0.1)';
+                    statusTitulo.style.color = 'blue';
+                    btnCancelar.style.display = 'none';
+                    localStorage.removeItem('idPedidoAtual');
+
+                } else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
+                    // Pedido cancelado/expirado
+                    clearInterval(intervaloVerificacao);
+                    statusTitulo.innerText = "PEDIDO CANCELADO!";
+                    statusDesc.innerText = `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado!O motoboy teve um imprevisto.    Pedimos desculpas!Por favor,   faça um novo pedido. Obrigado!"}`;
+                    statusArea.style.borderColor = 'var(--error-color)';
+                    statusArea.style.background = 'rgba(255, 0, 0, 0.1)';
+                    statusTitulo.style.color = 'var(--error-color)';
+                    btnCancelar.style.display = 'none';
+                    localStorage.removeItem('idPedidoAtual');
+                    showToast("Pedido cancelado. Use o botão 'FECHAR' abaixo para voltar.", "error", 5000);
+                }
+
+            } catch (e) { 
+                console.error("Erro na verificação de status:", e); 
             }
         }
+        
+        // Função para continuar acompanhando o pedido se o usuário recarregar a página
+        function checkPersistedOrder() {
+            const persistedId = localStorage.getItem('idPedidoAtual');
+            if (persistedId) {
+                idPedidoAtual = persistedId;
+                
+                // Mudar para a tela de acompanhamento e iniciar a verificação
+                mudarTela('tela-acompanhamento');
+                
+                // Tenta buscar o status imediatamente para preencher os dados
+                verificarStatus(idPedidoAtual); 
+                intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+            } else {
+                // Se não houver pedido, garante que a tela inicial esteja ativa
+                mudarTela('tela-pedido');
+            }
+        }
+        
+        // Chama a função ao carregar a página
+        window.onload = checkPersistedOrder;
+
+
+        // === FUNÇÕES DE CANCELAMENTO ATUALIZADAS PARA USAR MODAL DE JUSTIFICATIVA ===
+        function cancelarPedido() {
+            if(!idPedidoAtual) {
+                showToast("Nenhum pedido ativo para cancelar.", "error");
+                return;
+            }
+
+            // 1. Abre o modal de justificativa
+            document.getElementById('modal-justificativa').style.display = 'flex';
+            document.getElementById('campo-justificativa').value = ''; // Limpa campo
+            document.getElementById('campo-justificativa').focus();
+        }
+
+        async function confirmarCancelamentoCliente() {
+            const motivo = document.getElementById('campo-justificativa').value.trim();
+            
+            if (motivo.length < 5) {
+                showToast("Dê uma breve justificativa (mínimo 5 caracteres).", "error");
+                return;
+            }
+
+            // Fecha o modal de justificativa e abre o de carregamento/status
+            document.getElementById('modal-justificativa').style.display = 'none';
+            document.getElementById('modal-busca').style.display = 'flex';
+            document.getElementById('status-titulo-modal').innerText = "CANCELANDO PEDIDO...";
+            document.getElementById('status-desc-modal').innerText = "Enviando justificativa: " + motivo.substring(0, 30) + "...";
+            document.getElementById('btn-cancelar-pedido-modal').style.display = 'none';
+
+            try {
+                const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        id: idPedidoAtual, 
+                        motivo: `[CLIENTE] ${motivo}` 
+                    })
+                });
+                
+                const json = await res.json();
+
+                if (json.success) {
+                    clearInterval(intervaloVerificacao);
+                    verificarStatus(idPedidoAtual); 
+                    showToast("Pedido cancelado. O piloto foi notificado.", "success", 5000);
+                } else {
+                     throw new Error(json.message || "Erro desconhecido ao cancelar.");
+                }
+
+            } catch (e) {
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Falha ao cancelar: " + e.message, "error");
+            } finally {
+                 // Limpa o campo de justificativa para o próximo uso
+                 document.getElementById('campo-justificativa').value = '';
+            }
+        }
+
 
         // Toast Helper
         function showToast(msg, type, duration = 3000) {
             const container = document.getElementById('toast-container');
-            container.innerHTML = ''; // Limpa anteriores
             const div = document.createElement('div');
             div.className = `toast ${type}`;
             div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
             container.appendChild(div);
+            // Remove toasts antigos para manter apenas 1 ou 2 visíveis
+            while(container.children.length > 3) {
+                container.firstChild.remove();
+            }
             setTimeout(() => div.remove(), duration);
         }
 
