@@ -5,65 +5,58 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Instalar Falcões — App</title>
   <link rel="manifest" href="/manifest.json" />
-  <link rel="icon" href="/assets/logo.png" />
-  <meta name="theme-color" content="#00ff55">
+  <link rel="icon" href="/assets/icon-192.png" />
+  <meta name="theme-color" content="#00ff46">
+
+  <!-- Use Google Fonts (padrão online) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
 
   <style>
-    /* Estilo inspirado no seu app: preto + verde neon */
     :root{
       --bg:#050505;
-      --card:#0f0f10;
-      --neon:#00ff46;
-      --neon-2:#00e65a;
-      --muted:#9ea299;
-      --surface: rgba(255,255,255,0.03);
+      --panel:#0d0d0e;
+      --neon1:#00ff46;
+      --neon2:#00e65a;
+      --muted:#9aa29a;
+      --glass: rgba(255,255,255,0.035);
     }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#030303 0%, #070707 100%);color:#e9efe9}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:
+      radial-gradient(1200px 600px at 10% 10%, rgba(0,255,70,0.03), transparent 6%),
+      linear-gradient(180deg,#040404 0%, #070707 100%);color:#eafbf0;-webkit-font-smoothing:antialiased}
     .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
     .card{
-      width:100%;max-width:520px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius:18px;
-      padding:28px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 20px rgba(0,255,70,0.03) inset;
-      text-align:center;
-      border:1px solid rgba(0,255,70,0.06);
-      position:relative;
-      overflow:hidden;
+      width:100%;max-width:560px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:20px;padding:30px;box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(0,255,70,0.04) inset;
+      border:1px solid rgba(0,255,70,0.06);position:relative;overflow:hidden;text-align:center;
+      transform:translateY(0);transition:transform .28s cubic-bezier(.2,.9,.2,1);
     }
-    .glow {
-      position:absolute;inset:-30%;filter:blur(60px);opacity:0.12;
-      background: radial-gradient(circle at 30% 20%, rgba(0,255,70,0.18), transparent 8%),
-                  radial-gradient(circle at 80% 80%, rgba(0,160,255,0.08), transparent 15%);
-      pointer-events:none;
-    }
-    .logo{
-      width:96px;height:96px;border-radius:18px;margin:0 auto 12px;
-      display:flex;align-items:center;justify-content:center;
-      background:linear-gradient(135deg,var(--neon),var(--neon-2));
-      box-shadow: 0 6px 30px rgba(0,255,70,0.14);
-    }
-    .logo img{max-width:80%;max-height:80%;display:block;border-radius:8px}
-    h1{margin:6px 0 6px;font-size:22px;color:#e6ffe6;letter-spacing:0.6px}
-    p{margin:0 0 18px;color:var(--muted);line-height:1.4}
+    .card:hover{transform:translateY(-6px)}
+    .bg-glow{position:absolute;inset:-20%;filter:blur(80px);opacity:0.1;pointer-events:none;background:
+      radial-gradient(circle at 50% 20%, rgba(0,255,70,0.22), transparent 12%),
+      radial-gradient(circle at 10% 80%, rgba(0,160,255,0.06), transparent 18%);}
+    .logo-wrap{width:110px;height:110px;margin:0 auto 14px;border-radius:22px;
+      background:linear-gradient(135deg,var(--neon1),var(--neon2));display:flex;align-items:center;justify-content:center;
+      box-shadow:0 10px 40px rgba(0,255,70,0.14), 0 2px 6px rgba(0,0,0,0.6);position:relative}
+    .logo-wrap .border{position:absolute;inset:-8px;border-radius:26px;background:transparent;box-shadow:0 0 28px rgba(0,255,70,0.12);filter:blur(6px);opacity:.9}
+    .logo{width:72px;height:72px;border-radius:10px;object-fit:cover;box-shadow:0 6px 18px rgba(0,0,0,0.45)}
+    h1{margin:8px 0 6px;font-size:24px;color:#eaffef;font-weight:800;letter-spacing:.3px}
+    p.lead{margin:0 0 18px;color:var(--muted);line-height:1.5;font-size:15px}
+    .actions{display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;margin-top:6px}
     .btn{
-      display:inline-block;padding:12px 22px;border-radius:12px;background:linear-gradient(180deg,var(--neon),var(--neon-2));
-      color:#04140a;text-decoration:none;font-weight:800;cursor:pointer;border:none;
-      box-shadow: 0 10px 30px rgba(0,255,70,0.12), 0 3px 0 rgba(0,0,0,0.35) inset;
-      transition: transform .12s ease, box-shadow .12s ease;
-      font-size:16px;
+      display:inline-block;padding:12px 28px;border-radius:14px;background:linear-gradient(180deg,var(--neon1),var(--neon2));
+      color:#00160b;text-decoration:none;font-weight:800;cursor:pointer;border:none;font-size:16px;
+      box-shadow:0 14px 40px rgba(0,255,70,0.12), 0 4px 0 rgba(0,0,0,0.35) inset;transition:transform .12s, box-shadow .12s;
     }
     .btn:active{transform:translateY(1px)}
-    .btn.secondary{
-      background:transparent;color:var(--neon);border:1px solid rgba(0,255,70,0.12);
-      box-shadow:none;font-weight:700;padding:10px 18px;margin-top:12px;
-    }
-    .note{font-size:13px;color:#9ea299;margin-top:14px}
-    .hidden{display:none !important}
-    .status{margin-top:12px;font-size:13px;color:#9ea299}
-    /* responsividade */
-    @media(max-width:420px){
-      .card{padding:20px;border-radius:14px}
+    .btn.secondary{background:transparent;color:var(--neon1);border-radius:12px;padding:10px 22px;border:1px solid rgba(0,255,70,0.08);box-shadow:none}
+    .note{font-size:13px;color:var(--muted);margin-top:14px}
+    .status{margin-top:10px;font-size:13px;color:var(--muted)}
+    /* nice underline effect under title */
+    .underline{height:4px;width:72px;margin:12px auto 0;border-radius:24px;background:linear-gradient(90deg,var(--neon1),var(--neon2));box-shadow:0 6px 20px rgba(0,255,70,0.12)}
+    /* small devices */
+    @media(max-width:460px){
+      .card{padding:20px;border-radius:16px}
+      .logo-wrap{width:92px;height:92px}
       h1{font-size:20px}
     }
   </style>
@@ -71,21 +64,25 @@
 <body>
   <div class="wrap">
     <div class="card" role="main" aria-labelledby="titulo">
-      <div class="glow" aria-hidden="true"></div>
+      <div class="bg-glow" aria-hidden="true"></div>
 
-      <div class="logo" aria-hidden="true">
-        <!-- Altere o src abaixo para o seu logo se quiser -->
-        <img src="/assets/logo.png" alt="Falcões" />
+      <div class="logo-wrap" aria-hidden="true">
+        <div class="border" aria-hidden="true"></div>
+        <!-- use seu logo real aqui -->
+        <img class="logo" src="/assets/logo.png" alt="Falcões" onerror="this.src='/assets/icon-192.png'">
       </div>
 
       <h1 id="titulo">Instalar Falcões</h1>
-      <p>Abra o app como se fosse nativo. Quando o sistema pedir, toque em <strong>Instalar</strong>.</p>
+      <div class="underline" aria-hidden="true"></div>
 
-      <button id="btnInstall" class="btn hidden" aria-hidden="true" aria-label="Instalar aplicativo">Instalar</button>
-      <div style="height:12px"></div>
-      <a id="openSite" class="btn secondary" href="/" style="text-decoration:none">Abrir site</a>
+      <p class="lead">Abra o app como se fosse nativo. Quando o sistema pedir, toque em <strong>Instalar</strong>.</p>
 
-      <div class="note" id="note">Se o instalador não aparecer, toque em "Instalar" acima ou use "Adicionar à tela inicial" no menu do navegador.</div>
+      <div class="actions">
+        <button id="btnInstall" class="btn" aria-hidden="true">Instalar</button>
+        <a id="openSite" class="btn secondary" href="/" style="text-decoration:none">Abrir site</a>
+      </div>
+
+      <div class="note" id="note">Se o instalador não aparecer, use "Adicionar à tela inicial" no menu do navegador.</div>
       <div class="status" id="status" aria-live="polite"></div>
     </div>
   </div>
@@ -94,17 +91,15 @@
     const statusEl = document.getElementById('status');
     function setStatus(t){ console.log(t); statusEl.textContent = t; }
 
-    // registrar service worker
+    // register SW asap
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js').then(reg=>{
         setStatus('Service worker registrado.');
       }).catch(err=>{
-        console.warn('SW registro falhou', err);
+        console.warn('SW reg falhou', err);
         setStatus('Falha ao registrar service worker.');
       });
-    } else {
-      setStatus('Service worker não suportado.');
-    }
+    } else setStatus('Service worker não suportado.');
 
     let deferredPrompt = null;
     const btn = document.getElementById('btnInstall');
@@ -113,42 +108,40 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      btn.classList.remove('hidden');
+      // show button
       btn.setAttribute('aria-hidden','false');
-      setStatus('Pronto para instalar. Aguarde o prompt ou toque em Instalar.');
-      // tenta acionar automaticamente com um clique programático
-      setTimeout(()=> { try{ btn.click(); }catch(e){ console.warn(e); } }, 700);
+      btn.style.display = 'inline-block';
+      setStatus('Pronto para instalar — toque em Instalar.');
     });
 
     btn.addEventListener('click', async () => {
       setStatus('Abrindo prompt de instalação...');
-      if(!deferredPrompt){
-        setStatus('Prompt não disponível. Recarregue a página.');
+      if (!deferredPrompt) {
+        setStatus('Prompt indisponível. Recarregue a página ou toque em Abrir site.');
         return;
       }
       deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
-      console.log('install outcome', choice);
-      if(choice.outcome === 'accepted') setStatus('Instalação aceita!');
+      if (choice.outcome === 'accepted') setStatus('Instalação aceita!');
       else setStatus('Instalação cancelada.');
       deferredPrompt = null;
-      btn.classList.add('hidden');
+      // hide button after choice
+      btn.style.display = 'none';
       btn.setAttribute('aria-hidden','true');
     });
 
+    // iOS fallback
     const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
     const isInStandalone = ('standalone' in window.navigator) && window.navigator.standalone;
     if (isIos && !isInStandalone) {
       note.innerHTML = 'No iPhone: toque em <strong>Compartilhar → Adicionar à Tela de Início</strong>.';
-      btn.classList.remove('hidden'); btn.setAttribute('aria-hidden','false');
+      btn.style.display = 'inline-block';
+      btn.setAttribute('aria-hidden','false');
       setStatus('iOS detectado — siga instruções para instalar.');
     }
 
-    setTimeout(()=> {
-      if(!deferredPrompt && !isIos) {
-        setStatus('Aguardando evento de instalação (beforeinstallprompt).');
-      }
-    }, 3000);
+    // hide button by default until event
+    btn.style.display = 'none';
   </script>
 </body>
 </html>
