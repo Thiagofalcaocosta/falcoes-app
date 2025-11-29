@@ -72,6 +72,19 @@
             margin-top: 10px;
         }
     </style>
+
+    <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("/service-worker.js")
+    .then(() => console.log("SW registrado!"))
+    .catch(err => console.log("Erro SW:", err));
+}
+</script>
+
+    <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00e640">
+>>>>>>> fcc90e8 (Atualizações)
 </head>
 <body>
 
@@ -431,4 +444,6 @@
         setInterval(verificarEstado, 5000);
     </script>
 </body>
+
 </html>
+>>>>>>> fcc90e8 (Atualizações)

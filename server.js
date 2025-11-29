@@ -37,48 +37,52 @@ const pool = new Pool({
 const initDB = async () => {
     try {
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS usuarios (
-                id SERIAL PRIMARY KEY,
-                nome VARCHAR(100),
-                email VARCHAR(100) UNIQUE,
-                senha VARCHAR(100),
-                tipo VARCHAR(20),
-                telefone VARCHAR(20),
-                placa VARCHAR(20),
-                modelo_moto VARCHAR(50),
-                cor_moto VARCHAR(30),
-                categoria VARCHAR(50),
-                aprovado BOOLEAN DEFAULT false,
-                bloqueado_ate TIMESTAMP,
-                foto_cnh VARCHAR(255),
-                foto_moto VARCHAR(255),
-                foto_rosto VARCHAR(255)
-            );
-        `);
+
+CREATE TABLE IF NOT EXISTS usuarios (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    senha VARCHAR(100),
+    tipo VARCHAR(20),
+    telefone VARCHAR(20),
+    placa VARCHAR(20),
+    modelo_moto VARCHAR(50),
+    cor_moto VARCHAR(30),
+    categoria VARCHAR(50),
+    aprovado BOOLEAN DEFAULT false,
+    bloqueado_ate TIMESTAMP,
+    foto_cnh VARCHAR(255),
+    foto_moto VARCHAR(255),
+    foto_rosto VARCHAR(255)
+);
+`);
+
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS corridas (
-                id SERIAL PRIMARY KEY,
-                cliente_id INTEGER REFERENCES usuarios(id),
-                motoboy_id INTEGER REFERENCES usuarios(id),
-                origem VARCHAR(255),
-                destino VARCHAR(255),
-                distancia_km DECIMAL(10,2),
-                valor DECIMAL(10,2),
-                status VARCHAR(50) DEFAULT 'pendente',
-                tipo_servico VARCHAR(50),
-                motivo_cancelamento TEXT,
-                data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS mensagens (
-                id SERIAL PRIMARY KEY,
-                corrida_id INTEGER REFERENCES corridas(id),
-                remetente VARCHAR(20),
-                texto TEXT,
-                data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
+CREATE TABLE IF NOT EXISTS corridas (
+    id SERIAL PRIMARY KEY,
+    cliente_id INTEGER REFERENCES usuarios(id),
+    motoboy_id INTEGER REFERENCES usuarios(id),
+    origem VARCHAR(255),
+    destino VARCHAR(255),
+    distancia_km DECIMAL(10,2),
+    valor DECIMAL(10,2),
+    status VARCHAR(50) DEFAULT 'pendente',
+    tipo_servico VARCHAR(50),
+    motivo_cancelamento TEXT,
+    data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+`);
+await pool.query(`
+CREATE TABLE IF NOT EXISTS mensagens (
+    id SERIAL PRIMARY KEY,
+    corrida_id INTEGER REFERENCES corridas(id),
+    remetente VARCHAR(20),
+    texto TEXT,
+    data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+`);
+
+ fcc90e8 (Atualizações)
         console.log('✅ Tabelas Verificadas/Criadas!');
     } catch (err) { console.error('❌ Erro ao criar tabelas:', err); }
 };
@@ -306,4 +310,6 @@ app.delete('/admin/remover/:id', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
+
 });
+ fcc90e8 (Atualizações)

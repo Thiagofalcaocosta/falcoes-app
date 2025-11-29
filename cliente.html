@@ -495,7 +495,20 @@
     }
 }
 </script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("/service-worker.js")
+    .then(() => console.log("SW registrado!"))
+    .catch(err => console.log("Erro SW:", err));
+}
+</script>
+
 <link rel="stylesheet" href="/index.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00e640">
+>>>>>>> fcc90e8 (Atualizações)
 </head>
 <body>
 
@@ -1153,4 +1166,6 @@
     </script>
 <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>
+>>>>>>> fcc90e8 (Atualizações)
