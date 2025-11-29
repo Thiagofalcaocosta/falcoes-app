@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Instalar Falcões — App</title>
 
-  <!-- link pro manifest (já existente no seu projeto) -->
   <link rel="manifest" href="/manifest.json" />
-
-  <!-- ícone pequeno pro navegador (opcional) -->
   <link rel="icon" href="/assets/icon-192.png" />
+  <meta name="theme-color" content="#15aabf">
 
   <style>
     :root{
@@ -28,76 +26,111 @@
     .btn.secondary{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.06)}
     .note{font-size:13px;color:#9aa0a6;margin-top:12px}
     .hidden{display:none !important}
+    .status{margin-top:14px;font-size:13px;color:#9aa0a6}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <div class="icon">F</div>
-      <h1>Instalar Falcões</h1>
+    <div class="card" role="main" aria-labelledby="titulo">
+      <div class="icon" aria-hidden="true">F</div>
+      <h1 id="titulo">Instalar Falcões</h1>
       <p>Instale o app no seu celular para abrir como um aplicativo nativo. Toque em "Instalar" quando aparecer o botão do sistema.</p>
 
-      <!-- botão visível para o usuário (caso o prompt não abra automaticamente) -->
-      <button id="btnInstall" class="btn hidden">Instalar</button>
+      <button id="btnInstall" class="btn hidden" aria-hidden="true" aria-label="Instalar aplicativo">Instalar</button>
       <div style="height:14px"></div>
       <a id="openSite" class="btn secondary" href="/" style="text-decoration:none">Abrir site</a>
 
-      <div class="note">Se o instalador não aparecer, toque em "Instalar" acima ou use "Adicionar à tela inicial" no menu do navegador.</div>
+      <div class="note" id="note">Se o instalador não aparecer, toque em "Instalar" acima ou use "Adicionar à tela inicial" no menu do navegador.</div>
+      <div class="status" id="status" aria-live="polite"></div>
     </div>
   </div>
 
+  <noscript>
+    <div style="position:fixed;left:8px;right:8px;bottom:12px;padding:10px;background:#111;color:#fff;border-radius:8px;text-align:center;font-size:14px">
+      O JavaScript está desabilitado. A instalação via PWA precisa de JavaScript para funcionar.
+    </div>
+  </noscript>
+
   <script>
-    // Guarda o evento para disparar prompt depois
+    // debug
+    const statusEl = document.getElementById('status');
+    function setStatus(text){ console.log(text); statusEl.textContent = text; }
+
+    // register SW asap
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js').then(reg=>{
+        setStatus('Service worker registrado.');
+        console.log('SW registered', reg);
+      }).catch(err=>{
+        console.warn('SW reg falhou', err);
+        setStatus('Falha ao registrar service worker.');
+      });
+    } else {
+      setStatus('Service worker não suportado neste navegador.');
+    }
+
     let deferredPrompt = null;
     const btn = document.getElementById('btnInstall');
+    const note = document.getElementById('note');
 
     window.addEventListener('beforeinstallprompt', (e) => {
-      // impede o prompt automático padrão
-      e.preventDefault();
+      console.log('beforeinstallprompt event fired');
+      e.preventDefault(); // evita prompt automático padrão
       deferredPrompt = e;
 
-      // mostra botão
+      // mostra botão e atualiza atributos para acessibilidade
       btn.classList.remove('hidden');
+      btn.setAttribute('aria-hidden', 'false');
+      setStatus('Pronto para instalar. Aguarde o prompt do sistema ou toque em Instalar.');
 
-      // tenta acionar automaticamente depois de um pequeno delay (permite que o usuário veja a página)
-      setTimeout(() => {
-        // clicar programaticamente no botão para abrir o prompt (isso conta como interação)
-        btn.click();
+      // tenta abrir automaticamente após pequeno delay simulando interação do usuário
+      setTimeout(()=> {
+        try {
+          // clicar o botão programaticamente; se bloqueado, usuário verá o botão e poderá tocar
+          btn.click();
+        } catch (err) {
+          console.warn('Clique programático bloqueado', err);
+        }
       }, 700);
     });
 
     btn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      // Mostrar o prompt nativo
+      setStatus('Abrindo prompt de instalação...');
+      if (!deferredPrompt) {
+        setStatus('Prompt não disponível no momento. Tente novamente ou recarregue a página.');
+        return;
+      }
       deferredPrompt.prompt();
-      // Aguarda escolha do usuário
       const choice = await deferredPrompt.userChoice;
-      console.log('Resultado de instalação:', choice.outcome);
-      // Limpa
+      console.log('Resultado de instalação:', choice);
+      if (choice.outcome === 'accepted') {
+        setStatus('Instalação aceita pelo usuário.');
+      } else {
+        setStatus('Instalação cancelada pelo usuário.');
+      }
+      // cleanup
       deferredPrompt = null;
       btn.classList.add('hidden');
+      btn.setAttribute('aria-hidden','true');
     });
 
-    // Fallback: tenta registrar service worker caso não esteja
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistration().then(reg => {
-        if (!reg) {
-          navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
-        }
-      }).catch(()=>{});
-    }
-
-    // Experiência extra: se for iOS (sem beforeinstallprompt), mostrar instruções
+    // iOS fallback: instruções para adicionar à tela inicial
     const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
     const isInStandalone = ('standalone' in window.navigator) && window.navigator.standalone;
-
     if (isIos && !isInStandalone) {
-      // mostra instrução visual simples no lugar do botão
-      const note = document.querySelector('.note');
       note.innerHTML = 'No iPhone: toque em <strong>Compartilhar → Adicionar à Tela de Início</strong> para instalar.';
-      // mostrar ainda o botão para permitir clique manual (não disparam install prompt no iOS)
       btn.classList.remove('hidden');
+      btn.setAttribute('aria-hidden','false');
+      setStatus('iOS detectado — seguir instruções para adicionar à tela inicial.');
     }
+
+    // se o beforeinstallprompt nunca acontecer, mostrar instrução extra depois de alguns segundos
+    setTimeout(()=> {
+      if (!deferredPrompt && !isIos) {
+        note.innerHTML = 'Se o instalador não aparecer automaticamente, toque em "Abrir site" e recarregue, ou use as opções do navegador (menu) → Adicionar à tela inicial.';
+        setStatus('Ainda aguardando o evento de instalação (beforeinstallprompt).');
+      }
+    }, 3500);
   </script>
 </body>
 </html>
