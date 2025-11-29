@@ -15,6 +15,11 @@ app.use(cors());
 app.use(express.static(path.join(__dirname)));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
+// COLE A ROTA /install APÓS AQUI
+app.get('/install', (req, res) => {
+  res.sendFile(path.join(__dirname, 'install.html'));
+});
+
 // 2. LOG DE PEDIDOS (Para a gente ver nos logs o que está acontecendo)
 app.use((req, res, next) => {
     console.log(`--> Recebi pedido para: ${req.url}`);

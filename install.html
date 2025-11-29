@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Instalar Falcões — App</title>
+
+  <!-- link pro manifest (já existente no seu projeto) -->
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- ícone pequeno pro navegador (opcional) -->
+  <link rel="icon" href="/assets/icon-192.png" />
+
+  <style>
+    :root{
+      --bg:#0b0b0d;
+      --card:#111116;
+      --accent:#15aabf;
+      --white:#f6f6f8;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#05050a 0%, #0e0e12 100%);color:var(--white)}
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:28px}
+    .card{width:100%;max-width:520px;background:var(--card);border-radius:14px;padding:28px;box-shadow:0 8px 28px rgba(0,0,0,.6);text-align:center}
+    h1{margin:0 0 8px;font-size:22px}
+    p{margin:0 0 18px;color:#cfcfd6}
+    .icon{width:76px;height:76px;border-radius:18px;background:linear-gradient(135deg,var(--accent),#0ea5a4);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:30px}
+    .btn{display:inline-block;padding:12px 18px;border-radius:10px;background:var(--accent);color:#021018;text-decoration:none;font-weight:700;cursor:pointer;border:none}
+    .btn.secondary{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.06)}
+    .note{font-size:13px;color:#9aa0a6;margin-top:12px}
+    .hidden{display:none !important}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="icon">F</div>
+      <h1>Instalar Falcões</h1>
+      <p>Instale o app no seu celular para abrir como um aplicativo nativo. Toque em "Instalar" quando aparecer o botão do sistema.</p>
+
+      <!-- botão visível para o usuário (caso o prompt não abra automaticamente) -->
+      <button id="btnInstall" class="btn hidden">Instalar</button>
+      <div style="height:14px"></div>
+      <a id="openSite" class="btn secondary" href="/" style="text-decoration:none">Abrir site</a>
+
+      <div class="note">Se o instalador não aparecer, toque em "Instalar" acima ou use "Adicionar à tela inicial" no menu do navegador.</div>
+    </div>
+  </div>
+
+  <script>
+    // Guarda o evento para disparar prompt depois
+    let deferredPrompt = null;
+    const btn = document.getElementById('btnInstall');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // impede o prompt automático padrão
+      e.preventDefault();
+      deferredPrompt = e;
+
+      // mostra botão
+      btn.classList.remove('hidden');
+
+      // tenta acionar automaticamente depois de um pequeno delay (permite que o usuário veja a página)
+      setTimeout(() => {
+        // clicar programaticamente no botão para abrir o prompt (isso conta como interação)
+        btn.click();
+      }, 700);
+    });
+
+    btn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      // Mostrar o prompt nativo
+      deferredPrompt.prompt();
+      // Aguarda escolha do usuário
+      const choice = await deferredPrompt.userChoice;
+      console.log('Resultado de instalação:', choice.outcome);
+      // Limpa
+      deferredPrompt = null;
+      btn.classList.add('hidden');
+    });
+
+    // Fallback: tenta registrar service worker caso não esteja
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (!reg) {
+          navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
+        }
+      }).catch(()=>{});
+    }
+
+    // Experiência extra: se for iOS (sem beforeinstallprompt), mostrar instruções
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
+    const isInStandalone = ('standalone' in window.navigator) && window.navigator.standalone;
+
+    if (isIos && !isInStandalone) {
+      // mostra instrução visual simples no lugar do botão
+      const note = document.querySelector('.note');
+      note.innerHTML = 'No iPhone: toque em <strong>Compartilhar → Adicionar à Tela de Início</strong> para instalar.';
+      // mostrar ainda o botão para permitir clique manual (não disparam install prompt no iOS)
+      btn.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
