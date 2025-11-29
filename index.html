@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Falcões App</title>
+    <style>
+        /* --- IDENTIDADE VISUAL DARK --- */
+        :root {
+            --bg-color: #121212; --card-color: #1e1e1e; --neon-green: #00e640;
+            --text-color: #ffffff; --input-bg: #2c2c2c; --border-color: #333;
+            --danger-color: #ff4444; --warning-color: #ffcc00;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-color);
+            display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
+        }
+
+        .login-container { 
+            background: var(--card-color); padding: 40px 30px; border-radius: 15px; width: 100%; max-width: 350px; 
+            border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0, 230, 64, 0.1); text-align: center;
+        }
+
+        .logo-area img { max-height: 100px; filter: drop-shadow(0 0 5px rgba(0,230,64,0.5)); margin-bottom: 20px; }
+        h2 { color: var(--neon-green); text-transform: uppercase; margin-bottom: 30px; font-weight: 800; letter-spacing: 1px;}
+
+        input { 
+            width: 100%; padding: 14px; margin-bottom: 15px; background-color: var(--input-bg); border: 1px solid var(--border-color);
+            color: white; border-radius: 8px; box-sizing: border-box; font-size: 15px; transition: 0.3s;
+        }
+        input:focus { border-color: var(--neon-green); outline: none; box-shadow: 0 0 8px rgba(0,230,64,0.3); }
+
+        button { 
+            width: 100%; padding: 15px; margin-top: 10px; background-color: var(--neon-green); color: #000; border: none; 
+            border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 800; text-transform: uppercase; transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover { transform: scale(1.02); box-shadow: 0 0 15px var(--neon-green); }
+
+        .links { margin-top: 25px; font-size: 14px; color: #aaa; }
+        
+        .btn-criar-conta {
+            color: var(--neon-green); text-decoration: none; font-weight: bold; 
+            border: 1px solid var(--neon-green); padding: 10px 20px; border-radius: 20px;
+            display: inline-block; margin-top: 10px; transition: 0.3s;
+        }
+        .btn-criar-conta:hover { background-color: var(--neon-green); color: black; }
+
+        /* --- MODAL PERSONALIZADO (NOVO) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-box {
+            background: var(--card-color); padding: 30px; border-radius: 15px; 
+            width: 85%; max-width: 320px; text-align: center; border: 1px solid var(--border-color);
+            animation: popIn 0.3s ease;
+        }
+        @keyframes popIn { from{transform: scale(0.8); opacity:0;} to{transform: scale(1); opacity:1;} }
+
+        .modal-icone { font-size: 40px; margin-bottom: 15px; display: block; }
+        .modal-titulo { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: white; text-transform: uppercase;}
+        .modal-msg { font-size: 14px; color: #ccc; margin-bottom: 20px; line-height: 1.5; }
+        
+        .btn-modal {
+            width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none;
+        }
+        .btn-fechar-erro { background: #333; color: white; border: 1px solid var(--danger-color); color: var(--danger-color); }
+        .btn-fechar-erro:hover { background: var(--danger-color); color: white; }
+
+    </style>
+    <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("/service-worker.js")
+    .then(() => console.log("SW registrado!"))
+    .catch(err => console.log("Erro SW:", err));
+}
+</script>
+
+    <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00e640">
+
+</head>
+<body>
+
+    <div id="modal-aviso" class="modal-overlay">
+        <div class="modal-box" id="box-aviso">
+            <span class="modal-icone" id="icone-aviso">⚠️</span>
+            <div class="modal-titulo" id="titulo-aviso">ATENÇÃO</div>
+            <div class="modal-msg" id="msg-aviso">Mensagem de erro aqui.</div>
+            <button class="btn-modal btn-fechar-erro" onclick="fecharModal()">FECHAR</button>
+        </div>
+    </div>
+
+    <div class="login-container">
+        <div class="logo-area">
+            <img src="assets/logo.png" alt="Logo Falcões">
+        </div>
+        
+        <h2>Acessar Conta</h2>
+        
+        <input type="email" id="email" placeholder="Seu E-mail">
+        <input type="password" id="senha" placeholder="Sua Senha">
+        
+        <button onclick="fazerLogin()">ENTRAR</button>
+
+        <div class="links">
+            <p>Não tem conta?</p>
+            <a href="cadastro.html" class="btn-criar-conta">CRIAR CONTA NOVA</a>
+        </div>
+    </div>
+
+    <script>
+        // Função para exibir o modal bonito
+        function mostrarAviso(titulo, mensagem, tipo) {
+            const modal = document.getElementById('modal-aviso');
+            const box = document.getElementById('box-aviso');
+            const icone = document.getElementById('icone-aviso');
+            const txtTitulo = document.getElementById('titulo-aviso');
+            
+            document.getElementById('msg-aviso').innerText = mensagem;
+            txtTitulo.innerText = titulo;
+
+            if (tipo === 'erro') {
+                box.style.borderColor = 'var(--danger-color)';
+                txtTitulo.style.color = 'var(--danger-color)';
+                icone.innerText = '🚫';
+            } else {
+                box.style.borderColor = 'var(--warning-color)';
+                txtTitulo.style.color = 'var(--warning-color)';
+                icone.innerText = '⏳';
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-aviso').style.display = 'none';
+        }
+
+        async function fazerLogin() {
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+
+            if(!email || !senha) return mostrarAviso("CAMPO VAZIO", "Por favor, preencha seu e-mail e senha.", "erro");
+
+            const btn = document.querySelector('button');
+            const textoOriginal = btn.innerText;
+            btn.innerText = "VERIFICANDO...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('https://falcoes-app.onrender.com/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('usuario', JSON.stringify(data.user));
+                    
+                    if(data.user.tipo === 'motoboy') {
+                        window.location.href = 'motoboy.html';
+                    } else if (data.user.tipo === 'admin') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'cliente.html';
+                    }
+                } else {
+                    // Aqui entra o modal bonito em vez do alert feio
+                    // Se for "em análise", usa ícone de tempo, senão ícone de erro
+                    const tipo = data.message.includes('análise') ? 'aviso' : 'erro';
+                    const titulo = data.message.includes('análise') ? 'CONTA EM ANÁLISE' : 'ERRO DE ACESSO';
+                    
+                    mostrarAviso(titulo, data.message, tipo);
+                    
+                    btn.innerText = textoOriginal;
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                mostrarAviso("ERRO DE CONEXÃO", "Não foi possível conectar ao servidor.", "erro");
+                btn.innerText = textoOriginal;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

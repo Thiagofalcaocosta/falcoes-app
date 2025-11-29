@@ -1,0 +1,618 @@
+/* style.css — variáveis e estilos globais para "Falcões Moto-Taxi e Entregas" */
+
+/* ======= VARIÁVEIS DE MARCA ======= */
+:root{
+  --app-name: "Falcões Moto-Taxi e Entregas";
+  --brand-green: #10B981;
+  --brand-green-dark:#0beb38 ;
+  --navy: #0b2340;
+  --black: #057618;
+  --white: #164a19;
+  --bg: #000000;
+  --card-bg: #0b0c0c;
+  --muted: #08addf;
+  --accent-danger: #958888;
+  --radius-lg: 12px;
+}
+
+/* ======= RESET / TIPOGRAFIA ======= */
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background:var(--bg);
+  color:var(--black);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ======= UTILITÁRIOS ======= */
+.container { max-width:1000px; margin:36px auto; padding:0 16px; }
+.card { background:var(--card-bg); border-radius:var(--radius-lg); padding:18px; box-shadow:0 8px 30px rgba(0,0,0,0.06); }
+
+/* ======= LOGIN CARD (index.html) ======= */
+.login-box {
+  width: 360px;
+  margin: 64px auto;
+  background: var(--card-bg);
+  padding: 26px;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+  text-align: center;
+}
+.login-box img{ width:110px; height:110px; object-fit:cover; border-radius:10px; margin: 0 auto 12px; }
+.login-box h1{ margin:8px 0 6px; font-size:22px; }
+.login-box input{ width:100%; padding:12px 14px; margin:8px 0; border-radius:10px; border:1px solid #e6ecea; }
+.btn-primary {
+  width:100%;
+  padding:12px;
+  background: linear-gradient(180deg,var(--brand-green),var(--brand-green-dark));
+  color:var(--white);
+  font-weight:800;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  box-shadow:0 10px 30px rgba(6,95,70,0.12);
+}
+/* style.css (ADICIONAR ESTES ESTILOS) */
+
+/* Novo card de conteúdo para telas principais (Cliente/Motoboy) */
+.content-box {
+    width: 90%; /* Ocupa mais largura que o login-box */
+    max-width: 600px; /* Limita a largura máxima */
+    margin: 36px auto; /* Centraliza verticalmente e horizontalmente */
+    background: var(--card-bg);
+    padding: 26px;
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    text-align: center; /* Centraliza textos internos como h2 */
+}
+
+/* Ajustes para o h2 dentro do content-box/card */
+.content-box h2 {
+    text-align: center; /* Garante que os títulos h2 fiquem centralizados */
+    margin-bottom: 20px; /* Espaçamento padrão */
+}
+
+/* Garante que o container interno não atrapalhe a centralização do content-box */
+.container { 
+    max-width:1000px; 
+    margin: 0 auto; /* Remove margin-top/bottom para o container principal */
+    padding:0 16px; 
+}
+
+/* Ajustes para elementos internos que antes estavam no .container diretamente */
+.history-section {
+    margin-top: 25px; /* Volta o espaçamento para o histórico */
+}
+/* ======= CLIENT / MOTOBOY SHARED ======= */
+.header {
+  display:flex; align-items:center; gap:14px; padding:14px 18px; background:linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3));
+  border-bottom:1px solid #f3ebeb;
+}
+.header img{ width:56px; height:56px; border-radius:10px; object-fit:cover; }
+.brand-title{ font-weight:800; font-size:18px; }
+.muted{ color:var(--muted); font-size:13px; }
+
+/* forms */
+.form-ctrl { width:100%; padding:12px 14px; border-radius:10px; border:1px solid #eceff0; font-size:14px; }
+
+/* History cards (cliente) */
+.history { display:flex; flex-direction:column; gap:12px; margin-top:14px; }
+.ride-card { background:var(--card-bg); border-radius:12px; padding:12px; display:flex; justify-content:space-between; gap:12px; border:1px solid #f1f5f4; align-items:flex-start; }
+
+/* small notes */
+.small { font-size:13px; color:#374151; }
+.note { font-size:12px; color:var(--muted); }
+
+/* responsive */
+@media(max-width:900px){
+  .container { padding:14px; }
+  .login-box{ width:92%; margin-top:40px; }
+}
+.btn-secondary {
+    width: 100%;
+    padding: 12px;
+    background: transparent; 
+    color: var(--brand-green); 
+    font-weight: 800;
+    border-radius: 10px;
+    border: 2px solid var(--brand-green); 
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); 
+}
+/* style.css (ADICIONAR ESTES ESTILOS AO FINAL DO SEU ARQUIVO) */
+
+/* Estilo para inputs de formulário no Cliente, seguindo o padrão da tela de login */
+.request-card input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    margin: 8px 0;
+    border-radius: 10px;
+    /* Usando cores do tema escuro/cartão */
+    border: 1px solid var(--muted); 
+    background-color: #1a1a1a; /* Um pouco mais claro que o card-bg para contraste */
+    color: var(--black); /* Texto branco */
+}
+
+/* Opções de serviço (Moto/Entrega) */
+/* ======= CLIENT / MOTOBOY SHARED ======= */
+.header {
+  display:flex; /* Mantido flex para o caso de ter um background fixo */
+  justify-content: center; /* Centraliza o conteúdo (o .container) */
+  align-items: center;
+  background:linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3));
+  border-bottom:1px solid #f3ebeb;
+  /* Removido o padding:14px 18px; daqui */
+}
+
+/* Novo estilo para o conteúdo do cabeçalho */
+.header-content {
+    display: flex; 
+    align-items: center; 
+    gap: 14px; 
+    /* Adiciona o padding que foi removido do .header */
+    padding: 14px 16px; 
+}
+/* O .container já tem max-width:1000px; e margin:36px auto; definido no topo */
+
+.header img{ width:56px; height:56px; border-radius:10px; object-fit:cover; }
+.brand-title{ font-weight:800; font-size:18px; }
+.muted{ color:var(--muted); font-size:13px; }
+
+/* Preço no histórico */
+.ride-card .price {
+    font-weight: 800;
+    color: var(--brand-green); /* Destaque o preço na cor da marca */
+    font-size: 16px;
+    white-space: nowrap; /* Evita quebra de linha no preço */
+    margin: 0;
+}
+
+/* Ajuste no .ride-card para alinhamento (já existe, mas garantindo que o texto fique legível) */
+.ride-card { 
+    border: 1px solid #1a1a1a; /* Borda mais discreta para o fundo escuro */
+}
+
+/* Reajuste para os títulos no tema escuro */
+h2 {
+    color: var(--black);
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+/* style.css (ADICIONAR ESTES ESTILOS AO FINAL DO SEU ARQUIVO) */
+
+/* Estilos de Status do Motoboy */
+.status-available {
+    color: var(--brand-green); /* Verde para disponível */
+    font-weight: 700;
+}
+.status-unavailable {
+    color: var(--accent-danger); /* Vermelho/perigo para indisponível */
+    font-weight: 700;
+}
+
+/* Botão menor para o toggle de status */
+.btn-small {
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    width: auto; /* Não ocupa 100% da largura, pois está no cabeçalho */
+    margin-left: auto; /* Empurra para a direita no flexbox */
+}
+
+/* Botão de Perigo (usado para o status indisponível) */
+.btn-danger {
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    width: auto;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    /* Usando a cor de perigo/vermelho para indicar "indisponível" */
+    background: var(--accent-danger);
+    color: var(--white);
+    box-shadow: 0 10px 30px rgba(239, 68, 68, 0.2);
+    margin-left: auto;
+}
+
+/* Detalhes da Corrida Ativa */
+.ride-detail-box {
+    text-align: left;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: #1a1a1a; /* Fundo levemente diferente para contraste */
+}
+.ride-detail-box .label {
+    color: var(--muted);
+    font-size: 12px;
+    margin: 0;
+}
+.ride-detail-box .value {
+    color: var(--black);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 2px 0 0;
+}
+/* style.css (ADICIONAR ESTES ESTILOS AO FINAL DO SEU ARQUIVO) */
+
+/* Estilos para Upload de Foto de Perfil */
+.profile-upload {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.avatar-label {
+    display: inline-block;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--brand-green); /* Destaque na cor da marca */
+    font-weight: 600;
+}
+.avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    background-color: #1a1a1a; /* Fundo cinza escuro */
+    border-radius: 50%;
+    margin: 0 auto 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    color: var(--muted);
+    border: 2px dashed var(--muted);
+}
+.avatar-placeholder:hover {
+    border-color: var(--brand-green);
+    color: var(--brand-green);
+}
+
+/* Garante que o input[type="date"] fique legível no tema escuro */
+input[type="date"] {
+    /* Força o texto para a cor do tema */
+    color: var(--black); 
+    /* Garante que o ícone do calendário fique visível (pode variar por navegador) */
+    filter: invert(100%); 
+}
+/* style.css (ADICIONAR ESTES ESTILOS) */
+
+/* Estilos para o grupo de input e sugestões */
+.input-group {
+    position: relative; /* Pai para posicionar as sugestões */
+    margin-bottom: 5px; /* Ajusta o espaçamento */
+}
+
+.address-suggestions {
+    position: absolute;
+    top: 100%; /* Posiciona abaixo do input */
+    left: 0;
+    right: 0;
+    z-index: 10; /* Garante que fique acima de outros elementos */
+    background-color: var(--card-bg); /* Fundo do card */
+    border: 1px solid var(--brand-green);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    max-height: 150px;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.suggestion-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--black);
+    font-size: 14px;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background-color: #1a1a1a; /* Escurece um pouco no hover */
+    color: var(--brand-green);
+}
+
+/* Ajuste no form-ctrl para não ter margem duplicada com o input-group */
+.form-ctrl {
+    margin: 0 0 0 0; /* Remove a margem inferior para o input-group controlar */
+}
+
+/* Retorna a margem original se não estiver dentro de um input-group */
+.login-box input {
+    margin: 8px 0;
+}
+/* style.css (ADICIONAR ESTES ESTILOS) */
+
+/* Estilos para a Foto de Perfil na Conta */
+.avatar-display {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    margin: 0 auto;
+}
+.profile-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--brand-green); /* Borda verde de destaque */
+}
+.edit-icon {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: var(--brand-green);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* Estilos para Nível de Fidelidade (Badges) */
+.level-badge {
+    display: inline-block;
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--card-bg); /* Texto escuro */
+}
+/* Nível Ouro (Destaque máximo) */
+.level-gold {
+    background: linear-gradient(90deg, #FFD700, #FFA500); /* Dourado */
+}
+/* Exemplo de Prata e Bronze (Se você for usar) */
+/*
+.level-silver { background: #C0C0C0; }
+.level-bronze { background: #CD7F32; }
+*/
+
+/* Linha de Estatísticas (Saldo/Corridas) */
+/* AJUSTE NA CLASSE .stat-ROW PARA SUPORTAR 3 COLUNAS */
+.stat-row {
+    display: grid; /* Mudar de flex para grid */
+    grid-template-columns: repeat(3, 1fr); /* Divide em 3 colunas iguais */
+    padding: 10px 0;
+    border-top: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
+    /* Remover justify-content: space-around; se for usar grid de 1fr */
+}
+
+/* O restante das classes .stat-item, .stat-value, .stat-label continuam as mesmas */
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+.stat-value {
+    font-size: 20px;
+    font-weight: 800;
+}
+.stat-label {
+    font-size: 12px;
+}
+
+/* Lista de Configurações (Config-List) */
+.config-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px; /* Espaço mínimo entre itens */
+    border-radius: 10px;
+    overflow: hidden; /* Garante que o border-radius funcione com o gap */
+    background-color: #1a1a1a; /* Fundo que agrupa os itens */
+}
+.config-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background-color: var(--card-bg); /* Fundo do item */
+    border-bottom: 1px solid #1a1a1a;
+}
+.config-item:last-child {
+    border-bottom: none;
+}
+.config-item .label {
+    color: var(--muted);
+    font-size: 14px;
+    flex-basis: 30%; /* Controla o espaço do label */
+    text-align: left;
+}
+.config-item .value {
+    color: var(--black);
+    font-size: 14px;
+    font-weight: 600;
+    flex-basis: 40%;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.config-item .btn-action {
+    padding: 8px 10px;
+    font-size: 12px;
+    width: auto;
+    margin: 0;
+}
+/* style.css (ADICIONAR ESTES ESTILOS) */
+
+/* Estilos para o Painel de Resumo e Filtros (ADM) */
+.summary-filter-card {
+    padding: 20px;
+}
+.summary-filter-card h2 {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.filter-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.filter-select {
+    width: 200px; /* Largura fixa para o seletor */
+    padding: 10px 14px;
+    /* Reutiliza o estilo do form-ctrl, mas ajustado para select */
+}
+
+.total-revenue-box {
+    text-align: right;
+}
+.total-revenue-box .stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    display: block; /* Garante que o valor fique em uma linha própria */
+}
+
+/* Responsividade para o painel de filtros */
+@media(max-width: 600px) {
+    .filter-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .filter-select {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    .total-revenue-box {
+        width: 100%;
+        text-align: left;
+    }
+}
+
+/* style.css (ADICIONAR ESTES ESTILOS) */
+
+/* Estilos para o bloco de filtros avançados no ADM */
+.advanced-filters {
+    padding: 20px;
+}
+
+.filter-search-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Garante que os campos de texto se expandam, mas o botão fique fixo */
+.filter-search-row .form-ctrl {
+    flex-grow: 1; 
+    min-width: 150px; /* Garante que não fiquem muito pequenos */
+}
+.filter-search-row .btn-primary {
+    flex-shrink: 0; /* Impede que o botão encolha */
+}
+
+/* Responsividade para telas menores */
+@media(max-width: 768px) {
+    .filter-search-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .filter-search-row .form-ctrl,
+    .filter-search-row .btn-primary {
+        width: 100%;
+        margin-bottom: 5px; /* Adiciona espaço entre os elementos empilhados */
+    }
+}
+
+/* style.css (ADICIONAR ESTES ESTILOS) */
+
+/* ---------------------------------- */
+/* REUSABLE FEEDBACK MODAL STYLES */
+/* ---------------------------------- */
+
+/* 1. Camada de Fundo (Overlay) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Fundo escuro com transparência */
+    display: none; /* PADRÃO: ESCONDIDO */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Garante que fique acima de todos os outros elementos */
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+.modal-overlay.is-visible {
+    display: flex;
+    opacity: 1;
+}
+
+/* 2. Conteúdo do Modal (Card Central) */
+.modal-content {
+    background-color: var(--card-bg); 
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.7);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+.modal-overlay.is-visible .modal-content {
+    transform: scale(1);
+}
+
+/* 3. Ícone e Estilos de Status */
+.modal-icon {
+    font-size: 56px;
+    margin: 0 auto 15px;
+    line-height: 1;
+}
+/* Estilo para sucesso */
+.modal-success .modal-icon {
+    color: var(--brand-green);
+}
+/* Estilo para erro */
+.modal-error .modal-icon {
+    color: var(--btn-danger);
+}
+
+/* 4. Botão de Fechar */
+.modal-content .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--muted);
+    cursor: pointer;
+    line-height: 1;
+}
+.modal-content h3 {
+    margin-bottom: 8px;
+}
+.modal-content p {
+    color: var(--muted);
+}
+/* style.css (ADICIONAR ESTES ESTILOS) */
+
+.fare-display {
+    text-align: center;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #1a1a1a; /* Fundo levemente diferente para o valor */
+    border-radius: 8px;
+    font-size: 16px;
+    color: var(--muted);
+}
+.fare-display .price-value {
+    font-size: 20px;
+    font-weight: 800;
+}
