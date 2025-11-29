@@ -1,21 +1,26 @@
 {
   "name": "Falcões App",
   "short_name": "Falcões",
-  "description": "Sistema de gestão de motoboys e corridas.",
   "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#121212",
+  "background_color": "#000000",
   "theme_color": "#00e640",
   "icons": [
+    { "src": "/assets/logo-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/logo-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "screenshots": [
     {
-      "src": "assets/logo-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "/assets/screenshot-login.png",
+      "sizes": "1024x1536",
+      "type": "image/png",
+      "label": "Login - Falções App"
     },
     {
-      "src": "assets/logo-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/assets/screenshot-solicitacao.png",
+      "sizes": "1024x1536",
+      "type": "image/png",
+      "label": "Nova Solicitação - Falções App"
     }
   ]
 }
