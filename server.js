@@ -15,6 +15,12 @@ app.use(cors());
 app.use(express.static(path.join(__dirname)));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
+// rota curta /app redireciona para /install.html
+app.get('/app', (req, res) => {
+    res.sendFile(path.join(__dirname, 'app.html'));
+});
+
+
 // COLE A ROTA /install APÓS AQUI
 app.get('/install', (req, res) => {
   res.sendFile(path.join(__dirname, 'install.html'));
