@@ -4,40 +4,85 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Instalar Falcões — App</title>
-
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" href="/assets/icon-192.png" />
-  <meta name="theme-color" content="#15aabf">
+  <meta name="theme-color" content="#00ff55">
 
   <style>
+    /* Estilo inspirado no seu app: preto + verde neon */
     :root{
-      --bg:#0b0b0d;
-      --card:#111116;
-      --accent:#15aabf;
-      --white:#f6f6f8;
+      --bg:#050505;
+      --card:#0f0f10;
+      --neon:#00ff46;
+      --neon-2:#00e65a;
+      --muted:#9ea299;
+      --surface: rgba(255,255,255,0.03);
     }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#05050a 0%, #0e0e12 100%);color:var(--white)}
-    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:28px}
-    .card{width:100%;max-width:520px;background:var(--card);border-radius:14px;padding:28px;box-shadow:0 8px 28px rgba(0,0,0,.6);text-align:center}
-    h1{margin:0 0 8px;font-size:22px}
-    p{margin:0 0 18px;color:#cfcfd6}
-    .icon{width:76px;height:76px;border-radius:18px;background:linear-gradient(135deg,var(--accent),#0ea5a4);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:30px}
-    .btn{display:inline-block;padding:12px 18px;border-radius:10px;background:var(--accent);color:#021018;text-decoration:none;font-weight:700;cursor:pointer;border:none}
-    .btn.secondary{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.06)}
-    .note{font-size:13px;color:#9aa0a6;margin-top:12px}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#030303 0%, #070707 100%);color:#e9efe9}
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+    .card{
+      width:100%;max-width:520px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:18px;
+      padding:28px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 20px rgba(0,255,70,0.03) inset;
+      text-align:center;
+      border:1px solid rgba(0,255,70,0.06);
+      position:relative;
+      overflow:hidden;
+    }
+    .glow {
+      position:absolute;inset:-30%;filter:blur(60px);opacity:0.12;
+      background: radial-gradient(circle at 30% 20%, rgba(0,255,70,0.18), transparent 8%),
+                  radial-gradient(circle at 80% 80%, rgba(0,160,255,0.08), transparent 15%);
+      pointer-events:none;
+    }
+    .logo{
+      width:96px;height:96px;border-radius:18px;margin:0 auto 12px;
+      display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,var(--neon),var(--neon-2));
+      box-shadow: 0 6px 30px rgba(0,255,70,0.14);
+    }
+    .logo img{max-width:80%;max-height:80%;display:block;border-radius:8px}
+    h1{margin:6px 0 6px;font-size:22px;color:#e6ffe6;letter-spacing:0.6px}
+    p{margin:0 0 18px;color:var(--muted);line-height:1.4}
+    .btn{
+      display:inline-block;padding:12px 22px;border-radius:12px;background:linear-gradient(180deg,var(--neon),var(--neon-2));
+      color:#04140a;text-decoration:none;font-weight:800;cursor:pointer;border:none;
+      box-shadow: 0 10px 30px rgba(0,255,70,0.12), 0 3px 0 rgba(0,0,0,0.35) inset;
+      transition: transform .12s ease, box-shadow .12s ease;
+      font-size:16px;
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn.secondary{
+      background:transparent;color:var(--neon);border:1px solid rgba(0,255,70,0.12);
+      box-shadow:none;font-weight:700;padding:10px 18px;margin-top:12px;
+    }
+    .note{font-size:13px;color:#9ea299;margin-top:14px}
     .hidden{display:none !important}
-    .status{margin-top:14px;font-size:13px;color:#9aa0a6}
+    .status{margin-top:12px;font-size:13px;color:#9ea299}
+    /* responsividade */
+    @media(max-width:420px){
+      .card{padding:20px;border-radius:14px}
+      h1{font-size:20px}
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card" role="main" aria-labelledby="titulo">
-      <div class="icon" aria-hidden="true">F</div>
+      <div class="glow" aria-hidden="true"></div>
+
+      <div class="logo" aria-hidden="true">
+        <!-- Altere o src abaixo para o seu logo se quiser -->
+        <img src="/assets/icon-192.png" alt="Falcões" />
+      </div>
+
       <h1 id="titulo">Instalar Falcões</h1>
-      <p>Instale o app no seu celular para abrir como um aplicativo nativo. Toque em "Instalar" quando aparecer o botão do sistema.</p>
+      <p>Abra o app como se fosse nativo. Quando o sistema pedir, toque em <strong>Instalar</strong>.</p>
 
       <button id="btnInstall" class="btn hidden" aria-hidden="true" aria-label="Instalar aplicativo">Instalar</button>
-      <div style="height:14px"></div>
+      <div style="height:12px"></div>
       <a id="openSite" class="btn secondary" href="/" style="text-decoration:none">Abrir site</a>
 
       <div class="note" id="note">Se o instalador não aparecer, toque em "Instalar" acima ou use "Adicionar à tela inicial" no menu do navegador.</div>
@@ -45,28 +90,20 @@
     </div>
   </div>
 
-  <noscript>
-    <div style="position:fixed;left:8px;right:8px;bottom:12px;padding:10px;background:#111;color:#fff;border-radius:8px;text-align:center;font-size:14px">
-      O JavaScript está desabilitado. A instalação via PWA precisa de JavaScript para funcionar.
-    </div>
-  </noscript>
-
   <script>
-    // debug
     const statusEl = document.getElementById('status');
-    function setStatus(text){ console.log(text); statusEl.textContent = text; }
+    function setStatus(t){ console.log(t); statusEl.textContent = t; }
 
-    // register SW asap
+    // registrar service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js').then(reg=>{
         setStatus('Service worker registrado.');
-        console.log('SW registered', reg);
       }).catch(err=>{
-        console.warn('SW reg falhou', err);
+        console.warn('SW registro falhou', err);
         setStatus('Falha ao registrar service worker.');
       });
     } else {
-      setStatus('Service worker não suportado neste navegador.');
+      setStatus('Service worker não suportado.');
     }
 
     let deferredPrompt = null;
@@ -74,63 +111,44 @@
     const note = document.getElementById('note');
 
     window.addEventListener('beforeinstallprompt', (e) => {
-      console.log('beforeinstallprompt event fired');
-      e.preventDefault(); // evita prompt automático padrão
+      e.preventDefault();
       deferredPrompt = e;
-
-      // mostra botão e atualiza atributos para acessibilidade
       btn.classList.remove('hidden');
-      btn.setAttribute('aria-hidden', 'false');
-      setStatus('Pronto para instalar. Aguarde o prompt do sistema ou toque em Instalar.');
-
-      // tenta abrir automaticamente após pequeno delay simulando interação do usuário
-      setTimeout(()=> {
-        try {
-          // clicar o botão programaticamente; se bloqueado, usuário verá o botão e poderá tocar
-          btn.click();
-        } catch (err) {
-          console.warn('Clique programático bloqueado', err);
-        }
-      }, 700);
+      btn.setAttribute('aria-hidden','false');
+      setStatus('Pronto para instalar. Aguarde o prompt ou toque em Instalar.');
+      // tenta acionar automaticamente com um clique programático
+      setTimeout(()=> { try{ btn.click(); }catch(e){ console.warn(e); } }, 700);
     });
 
     btn.addEventListener('click', async () => {
       setStatus('Abrindo prompt de instalação...');
-      if (!deferredPrompt) {
-        setStatus('Prompt não disponível no momento. Tente novamente ou recarregue a página.');
+      if(!deferredPrompt){
+        setStatus('Prompt não disponível. Recarregue a página.');
         return;
       }
       deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
-      console.log('Resultado de instalação:', choice);
-      if (choice.outcome === 'accepted') {
-        setStatus('Instalação aceita pelo usuário.');
-      } else {
-        setStatus('Instalação cancelada pelo usuário.');
-      }
-      // cleanup
+      console.log('install outcome', choice);
+      if(choice.outcome === 'accepted') setStatus('Instalação aceita!');
+      else setStatus('Instalação cancelada.');
       deferredPrompt = null;
       btn.classList.add('hidden');
       btn.setAttribute('aria-hidden','true');
     });
 
-    // iOS fallback: instruções para adicionar à tela inicial
     const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
     const isInStandalone = ('standalone' in window.navigator) && window.navigator.standalone;
     if (isIos && !isInStandalone) {
-      note.innerHTML = 'No iPhone: toque em <strong>Compartilhar → Adicionar à Tela de Início</strong> para instalar.';
-      btn.classList.remove('hidden');
-      btn.setAttribute('aria-hidden','false');
-      setStatus('iOS detectado — seguir instruções para adicionar à tela inicial.');
+      note.innerHTML = 'No iPhone: toque em <strong>Compartilhar → Adicionar à Tela de Início</strong>.';
+      btn.classList.remove('hidden'); btn.setAttribute('aria-hidden','false');
+      setStatus('iOS detectado — siga instruções para instalar.');
     }
 
-    // se o beforeinstallprompt nunca acontecer, mostrar instrução extra depois de alguns segundos
     setTimeout(()=> {
-      if (!deferredPrompt && !isIos) {
-        note.innerHTML = 'Se o instalador não aparecer automaticamente, toque em "Abrir site" e recarregue, ou use as opções do navegador (menu) → Adicionar à tela inicial.';
-        setStatus('Ainda aguardando o evento de instalação (beforeinstallprompt).');
+      if(!deferredPrompt && !isIos) {
+        setStatus('Aguardando evento de instalação (beforeinstallprompt).');
       }
-    }, 3500);
+    }, 3000);
   </script>
 </body>
 </html>
