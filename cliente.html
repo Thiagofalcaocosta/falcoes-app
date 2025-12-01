@@ -1,509 +1,508 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Falcões App</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Falcões App</title>
 
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-        crossorigin=""
-    />
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+        crossorigin=""
+    />
 
-    <style>
-        /* --- IDENTIDADE VISUAL FALCÕES (DARK MODE OFICIAL - PRESERVADO) --- */
-        :root {
-            --bg-color: #121212;
-            --card-color: #1e1e1e;
-            --neon-green: #00e640;
-            --text-color: #ffffff;
-            --input-bg: #2c2c2c;
-            --border-color: #333;
-            --error-color: #ff4444;
-            --dica-color: #888;
-        }
+    <style>
+        /* --- IDENTIDADE VISUAL FALCÕES (DARK MODE OFICIAL - PRESERVADO) --- */
+        :root {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --neon-green: #00e640;
+            --text-color: #ffffff;
+            --input-bg: #2c2c2c;
+            --border-color: #333;
+            --error-color: #ff4444;
+            --dica-color: #888;
+        }
 
-        body {
-            font-family: "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            padding: 20px;
-            margin: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
+        body {
+            font-family: "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            margin: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            background: var(--card-color);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 230, 64, 0.1);
-            position: relative;
-            border: 1px solid var(--border-color);
-            padding-bottom: 80px; /* Espaço para não cortar conteudo em mobile */
-        }
-        
-        /* Gerenciamento de Telas */
-        .tela {
-            display: none; /* Todas as telas escondidas por padrão */
-        }
-        .tela.ativa {
-            display: block; /* Tela ativa */
-            animation: fadeIn 0.5s;
-        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--card-color);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 230, 64, 0.1);
+            position: relative;
+            border: 1px solid var(--border-color);
+            padding-bottom: 80px; /* Espaço para não cortar conteudo em mobile */
+        }
+        
+        /* Gerenciamento de Telas */
+        .tela {
+            display: none; /* Todas as telas escondidas por padrão */
+        }
+        .tela.ativa {
+            display: block; /* Tela ativa */
+            animation: fadeIn 0.5s;
+        }
 
-        .logo-area {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .logo-area img {
-            max-height: 100px;
-            filter: drop-shadow(0 0 5px rgba(0, 230, 64, 0.5));
-        }
+        .logo-area {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo-area img {
+            max-height: 100px;
+            filter: drop-shadow(0 0 5px rgba(0, 230, 64, 0.5));
+        }
 
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-        .user-info {
-            font-weight: 600;
-            color: #ccc;
-        }
-        .estrelas {
-            background-color: rgba(255, 215, 0, 0.2);
-            color: #ffd700;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-weight: bold;
-        }
-        .logout a {
-            color: var(--error-color);
-            text-decoration: none;
-            font-weight: 600;
-        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .user-info {
+            font-weight: 600;
+            color: #ccc;
+        }
+        .estrelas {
+            background-color: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .logout a {
+            color: var(--error-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
 
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-weight: 700;
-            color: var(--neon-green);
-            letter-spacing: 1px;
-        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 700;
+            color: var(--neon-green);
+            letter-spacing: 1px;
+        }
 
-        /* --- SELETOR DE SERVIÇO --- */
-        .opcoes-servico {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 10px;
-        }
-        .card {
-            flex: 1;
-            padding: 15px;
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
-            background: #252525;
-            color: #aaa;
-        }
-        .card:hover {
-            border-color: var(--neon-green);
-            color: white;
-        }
-        .card.selecionado {
-            border-color: var(--neon-green);
-            background-color: rgba(0, 230, 64, 0.1);
-            color: var(--neon-green);
-            box-shadow: 0 0 15px rgba(0, 230, 64, 0.2);
-        }
-        .icon {
-            font-size: 28px;
-            display: block;
-            margin-bottom: 5px;
-        }
-        .preco {
-            font-size: 14px;
-            font-weight: 500;
-        }
+        /* --- SELETOR DE SERVIÇO --- */
+        .opcoes-servico {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .card {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            background: #252525;
+            color: #aaa;
+        }
+        .card:hover {
+            border-color: var(--neon-green);
+            color: white;
+        }
+        .card.selecionado {
+            border-color: var(--neon-green);
+            background-color: rgba(0, 230, 64, 0.1);
+            color: var(--neon-green);
+            box-shadow: 0 0 15px rgba(0, 230, 64, 0.2);
+        }
+        .icon {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .preco {
+            font-size: 14px;
+            font-weight: 500;
+        }
 
-        /* --- NOVOS CAMPOS DE ENDEREÇO (GRID) --- */
-        label {
-            display: block;
-            margin-top: 15px;
-            font-weight: 700;
-            color: var(--neon-green); /* Label verde para destaque */
-            margin-bottom: 8px;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        /* --- NOVOS CAMPOS DE ENDEREÇO (GRID) --- */
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: 700;
+            color: var(--neon-green); /* Label verde para destaque */
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-        .address-container {
-            background: rgba(255,255,255,0.03);
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
+        .address-container {
+            background: rgba(255,255,255,0.03);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
 
-        /* Linha 1: Rua + Botão Mapa */
-        .row-rua {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            position: relative;
-        }
-        .input-rua-wrapper {
-            flex: 1;
-            position: relative;
-        }
-        .btn-map-icon {
-            background: transparent;
-            border: 1px solid var(--neon-green);
-            color: var(--neon-green);
-            border-radius: 8px;
-            width: 44px;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-map-icon:hover {
-            background: rgba(0,230,64,0.1);
-        }
-        
-        /* Linha 2: Número e Bairro */
-        .row-details {
-            display: flex;
-            gap: 8px;
-        }
-        .input-num-wrapper {
-            flex: 1; /* 25% */
-            max-width: 80px;
-            position: relative;
-        }
-        .input-bairro-wrapper {
-            flex: 3; /* 75% */
-        }
+        /* Linha 1: Rua + Botão Mapa */
+        .row-rua {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .input-rua-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        .btn-map-icon {
+            background: transparent;
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            border-radius: 8px;
+            width: 44px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-map-icon:hover {
+            background: rgba(0,230,64,0.1);
+        }
+        
+        /* Linha 2: Número e Bairro */
+        .row-details {
+            display: flex;
+            gap: 8px;
+        }
+        .input-num-wrapper {
+            flex: 1; /* 25% */
+            max-width: 80px;
+            position: relative;
+        }
+        .input-bairro-wrapper {
+            flex: 3; /* 75% */
+        }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: white;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 15px;
-            transition: 0.3s;
-        }
-        input:focus {
-            border-color: var(--neon-green);
-            outline: none;
-        }
-        /* Erro específico para número vazio */
-        input.erro {
-            border-color: var(--error-color) !important;
-            animation: shake 0.4s ease-in-out;
-        }
-        .erro-msg {
-            position: absolute;
-            bottom: -16px;
-            left: 0;
-            font-size: 10px;
-            color: var(--error-color);
-            font-weight: bold;
-            display: none;
-        }
-        input.erro + .erro-msg {
-            display: block;
-        }
+        input {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: white;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+        input:focus {
+            border-color: var(--neon-green);
+            outline: none;
+        }
+        /* Erro específico para número vazio */
+        input.erro {
+            border-color: var(--error-color) !important;
+            animation: shake 0.4s ease-in-out;
+        }
+        .erro-msg {
+            position: absolute;
+            bottom: -16px;
+            left: 0;
+            font-size: 10px;
+            color: var(--error-color);
+            font-weight: bold;
+            display: none;
+        }
+        input.erro + .erro-msg {
+            display: block;
+        }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
 
-        /* Campo de detalhes da entrega */
-        #detalhes-entrega-container {
-            display: none; /* Só aparece se for entrega */
-            margin-top: 15px;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Campo de detalhes da entrega */
+        #detalhes-entrega-container {
+            display: none; /* Só aparece se for entrega */
+            margin-top: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 
-        /* Lista de Sugestões */
-        .sugestoes-lista {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--card-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            max-height: 250px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        }
-        .sugestao-item {
-            padding: 12px 15px;
-            border-bottom: 1px solid #333;
-            cursor: pointer;
-        }
-        .sugestao-item:last-child { border-bottom: none; }
-        .sugestao-item:hover {
-            background-color: #2c2c2c;
-        }
-        .rua-texto {
-            display: block;
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--neon-green);
-        }
-        .bairro-texto {
-            display: block;
-            font-size: 12px;
-            color: #aaa;
-            margin-top: 2px;
-        }
+        /* Lista de Sugestões */
+        .sugestoes-lista {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .sugestao-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+        }
+        .sugestao-item:last-child { border-bottom: none; }
+        .sugestao-item:hover {
+            background-color: #2c2c2c;
+        }
+        .rua-texto {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--neon-green);
+        }
+        .bairro-texto {
+            display: block;
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 2px;
+        }
 
-        /* --- RESUMO E BOTÃO --- */
-        .resumo-final {
-            margin-top: 25px;
-            padding: 15px;
-            background-color: rgba(0, 230, 64, 0.1);
-            color: var(--neon-green);
-            border: 1px solid var(--neon-green);
-            text-align: center;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 700;
-            display: none;
-        }
+        /* --- RESUMO E BOTÃO --- */
+        .resumo-final {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: rgba(0, 230, 64, 0.1);
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+            text-align: center;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            display: none;
+        }
 
-        .btn {
-            width: 100%;
-            padding: 16px;
-            margin-top: 20px;
-            background-color: var(--neon-green);
-            color: black;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.3s;
-            text-transform: uppercase;
-        }
-        .btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 15px var(--neon-green);
-        }
-        .btn:disabled {
-            background-color: #444;
-            color: #888;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        /* --- ESTILOS ESPECÍFICOS ACOMPANHAMENTO --- */
-        .info-card {
-            background: #252525;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border-color);
-        }
-        .info-card .label {
-            font-size: 12px;
-            color: #999;
-            text-transform: uppercase;
-            margin-bottom: 3px;
-        }
-        .info-card .value {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        .motoboy-box {
-            text-align: center;
-            margin: 20px 0;
-            padding: 20px;
-            border: 2px solid var(--neon-green);
-            border-radius: 15px;
-            background: rgba(0, 230, 64, 0.1);
-        }
-        .motoboy-box .nome {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--neon-green);
-            margin-top: 5px;
-        }
-        .motoboy-box .placa {
-            font-size: 14px;
-            color: #ccc;
-            margin-bottom: 10px;
-        }
-        
-        /* NOVO ESTILO WHATSAPP */
-        .btn-whatsapp {
-            background-color: #25D366; /* Cor oficial do WhatsApp */
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            width: 100%;
-            margin-top: 15px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        .btn-whatsapp:hover {
-            background-color: #1FAF59;
-        }
-        
-        /* --- MODAL DE BUSCA (temporário) --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .modal-content {
-            background: var(--card-color);
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            width: 85%;
-            max-width: 350px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 0 40px rgba(0, 230, 64, 0.15);
-        }
-        .spinner {
-            border: 5px solid #333;
-            border-top: 5px solid var(--neon-green);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: girar 1s linear infinite;
-            margin: 0 auto 20px auto;
-        }
-        @keyframes girar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .btn-cancelar {
-            background-color: transparent;
-            border: 1px solid var(--error-color);
-            color: var(--error-color);
-            font-size: 14px;
-            margin-top: 20px;
-            padding: 10px;
-            width: 100%;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        
-        
-        /* Bloco de ESTILO PARA O CAMPO TEXTAREA NO MODAL DE JUSTIFICATIVA (aproximadamente linha 283) */
-.modal-content textarea {
-    width: 100%; 
-    height: 80px; 
-    padding: 10px; 
-    box-sizing: border-box; 
-    border-radius: 8px; 
-    border: 1px solid var(--border-color); 
-    background: var(--input-bg); 
-    color: white; 
-    resize: none;
-    font-family: inherit;
-    /* --- CORREÇÃO: ADICIONAR Z-INDEX ALTO --- */
-    position: relative; 
-    z-index: 10000; /* Mais alto que o modal (9999) */
-}
+        .btn {
+            width: 100%;
+            padding: 16px;
+            margin-top: 20px;
+            background-color: var(--neon-green);
+            color: black;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        .btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+        .btn:disabled {
+            background-color: #444;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* --- ESTILOS ESPECÍFICOS ACOMPANHAMENTO --- */
+        .info-card {
+            background: #252525;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .info-card .label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .info-card .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .motoboy-box {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid var(--neon-green);
+            border-radius: 15px;
+            background: rgba(0, 230, 64, 0.1);
+        }
+        .motoboy-box .nome {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--neon-green);
+            margin-top: 5px;
+        }
+        .motoboy-box .placa {
+            font-size: 14px;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+        
+        /* NOVO ESTILO WHATSAPP */
+        .btn-whatsapp {
+            background-color: #25D366; /* Cor oficial do WhatsApp */
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            width: 100%;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-whatsapp:hover {
+            background-color: #1FAF59;
+        }
+        
+        /* --- MODAL DE BUSCA (temporário) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .modal-content {
+            background: var(--card-color);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 85%;
+            max-width: 350px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 40px rgba(0, 230, 64, 0.15);
+        }
+        .spinner {
+            border: 5px solid #333;
+            border-top: 5px solid var(--neon-green);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: girar 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+        @keyframes girar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .btn-cancelar {
+            background-color: transparent;
+            border: 1px solid var(--error-color);
+            color: var(--error-color);
+            font-size: 14px;
+            margin-top: 20px;
+            padding: 10px;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        /* ESTILO PARA O CAMPO TEXTAREA NO MODAL DE JUSTIFICATIVA */
+        .modal-content textarea {
+            width: 100%; 
+            height: 80px; 
+            padding: 10px; 
+            box-sizing: border-box; 
+            border-radius: 8px; 
+            border: 1px solid var(--border-color); 
+            background: var(--input-bg); 
+            color: white; 
+            resize: none;
+            font-family: inherit;
+            /* --- CORREÇÃO APLICADA AQUI --- */
+            **position: relative;**             **z-index: 10000;** /* Garante que fique acima de outros elementos do modal e do teclado */
+        }
 
-        #map {
-            height: 180px;
-            border-radius: 12px;
-            margin-top: 20px;
-            border: 1px solid var(--border-color);
-        }
 
-        /* --- TOAST --- */
-        .toast-container {
-            position: fixed;
-            left: 50%;
-            bottom: 24px;
-            transform: translateX(-50%);
-            z-index: 10050;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-            pointer-events: none;
-            width: 90%;
-        }
-        .toast {
-            width: 100%;
-            max-width: 400px;
-            background: #000;
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: #fff;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            opacity: 0;
-            transform: translateY(10px);
-            animation: toast-in 0.3s forwards;
-            font-weight: 600;
-            border: 1px solid var(--neon-green);
-            pointer-events: auto;
-        }
-        @keyframes toast-in { to { opacity: 1; transform: translateY(0); } }
-        .toast.error { border-color: var(--error-color); }
-        .toast .msg { flex: 1; font-size: 14px; }
-        .toast .close { background: none; border: none; color: #fff; cursor: pointer; font-size: 18px; }
+        #map {
+            height: 180px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 1px solid var(--border-color);
+        }
 
-    </style>
+        /* --- TOAST --- */
+        .toast-container {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            z-index: 10050;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            pointer-events: none;
+            width: 90%;
+        }
+        .toast {
+            width: 100%;
+            max-width: 400px;
+            background: #000;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: toast-in 0.3s forwards;
+            font-weight: 600;
+            border: 1px solid var(--neon-green);
+            pointer-events: auto;
+        }
+        @keyframes toast-in { to { opacity: 1; transform: translateY(0); } }
+        .toast.error { border-color: var(--error-color); }
+        .toast .msg { flex: 1; font-size: 14px; }
+        .toast .close { background: none; border: none; color: #fff; cursor: pointer; font-size: 18px; }
+
+    </style>
 <script type="importmap">
 {
-    "imports": {
-        "react/": "https://aistudiocdn.com/react@^19.2.0/",
-        "react": "https://aistudiocdn.com/react@^19.2.0",
-        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
-    }
+    "imports": {
+        "react/": "https://aistudiocdn.com/react@^19.2.0/",
+        "react": "https://aistudiocdn.com/react@^19.2.0",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+    }
 }
 </script>
 <script>
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("/service-worker.js")
-    .then(() => console.log("SW registrado!"))
-    .catch(err => console.log("Erro SW:", err));
+  navigator.serviceWorker
+    .register("/service-worker.js")
+    .then(() => console.log("SW registrado!"))
+    .catch(err => console.log("Erro SW:", err));
 }
 </script>
 
@@ -513,658 +512,658 @@ if ("serviceWorker" in navigator) {
 </head>
 <body>
 
-    <div class="toast-container" id="toast-container"></div>
-
-    <div class="modal-overlay" id="modal-busca">
-        <div class="modal-content">
-            <div id="area-spinner" class="spinner"></div>
-
-            <div id="status-titulo-modal" style="font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px;">BUSCANDO PILOTO...</div>
-            <div id="status-desc-modal" style="font-size: 14px; color: #aaa;">Notificando parceiros próximos.</div>
-
-            <button id="btn-cancelar-pedido-modal" class="btn-cancelar" onclick="cancelarPedido()">CANCELAR PEDIDO</button>
-        </div>
-    </div>
-    
-    <div class="modal-overlay" id="modal-justificativa">
-        <div class="modal-content">
-            <div style="font-size: 24px; color: var(--error-color); margin-bottom: 15px;">⚠️ Cancelar Pedido</div>
-            <div id="justificativa-titulo" style="font-size: 16px; color: white; margin-bottom: 10px; font-weight: 600;">Por que deseja cancelar?</div>
-            
-            <textarea id="campo-justificativa" 
-                      placeholder="Ex: Não preciso mais, endereço errado, demora do piloto..."></textarea>
-                      
-            <button onclick="confirmarCancelamentoCliente()" class="btn" style="background-color: var(--error-color); color: white; margin-top: 15px;">
-                CONFIRMAR CANCELAMENTO
-            </button>
-            <button onclick="document.getElementById('modal-justificativa').style.display='none'" class="btn-cancelar" style="border: none; color: #aaa; margin-top: 10px;">
-                Voltar
-            </button>
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="logo-area"><img src="assets/logo.png" alt="Logo" onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" /></div>
-
-        <div class="header-top">
-            <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
-            <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
-        </div>
-
-        <div id="tela-pedido" class="tela ativa">
-            
-            <h2>NOVA SOLICITAÇÃO</h2>
-
-            <div class="opcoes-servico">
-                <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
-                    <span class="icon">🏍️</span>
-                    <div class="card-title">MOTO TÁXI</div>
-                    <div class="preco">R$ 10,00 + Km</div>
-                </div>
-                <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
-                    <span class="icon">📦</span>
-                    <div class="card-title">ENTREGA</div>
-                    <div class="preco">R$ 8,50 + Km</div>
-                </div>
-            </div>
-
-            <div id="form-endereco">
-                
-                <label>📍 Onde vamos buscar? (Origem)</label>
-                <div class="address-container">
-                    <div class="row-rua">
-                        <div class="input-rua-wrapper">
-                            <input type="text" id="rua-origem" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
-                            <div id="lista-origem" class="sugestoes-lista"></div>
-                        </div>
-                        <button class="btn-map-icon" onclick="ativarMapa('origem')" title="Marcar no mapa">🗺️</button>
-                    </div>
-                    <div class="row-details">
-                        <div class="input-num-wrapper">
-                            <input type="text" id="num-origem" placeholder="Nº" oninput="removerErro(this)">
-                            <span class="erro-msg">Obrigatório</span>
-                        </div>
-                        <div class="input-bairro-wrapper">
-                            <input type="text" id="bairro-origem" placeholder="Bairro">
-                        </div>
-                    </div>
-                </div>
-
-                <label>🏁 Onde vamos levar? (Destino)</label>
-                <div class="address-container">
-                    <div class="row-rua">
-                        <div class="input-rua-wrapper">
-                            <input type="text" id="rua-destino" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
-                            <div id="lista-destino" class="sugestoes-lista"></div>
-                        </div>
-                        <button class="btn-map-icon" onclick="ativarMapa('destino')" title="Marcar no mapa">🗺️</button>
-                    </div>
-                    <div class="row-details">
-                        <div class="input-num-wrapper">
-                            <input type="text" id="num-destino" placeholder="Nº" oninput="removerErro(this)">
-                            <span class="erro-msg">Obrigatório</span>
-                        </div>
-                        <div class="input-bairro-wrapper">
-                            <input type="text" id="bairro-destino" placeholder="Bairro">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="detalhes-entrega-container">
-                    <label>📦 O que vamos levar?</label>
-                    <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..." oninput="removerErro(this)">
-                    <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
-                </div>
-
-            </div>
-
-            <div id="map"></div>
-            <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no mapa</p>
-
-            <div class="resumo-final" id="resumo"></div>
-
-            <button onclick="pedir()" id="btn-pedir" class="btn" disabled>SELECIONE O SERVIÇO</button>
-        </div>
-        
-        <div id="tela-acompanhamento" class="tela">
-            <h2>ACOMPANHANDO PEDIDO <span id="acompanhamento-id">#--</span></h2>
-            
-            <div id="acompanhamento-status-area" class="motoboy-box" style="border-color: #ffd700; background: rgba(255, 215, 0, 0.1);">
-                <div style="font-size: 36px; margin-bottom: 5px;">⏳</div>
-                <div class="nome" id="acompanhamento-status-titulo" style="color: #ffd700;">BUSCANDO PILOTO...</div>
-                <div class="placa" id="acompanhamento-status-desc" style="font-size: 16px;">Notificando parceiros próximos.</div>
-            </div>
-
-            <div id="motoboy-info-box" style="display:none; margin-top: 20px;">
-                <div class="motoboy-box">
-                    <div style="font-size: 32px; margin-bottom: 5px;">🏍️</div>
-                    <div style="font-size: 12px; color: #aaa; text-transform:uppercase;">Seu Piloto</div>
-                    <div class="nome" id="motoboy-nome">--</div>
-                    <div class="placa" id="motoboy-placa">--</div>
-                </div>
-
-                <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp" style="display: none;">
-                    <span style="font-size: 20px;">📞</span>
-                    CHAMAR NO WHATSAPP
-                </a>
-            </div>
-
-            <h3>Detalhes da Viagem</h3>
-            <div id="viagem-origem" class="info-card">
-                <div class="label">📍 Origem</div>
-                <div class="value" id="detalhe-origem">Aguardando...</div>
-            </div>
-            <div id="viagem-destino" class="info-card">
-                <div class="label">🏁 Destino</div>
-                <div class="value" id="detalhe-destino">Aguardando...</div>
-            </div>
-            <div id="viagem-valor" class="info-card" style="text-align:center; border: 1px solid var(--neon-green);">
-                <div class="label">Total Estimado</div>
-                <div class="value" id="detalhe-valor" style="color: var(--neon-green); font-size: 20px;">R$ --</div>
-            </div>
-
-            <button onclick="cancelarPedido()" id="btn-cancelar-acomp" class="btn-cancelar">CANCELAR PEDIDO</button>
-            <button onclick="reiniciarApp()" class="btn" style="background-color: #333; color: #ccc; margin-top: 10px;">FECHAR (apenas se finalizado)</button>
-        </div>
-
-    </div>
-
-    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
-    <script>
-        // === CONFIGURAÇÃO E DADOS ===
-        const MEU_IP = 'https://falcoes-app.onrender.com';
-        const LAT_TC = -21.6975;
-        const LON_TC = -45.2556;
-        
-        // Mock de usuário se não existir (para testes)
-        if(!localStorage.getItem("usuario")) {
-            localStorage.setItem("usuario", JSON.stringify({id: 1, nome: "Visitante", telefone: "00000000"}));
-        }
-        const usuario = JSON.parse(localStorage.getItem("usuario"));
-        document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
-
-        // Variáveis de Estado
-        let servicoSelecionado = null;
-        let coordsOrigem = null;
-        let coordsDestino = null;
-        let timeoutBusca = null;
-        let mapMode = null; 
-        let markerOrigem = null;
-        let markerDestino = null;
-        let idPedidoAtual = null;
-        let intervaloVerificacao = null;
-
-        const precos = {
-            'moto-taxi': { base: 10.0, kmExtra: 3.15, franquia: 3 },
-            'entrega': { base: 8.50, kmExtra: 2.0, franquia: 3 }
-        };
-
-        // === FUNÇÕES DE GERENCIAMENTO DE TELA ===
-        function mudarTela(novaTelaId) {
-            document.querySelectorAll('.tela').forEach(tela => {
-                tela.classList.remove('ativa');
-            });
-            document.getElementById(novaTelaId).classList.add('ativa');
-        }
-
-        function reiniciarApp() {
-            // Limpa o estado e recarrega para voltar à tela de pedido limpa
-            localStorage.removeItem('idPedidoAtual');
-            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
-            window.location.reload(); 
-        }
-
-        // === INICIALIZAÇÃO DO MAPA (Permanece) ===
-        const map = L.map('map').setView([LAT_TC, LON_TC], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap',
-            maxZoom: 19
-        }).addTo(map);
-
-        map.on('click', async (e) => {
-            if (!mapMode) {
-                showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
-                return;
-            }
-
-            const { lat, lng } = e.latlng;
-            showToast("Buscando endereço...", "info", 1000);
-
-            // Reverse Geocoding via Nominatim (Gratuito)
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-                const data = await res.json();
-                
-                const rua = data.address.road || data.address.pedestrian || "Local Marcado";
-                const bairro = data.address.suburb || data.address.neighbourhood || data.address.city_district || "Três Corações";
-
-                if (mapMode === 'origem') {
-                    document.getElementById('rua-origem').value = rua;
-                    document.getElementById('bairro-origem').value = bairro;
-                    document.getElementById('num-origem').focus();
-                    coordsOrigem = { lat, lon: lng };
-                    if(markerOrigem) map.removeLayer(markerOrigem);
-                    markerOrigem = L.marker([lat, lng]).addTo(map);
-                } else {
-                    document.getElementById('rua-destino').value = rua;
-                    document.getElementById('bairro-destino').value = bairro;
-                    document.getElementById('num-destino').focus();
-                    coordsDestino = { lat, lon: lng };
-                    if(markerDestino) map.removeLayer(markerDestino);
-                    markerDestino = L.marker([lat, lng]).addTo(map);
-                }
-
-                showToast("Endereço preenchido! Digite o número.", "success");
-                mapMode = null; // Reset modo
-                calcularRota();
-
-            } catch (error) {
-                showToast("Erro ao obter endereço do mapa.", "error");
-            }
-        });
-
-        // === FUNÇÕES DE UI (Permanece) ===
-        function ativarMapa(modo) {
-            mapMode = modo;
-            showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
-            // Rola até o mapa
-            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function selecionarServico(tipo, valorBase) {
-            servicoSelecionado = tipo;
-            
-            // Visual Cards
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('selecionado'));
-            if(tipo === 'moto-taxi') document.getElementById('card-moto').classList.add('selecionado');
-            else document.getElementById('card-entrega').classList.add('selecionado');
-
-            // Campo Detalhes da Entrega
-            const detailsDiv = document.getElementById('detalhes-entrega-container');
-            if(tipo === 'entrega') {
-                detailsDiv.style.display = 'block';
-            } else {
-                detailsDiv.style.display = 'none';
-            }
-
-            document.getElementById('btn-pedir').disabled = false;
-            document.getElementById('btn-pedir').innerText = tipo === 'entrega' ? "SOLICITAR ENTREGA" : "CHAMAR MOTO TÁXI";
-            
-            calcularRota(); 
-        }
-
-        function logout() {
-            localStorage.clear();
-            window.location.reload();
-        }
-
-        function removerErro(input) {
-            input.classList.remove('erro');
-        }
-
-        // Fechar sugestões ao clicar fora
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.input-rua-wrapper')) {
-                document.querySelectorAll('.sugestoes-lista').forEach(el => el.style.display = 'none');
-            }
-        });
-
-        // LÓGICA DE ENDEREÇO e CÁLCULO DE ROTA (Omitidas para brevidade no comentário, mas mantidas no código)
-        function buscarEndereco(query, listId, type) { 
-            const list = document.getElementById(listId);
-            if (query.length < 3) {
-                list.style.display = 'none';
-                return;
-            }
-
-            clearTimeout(timeoutBusca);
-            timeoutBusca = setTimeout(async () => {
-                try {
-                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Três Corações")}&addressdetails=1&limit=5&countrycodes=br`;
-                    const res = await fetch(url);
-                    const data = await res.json();
-
-                    list.innerHTML = '';
-                    if (data.length > 0) {
-                        data.forEach(item => {
-                            const rua = item.address.road || item.address.pedestrian || item.display_name.split(',')[0];
-                            const bairro = item.address.suburb || item.address.neighbourhood || "Centro";
-
-                            const div = document.createElement('div');
-                            div.className = 'sugestao-item';
-                            div.innerHTML = `<span class="rua-texto">${rua}</span><span class="bairro-texto">${bairro}</span>`;
-                            
-                            div.onclick = () => {
-                                document.getElementById(`rua-${type}`).value = rua;
-                                document.getElementById(`bairro-${type}`).value = bairro;
-                                
-                                const coords = { lat: parseFloat(item.lat), lon: parseFloat(item.lon) };
-                                if(type === 'origem') coordsOrigem = coords;
-                                else coordsDestino = coords;
-
-                                list.style.display = 'none';
-                                
-                                const numInput = document.getElementById(`num-${type}`);
-                                numInput.focus();
-                                numInput.classList.add('erro'); 
-                                setTimeout(() => numInput.classList.remove('erro'), 500);
-
-                                calcularRota();
-                            };
-                            list.appendChild(div);
-                        });
-                        list.style.display = 'block';
-                    } else {
-                        list.style.display = 'none';
-                    }
-                } catch (e) {
-                    console.error("Erro busca", e);
-                }
-            }, 500); 
-        }
-
-        async function calcularRota() {
-            if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
-
-            const resumo = document.getElementById('resumo');
-            resumo.style.display = 'block';
-            resumo.innerText = "Calculando...";
-
-            try {
-                const url = `https://router.project-osrm.org/route/v1/driving/${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}?overview=false`;
-                const res = await fetch(url);
-                const json = await res.json();
-
-                let distanciaKm = 0;
-                if (json.routes && json.routes.length > 0) {
-                    distanciaKm = json.routes[0].distance / 1000;
-                } else {
-                    distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
-                }
-
-                const regra = precos[servicoSelecionado];
-                const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
-                const total = regra.base + (kmCobrado * regra.kmExtra);
-
-                resumo.innerHTML = `
-                    <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km</div>
-                    <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
-                `;
-                
-                window.valorCalculado = total;
-
-            } catch (e) {
-                console.error("Erro rota", e);
-                resumo.innerText = "Erro ao calcular rota.";
-            }
-        }
-        
-        function calcDistanciaReta(c1, c2) {
-            const R = 6371; 
-            const dLat = (c2.lat - c1.lat) * Math.PI / 180;
-            const dLon = (c2.lon - c1.lon) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        // === ENVIO DE PEDIDO (Alterada para usar a nova tela) ===
-        async function pedir() {
-            // ... (Validação e montagem de dados idêntica à anterior) ...
-            if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
-            const ruaOrigem = document.getElementById('rua-origem').value;
-            const numOrigem = document.getElementById('num-origem').value;
-            const bairroOrigem = document.getElementById('bairro-origem').value;
-            const ruaDestino = document.getElementById('rua-destino').value;
-            const numDestino = document.getElementById('num-destino').value;
-            const bairroDestino = document.getElementById('bairro-destino').value;
-            const detalhes = document.getElementById('detalhes-entrega').value;
-
-            let erro = false;
-            if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
-            if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
-            if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
-            if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
-            if (servicoSelecionado === 'entrega' && !detalhes.trim()) { document.getElementById('detalhes-entrega').classList.add('erro'); showToast("Descreva o que vamos entregar!", "error"); return; }
-            if (erro) { showToast("⚠️ Preencha o NÚMERO dos endereços!", "error"); return; }
-            
-            const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
-            const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
-            const strDestinoFinal = servicoSelecionado === 'entrega' 
-                ? `${strDestino} (ITEM: ${detalhes})` 
-                : strDestino;
-            // ... (Fim da validação) ...
-
-
-            // 1. Mostrar o modal de carregamento
-            document.getElementById('modal-busca').style.display = 'flex';
-
-            try {
-                const body = {
-                    cliente_id: usuario.id,
-                    origem: strOrigem,
-                    destino: strDestinoFinal,
-                    valor: window.valorCalculado || 10.0,
-                    tipo_servico: servicoSelecionado
-                };
-
-                const res = await fetch(`${MEU_IP}/pedir-corrida`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-
-                const json = await res.json();
-                
-                if (json.success) {
-                    idPedidoAtual = json.id;
-                    localStorage.setItem('idPedidoAtual', idPedidoAtual); 
-                    
-                    // 2. Preencher a nova tela com os dados iniciais
-                    document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
-                    document.getElementById('detalhe-origem').innerText = strOrigem;
-                    document.getElementById('detalhe-destino').innerText = strDestino;
-                    document.getElementById('detalhe-valor').innerText = `R$ ${window.valorCalculado.toFixed(2).replace('.', ',')}`;
-
-                    // 3. Trocar para a tela de Acompanhamento e fechar o modal
-                    mudarTela('tela-acompanhamento');
-                    document.getElementById('modal-busca').style.display = 'none';
-
-                    // 4. Iniciar verificação de status
-                    intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-                    showToast("Solicitação enviada. Buscando piloto...", "info");
-
-                } else {
-                    throw new Error(json.message);
-                }
-
-            } catch (e) {
-                document.getElementById('modal-busca').style.display = 'none';
-                showToast("Erro ao enviar pedido: " + e.message, "error");
-            }
-        }
-
-        // === VERIFICAÇÃO DE STATUS (Mantida) ===
-        async function verificarStatus(id) {
-            try {
-                const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
-                const data = await res.json();
-                const pedido = data.pedido;
-                
-                if (!data.success || !pedido) {
-                    // Trata erro de API
-                    console.error("Erro ao obter status. Tentando novamente...");
-                    return;
-                }
-
-                // Elementos da tela de acompanhamento
-                const statusTitulo = document.getElementById('acompanhamento-status-titulo');
-                const statusDesc = document.getElementById('acompanhamento-status-desc');
-                const statusArea = document.getElementById('acompanhamento-status-area');
-                const motoboyBox = document.getElementById('motoboy-info-box');
-                const btnWpp = document.getElementById('btn-whatsapp-motoboy');
-                const btnCancelar = document.getElementById('btn-cancelar-acomp');
-                
-                // Limpa quaisquer classes de cor
-                statusArea.style.borderColor = '#ffd700';
-                statusArea.style.background = 'rgba(255, 215, 0, 0.1)';
-                statusTitulo.style.color = '#ffd700';
-                
-                motoboyBox.style.display = 'none';
-                btnWpp.style.display = 'none';
-
-                if (pedido.status === 'aceita') {
-                    // Pedido Aceito!
-                    statusArea.style.borderColor = 'var(--neon-green)';
-                    statusArea.style.background = 'rgba(0, 230, 64, 0.1)';
-                    statusTitulo.style.color = 'var(--neon-green)';
-                    statusTitulo.innerText = "FALCÃO A CAMINHO!";
-                    statusDesc.innerText = "Seu piloto está indo até você.";
-                    
-                    document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
-                    document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
-                    motoboyBox.style.display = 'block';
-
-                    // Lógica do botão WHATSAPP
-                    if (pedido.telefone_motoboy) {
-                        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, ''); 
-                        const numeroInternacional = foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo; 
-                        
-                        const textoWpp = encodeURIComponent(`Olá, sou o cliente do pedido #${id} no app Falcões. Gostaria de confirmar a sua chegada.`);
-                        const linkWpp = `https://wa.me/${numeroInternacional}?text=${textoWpp}`;
-                        
-                        btnWpp.href = linkWpp;
-                        btnWpp.style.display = 'flex';
-                    }
-
-                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                    
-                } else if (pedido.status === 'finalizada') {
-                    // Corrida finalizada
-                    clearInterval(intervaloVerificacao);
-                    statusTitulo.innerText = "PEDIDO CONCLUÍDO!";
-                    statusDesc.innerText = `Valor pago: R$ ${pedido.valor.toFixed(2).replace('.', ',')}`;
-                    statusArea.style.borderColor = 'blue'; 
-                    statusArea.style.background = 'rgba(0, 0, 255, 0.1)';
-                    statusTitulo.style.color = 'blue';
-                    btnCancelar.style.display = 'none';
-                    localStorage.removeItem('idPedidoAtual');
-
-                } else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
-                    // Pedido cancelado/expirado
-                    clearInterval(intervaloVerificacao);
-                    statusTitulo.innerText = "PEDIDO CANCELADO!";
-                    statusDesc.innerText = `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado!O motoboy teve um imprevisto.    Pedimos desculpas!Por favor,   faça um novo pedido. Obrigado!"}`;
-                    statusArea.style.borderColor = 'var(--error-color)';
-                    statusArea.style.background = 'rgba(255, 0, 0, 0.1)';
-                    statusTitulo.style.color = 'var(--error-color)';
-                    btnCancelar.style.display = 'none';
-                    localStorage.removeItem('idPedidoAtual');
-                    showToast("Pedido cancelado. Use o botão 'FECHAR' abaixo para voltar.", "error", 5000);
-                }
-
-            } catch (e) { 
-                console.error("Erro na verificação de status:", e); 
-            }
-        }
-        
-        // Função para continuar acompanhando o pedido se o usuário recarregar a página
-        function checkPersistedOrder() {
-            const persistedId = localStorage.getItem('idPedidoAtual');
-            if (persistedId) {
-                idPedidoAtual = persistedId;
-                
-                // Mudar para a tela de acompanhamento e iniciar a verificação
-                mudarTela('tela-acompanhamento');
-                
-                // Tenta buscar o status imediatamente para preencher os dados
-                verificarStatus(idPedidoAtual); 
-                intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-            } else {
-                // Se não houver pedido, garante que a tela inicial esteja ativa
-                mudarTela('tela-pedido');
-            }
-        }
-        
-        // Chama a função ao carregar a página
-        window.onload = checkPersistedOrder;
-
-
-        // === FUNÇÕES DE CANCELAMENTO ATUALIZADAS PARA USAR MODAL DE JUSTIFICATIVA ===
-        function cancelarPedido() {
-            if(!idPedidoAtual) {
-                showToast("Nenhum pedido ativo para cancelar.", "error");
-                return;
-            }
-
-            // 1. Abre o modal de justificativa
-            document.getElementById('modal-justificativa').style.display = 'flex';
-            document.getElementById('campo-justificativa').value = ''; // Limpa campo
-            document.getElementById('campo-justificativa').focus();
-        }
-
-        async function confirmarCancelamentoCliente() {
-            const motivo = document.getElementById('campo-justificativa').value.trim();
-            
-            if (motivo.length < 5) {
-                showToast("Dê uma breve justificativa (mínimo 5 caracteres).", "error");
-                return;
-            }
-
-            // Fecha o modal de justificativa e abre o de carregamento/status
-            document.getElementById('modal-justificativa').style.display = 'none';
-            document.getElementById('modal-busca').style.display = 'flex';
-            document.getElementById('status-titulo-modal').innerText = "CANCELANDO PEDIDO...";
-            document.getElementById('status-desc-modal').innerText = "Enviando justificativa: " + motivo.substring(0, 30) + "...";
-            document.getElementById('btn-cancelar-pedido-modal').style.display = 'none';
-
-            try {
-                const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        id: idPedidoAtual, 
-                        motivo: `[CLIENTE] ${motivo}` 
-                    })
-                });
-                
-                const json = await res.json();
-
-                if (json.success) {
-                    clearInterval(intervaloVerificacao);
-                    verificarStatus(idPedidoAtual); 
-                    showToast("Pedido cancelado. O piloto foi notificado.", "success", 5000);
-                } else {
-                     throw new Error(json.message || "Erro desconhecido ao cancelar.");
-                }
-
-            } catch (e) {
-                document.getElementById('modal-busca').style.display = 'none';
-                showToast("Falha ao cancelar: " + e.message, "error");
-            } finally {
-                 // Limpa o campo de justificativa para o próximo uso
-                 document.getElementById('campo-justificativa').value = '';
-            }
-        }
-
-
-        // Toast Helper
-        function showToast(msg, type, duration = 3000) {
-            const container = document.getElementById('toast-container');
-            const div = document.createElement('div');
-            div.className = `toast ${type}`;
-            div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
-            container.appendChild(div);
-            // Remove toasts antigos para manter apenas 1 ou 2 visíveis
-            while(container.children.length > 3) {
-                container.firstChild.remove();
-            }
-            setTimeout(() => div.remove(), duration);
-        }
-
-    </script>
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="modal-overlay" id="modal-busca">
+        <div class="modal-content">
+            <div id="area-spinner" class="spinner"></div>
+
+            <div id="status-titulo-modal" style="font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px;">BUSCANDO PILOTO...</div>
+            <div id="status-desc-modal" style="font-size: 14px; color: #aaa;">Notificando parceiros próximos.</div>
+
+            <button id="btn-cancelar-pedido-modal" class="btn-cancelar" onclick="cancelarPedido()">CANCELAR PEDIDO</button>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="modal-justificativa">
+        <div class="modal-content">
+            <div style="font-size: 24px; color: var(--error-color); margin-bottom: 15px;">⚠️ Cancelar Pedido</div>
+            <div id="justificativa-titulo" style="font-size: 16px; color: white; margin-bottom: 10px; font-weight: 600;">Por que deseja cancelar?</div>
+            
+            <textarea id="campo-justificativa" 
+                      placeholder="Ex: Não preciso mais, endereço errado, demora do piloto..."></textarea>
+                      
+            <button onclick="confirmarCancelamentoCliente()" class="btn" style="background-color: var(--error-color); color: white; margin-top: 15px;">
+                CONFIRMAR CANCELAMENTO
+            </button>
+            <button onclick="document.getElementById('modal-justificativa').style.display='none'" class="btn-cancelar" style="border: none; color: #aaa; margin-top: 10px;">
+                Voltar
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="logo-area"><img src="assets/logo.png" alt="Logo" onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" /></div>
+
+        <div class="header-top">
+            <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
+            <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
+        </div>
+
+        <div id="tela-pedido" class="tela ativa">
+            
+            <h2>NOVA SOLICITAÇÃO</h2>
+
+            <div class="opcoes-servico">
+                <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
+                    <span class="icon">🏍️</span>
+                    <div class="card-title">MOTO TÁXI</div>
+                    <div class="preco">R$ 10,00 + Km</div>
+                </div>
+                <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
+                    <span class="icon">📦</span>
+                    <div class="card-title">ENTREGA</div>
+                    <div class="preco">R$ 8,50 + Km</div>
+                </div>
+            </div>
+
+            <div id="form-endereco">
+                
+                <label>📍 Onde vamos buscar? (Origem)</label>
+                <div class="address-container">
+                    <div class="row-rua">
+                        <div class="input-rua-wrapper">
+                            <input type="text" id="rua-origem" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
+                            <div id="lista-origem" class="sugestoes-lista"></div>
+                        </div>
+                        <button class="btn-map-icon" onclick="ativarMapa('origem')" title="Marcar no mapa">🗺️</button>
+                    </div>
+                    <div class="row-details">
+                        <div class="input-num-wrapper">
+                            <input type="text" id="num-origem" placeholder="Nº" oninput="removerErro(this)">
+                            <span class="erro-msg">Obrigatório</span>
+                        </div>
+                        <div class="input-bairro-wrapper">
+                            <input type="text" id="bairro-origem" placeholder="Bairro">
+                        </div>
+                    </div>
+                </div>
+
+                <label>🏁 Onde vamos levar? (Destino)</label>
+                <div class="address-container">
+                    <div class="row-rua">
+                        <div class="input-rua-wrapper">
+                            <input type="text" id="rua-destino" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
+                            <div id="lista-destino" class="sugestoes-lista"></div>
+                        </div>
+                        <button class="btn-map-icon" onclick="ativarMapa('destino')" title="Marcar no mapa">🗺️</button>
+                    </div>
+                    <div class="row-details">
+                        <div class="input-num-wrapper">
+                            <input type="text" id="num-destino" placeholder="Nº" oninput="removerErro(this)">
+                            <span class="erro-msg">Obrigatório</span>
+                        </div>
+                        <div class="input-bairro-wrapper">
+                            <input type="text" id="bairro-destino" placeholder="Bairro">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="detalhes-entrega-container">
+                    <label>📦 O que vamos levar?</label>
+                    <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..." oninput="removerErro(this)">
+                    <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
+                </div>
+
+            </div>
+
+            <div id="map"></div>
+            <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no mapa</p>
+
+            <div class="resumo-final" id="resumo"></div>
+
+            <button onclick="pedir()" id="btn-pedir" class="btn" disabled>SELECIONE O SERVIÇO</button>
+        </div>
+        
+        <div id="tela-acompanhamento" class="tela">
+            <h2>ACOMPANHANDO PEDIDO <span id="acompanhamento-id">#--</span></h2>
+            
+            <div id="acompanhamento-status-area" class="motoboy-box" style="border-color: #ffd700; background: rgba(255, 215, 0, 0.1);">
+                <div style="font-size: 36px; margin-bottom: 5px;">⏳</div>
+                <div class="nome" id="acompanhamento-status-titulo" style="color: #ffd700;">BUSCANDO PILOTO...</div>
+                <div class="placa" id="acompanhamento-status-desc" style="font-size: 16px;">Notificando parceiros próximos.</div>
+            </div>
+
+            <div id="motoboy-info-box" style="display:none; margin-top: 20px;">
+                <div class="motoboy-box">
+                    <div style="font-size: 32px; margin-bottom: 5px;">🏍️</div>
+                    <div style="font-size: 12px; color: #aaa; text-transform:uppercase;">Seu Piloto</div>
+                    <div class="nome" id="motoboy-nome">--</div>
+                    <div class="placa" id="motoboy-placa">--</div>
+                </div>
+
+                <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp" style="display: none;">
+                    <span style="font-size: 20px;">📞</span>
+                    CHAMAR NO WHATSAPP
+                </a>
+            </div>
+
+            <h3>Detalhes da Viagem</h3>
+            <div id="viagem-origem" class="info-card">
+                <div class="label">📍 Origem</div>
+                <div class="value" id="detalhe-origem">Aguardando...</div>
+            </div>
+            <div id="viagem-destino" class="info-card">
+                <div class="label">🏁 Destino</div>
+                <div class="value" id="detalhe-destino">Aguardando...</div>
+            </div>
+            <div id="viagem-valor" class="info-card" style="text-align:center; border: 1px solid var(--neon-green);">
+                <div class="label">Total Estimado</div>
+                <div class="value" id="detalhe-valor" style="color: var(--neon-green); font-size: 20px;">R$ --</div>
+            </div>
+
+            <button onclick="cancelarPedido()" id="btn-cancelar-acomp" class="btn-cancelar">CANCELAR PEDIDO</button>
+            <button onclick="reiniciarApp()" class="btn" style="background-color: #333; color: #ccc; margin-top: 10px;">FECHAR (apenas se finalizado)</button>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        // === CONFIGURAÇÃO E DADOS ===
+        const MEU_IP = 'https://falcoes-app.onrender.com';
+        const LAT_TC = -21.6975;
+        const LON_TC = -45.2556;
+        
+        // Mock de usuário se não existir (para testes)
+        if(!localStorage.getItem("usuario")) {
+            localStorage.setItem("usuario", JSON.stringify({id: 1, nome: "Visitante", telefone: "00000000"}));
+        }
+        const usuario = JSON.parse(localStorage.getItem("usuario"));
+        document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
+
+        // Variáveis de Estado
+        let servicoSelecionado = null;
+        let coordsOrigem = null;
+        let coordsDestino = null;
+        let timeoutBusca = null;
+        let mapMode = null; 
+        let markerOrigem = null;
+        let markerDestino = null;
+        let idPedidoAtual = null;
+        let intervaloVerificacao = null;
+
+        const precos = {
+            'moto-taxi': { base: 10.0, kmExtra: 3.15, franquia: 3 },
+            'entrega': { base: 8.50, kmExtra: 2.0, franquia: 3 }
+        };
+
+        // === FUNÇÕES DE GERENCIAMENTO DE TELA ===
+        function mudarTela(novaTelaId) {
+            document.querySelectorAll('.tela').forEach(tela => {
+                tela.classList.remove('ativa');
+            });
+            document.getElementById(novaTelaId).classList.add('ativa');
+        }
+
+        function reiniciarApp() {
+            // Limpa o estado e recarrega para voltar à tela de pedido limpa
+            localStorage.removeItem('idPedidoAtual');
+            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+            window.location.reload(); 
+        }
+
+        // === INICIALIZAÇÃO DO MAPA (Permanece) ===
+        const map = L.map('map').setView([LAT_TC, LON_TC], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
+
+        map.on('click', async (e) => {
+            if (!mapMode) {
+                showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
+                return;
+            }
+
+            const { lat, lng } = e.latlng;
+            showToast("Buscando endereço...", "info", 1000);
+
+            // Reverse Geocoding via Nominatim (Gratuito)
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                const data = await res.json();
+                
+                const rua = data.address.road || data.address.pedestrian || "Local Marcado";
+                const bairro = data.address.suburb || data.address.neighbourhood || data.address.city_district || "Três Corações";
+
+                if (mapMode === 'origem') {
+                    document.getElementById('rua-origem').value = rua;
+                    document.getElementById('bairro-origem').value = bairro;
+                    document.getElementById('num-origem').focus();
+                    coordsOrigem = { lat, lon: lng };
+                    if(markerOrigem) map.removeLayer(markerOrigem);
+                    markerOrigem = L.marker([lat, lng]).addTo(map);
+                } else {
+                    document.getElementById('rua-destino').value = rua;
+                    document.getElementById('bairro-destino').value = bairro;
+                    document.getElementById('num-destino').focus();
+                    coordsDestino = { lat, lon: lng };
+                    if(markerDestino) map.removeLayer(markerDestino);
+                    markerDestino = L.marker([lat, lng]).addTo(map);
+                }
+
+                showToast("Endereço preenchido! Digite o número.", "success");
+                mapMode = null; // Reset modo
+                calcularRota();
+
+            } catch (error) {
+                showToast("Erro ao obter endereço do mapa.", "error");
+            }
+        });
+
+        // === FUNÇÕES DE UI (Permanece) ===
+        function ativarMapa(modo) {
+            mapMode = modo;
+            showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
+            // Rola até o mapa
+            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function selecionarServico(tipo, valorBase) {
+            servicoSelecionado = tipo;
+            
+            // Visual Cards
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selecionado'));
+            if(tipo === 'moto-taxi') document.getElementById('card-moto').classList.add('selecionado');
+            else document.getElementById('card-entrega').classList.add('selecionado');
+
+            // Campo Detalhes da Entrega
+            const detailsDiv = document.getElementById('detalhes-entrega-container');
+            if(tipo === 'entrega') {
+                detailsDiv.style.display = 'block';
+            } else {
+                detailsDiv.style.display = 'none';
+            }
+
+            document.getElementById('btn-pedir').disabled = false;
+            document.getElementById('btn-pedir').innerText = tipo === 'entrega' ? "SOLICITAR ENTREGA" : "CHAMAR MOTO TÁXI";
+            
+            calcularRota(); 
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.reload();
+        }
+
+        function removerErro(input) {
+            input.classList.remove('erro');
+        }
+
+        // Fechar sugestões ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.input-rua-wrapper')) {
+                document.querySelectorAll('.sugestoes-lista').forEach(el => el.style.display = 'none');
+            }
+        });
+
+        // LÓGICA DE ENDEREÇO e CÁLCULO DE ROTA (Omitidas para brevidade no comentário, mas mantidas no código)
+        function buscarEndereco(query, listId, type) { 
+            const list = document.getElementById(listId);
+            if (query.length < 3) {
+                list.style.display = 'none';
+                return;
+            }
+
+            clearTimeout(timeoutBusca);
+            timeoutBusca = setTimeout(async () => {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Três Corações")}&addressdetails=1&limit=5&countrycodes=br`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+
+                    list.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            const rua = item.address.road || item.address.pedestrian || item.display_name.split(',')[0];
+                            const bairro = item.address.suburb || item.address.neighbourhood || "Centro";
+
+                            const div = document.createElement('div');
+                            div.className = 'sugestao-item';
+                            div.innerHTML = `<span class="rua-texto">${rua}</span><span class="bairro-texto">${bairro}</span>`;
+                            
+                            div.onclick = () => {
+                                document.getElementById(`rua-${type}`).value = rua;
+                                document.getElementById(`bairro-${type}`).value = bairro;
+                                
+                                const coords = { lat: parseFloat(item.lat), lon: parseFloat(item.lon) };
+                                if(type === 'origem') coordsOrigem = coords;
+                                else coordsDestino = coords;
+
+                                list.style.display = 'none';
+                                
+                                const numInput = document.getElementById(`num-${type}`);
+                                numInput.focus();
+                                numInput.classList.add('erro'); 
+                                setTimeout(() => numInput.classList.remove('erro'), 500);
+
+                                calcularRota();
+                            };
+                            list.appendChild(div);
+                        });
+                        list.style.display = 'block';
+                    } else {
+                        list.style.display = 'none';
+                    }
+                } catch (e) {
+                    console.error("Erro busca", e);
+                }
+            }, 500); 
+        }
+
+        async function calcularRota() {
+            if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
+
+            const resumo = document.getElementById('resumo');
+            resumo.style.display = 'block';
+            resumo.innerText = "Calculando...";
+
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}?overview=false`;
+                const res = await fetch(url);
+                const json = await res.json();
+
+                let distanciaKm = 0;
+                if (json.routes && json.routes.length > 0) {
+                    distanciaKm = json.routes[0].distance / 1000;
+                } else {
+                    distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
+                }
+
+                const regra = precos[servicoSelecionado];
+                const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
+                const total = regra.base + (kmCobrado * regra.kmExtra);
+
+                resumo.innerHTML = `
+                    <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km</div>
+                    <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
+                `;
+                
+                window.valorCalculado = total;
+
+            } catch (e) {
+                console.error("Erro rota", e);
+                resumo.innerText = "Erro ao calcular rota.";
+            }
+        }
+        
+        function calcDistanciaReta(c1, c2) {
+            const R = 6371; 
+            const dLat = (c2.lat - c1.lat) * Math.PI / 180;
+            const dLon = (c2.lon - c1.lon) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // === ENVIO DE PEDIDO (Alterada para usar a nova tela) ===
+        async function pedir() {
+            // ... (Validação e montagem de dados idêntica à anterior) ...
+            if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
+            const ruaOrigem = document.getElementById('rua-origem').value;
+            const numOrigem = document.getElementById('num-origem').value;
+            const bairroOrigem = document.getElementById('bairro-origem').value;
+            const ruaDestino = document.getElementById('rua-destino').value;
+            const numDestino = document.getElementById('num-destino').value;
+            const bairroDestino = document.getElementById('bairro-destino').value;
+            const detalhes = document.getElementById('detalhes-entrega').value;
+
+            let erro = false;
+            if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
+            if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
+            if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
+            if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
+            if (servicoSelecionado === 'entrega' && !detalhes.trim()) { document.getElementById('detalhes-entrega').classList.add('erro'); showToast("Descreva o que vamos entregar!", "error"); return; }
+            if (erro) { showToast("⚠️ Preencha o NÚMERO dos endereços!", "error"); return; }
+            
+            const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
+            const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
+            const strDestinoFinal = servicoSelecionado === 'entrega' 
+                ? `${strDestino} (ITEM: ${detalhes})` 
+                : strDestino;
+            // ... (Fim da validação) ...
+
+
+            // 1. Mostrar o modal de carregamento
+            document.getElementById('modal-busca').style.display = 'flex';
+
+            try {
+                const body = {
+                    cliente_id: usuario.id,
+                    origem: strOrigem,
+                    destino: strDestinoFinal,
+                    valor: window.valorCalculado || 10.0,
+                    tipo_servico: servicoSelecionado
+                };
+
+                const res = await fetch(`${MEU_IP}/pedir-corrida`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const json = await res.json();
+                
+                if (json.success) {
+                    idPedidoAtual = json.id;
+                    localStorage.setItem('idPedidoAtual', idPedidoAtual); 
+                    
+                    // 2. Preencher a nova tela com os dados iniciais
+                    document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
+                    document.getElementById('detalhe-origem').innerText = strOrigem;
+                    document.getElementById('detalhe-destino').innerText = strDestino;
+                    document.getElementById('detalhe-valor').innerText = `R$ ${window.valorCalculado.toFixed(2).replace('.', ',')}`;
+
+                    // 3. Trocar para a tela de Acompanhamento e fechar o modal
+                    mudarTela('tela-acompanhamento');
+                    document.getElementById('modal-busca').style.display = 'none';
+
+                    // 4. Iniciar verificação de status
+                    intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+                    showToast("Solicitação enviada. Buscando piloto...", "info");
+
+                } else {
+                    throw new Error(json.message);
+                }
+
+            } catch (e) {
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Erro ao enviar pedido: " + e.message, "error");
+            }
+        }
+
+        // === VERIFICAÇÃO DE STATUS (Mantida) ===
+        async function verificarStatus(id) {
+            try {
+                const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+                const data = await res.json();
+                const pedido = data.pedido;
+                
+                if (!data.success || !pedido) {
+                    // Trata erro de API
+                    console.error("Erro ao obter status. Tentando novamente...");
+                    return;
+                }
+
+                // Elementos da tela de acompanhamento
+                const statusTitulo = document.getElementById('acompanhamento-status-titulo');
+                const statusDesc = document.getElementById('acompanhamento-status-desc');
+                const statusArea = document.getElementById('acompanhamento-status-area');
+                const motoboyBox = document.getElementById('motoboy-info-box');
+                const btnWpp = document.getElementById('btn-whatsapp-motoboy');
+                const btnCancelar = document.getElementById('btn-cancelar-acomp');
+                
+                // Limpa quaisquer classes de cor
+                statusArea.style.borderColor = '#ffd700';
+                statusArea.style.background = 'rgba(255, 215, 0, 0.1)';
+                statusTitulo.style.color = '#ffd700';
+                
+                motoboyBox.style.display = 'none';
+                btnWpp.style.display = 'none';
+
+                if (pedido.status === 'aceita') {
+                    // Pedido Aceito!
+                    statusArea.style.borderColor = 'var(--neon-green)';
+                    statusArea.style.background = 'rgba(0, 230, 64, 0.1)';
+                    statusTitulo.style.color = 'var(--neon-green)';
+                    statusTitulo.innerText = "FALCÃO A CAMINHO!";
+                    statusDesc.innerText = "Seu piloto está indo até você.";
+                    
+                    document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
+                    document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
+                    motoboyBox.style.display = 'block';
+
+                    // Lógica do botão WHATSAPP
+                    if (pedido.telefone_motoboy) {
+                        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, ''); 
+                        const numeroInternacional = foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo; 
+                        
+                        const textoWpp = encodeURIComponent(`Olá, sou o cliente do pedido #${id} no app Falcões. Gostaria de confirmar a sua chegada.`);
+                        const linkWpp = `https://wa.me/${numeroInternacional}?text=${textoWpp}`;
+                        
+                        btnWpp.href = linkWpp;
+                        btnWpp.style.display = 'flex';
+                    }
+
+                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                    
+                } else if (pedido.status === 'finalizada') {
+                    // Corrida finalizada
+                    clearInterval(intervaloVerificacao);
+                    statusTitulo.innerText = "PEDIDO CONCLUÍDO!";
+                    statusDesc.innerText = `Valor pago: R$ ${pedido.valor.toFixed(2).replace('.', ',')}`;
+                    statusArea.style.borderColor = 'blue'; 
+                    statusArea.style.background = 'rgba(0, 0, 255, 0.1)';
+                    statusTitulo.style.color = 'blue';
+                    btnCancelar.style.display = 'none';
+                    localStorage.removeItem('idPedidoAtual');
+
+                } else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
+                    // Pedido cancelado/expirado
+                    clearInterval(intervaloVerificacao);
+                    statusTitulo.innerText = "PEDIDO CANCELADO!";
+                    statusDesc.innerText = `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado!O motoboy teve um imprevisto.    Pedimos desculpas!Por favor,   faça um novo pedido. Obrigado!"}`;
+                    statusArea.style.borderColor = 'var(--error-color)';
+                    statusArea.style.background = 'rgba(255, 0, 0, 0.1)';
+                    statusTitulo.style.color = 'var(--error-color)';
+                    btnCancelar.style.display = 'none';
+                    localStorage.removeItem('idPedidoAtual');
+                    showToast("Pedido cancelado. Use o botão 'FECHAR' abaixo para voltar.", "error", 5000);
+                }
+
+            } catch (e) { 
+                console.error("Erro na verificação de status:", e); 
+            }
+        }
+        
+        // Função para continuar acompanhando o pedido se o usuário recarregar a página
+        function checkPersistedOrder() {
+            const persistedId = localStorage.getItem('idPedidoAtual');
+            if (persistedId) {
+                idPedidoAtual = persistedId;
+                
+                // Mudar para a tela de acompanhamento e iniciar a verificação
+                mudarTela('tela-acompanhamento');
+                
+                // Tenta buscar o status imediatamente para preencher os dados
+                verificarStatus(idPedidoAtual); 
+                intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+            } else {
+                // Se não houver pedido, garante que a tela inicial esteja ativa
+                mudarTela('tela-pedido');
+            }
+        }
+        
+        // Chama a função ao carregar a página
+        window.onload = checkPersistedOrder;
+
+
+        // === FUNÇÕES DE CANCELAMENTO ATUALIZADAS PARA USAR MODAL DE JUSTIFICATIVA ===
+        function cancelarPedido() {
+            if(!idPedidoAtual) {
+                showToast("Nenhum pedido ativo para cancelar.", "error");
+                return;
+            }
+
+            // 1. Abre o modal de justificativa
+            document.getElementById('modal-justificativa').style.display = 'flex';
+            document.getElementById('campo-justificativa').value = ''; // Limpa campo
+            document.getElementById('campo-justificativa').focus();
+        }
+
+        async function confirmarCancelamentoCliente() {
+            const motivo = document.getElementById('campo-justificativa').value.trim();
+            
+            if (motivo.length < 5) {
+                showToast("Dê uma breve justificativa (mínimo 5 caracteres).", "error");
+                return;
+            }
+
+            // Fecha o modal de justificativa e abre o de carregamento/status
+            document.getElementById('modal-justificativa').style.display = 'none';
+            document.getElementById('modal-busca').style.display = 'flex';
+            document.getElementById('status-titulo-modal').innerText = "CANCELANDO PEDIDO...";
+            document.getElementById('status-desc-modal').innerText = "Enviando justificativa: " + motivo.substring(0, 30) + "...";
+            document.getElementById('btn-cancelar-pedido-modal').style.display = 'none';
+
+            try {
+                const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        id: idPedidoAtual, 
+                        motivo: `[CLIENTE] ${motivo}` 
+                    })
+                });
+                
+                const json = await res.json();
+
+                if (json.success) {
+                    clearInterval(intervaloVerificacao);
+                    verificarStatus(idPedidoAtual); 
+                    showToast("Pedido cancelado. O piloto foi notificado.", "success", 5000);
+                } else {
+                     throw new Error(json.message || "Erro desconhecido ao cancelar.");
+                }
+
+            } catch (e) {
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Falha ao cancelar: " + e.message, "error");
+            } finally {
+                 // Limpa o campo de justificativa para o próximo uso
+                 document.getElementById('campo-justificativa').value = '';
+            }
+        }
+
+
+        // Toast Helper
+        function showToast(msg, type, duration = 3000) {
+            const container = document.getElementById('toast-container');
+            const div = document.createElement('div');
+            div.className = `toast ${type}`;
+            div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
+            container.appendChild(div);
+            // Remove toasts antigos para manter apenas 1 ou 2 visíveis
+            while(container.children.length > 3) {
+                container.firstChild.remove();
+            }
+            setTimeout(() => div.remove(), duration);
+        }
+
+    </script>
 
 </body>
 </html>
