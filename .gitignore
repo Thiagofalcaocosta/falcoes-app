@@ -1,1 +1,8 @@
-node_modules
+# Ignorar arquivos de backup
+*.bak
+
+# Ignorar pasta de dependências do Node
+/node_modules
+
+# Ignorar arquivos de log
+*.log
