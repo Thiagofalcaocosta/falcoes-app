@@ -425,23 +425,20 @@
             cursor: pointer;
         }
         
-        
-        /* Bloco de ESTILO PARA O CAMPO TEXTAREA NO MODAL DE JUSTIFICATIVA (aproximadamente linha 283) */
-.modal-content textarea {
-    width: 100%; 
-    height: 80px; 
-    padding: 10px; 
-    box-sizing: border-box; 
-    border-radius: 8px; 
-    border: 1px solid var(--border-color); 
-    background: var(--input-bg); 
-    color: white; 
-    resize: none;
-    font-family: inherit;
-    /* --- CORREÇÃO: ADICIONAR Z-INDEX ALTO --- */
-    position: relative; 
-    z-index: 10000; /* Mais alto que o modal (9999) */
-}
+        /* ESTILO PARA O CAMPO TEXTAREA NO MODAL DE JUSTIFICATIVA */
+        .modal-content textarea {
+            width: 100%; 
+            height: 80px; 
+            padding: 10px; 
+            box-sizing: border-box; 
+            border-radius: 8px; 
+            border: 1px solid var(--border-color); 
+            background: var(--input-bg); 
+            color: white; 
+            resize: none;
+            font-family: inherit;
+        }
+
 
         #map {
             height: 180px;

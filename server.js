@@ -4,6 +4,17 @@ const { Pool } = require('pg');
 const path = require('path');
 const cors = require('cors');
 
+// suporte a fetch no Node: usa global fetch (Node >=18) ou node-fetch (Node <18)
+let fetchFn = globalThis.fetch;
+if (!fetchFn) {
+  try {
+    fetchFn = require('node-fetch');
+  } catch (e) {
+    console.warn('node-fetch não instalado — instale com: npm install node-fetch@2');
+  }
+}
+
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -14,6 +25,75 @@ app.use(cors());
 // 1. SERVIR ARQUIVOS ESTÁTICOS (CSS, IMAGENS, JS)
 app.use(express.static(path.join(__dirname)));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+// PROXY para Nominatim (reverse geocoding) - evita CORS no browser
+app.get('/reverse', async (req, res) => {
+  try {
+    const lat = req.query.lat;
+    const lon = req.query.lon;
+    if (!lat || !lon) return res.status(400).json({ error: 'missing lat or lon' });
+
+    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=18&addressdetails=1`;
+
+    const r = await fetchFn(nominatimUrl, {
+      headers: {
+        // **TROQUE PELO SEU EMAIL REAL AQUI**
+        'User-Agent': 'FalcaoApp/1.0 (seu-email@exemplo.com)'
+      },
+      timeout: 10000
+    });
+
+    const text = await r.text();
+    if (!r.ok) {
+      // repassa o status e a mensagem do nominatim (p.ex. 503)
+      return res.status(r.status).send(text);
+    }
+
+    try {
+      const json = JSON.parse(text);
+      return res.json(json);
+    } catch (err) {
+      return res.send(text);
+    }
+  } catch (err) {
+    console.error('proxy /reverse error:', err);
+    return res.status(500).json({ error: 'proxy failed', details: String(err) });
+  }
+});
+// PROXY para Nominatim (reverse geocoding) - evita CORS no browser
+app.get('/reverse', async (req, res) => {
+  try {
+    const lat = req.query.lat;
+    const lon = req.query.lon;
+    if (!lat || !lon) return res.status(400).json({ error: 'missing lat or lon' });
+
+    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=18&addressdetails=1`;
+
+    const r = await fetchFn(nominatimUrl, {
+      headers: {
+        // **TROQUE PELO SEU EMAIL REAL AQUI**
+        'User-Agent': 'FalcaoApp/1.0 (seu-email@exemplo.com)'
+      },
+      timeout: 10000
+    });
+
+    const text = await r.text();
+    if (!r.ok) {
+      // repassa o status e a mensagem do nominatim (p.ex. 503)
+      return res.status(r.status).send(text);
+    }
+
+    try {
+      const json = JSON.parse(text);
+      return res.json(json);
+    } catch (err) {
+      return res.send(text);
+    }
+  } catch (err) {
+    console.error('proxy /reverse error:', err);
+    return res.status(500).json({ error: 'proxy failed', details: String(err) });
+  }
+});
 
 // rota curta /app redireciona para /install.html
 app.get('/app', (req, res) => {
