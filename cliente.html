@@ -490,6 +490,71 @@
         .toast.error { border-color: var(--error-color); }
         .toast .msg { flex: 1; font-size: 14px; }
         .toast .close { background: none; border: none; color: #fff; cursor: pointer; font-size: 18px; }
+        /* FORÇA o modal a ficar SEMPRE acima de TUDO, inclusive do mapa */
+#modal-justificativa,
+#modal-encerramento,
+#modal-busca {
+    z-index: 999999 !important;
+    position: fixed !important;
+}
+
+#modal-justificativa .modal-content,
+#modal-encerramento .modal-content,
+#modal-busca .modal-content {
+    z-index: 1000000 !important;
+    position: relative !important;
+}
+/* Garante que os modais fiquem sempre acima do mapa/leaflet */
+#modal-busca,
+#modal-justificativa,
+#modal-encerramento {
+  z-index: 999999 !important;
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: none; /* fica oculto por padrão; o JS abre com display:flex */
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(0,0,0,0.85) !important; /* leve escurecimento por cima do app */
+}
+
+#modal-busca .modal-content,
+#modal-justificativa .modal-content,
+#modal-encerramento .modal-content {
+  z-index: 1000000 !important;
+  position: relative !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  margin: auto !important;
+}
+/* Garante que os modais fiquem acima de qualquer overlay (mapa/leaflet etc.) */
+#modal-busca,
+#modal-justificativa,
+#modal-encerramento {
+  z-index: 2147483646 !important;   /* número muito alto, garante prioridade */
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: none; /* o JS abre com display:flex quando necessário */
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(0,0,0,0.85) !important; /* leve escurecimento sobre o app */
+}
+
+#modal-busca .modal-content,
+#modal-justificativa .modal-content,
+#modal-encerramento .modal-content {
+  z-index: 2147483647 !important;
+  position: relative !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  margin: auto !important;
+}
+
 
     </style>
 <script type="importmap">
@@ -998,7 +1063,7 @@ function calcDistanciaReta(c1, c2) {
 
 
             // 1. Mostrar o modal de carregamento
-            document.getElementById('modal-busca').style.display = 'flex';
+            document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
 
             try {
                 const body = {
@@ -1051,6 +1116,9 @@ function calcDistanciaReta(c1, c2) {
                 const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
                 const data = await res.json();
                 const pedido = data.pedido;
+                console.log('[DEBUG] verificarStatus -> data:', data);
+console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.status);
+
                 
                 if (!data.success || !pedido) {
                     // Trata erro de API
@@ -1113,9 +1181,18 @@ function calcDistanciaReta(c1, c2) {
 
                     // Abre o modal de confirmação (se não estiver já aberto)
                     const modalEnc = document.getElementById('modal-encerramento');
-                    if (modalEnc && modalEnc.style.display !== 'flex') {
-                        abrirModalEncerramento(`A corrida foi finalizada. Confirme e, se desejar, deixe uma observação.`);
-                    }
+try {
+    const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
+    if (modalEnc && modalDisplay === 'none') {
+        console.log('[DEBUG] abrirModalEncerramento() chamado — status finalizado recebido.');
+        abrirModalEncerramento('A corrida foi finalizada. Confirme e, se desejar, deixe uma observação.');
+    } else {
+        console.log('[DEBUG] modal-encerramento já visível ou ausente (display=' + modalDisplay + ')');
+    }
+} catch (err) {
+    console.warn('[DEBUG] erro ao avaliar modal-encerramento:', err);
+    if (modalEnc) abrirModalEncerramento('A corrida foi finalizada. Confirme e, se desejar, deixe uma observação.');
+}
 
                 } else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
                     // Pedido cancelado/expirado
@@ -1217,12 +1294,23 @@ function calcDistanciaReta(c1, c2) {
 
         // ======= NOVAS FUNÇÕES: ABRIR E CONFIRMAR ENCERRAMENTO (CLIENTE) =======
         // Abre modal de encerramento (cliente)
-        function abrirModalEncerramento(mensagemOpcional = '') {
-            const modal = document.getElementById('modal-encerramento');
-            const campo = document.getElementById('campo-encerramento');
-            const titulo = document.getElementById('encerramento-titulo');
+        function cancelarPedido() {
+  if (!idPedidoAtual) {
+    showToast("Nenhum pedido ativo para cancelar.", "error");
+    return;
+  }
+  const busca = document.getElementById('modal-busca');
+  if (busca) busca.style.display = 'none';
 
-            // garante que o modal esteja visível antes de focar (evita abrir teclado sem mostrar modal)
+  document.getElementById('modal-justificativa').style.display = 'flex';
+  document.getElementById('campo-justificativa').value = '';
+  document.getElementById('campo-justificativa').focus();
+
+
+
+
+
+ // garante que o modal esteja visível antes de focar (evita abrir teclado sem mostrar modal)
             campo.value = '';
             titulo.innerText = mensagemOpcional || 'A corrida foi finalizada. Confirme e, se desejar, deixe uma observação (opcional)';
             modal.style.display = 'flex';
@@ -1230,7 +1318,7 @@ function calcDistanciaReta(c1, c2) {
             // pequena espera para garantir que o modal foi renderizado em mobile antes de focar
             setTimeout(() => {
                 try { campo.focus(); } catch(e) {}
-            }, 120);
+            }, 220);
         }
 
         // Função que envia confirmação do cliente ao backend
