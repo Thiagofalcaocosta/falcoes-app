@@ -547,6 +547,19 @@ if ("serviceWorker" in navigator) {
         </div>
     </div>
 
+    <!-- Modal: confirmar encerramento (cliente) -->
+    <div class="modal-overlay" id="modal-encerramento" style="display:none;">
+        <div class="modal-content">
+            <div style="font-size: 22px; color: var(--neon-green); margin-bottom: 12px;">✅ Corrida Finalizada</div>
+            <div id="encerramento-titulo" style="font-size:16px; color:#fff; margin-bottom:8px;">
+                A corrida foi finalizada. Confirme e, se desejar, deixe uma observação (opcional)
+            </div>
+            <textarea id="campo-encerramento" placeholder="Ex: Tudo ok, atraso, avaria..." ></textarea>
+            <button onclick="confirmarEncerramentoCliente()" class="btn" style="margin-top:12px;">CONFIRMAR ENCERRAMENTO</button>
+            <button onclick="document.getElementById('modal-encerramento').style.display='none'" class="btn-cancelar" style="margin-top:8px;">Fechar</button>
+        </div>
+    </div>
+
     <div class="container">
         <div class="logo-area"><img src="assets/logo.png" alt="Logo" onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" /></div>
 
@@ -676,10 +689,10 @@ if ("serviceWorker" in navigator) {
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
     <script>
         
-        // === CONFIGURAÇÃO E DADOS (AGORA COM O TOKEN DO MAPBOX) ===
-        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtaW5sYnRtdDB1ZGIzZnB1OXhid2p4ZXQifQ.uAw7CNaemwsun4RGsyOOIQ'; // SEU TOKEN AQUI!
-        const MEU_IP = 'https://falcoes-app.onrender.com';
-        const LAT_TC = -21.6975;
+        // === CONFIGURAÇÃO E DADOS (AGORA COM O TOKEN DO MAPBOX) ===
+        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtaW5sYnRtdDB1ZGIzZnB1OXhid2p4ZXQifQ.uAw7CNaemwsun4RGsyOOIQ'; // SEU TOKEN AQUI!
+        const MEU_IP = 'https://falcoes-app.onrender.com';
+        const LAT_TC = -21.6975;
         const LON_TC = -45.25; // longitude padrão (ajuste conforme sua cidade)
         
         // Mock de usuário se não existir (para testes)
@@ -733,35 +746,35 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 }).addTo(map);
 
         map.on('click', async (e) => {
-            if (!mapMode) {
-                showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
-                return;
-            }
+            if (!mapMode) {
+                showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
+                return;
+            }
 
-            const { lat, lng } = e.latlng;
-            showToast("Buscando endereço com Mapbox...", "info", 1000);
+            const { lat, lng } = e.latlng;
+            showToast("Buscando endereço com Mapbox...", "info", 1000);
 
-            // ** Reverse Geocoding via Mapbox (LON,LAT) **
-            try {
-                const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
+            // ** Reverse Geocoding via Mapbox (LON,LAT) **
+            try {
+                const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
 
-                const res = await fetch(urlMapbox);
-                const data = await res.json();
-                
-                let rua, bairro;
+                const res = await fetch(urlMapbox);
+                const data = await res.json();
+                
+                let rua, bairro;
 
-                if (data.features && data.features.length > 0) {
-                    const feature = data.features[0];
-                    // Mapbox retorna o endereço completo no place_name. Pegamos o que está antes da primeira vírgula como rua.
-                    rua = feature.place_name.split(',')[0] || "Local Marcado"; 
-                    
-                    // Tentamos obter o bairro do contexto
-                    const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
-                    bairro = (neighborhood && neighborhood.text) || "Três Corações";
-                } else {
-                    rua = "Local Marcado";
-                    bairro = "Três Corações";
-                }
+                if (data.features && data.features.length > 0) {
+                    const feature = data.features[0];
+                    // Mapbox retorna o endereço completo no place_name. Pegamos o que está antes da primeira vírgula como rua.
+                    rua = feature.place_name.split(',')[0] || "Local Marcado"; 
+                    
+                    // Tentamos obter o bairro do contexto
+                    const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
+                    bairro = (neighborhood && neighborhood.text) || "Três Corações";
+                } else {
+                    rua = "Local Marcado";
+                    bairro = "Três Corações";
+                }
                 if (mapMode === 'origem') {
                     document.getElementById('rua-origem').value = rua;
                     document.getElementById('bairro-origem').value = bairro;
@@ -944,7 +957,7 @@ async function calcularRota() {
         resumo.innerText = "Erro ao calcular rota.";
     }
 }
-         
+         
 function calcDistanciaReta(c1, c2) {
     const R = 6371; 
     const dLat = (c2.lat - c1.lat) * Math.PI / 180;
@@ -1087,16 +1100,22 @@ function calcDistanciaReta(c1, c2) {
 
                     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
                     
-                } else if (pedido.status === 'finalizada') {
-                    // Corrida finalizada
-                    clearInterval(intervaloVerificacao);
-                    statusTitulo.innerText = "PEDIDO CONCLUÍDO!";
-                    statusDesc.innerText = `Valor pago: R$ ${pedido.valor.toFixed(2).replace('.', ',')}`;
-                    statusArea.style.borderColor = 'blue'; 
-                    statusArea.style.background = 'rgba(0, 0, 255, 0.1)';
+                } else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
+                    // Pedido finalizado pelo motoboy / sistema: pedir confirmação do cliente
+                    statusArea.style.borderColor = 'blue';
+                    statusArea.style.background = 'rgba(0, 0, 255, 0.05)';
                     statusTitulo.style.color = 'blue';
+                    statusTitulo.innerText = "CORRIDA FINALIZADA (A CONFIRMAR)";
+                    statusDesc.innerText = `Valor estimado: R$ ${ (pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',') }`;
+
+                    // Remove botão de cancelar para evitar conflitos
                     btnCancelar.style.display = 'none';
-                    localStorage.removeItem('idPedidoAtual');
+
+                    // Abre o modal de confirmação (se não estiver já aberto)
+                    const modalEnc = document.getElementById('modal-encerramento');
+                    if (modalEnc && modalEnc.style.display !== 'flex') {
+                        abrirModalEncerramento(`A corrida foi finalizada. Confirme e, se desejar, deixe uma observação.`);
+                    }
 
                 } else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
                     // Pedido cancelado/expirado
@@ -1195,6 +1214,70 @@ function calcDistanciaReta(c1, c2) {
             }
         }
 
+
+        // ======= NOVAS FUNÇÕES: ABRIR E CONFIRMAR ENCERRAMENTO (CLIENTE) =======
+        // Abre modal de encerramento (cliente)
+        function abrirModalEncerramento(mensagemOpcional = '') {
+            const modal = document.getElementById('modal-encerramento');
+            const campo = document.getElementById('campo-encerramento');
+            const titulo = document.getElementById('encerramento-titulo');
+
+            // garante que o modal esteja visível antes de focar (evita abrir teclado sem mostrar modal)
+            campo.value = '';
+            titulo.innerText = mensagemOpcional || 'A corrida foi finalizada. Confirme e, se desejar, deixe uma observação (opcional)';
+            modal.style.display = 'flex';
+
+            // pequena espera para garantir que o modal foi renderizado em mobile antes de focar
+            setTimeout(() => {
+                try { campo.focus(); } catch(e) {}
+            }, 120);
+        }
+
+        // Função que envia confirmação do cliente ao backend
+        async function confirmarEncerramentoCliente() {
+            const observacao = document.getElementById('campo-encerramento').value.trim();
+
+            // Mostrar modal de carregamento (reaproveita modal-busca)
+            document.getElementById('modal-encerramento').style.display = 'none';
+            document.getElementById('modal-busca').style.display = 'flex';
+            document.getElementById('status-titulo-modal').innerText = "Registrando finalização...";
+            document.getElementById('status-desc-modal').style.innerText = "Enviando confirmação...";
+
+            try {
+                // Se houver observação, envie como mensagem para o backend (rota já existente)
+                if (observacao && idPedidoAtual) {
+                    await fetch(`${MEU_IP}/enviar-mensagem`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            corrida_id: idPedidoAtual,
+                            remetente: 'cliente',
+                            texto: observacao
+                        })
+                    }).catch(err => console.warn('Falha ao enviar observacao:', err));
+                }
+
+                // Limpeza local e atualização da UI
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Finalização registrada. Obrigado!", "success", 3000);
+
+                clearInterval(intervaloVerificacao);
+                localStorage.removeItem('idPedidoAtual');
+                idPedidoAtual = null;
+
+                // Atualiza a tela de acompanhamento
+                document.getElementById('acompanhamento-status-titulo').innerText = "PEDIDO CONCLUÍDO!";
+                document.getElementById('acompanhamento-status-desc').innerText = "Obrigado por usar Falcões.";
+                document.getElementById('btn-cancelar-acomp').style.display = 'none';
+
+                // volta à tela principal depois de curto delay
+                setTimeout(() => reiniciarApp(), 1400);
+
+            } catch (e) {
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Falha ao registrar finalização: " + e.message, "error");
+            }
+        }
 
         // Toast Helper
         function showToast(msg, type, duration = 3000) {
