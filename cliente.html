@@ -501,21 +501,21 @@ if ("serviceWorker" in navigator) {
     </div>
     
     <div class="modal-overlay" id="modal-justificativa">
-        <div class="modal-box" style="border-color: var(--error-color); box-shadow: 0 0 30px rgba(255, 68, 68, 0.2);">
-            <div class="modal-titulo" style="font-size: 24px; color: var(--error-color); margin-bottom: 15px;">⚠️ Cancelar Pedido</div>
-            <div id="justificativa-titulo" style="font-size: 16px; color: white; margin-bottom: 10px; font-weight: 600;">Por que deseja cancelar?</div>
-            
-            <textarea id="campo-justificativa" 
-                      placeholder="Ex: Não preciso mais, endereço errado, demora..."></textarea>
-                      
-            <button onclick="confirmarCancelamentoCliente()" class="btn" style="background-color: var(--error-color); color: white; margin-top: 15px;">
-                CONFIRMAR CANCELAMENTO
-            </button>
-            <button onclick="document.getElementById('modal-justificativa').style.display='none'" class="btn-cancelar" style="border: none; color: #aaa; margin-top: 10px;">
-                Voltar
-            </button>
-        </div>
-    </div>
+        <div class="modal-content">
+            <div style="font-size: 24px; color: var(--error-color); margin-bottom: 15px;">⚠️ Cancelar Pedido</div>
+            <div id="justificativa-titulo" style="font-size: 16px; color: white; margin-bottom: 10px; font-weight: 600;">Por que deseja cancelar?</div>
+            
+            <textarea id="campo-justificativa" 
+                      placeholder="Ex: Não preciso mais, endereço errado, demora do piloto..."></textarea>
+                      
+            <button onclick="confirmarCancelamentoCliente()" class="btn" style="background-color: var(--error-color); color: white; margin-top: 15px;">
+                CONFIRMAR CANCELAMENTO
+            </button>
+            <button onclick="document.getElementById('modal-justificativa').style.display='none'" class="btn-cancelar" style="border: none; color: #aaa; margin-top: 10px;">
+                Voltar
+            </button>
+        </div>
+    </div>
 
     <div class="container">
         <div class="logo-area"><img src="assets/logo.png" alt="Logo" onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" /></div>
