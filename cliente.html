@@ -443,7 +443,7 @@
     font-family: inherit;
     /* --- CORREÇÃO: ADICIONAR Z-INDEX ALTO E GARANTIR VISIBILIDADE --- */
     position: relative; 
-    z-index: 10000; 
+    z-index: 1000000; 
     margin-bottom: 5px; /* Adiciona espaço extra para não ser cortado */
 }
 
@@ -498,12 +498,31 @@
     position: fixed !important;
 }
 
-#modal-justificativa .modal-content,
-#modal-encerramento .modal-content,
-#modal-busca .modal-content {
-    z-index: 1000000 !important;
-    position: relative !important;
+#modal-busca,
+#modal-justificativa,
+#modal-encerramento {
+  display: none; /* sem !important */
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483646 !important;
+  background: rgba(0,0,0,0.85);
 }
+
+#modal-busca .modal-content,
+#modal-justificativa .modal-content,
+#modal-encerramento .modal-content {
+  z-index: 2147483647 !important;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: auto;
+}
+
 /* Garante que os modais fiquem sempre acima do mapa/leaflet */
 #modal-busca,
 #modal-justificativa,
