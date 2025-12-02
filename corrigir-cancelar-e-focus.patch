@@ -1,0 +1,152 @@
+*** Begin Patch
+*** Update File: cliente.html
+@@
+-        map.on('click', async (e) => {
+-            if (!mapMode) {
+-                showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
+-                return;
+-            }
+-
+-            const { lat, lng } = e.latlng;
+-            showToast("Buscando endereço com Mapbox...", "info", 1000);
+-
+-            // ** Reverse Geocoding via Mapbox (LON,LAT) **
+-            try {
+-                const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
+-
+-                const res = await fetch(urlMapbox);
+-                const data = await res.json();
+-                
+-                let rua, bairro;
+-
+-                if (data.features && data.features.length > 0) {
+-                    const feature = data.features[0];
+-                    // Mapbox retorna o endereço completo no place_name. Pegamos o que está antes da primeira vírgula como rua.
+-                    rua = feature.place_name.split(',')[0] || "Local Marcado"; 
+-                    
+-                    // Tentamos obter o bairro do contexto
+-                    const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
+-                    bairro = (neighborhood && neighborhood.text) || "Três Corações";
+-                } else {
+-                    rua = "Local Marcado";
+-                    bairro = "Três Corações";
+-                }
+-                if (mapMode === 'origem') {
+-                    document.getElementById('rua-origem').value = rua;
+-                    document.getElementById('bairro-origem').value = bairro;
+-                    document.getElementById('num-origem').focus();
+-                    coordsOrigem = { lat, lon: lng };
+-                    if(markerOrigem) map.removeLayer(markerOrigem);
+-                    markerOrigem = L.marker([lat, lng]).addTo(map);
+-                } else {
+-                    document.getElementById('rua-destino').value = rua;
+-                    document.getElementById('bairro-destino').value = bairro;
+-                    document.getElementById('num-destino').focus();
+-                    coordsDestino = { lat, lon: lng };
+-                    if(markerDestino) map.removeLayer(markerDestino);
+-                    markerDestino = L.marker([lat, lng]).addTo(map);
+-                }
+-
+-                showToast("Endereço preenchido! Digite o número.", "success");
+-                mapMode = null; // Reset modo
+-                calcularRota();
+-
+-            } catch (error) {
+-                showToast("Erro ao obter endereço do mapa.", "error");
+-            }
+-        });
++        map.on('click', async (e) => {
++            if (!mapMode) {
++                showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
++                return;
++            }
++
++            const { lat, lng } = e.latlng;
++            showToast("Buscando endereço com Mapbox...", "info", 1000);
++
++            // ** Reverse Geocoding via Mapbox (LON,LAT) **
++            try {
++                const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
++
++                const res = await fetch(urlMapbox);
++                const data = await res.json();
++                
++                let rua, bairro;
++
++                if (data.features && data.features.length > 0) {
++                    const feature = data.features[0];
++                    // Mapbox retorna o endereço completo no place_name. Pegamos o que está antes da primeira vírgula como rua.
++                    rua = feature.place_name.split(',')[0] || "Local Marcado"; 
++                    
++                    // Tentamos obter o bairro do contexto
++                    const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
++                    bairro = (neighborhood && neighborhood.text) || "Três Corações";
++                } else {
++                    rua = "Local Marcado";
++                    bairro = "Três Corações";
++                }
++                if (mapMode === 'origem') {
++                    document.getElementById('rua-origem').value = rua;
++                    document.getElementById('bairro-origem').value = bairro;
++                    // REMOVIDO: focus automático em num-origem para evitar abrir teclado sem querer
++                    coordsOrigem = { lat, lon: lng };
++                    if(markerOrigem) map.removeLayer(markerOrigem);
++                    markerOrigem = L.marker([lat, lng]).addTo(map);
++                } else {
++                    document.getElementById('rua-destino').value = rua;
++                    document.getElementById('bairro-destino').value = bairro;
++                    // REMOVIDO: focus automático em num-destino para evitar abrir teclado sem querer
++                    coordsDestino = { lat, lon: lng };
++                    if(markerDestino) map.removeLayer(markerDestino);
++                    markerDestino = L.marker([lat, lng]).addTo(map);
++                }
++
++                showToast("Endereço preenchido! Digite o número.", "success");
++                mapMode = null; // Reset modo
++                calcularRota();
++
++            } catch (error) {
++                showToast("Erro ao obter endereço do mapa.", "error");
++            }
++        });
+@@
+-                    div.onclick = () => {
+-                        document.getElementById(`rua-${type}`).value = rua;
+-                        document.getElementById(`bairro-${type}`).value = bairro;
+-                        
+-                        // Mapbox usa [lon, lat], convertemos para {lat, lon}
+-                        const coords = { lat: item.center[1], lon: item.center[0] }; 
+-                        if(type === 'origem') coordsOrigem = coords;
+-                        else coordsDestino = coords;
+-
+-                        list.style.display = 'none';
+-                        
+-                        const numInput = document.getElementById(`num-${type}`);
+-                        numInput.focus();
+-                        numInput.classList.add('erro'); 
+-                        setTimeout(() => numInput.classList.remove('erro'), 500);
+-
+-                        calcularRota();
+-                    };
++                    div.onclick = () => {
++                        document.getElementById(`rua-${type}`).value = rua;
++                        document.getElementById(`bairro-${type}`).value = bairro;
++                        
++                        // Mapbox usa [lon, lat], convertemos para {lat, lon}
++                        const coords = { lat: item.center[1], lon: item.center[0] }; 
++                        if(type === 'origem') coordsOrigem = coords;
++                        else coordsDestino = coords;
++
++                        list.style.display = 'none';
++                        
++                        const numInput = document.getElementById(`num-${type}`);
++                        // REMOVIDO: foco automático para não disparar teclado móvel
++                        // Mantemos indicação visual de erro (sem foco) se desejar:
++                        if (numInput) {
++                            numInput.classList.add('erro');
++                            setTimeout(() => numInput.classList.remove('erro'), 500);
++                        }
++
++                        calcularRota();
++                    };
+*** End Patch

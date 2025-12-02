@@ -379,29 +379,32 @@
             background-color: #1FAF59;
         }
         
-        /* --- MODAL DE BUSCA (temporário) --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .modal-content {
-            background: var(--card-color);
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            width: 85%;
-            max-width: 350px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 0 40px rgba(0, 230, 64, 0.15);
-        }
+        /* --- MODAL DE BUSCA (ATUALIZADO) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Z-index alto para ficar acima de tudo */
+    overflow-y: auto; /* PERMITE ROLAR SE O CONTEÚDO FOR MAIOR QUE A TELA */
+    padding: 20px 0; /* Espaço vertical para não grudar no topo/base */
+}
+.modal-content {
+    background: var(--card-color);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    width: 85%;
+    max-width: 350px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 0 40px rgba(0, 230, 64, 0.15);
+    margin: auto; /* Centraliza verticalmente */
+}
         .spinner {
             border: 5px solid #333;
             border-top: 5px solid var(--neon-green);
@@ -425,20 +428,24 @@
             cursor: pointer;
         }
         
-        /* ESTILO PARA O CAMPO TEXTAREA NO MODAL DE JUSTIFICATIVA */
-        .modal-content textarea {
-            width: 100%; 
-            height: 80px; 
-            padding: 10px; 
-            box-sizing: border-box; 
-            border-radius: 8px; 
-            border: 1px solid var(--border-color); 
-            background: var(--input-bg); 
-            color: white; 
-            resize: none;
-            font-family: inherit;
-        }
-
+        
+        /* Bloco de ESTILO PARA O CAMPO TEXTAREA NO MODAL DE JUSTIFICATIVA (aproximadamente linha 283) */
+.modal-content textarea {
+    width: 100%; 
+    height: 80px; 
+    padding: 10px; 
+    box-sizing: border-box; 
+    border-radius: 8px; 
+    border: 1px solid var(--border-color); 
+    background: var(--input-bg); 
+    color: white; 
+    resize: none;
+    font-family: inherit;
+    /* --- CORREÇÃO: ADICIONAR Z-INDEX ALTO E GARANTIR VISIBILIDADE --- */
+    position: relative; 
+    z-index: 1000000; 
+    margin-bottom: 5px; /* Adiciona espaço extra para não ser cortado */
+}
 
         #map {
             height: 180px;
@@ -483,7 +490,64 @@
         .toast.error { border-color: var(--error-color); }
         .toast .msg { flex: 1; font-size: 14px; }
         .toast .close { background: none; border: none; color: #fff; cursor: pointer; font-size: 18px; }
+        /* FORÇA o modal a ficar SEMPRE acima de TUDO, inclusive do mapa */
+#modal-justificativa,
+#modal-encerramento,
+#modal-busca {
+    z-index: 999999 !important;
+    position: fixed !important;
+}
 
+#modal-busca,
+#modal-justificativa,
+#modal-encerramento {
+  display: none; /* sem !important */
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483646 !important;
+  background: rgba(0,0,0,0.85);
+}
+
+#modal-busca .modal-content,
+#modal-justificativa .modal-content,
+#modal-encerramento .modal-content {
+  z-index: 2147483647 !important;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: auto;
+}
+
+/* Garante que os modais fiquem sempre acima do mapa/leaflet */
+#modal-busca,
+#modal-justificativa,
+#modal-encerramento {
+  z-index: 999999 !important;
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: none; /* fica oculto por padrão; o JS abre com display:flex */
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(0,0,0,0.85) !important; /* leve escurecimento por cima do app */
+}
+
+#modal-busca .modal-content,
+#modal-justificativa .modal-content,
+#modal-encerramento .modal-content {
+  z-index: 1000000 !important;
+  position: relative !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  margin: auto !important;
+}
     </style>
 <script type="importmap">
 {
@@ -537,6 +601,19 @@ if ("serviceWorker" in navigator) {
             <button onclick="document.getElementById('modal-justificativa').style.display='none'" class="btn-cancelar" style="border: none; color: #aaa; margin-top: 10px;">
                 Voltar
             </button>
+        </div>
+    </div>
+
+    <!-- Modal: confirmar encerramento (cliente) -->
+    <div class="modal-overlay" id="modal-encerramento" style="display:none;">
+        <div class="modal-content">
+            <div style="font-size: 22px; color: var(--neon-green); margin-bottom: 12px;">✅ Corrida Finalizada</div>
+            <div id="encerramento-titulo" style="font-size:16px; color:#fff; margin-bottom:8px;">
+                A corrida foi finalizada. Confirme e, se desejar, deixe uma observação (opcional)
+            </div>
+            <textarea id="campo-encerramento" placeholder="Ex: Tudo ok, atraso, avaria..." ></textarea>
+            <button onclick="confirmarEncerramentoCliente()" class="btn" style="margin-top:12px;">CONFIRMAR ENCERRAMENTO</button>
+            <button onclick="document.getElementById('modal-encerramento').style.display='none'" class="btn-cancelar" style="margin-top:8px;">Fechar</button>
         </div>
     </div>
 
@@ -668,10 +745,12 @@ if ("serviceWorker" in navigator) {
 
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
     <script>
-        // === CONFIGURAÇÃO E DADOS ===
+        
+        // === CONFIGURAÇÃO E DADOS (AGORA COM O TOKEN DO MAPBOX) ===
+        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtaW5sYnRtdDB1ZGIzZnB1OXhid2p4ZXQifQ.uAw7CNaemwsun4RGsyOOIQ'; // SEU TOKEN AQUI!
         const MEU_IP = 'https://falcoes-app.onrender.com';
         const LAT_TC = -21.6975;
-        const LON_TC = -45.2556;
+        const LON_TC = -45.25; // longitude padrão (ajuste conforme sua cidade)
         
         // Mock de usuário se não existir (para testes)
         if(!localStorage.getItem("usuario")) {
@@ -711,12 +790,17 @@ if ("serviceWorker" in navigator) {
             window.location.reload(); 
         }
 
-        // === INICIALIZAÇÃO DO MAPA (Permanece) ===
-        const map = L.map('map').setView([LAT_TC, LON_TC], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap',
-            maxZoom: 19
-        }).addTo(map);
+        // === INICIALIZAÇÃO DO MAPA (AGORA COM MAPBOX) ===
+const map = L.map('map').setView([LAT_TC, LON_TC], 14);
+// ** USANDO A CAMADA DE MAPA DO MAPBOX (REQUER O TOKEN) **
+L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+    attribution: 'Mapa &copy; <a href="https://www.mapbox.com/">Mapbox</a> | Dados &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+    maxZoom: 19,
+    id: 'mapbox/streets-v11', // Estilo do Mapa (pode ser trocado)
+    tileSize: 512,
+    zoomOffset: -1,
+    accessToken: MAPBOX_ACCESS_TOKEN 
+}).addTo(map);
 
         map.on('click', async (e) => {
             if (!mapMode) {
@@ -725,27 +809,38 @@ if ("serviceWorker" in navigator) {
             }
 
             const { lat, lng } = e.latlng;
-            showToast("Buscando endereço...", "info", 1000);
+            showToast("Buscando endereço com Mapbox...", "info", 1000);
 
-            // Reverse Geocoding via Nominatim (Gratuito)
+            // ** Reverse Geocoding via Mapbox (LON,LAT) **
             try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
+
+                const res = await fetch(urlMapbox);
                 const data = await res.json();
                 
-                const rua = data.address.road || data.address.pedestrian || "Local Marcado";
-                const bairro = data.address.suburb || data.address.neighbourhood || data.address.city_district || "Três Corações";
+                let rua, bairro;
 
+                if (data.features && data.features.length > 0) {
+                    const feature = data.features[0];
+                    // Mapbox retorna o endereço completo no place_name. Pegamos o que está antes da primeira vírgula como rua.
+                    rua = feature.place_name.split(',')[0] || "Local Marcado"; 
+                    
+                    // Tentamos obter o bairro do contexto
+                    const neighborhood = (feature.context||[]).find(c => c.id && c.id.startsWith && c.id.startsWith('neighborhood'));
+                    bairro = (neighborhood && neighborhood.text) || "Três Corações";
+                } else {
+                    rua = "Local Marcado";
+                    bairro = "Três Corações";
+                }
                 if (mapMode === 'origem') {
                     document.getElementById('rua-origem').value = rua;
                     document.getElementById('bairro-origem').value = bairro;
-                    document.getElementById('num-origem').focus();
                     coordsOrigem = { lat, lon: lng };
                     if(markerOrigem) map.removeLayer(markerOrigem);
                     markerOrigem = L.marker([lat, lng]).addTo(map);
                 } else {
                     document.getElementById('rua-destino').value = rua;
                     document.getElementById('bairro-destino').value = bairro;
-                    document.getElementById('num-destino').focus();
                     coordsDestino = { lat, lon: lng };
                     if(markerDestino) map.removeLayer(markerDestino);
                     markerDestino = L.marker([lat, lng]).addTo(map);
@@ -806,106 +901,130 @@ if ("serviceWorker" in navigator) {
             }
         });
 
-        // LÓGICA DE ENDEREÇO e CÁLCULO DE ROTA (Omitidas para brevidade no comentário, mas mantidas no código)
-        function buscarEndereco(query, listId, type) { 
-            const list = document.getElementById(listId);
-            if (query.length < 3) {
-                list.style.display = 'none';
-                return;
-            }
+        // LÓGICA DE ENDEREÇO e CÁLCULO DE ROTA (AGORA COM MAPBOX)
+function buscarEndereco(query, listId, type) { 
+    const list = document.getElementById(listId);
+    if (query.length < 3) {
+        list.style.display = 'none';
+        return;
+    }
 
-            clearTimeout(timeoutBusca);
-            timeoutBusca = setTimeout(async () => {
-                try {
-                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Três Corações")}&addressdetails=1&limit=5&countrycodes=br`;
-                    const res = await fetch(url);
-                    const data = await res.json();
+    clearTimeout(timeoutBusca);
+    timeoutBusca = setTimeout(async () => {
+        try {
+            // ** USANDO A API DE PESQUISA (Search) DO MAPBOX **
+            // Usa bbox para limitar a busca à área de Três Corações (ajusta a área conforme necessário)
+            const bounds = '-45.30,-21.75,-45.20,-21.65'; // [minLon, minLat, maxLon, maxLat]
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?country=BR&bbox=${bounds}&limit=5&access_token=${MAPBOX_ACCESS_TOKEN}`;
+            
+            const res = await fetch(url);
+            const data = await res.json();
 
-                    list.innerHTML = '';
-                    if (data.length > 0) {
-                        data.forEach(item => {
-                            const rua = item.address.road || item.address.pedestrian || item.display_name.split(',')[0];
-                            const bairro = item.address.suburb || item.address.neighbourhood || "Centro";
+            list.innerHTML = '';
+            
+            if (data.features && data.features.length > 0) {
+                data.features.forEach(item => {
+                    const rua = item.place_name.split(',')[0];
+                    const context = item.context || [];
+                    const neighborhood = context.find(c => c.id && c.id.startsWith && c.id.startsWith('neighborhood'));
+                    const bairro = (neighborhood && neighborhood.text) || "Três Corações";
 
-                            const div = document.createElement('div');
-                            div.className = 'sugestao-item';
-                            div.innerHTML = `<span class="rua-texto">${rua}</span><span class="bairro-texto">${bairro}</span>`;
-                            
-                            div.onclick = () => {
-                                document.getElementById(`rua-${type}`).value = rua;
-                                document.getElementById(`bairro-${type}`).value = bairro;
-                                
-                                const coords = { lat: parseFloat(item.lat), lon: parseFloat(item.lon) };
-                                if(type === 'origem') coordsOrigem = coords;
-                                else coordsDestino = coords;
+                    const div = document.createElement('div');
+                    div.className = 'sugestao-item';
+                    div.innerHTML = `<span class="rua-texto">${rua}</span><span class="bairro-texto">${bairro}</span>`;
+                    
+                    div.onclick = () => {
+                        document.getElementById(`rua-${type}`).value = rua;
+                        document.getElementById(`bairro-${type}`).value = bairro;
+                        
+                        // Mapbox usa [lon, lat], convertemos para {lat, lon}
+                        const coords = { lat: item.center[1], lon: item.center[0] }; 
+                        if(type === 'origem') coordsOrigem = coords;
+                        else coordsDestino = coords;
 
-                                list.style.display = 'none';
-                                
-                                const numInput = document.getElementById(`num-${type}`);
-                                numInput.focus();
-                                numInput.classList.add('erro'); 
-                                setTimeout(() => numInput.classList.remove('erro'), 500);
-
-                                calcularRota();
-                            };
-                            list.appendChild(div);
-                        });
-                        list.style.display = 'block';
-                    } else {
                         list.style.display = 'none';
-                    }
-                } catch (e) {
-                    console.error("Erro busca", e);
-                }
-            }, 500); 
-        }
+                        
+                        const numInput = document.getElementById(`num-${type}`);
+                        // NÃO chamamos numInput.focus() automaticamente para evitar teclado móvel
+                        if (numInput) {
+                            numInput.classList.add('erro');
+                            setTimeout(() => numInput.classList.remove('erro'), 500);
+                        }
 
-        async function calcularRota() {
-            if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
-
-            const resumo = document.getElementById('resumo');
-            resumo.style.display = 'block';
-            resumo.innerText = "Calculando...";
-
-            try {
-                const url = `https://router.project-osrm.org/route/v1/driving/${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}?overview=false`;
-                const res = await fetch(url);
-                const json = await res.json();
-
-                let distanciaKm = 0;
-                if (json.routes && json.routes.length > 0) {
-                    distanciaKm = json.routes[0].distance / 1000;
-                } else {
-                    distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
-                }
-
-                const regra = precos[servicoSelecionado];
-                const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
-                const total = regra.base + (kmCobrado * regra.kmExtra);
-
-                resumo.innerHTML = `
-                    <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km</div>
-                    <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
-                `;
-                
-                window.valorCalculado = total;
-
-            } catch (e) {
-                console.error("Erro rota", e);
-                resumo.innerText = "Erro ao calcular rota.";
+                        calcularRota();
+                    };
+                    list.appendChild(div);
+                });
+                list.style.display = 'block';
+            } else {
+                list.style.display = 'none';
             }
+        } catch (e) {
+            console.error("Erro busca Mapbox", e);
         }
+    }, 500); 
+}
+
+        // === FUNÇÃO DE CÁLCULO DE ROTA (AGORA COM MAPBOX DIRECTIONS API) ===
+async function calcularRota() {
+    if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
+
+    const resumo = document.getElementById('resumo');
+    resumo.style.display = 'block';
+    resumo.innerText = "Calculando rota com Mapbox...";
+
+    try {
+        // Directions API Mapbox: coordenadas no formato LON,LAT;LON,LAT
+        const coordenadas = `${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}`;
         
-        function calcDistanciaReta(c1, c2) {
-            const R = 6371; 
-            const dLat = (c2.lat - c1.lat) * Math.PI / 180;
-            const dLon = (c2.lon - c1.lon) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
+        // Mapbox Directions API
+        const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordenadas}?geometries=geojson&steps=false&access_token=${MAPBOX_ACCESS_TOKEN}`;
+        
+        const res = await fetch(url);
+        const json = await res.json();
+
+        let distanciaKm = 0;
+        let tempoSegundos = 0; 
+        
+        if (json.routes && json.routes.length > 0) {
+            // Distância em metros e Duração em segundos
+            distanciaKm = json.routes[0].distance / 1000;
+            tempoSegundos = json.routes[0].duration;
+        } else {
+            // Fallback: Distância em linha reta se a rota falhar
+            distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
+            tempoSegundos = (distanciaKm / 0.3) * 60; // Estima tempo a 18km/h
         }
+
+        const regra = precos[servicoSelecionado];
+        const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
+        const total = regra.base + (kmCobrado * regra.kmExtra);
+
+        const tempoMinutos = Math.ceil(tempoSegundos / 60);
+
+        resumo.innerHTML = `
+            <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km &nbsp; | &nbsp; Tempo: ${tempoMinutos} min</div>
+            <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
+        `;
+        
+        window.valorCalculado = total;
+
+    } catch (e) {
+        console.error("Erro rota Mapbox", e);
+        resumo.innerText = "Erro ao calcular rota.";
+    }
+}
+         
+function calcDistanciaReta(c1, c2) {
+    const R = 6371; 
+    const dLat = (c2.lat - c1.lat) * Math.PI / 180;
+    const dLon = (c2.lon - c1.lon) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
 
         // === ENVIO DE PEDIDO (Alterada para usar a nova tela) ===
         async function pedir() {
@@ -936,7 +1055,7 @@ if ("serviceWorker" in navigator) {
 
 
             // 1. Mostrar o modal de carregamento
-            document.getElementById('modal-busca').style.display = 'flex';
+            document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
 
             try {
                 const body = {
@@ -989,6 +1108,9 @@ if ("serviceWorker" in navigator) {
                 const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
                 const data = await res.json();
                 const pedido = data.pedido;
+                console.log('[DEBUG] verificarStatus -> data:', data);
+console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.status);
+
                 
                 if (!data.success || !pedido) {
                     // Trata erro de API
@@ -1038,16 +1160,31 @@ if ("serviceWorker" in navigator) {
 
                     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
                     
-                } else if (pedido.status === 'finalizada') {
-                    // Corrida finalizada
-                    clearInterval(intervaloVerificacao);
-                    statusTitulo.innerText = "PEDIDO CONCLUÍDO!";
-                    statusDesc.innerText = `Valor pago: R$ ${pedido.valor.toFixed(2).replace('.', ',')}`;
-                    statusArea.style.borderColor = 'blue'; 
-                    statusArea.style.background = 'rgba(0, 0, 255, 0.1)';
+                } else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
+                    // Pedido finalizado pelo motoboy / sistema: pedir confirmação do cliente
+                    statusArea.style.borderColor = 'blue';
+                    statusArea.style.background = 'rgba(0, 0, 255, 0.05)';
                     statusTitulo.style.color = 'blue';
+                    statusTitulo.innerText = "CORRIDA FINALIZADA (A CONFIRMAR)";
+                    statusDesc.innerText = `Valor estimado: R$ ${ (pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',') }`;
+
+                    // Remove botão de cancelar para evitar conflitos
                     btnCancelar.style.display = 'none';
-                    localStorage.removeItem('idPedidoAtual');
+
+                    // Abre o modal de confirmação (se não estiver já aberto)
+                    const modalEnc = document.getElementById('modal-encerramento');
+try {
+    const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
+    if (modalEnc && modalDisplay === 'none') {
+        console.log('[DEBUG] abrirModalEncerramento() chamado — status finalizado recebido.');
+        abrirModalEncerramento('A corrida foi finalizada. Confirme e, se desejar, deixe uma observação.');
+    } else {
+        console.log('[DEBUG] modal-encerramento já visível ou ausente (display=' + modalDisplay + ')');
+    }
+} catch (err) {
+    console.warn('[DEBUG] erro ao avaliar modal-encerramento:', err);
+    if (modalEnc) abrirModalEncerramento('A corrida foi finalizada. Confirme e, se desejar, deixe uma observação.');
+}
 
                 } else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
                     // Pedido cancelado/expirado
@@ -1089,18 +1226,35 @@ if ("serviceWorker" in navigator) {
         window.onload = checkPersistedOrder;
 
 
-        // === FUNÇÕES DE CANCELAMENTO ATUALIZADAS PARA USAR MODAL DE JUSTIFICATIVA ===
-        function cancelarPedido() {
-            if(!idPedidoAtual) {
-                showToast("Nenhum pedido ativo para cancelar.", "error");
-                return;
-            }
+        // === FUNÇÃO ÚNICA E SEGURA: abrir modal de justificativa (cancelamento) ===
+function cancelarPedido() {
+    if (!idPedidoAtual) {
+        showToast("Nenhum pedido ativo para cancelar.", "error");
+        return;
+    }
 
-            // 1. Abre o modal de justificativa
-            document.getElementById('modal-justificativa').style.display = 'flex';
-            document.getElementById('campo-justificativa').value = ''; // Limpa campo
-            document.getElementById('campo-justificativa').focus();
-        }
+    // Fecha qualquer modal de carregamento (se estiver aberto)
+    const busca = document.getElementById('modal-busca');
+    if (busca) busca.style.display = 'none';
+
+    const modal = document.getElementById('modal-justificativa');
+    const campo = document.getElementById('campo-justificativa');
+    const titulo = document.getElementById('justificativa-titulo');
+
+    if (!modal) {
+        console.warn('Modal de justificativa não encontrado.');
+        return;
+    }
+
+    if (titulo) titulo.innerText = 'Por que deseja cancelar?';
+    if (campo) campo.value = '';
+
+    modal.style.display = 'flex';
+
+    // Opcional: foco controlado (desativado para evitar teclado automático)
+    // setTimeout(() => { try { campo && campo.focus(); } catch (e) {} }, 200);
+}
+
 
         async function confirmarCancelamentoCliente() {
             const motivo = document.getElementById('campo-justificativa').value.trim();
@@ -1146,6 +1300,52 @@ if ("serviceWorker" in navigator) {
             }
         }
 
+
+        // Função que envia confirmação do cliente ao backend
+        async function confirmarEncerramentoCliente() {
+            const observacao = document.getElementById('campo-encerramento').value.trim();
+
+            // Mostrar modal de carregamento (reaproveita modal-busca)
+            document.getElementById('modal-encerramento').style.display = 'none';
+            document.getElementById('modal-busca').style.display = 'flex';
+            document.getElementById('status-titulo-modal').innerText = "Registrando finalização...";
+            document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
+
+            try {
+                // Se houver observação, envie como mensagem para o backend (rota já existente)
+                if (observacao && idPedidoAtual) {
+                    await fetch(`${MEU_IP}/enviar-mensagem`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            corrida_id: idPedidoAtual,
+                            remetente: 'cliente',
+                            texto: observacao
+                        })
+                    }).catch(err => console.warn('Falha ao enviar observacao:', err));
+                }
+
+                // Limpeza local e atualização da UI
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Finalização registrada. Obrigado!", "success", 3000);
+
+                clearInterval(intervaloVerificacao);
+                localStorage.removeItem('idPedidoAtual');
+                idPedidoAtual = null;
+
+                // Atualiza a tela de acompanhamento
+                document.getElementById('acompanhamento-status-titulo').innerText = "PEDIDO CONCLUÍDO!";
+                document.getElementById('acompanhamento-status-desc').innerText = "Obrigado por usar Falcões.";
+                document.getElementById('btn-cancelar-acomp').style.display = 'none';
+
+                // volta à tela principal depois de curto delay
+                setTimeout(() => reiniciarApp(), 1400);
+
+            } catch (e) {
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Falha ao registrar finalização: " + e.message, "error");
+            }
+        }
 
         // Toast Helper
         function showToast(msg, type, duration = 3000) {
