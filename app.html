@@ -21,3 +21,34 @@
 </head>
 <body>Redirecionando para instalação...</body>
 </html>
+// Exemplo de código no seu servidor (back-end)
+
+const express = require('express');
+const cors = require('cors'); // Importa o CORS
+const app = express();
+
+// Defina a URL do seu front-end hospedado no Render
+const allowedOrigins = [
+    'https://falcoes-app.onrender.com', // Domínio do seu front-end/site no Render
+    'http://localhost:8080' // Opcional: para testes locais
+];
+
+const corsOptions = {
+  // Permite todas as origens (mais simples, mas menos seguro)
+  // origin: '*', 
+  
+  // OU: Permite apenas as origens definidas acima (mais seguro)
+  origin: function (origin, callback) {
+    // Se a origem for permitida, ou se a origem for indefinida (caso de Postman, ou file://)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Permite todos os métodos que você usa
+  credentials: true,
+};
+
+app.use(cors(corsOptions)); // Aplica o middleware CORS
+// ... O resto do seu código Express (app.get, app.post, etc.)
