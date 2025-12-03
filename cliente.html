@@ -1461,7 +1461,7 @@
             window.abrirJustificativaCliente = function () {
                 // valida se existe pedido ativo (adapte se seu código usa outro nome)
                 const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
-                if (!id) {
+                if (false) { // (!id) {
                     // use sua função de toast para avisar
                     if (typeof showToast === 'function') showToast("Nenhum pedido ativo para cancelar.", "error");
                     else alert("Nenhum pedido ativo para cancelar.");
@@ -1554,6 +1554,110 @@
 
     </script>
 
+    <script>
+        // CORREÇÃO: Sobrescrever lógica de justificativa para permitir cancelamento sem ID
+        window.abrirJustificativaCliente = function () {
+            // Permite abrir sempre
+            const modal = document.getElementById('modal-justificativa-cliente');
+            const campo = document.getElementById('campo-justificativa-cliente');
+            const btnConfirm = document.getElementById('btn-confirmar-just-cliente');
+            const erro = document.getElementById('erro-just-cliente');
+
+            // Fecha modal de busca se houver
+            const mb = document.getElementById('modal-busca');
+            if (mb) mb.style.display = 'none';
+
+            if (campo) campo.value = '';
+            if (btnConfirm) btnConfirm.disabled = true;
+            if (erro) erro.style.display = 'none';
+
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => { try { campo.focus(); } catch (e) { } }, 100);
+            }
+        };
+
+        // Re-adicionar listener do botão de confirmação
+        const btnConfirm = document.getElementById('btn-confirmar-just-cliente');
+        if (btnConfirm) {
+            // Clone para remover listeners antigos
+            const newBtn = btnConfirm.cloneNode(true);
+            btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
+
+            const campo = document.getElementById('campo-justificativa-cliente');
+            const erro = document.getElementById('erro-just-cliente');
+            const modal = document.getElementById('modal-justificativa-cliente');
+
+            // Re-adicionar listener de input (pois o clone perdeu)
+            if (campo) {
+                campo.addEventListener('input', () => {
+                    const v = campo.value.trim();
+                    newBtn.disabled = v.length < 5;
+                    if (v.length >= 5 && erro) erro.style.display = 'none';
+                });
+            }
+
+            newBtn.addEventListener('click', async () => {
+                const motivo = campo.value.trim();
+                if (motivo.length < 5) {
+                    if (erro) erro.style.display = 'block';
+                    return;
+                }
+
+                if (modal) modal.style.display = 'none';
+
+                // Mostra busca/loading
+                const mb = document.getElementById('modal-busca');
+                if (mb) {
+                    mb.style.display = 'flex';
+                    const titulo = document.getElementById('status-titulo-modal');
+                    const desc = document.getElementById('status-desc-modal');
+                    if (titulo) titulo.innerText = "CANCELANDO...";
+                    if (desc) desc.innerText = "Processando...";
+                }
+
+                try {
+                    const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
+
+                    if (id) {
+                        // Com ID: cancela no servidor
+                        const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : window.MEU_IP || "https://falcoes-app.onrender.com";
+                        const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
+                        });
+                        const json = await res.json().catch(() => ({ success: false }));
+
+                        if (json.success) {
+                            if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
+                            localStorage.removeItem('idPedidoAtual');
+                            window.idPedidoAtual = null;
+                            if (typeof showToast === 'function') showToast("Pedido cancelado.", "success");
+                            else alert("Pedido cancelado.");
+
+                            if (typeof verificarStatus === 'function') verificarStatus(id); // Para atualizar UI se precisar
+                            // Mas geralmente queremos resetar
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            throw new Error(json.message || 'Falha ao cancelar.');
+                        }
+                    } else {
+                        // Sem ID: cancelamento local
+                        if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
+                        localStorage.removeItem('idPedidoAtual');
+                        window.idPedidoAtual = null;
+                        if (typeof showToast === 'function') showToast("Busca cancelada.", "info");
+                        setTimeout(() => window.location.reload(), 500);
+                    }
+                } catch (e) {
+                    if (mb) mb.style.display = 'none';
+                    if (typeof showToast === 'function') showToast("Erro: " + e.message, "error");
+                    else alert("Erro: " + e.message);
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>
