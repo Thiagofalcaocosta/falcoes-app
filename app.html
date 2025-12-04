@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -9,17 +10,27 @@
   <meta http-equiv="refresh" content="0; url=/install">
 
   <!-- OPEN GRAPH para WhatsApp/Facebook/Twitter -->
-<meta property="og:title" content="FALCÕES — App Oficial 🚀" />
-<meta property="og:description" content="Peça mototáxi e entregas rápidas. Instale o App Falcões e ganhe tempo!" />
-<meta property="og:image" content="https://falcoes.site/assets/falcoes-banner.jpg?v=1" />
-<meta property="og:url" content="https://falcoes.site/app" />
-<meta property="og:type" content="website" />
-<meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:title" content="FALCÕES — App Oficial 🚀" />
+  <meta property="og:description" content="Peça mototáxi e entregas rápidas. Instale o App Falcões e ganhe tempo!" />
+  <meta property="og:image" content="https://falcoes.site/assets/falcoes-banner.jpg?v=1" />
+  <meta property="og:url" content="https://falcoes.site/app" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
 
 
-  <style>body{background:#000;color:#fff;font-family:Arial;text-align:center;padding-top:40px}</style>
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      font-family: Arial;
+      text-align: center;
+      padding-top: 40px
+    }
+  </style>
 </head>
+
 <body>Redirecionando para instalação...</body>
+
 </html>
 // Exemplo de código no seu servidor (back-end)
 
@@ -29,28 +40,26 @@ const app = express();
 
 // Defina a URL do seu front-end hospedado no Render
 const allowedOrigins = [
-    'https://falcoes-app.onrender.com', // Domínio do seu front-end/site no Render
-    'http://localhost:8080' // Opcional: para testes locais
+'https://falcoes-app.onrender.com', // Domínio do seu front-end/site no Render
+'http://localhost:8080' // Opcional: para testes locais
 ];
 
 const corsOptions = {
-  // Permite todas as origens (mais simples, mas menos seguro)
-  // origin: '*', 
-  
-  // OU: Permite apenas as origens definidas acima (mais seguro)
-  origin: function (origin, callback) {
-    // Se a origem for permitida, ou se a origem for indefinida (caso de Postman, ou file://)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Permite todos os métodos que você usa
-  credentials: true,
+// Permite todas as origens (mais simples, mas menos seguro)
+// origin: '*',
+
+// OU: Permite apenas as origens definidas acima (mais seguro)
+origin: function (origin, callback) {
+// Se a origem for permitida, ou se a origem for indefinida (caso de Postman, ou file://)
+if (!origin || allowedOrigins.includes(origin)) {
+callback(null, true);
+} else {
+callback(new Error('Not allowed by CORS'));
+}
+},
+methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Permite todos os métodos que você usa
+credentials: true,
 };
 
 app.use(cors(corsOptions)); // Aplica o middleware CORS
-<<<<<<< HEAD
 // ... O resto do seu código Express (app.get, app.post, etc.)
-=======
