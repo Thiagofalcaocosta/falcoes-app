@@ -1,15 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Falcões App</title>
 
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-        crossorigin=""
-    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" crossorigin="" />
 
     <style>
         /* --- IDENTIDADE VISUAL FALCÕES (DARK MODE OFICIAL - PRESERVADO) --- */
@@ -42,15 +39,19 @@
             box-shadow: 0 4px 20px rgba(0, 230, 64, 0.1);
             position: relative;
             border: 1px solid var(--border-color);
-            padding-bottom: 80px; /* Espaço para não cortar conteudo em mobile */
+            padding-bottom: 80px;
+            /* Espaço para não cortar conteudo em mobile */
         }
-        
+
         /* Gerenciamento de Telas */
         .tela {
-            display: none; /* Todas as telas escondidas por padrão */
+            display: none;
+            /* Todas as telas escondidas por padrão */
         }
+
         .tela.ativa {
-            display: block; /* Tela ativa */
+            display: block;
+            /* Tela ativa */
             animation: fadeIn 0.5s;
         }
 
@@ -58,6 +59,7 @@
             text-align: center;
             margin-bottom: 20px;
         }
+
         .logo-area img {
             max-height: 100px;
             filter: drop-shadow(0 0 5px rgba(0, 230, 64, 0.5));
@@ -70,10 +72,12 @@
             margin-bottom: 15px;
             font-size: 14px;
         }
+
         .user-info {
             font-weight: 600;
             color: #ccc;
         }
+
         .estrelas {
             background-color: rgba(255, 215, 0, 0.2);
             color: #ffd700;
@@ -81,6 +85,7 @@
             border-radius: 15px;
             font-weight: bold;
         }
+
         .logout a {
             color: var(--error-color);
             text-decoration: none;
@@ -101,6 +106,7 @@
             gap: 15px;
             margin-bottom: 10px;
         }
+
         .card {
             flex: 1;
             padding: 15px;
@@ -112,21 +118,25 @@
             background: #252525;
             color: #aaa;
         }
+
         .card:hover {
             border-color: var(--neon-green);
             color: white;
         }
+
         .card.selecionado {
             border-color: var(--neon-green);
             background-color: rgba(0, 230, 64, 0.1);
             color: var(--neon-green);
             box-shadow: 0 0 15px rgba(0, 230, 64, 0.2);
         }
+
         .icon {
             font-size: 28px;
             display: block;
             margin-bottom: 5px;
         }
+
         .preco {
             font-size: 14px;
             font-weight: 500;
@@ -137,7 +147,8 @@
             display: block;
             margin-top: 15px;
             font-weight: 700;
-            color: var(--neon-green); /* Label verde para destaque */
+            color: var(--neon-green);
+            /* Label verde para destaque */
             margin-bottom: 8px;
             font-size: 13px;
             text-transform: uppercase;
@@ -145,7 +156,7 @@
         }
 
         .address-container {
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
             padding: 10px;
             border-radius: 10px;
             border: 1px solid var(--border-color);
@@ -158,10 +169,12 @@
             margin-bottom: 8px;
             position: relative;
         }
+
         .input-rua-wrapper {
             flex: 1;
             position: relative;
         }
+
         .btn-map-icon {
             background: transparent;
             border: 1px solid var(--neon-green);
@@ -174,22 +187,27 @@
             align-items: center;
             justify-content: center;
         }
+
         .btn-map-icon:hover {
-            background: rgba(0,230,64,0.1);
+            background: rgba(0, 230, 64, 0.1);
         }
-        
+
         /* Linha 2: Número e Bairro */
         .row-details {
             display: flex;
             gap: 8px;
         }
+
         .input-num-wrapper {
-            flex: 1; /* 25% */
+            flex: 1;
+            /* 25% */
             max-width: 80px;
             position: relative;
         }
+
         .input-bairro-wrapper {
-            flex: 3; /* 75% */
+            flex: 3;
+            /* 75% */
         }
 
         input {
@@ -203,15 +221,18 @@
             font-size: 15px;
             transition: 0.3s;
         }
+
         input:focus {
             border-color: var(--neon-green);
             outline: none;
         }
+
         /* Erro específico para número vazio */
         input.erro {
             border-color: var(--error-color) !important;
             animation: shake 0.4s ease-in-out;
         }
+
         .erro-msg {
             position: absolute;
             bottom: -16px;
@@ -221,23 +242,44 @@
             font-weight: bold;
             display: none;
         }
-        input.erro + .erro-msg {
+
+        input.erro+.erro-msg {
             display: block;
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
         }
 
         /* Campo de detalhes da entrega */
         #detalhes-entrega-container {
-            display: none; /* Só aparece se for entrega */
+            display: none;
+            /* Só aparece se for entrega */
             margin-top: 15px;
             animation: fadeIn 0.3s ease;
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
 
 
         /* Lista de Sugestões */
@@ -253,23 +295,30 @@
             overflow-y: auto;
             z-index: 1000;
             display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
         }
+
         .sugestao-item {
             padding: 12px 15px;
             border-bottom: 1px solid #333;
             cursor: pointer;
         }
-        .sugestao-item:last-child { border-bottom: none; }
+
+        .sugestao-item:last-child {
+            border-bottom: none;
+        }
+
         .sugestao-item:hover {
             background-color: #2c2c2c;
         }
+
         .rua-texto {
             display: block;
             font-size: 15px;
             font-weight: 600;
             color: var(--neon-green);
         }
+
         .bairro-texto {
             display: block;
             font-size: 12px;
@@ -305,10 +354,12 @@
             transition: 0.3s;
             text-transform: uppercase;
         }
+
         .btn:hover {
             transform: scale(1.02);
             box-shadow: 0 0 15px var(--neon-green);
         }
+
         .btn:disabled {
             background-color: #444;
             color: #888;
@@ -316,7 +367,7 @@
             transform: none;
             box-shadow: none;
         }
-        
+
         /* --- ESTILOS ESPECÍFICOS ACOMPANHAMENTO --- */
         .info-card {
             background: #252525;
@@ -325,17 +376,20 @@
             margin-bottom: 15px;
             border: 1px solid var(--border-color);
         }
+
         .info-card .label {
             font-size: 12px;
             color: #999;
             text-transform: uppercase;
             margin-bottom: 3px;
         }
+
         .info-card .value {
             font-size: 16px;
             font-weight: 600;
             color: var(--text-color);
         }
+
         .motoboy-box {
             text-align: center;
             margin: 20px 0;
@@ -344,21 +398,24 @@
             border-radius: 15px;
             background: rgba(0, 230, 64, 0.1);
         }
+
         .motoboy-box .nome {
             font-size: 24px;
             font-weight: 800;
             color: var(--neon-green);
             margin-top: 5px;
         }
+
         .motoboy-box .placa {
             font-size: 14px;
             color: #ccc;
             margin-bottom: 10px;
         }
-        
+
         /* NOVO ESTILO WHATSAPP */
         .btn-whatsapp {
-            background-color: #25D366; /* Cor oficial do WhatsApp */
+            background-color: #25D366;
+            /* Cor oficial do WhatsApp */
             color: white;
             border: none;
             padding: 12px;
@@ -375,36 +432,43 @@
             justify-content: center;
             gap: 10px;
         }
+
         .btn-whatsapp:hover {
             background-color: #1FAF59;
         }
-        
+
         /* --- MODAL DE BUSCA (ATUALIZADO) --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999; /* Z-index alto para ficar acima de tudo */
-    overflow-y: auto; /* PERMITE ROLAR SE O CONTEÚDO FOR MAIOR QUE A TELA */
-    padding: 20px 0; /* Espaço vertical para não grudar no topo/base */
-}
-.modal-content {
-    background: var(--card-color);
-    padding: 30px;
-    border-radius: 20px;
-    text-align: center;
-    width: 85%;
-    max-width: 350px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 0 40px rgba(0, 230, 64, 0.15);
-    margin: auto; /* Centraliza verticalmente */
-}
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            /* Z-index alto para ficar acima de tudo */
+            overflow-y: auto;
+            /* PERMITE ROLAR SE O CONTEÚDO FOR MAIOR QUE A TELA */
+            padding: 20px 0;
+            /* Espaço vertical para não grudar no topo/base */
+        }
+
+        .modal-content {
+            background: var(--card-color);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 85%;
+            max-width: 350px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 40px rgba(0, 230, 64, 0.15);
+            margin: auto;
+            /* Centraliza verticalmente */
+        }
+
         .spinner {
             border: 5px solid #333;
             border-top: 5px solid var(--neon-green);
@@ -414,8 +478,17 @@
             animation: girar 1s linear infinite;
             margin: 0 auto 20px auto;
         }
-        @keyframes girar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
+
+        @keyframes girar {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
         .btn-cancelar {
             background-color: transparent;
             border: 1px solid var(--error-color);
@@ -427,25 +500,26 @@
             border-radius: 8px;
             cursor: pointer;
         }
-        
-        
+
+
         /* Bloco de ESTILO PARA O CAMPO TEXTAREA NO MODAL DE JUSTIFICATIVA (aproximadamente linha 283) */
-.modal-content textarea {
-    width: 100%; 
-    height: 80px; 
-    padding: 10px; 
-    box-sizing: border-box; 
-    border-radius: 8px; 
-    border: 1px solid var(--border-color); 
-    background: var(--input-bg); 
-    color: white; 
-    resize: none;
-    font-family: inherit;
-    /* --- CORREÇÃO: ADICIONAR Z-INDEX ALTO E GARANTIR VISIBILIDADE --- */
-    position: relative; 
-    z-index: 1000000; 
-    margin-bottom: 5px; /* Adiciona espaço extra para não ser cortado */
-}
+        .modal-content textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: white;
+            resize: none;
+            font-family: inherit;
+            /* --- CORREÇÃO: ADICIONAR Z-INDEX ALTO E GARANTIR VISIBILIDADE --- */
+            position: relative;
+            z-index: 1000000;
+            margin-bottom: 5px;
+            /* Adiciona espaço extra para não ser cortado */
+        }
 
         #map {
             height: 180px;
@@ -468,17 +542,8 @@
             pointer-events: none;
             width: 90%;
         }
+
         .toast {
-            width: 100%;
-            max-width: 400px;
-            background: #000;
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: #fff;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            display: flex;
-            gap: 12px;
-            align-items: center;
             opacity: 0;
             transform: translateY(10px);
             animation: toast-in 0.3s forwards;
@@ -486,169 +551,138 @@
             border: 1px solid var(--neon-green);
             pointer-events: auto;
         }
-        @keyframes toast-in { to { opacity: 1; transform: translateY(0); } }
-        .toast.error { border-color: var(--error-color); }
-        .toast .msg { flex: 1; font-size: 14px; }
-        .toast .close { background: none; border: none; color: #fff; cursor: pointer; font-size: 18px; }
-        /* FORÇA o modal a ficar SEMPRE acima de TUDO, inclusive do mapa */
-#modal-justificativa,
-#modal-encerramento,
-#modal-busca {
-    z-index: 999999 !important;
-    position: fixed !important;
-}
 
-#modal-busca,
-#modal-justificativa,
-#modal-encerramento {
-  display: none; /* sem !important */
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-  z-index: 2147483646 !important;
-  background: rgba(0,0,0,0.85);
-}
+        @keyframes toast-in {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-#modal-busca .modal-content,
-#modal-justificativa .modal-content,
-#modal-encerramento .modal-content {
-  z-index: 2147483647 !important;
-  position: relative;
-  max-height: 90vh;
-  overflow-y: auto;
-  margin: auto;
-}
+        /* Estilo para a modal-box no modal-justificativa-cliente */
+        #modal-justificativa-cliente .modal-box {
+            background: var(--card-color);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 85%;
+            max-width: 350px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 40px rgba(0, 230, 64, 0.15);
+        }
 
-/* Garante que os modais fiquem sempre acima do mapa/leaflet */
-#modal-busca,
-#modal-justificativa,
-#modal-encerramento {
-  z-index: 999999 !important;
-  position: fixed !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  display: none; /* fica oculto por padrão; o JS abre com display:flex */
-  align-items: center !important;
-  justify-content: center !important;
-  background: rgba(0,0,0,0.85) !important; /* leve escurecimento por cima do app */
-}
+        #modal-justificativa-cliente .modal-titulo {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            color: var(--error-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-#modal-busca .modal-content,
-#modal-justificativa .modal-content,
-#modal-encerramento .modal-content {
-  z-index: 1000000 !important;
-  position: relative !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-  margin: auto !important;
-}
+        #modal-justificativa-cliente .modal-desc {
+            font-size: 16px;
+            color: white;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
     </style>
-<script type="importmap">
-{
-    "imports": {
-        "react/": "https://aistudiocdn.com/react@^19.2.0/",
-        "react": "https://aistudiocdn.com/react@^19.2.0",
-        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+    <script type="importmap">
+    {
+        "imports": {
+            "react/": "https://aistudiocdn.com/react@^19.2.0/",
+            "react": "https://aistudiocdn.com/react@^19.2.0",
+            "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+            "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+        }
     }
-}
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("/service-worker.js")
-    .then(() => console.log("SW registrado!"))
-    .catch(err => console.log("Erro SW:", err));
-}
-</script>
-
-<link rel="stylesheet" href="/style.css">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#00e640">
+    </script>
+    <script>if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/service-worker.js").then(() => console.log("SW registrado!")).catch(err => console.log("Erro SW:", err));
+        }
+    </script>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#00e640">
 </head>
-<body>
 
+<body>
     <div class="toast-container" id="toast-container"></div>
 
     <div class="modal-overlay" id="modal-busca">
         <div class="modal-content">
             <div id="area-spinner" class="spinner"></div>
-
-            <div id="status-titulo-modal" style="font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px;">BUSCANDO PILOTO...</div>
+            <div id="status-titulo-modal"
+                style="font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px;">BUSCANDO PILOTO...</div>
             <div id="status-desc-modal" style="font-size: 14px; color: #aaa;">Notificando parceiros próximos.</div>
-
-            <button id="btn-cancelar-pedido-modal" class="btn-cancelar" onclick="cancelarPedido()">CANCELAR PEDIDO</button>
-        </div>
-    </div>
-    
-    <div class="modal-overlay" id="modal-justificativa">
-        <div class="modal-content">
-            <div style="font-size: 24px; color: var(--error-color); margin-bottom: 15px;">⚠️ Cancelar Pedido</div>
-            <div id="justificativa-titulo" style="font-size: 16px; color: white; margin-bottom: 10px; font-weight: 600;">Por que deseja cancelar?</div>
-            
-            <textarea id="campo-justificativa" 
-                      placeholder="Ex: Não preciso mais, endereço errado, demora do piloto..."></textarea>
-                      
-            <button onclick="confirmarCancelamentoCliente()" class="btn" style="background-color: var(--error-color); color: white; margin-top: 15px;">
-                CONFIRMAR CANCELAMENTO
-            </button>
-            <button onclick="document.getElementById('modal-justificativa').style.display='none'" class="btn-cancelar" style="border: none; color: #aaa; margin-top: 10px;">
-                Voltar
-            </button>
+            <button class="btn-cancelar" onclick="abrirJustificativaCliente()">CANCELAR PEDIDO</button>
         </div>
     </div>
 
-    <!-- Modal: confirmar encerramento (cliente) -->
+    <div id="modal-justificativa-cliente" class="modal-overlay" style="display:none;">
+        <div class="modal-box" style="max-width:420px;">
+            <div class="modal-titulo texto-vermelho">⚠️ Cancelar Pedido</div>
+            <div class="modal-desc" id="modal-justificativa-desc">Por favor, diga por que deseja cancelar (mínimo 5
+                caracteres).</div>
+            <textarea id="campo-justificativa-cliente"
+                placeholder="Ex: Não preciso mais, endereço errado, demora do piloto..."
+                style="width:100%;height:110px;padding:10px;border-radius:8px;background:var(--card-color);border:1px solid var(--border-color);color:#fff;margin-top:10px;"></textarea>
+            <div style="display:flex;gap:10px;margin-top:14px;">
+                <button id="btn-fechar-just-cliente" class="btn-cancelar btn-nao" style="flex:1">Voltar</button>
+                <button id="btn-confirmar-just-cliente" class="btn-cancelar"
+                    style="flex:1;background:var(--error-color);color:#fff;font-weight:800; border: none;"
+                    disabled>CONFIRMAR CANCELAMENTO</button>
+            </div>
+            <div id="erro-just-cliente" style="color:#ff8888;font-size:13px;margin-top:10px;display:none">Escreva uma
+                justificativa com pelo menos 5 caracteres.</div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="modal-encerramento" style="display:none;">
         <div class="modal-content">
             <div style="font-size: 22px; color: var(--neon-green); margin-bottom: 12px;">✅ Corrida Finalizada</div>
-            <div id="encerramento-titulo" style="font-size:16px; color:#fff; margin-bottom:8px;">
-                A corrida foi finalizada. Confirme e, se desejar, deixe uma observação (opcional)
-            </div>
-            <textarea id="campo-encerramento" placeholder="Ex: Tudo ok, atraso, avaria..." ></textarea>
-            <button onclick="confirmarEncerramentoCliente()" class="btn" style="margin-top:12px;">CONFIRMAR ENCERRAMENTO</button>
-            <button onclick="document.getElementById('modal-encerramento').style.display='none'" class="btn-cancelar" style="margin-top:8px;">Fechar</button>
+            <div id="encerramento-titulo" style="font-size:16px; color:#fff; margin-bottom:8px;">A corrida foi
+                finalizada. Confirme e, se desejar,
+                deixe uma observação (opcional) </div><textarea id="campo-encerramento"
+                placeholder="Ex: Tudo ok, atraso, avaria..."></textarea><button onclick="confirmarEncerramentoCliente()"
+                class="btn" style="margin-top:12px;">CONFIRMAR ENCERRAMENTO</button><button
+                onclick="document.getElementById('modal-encerramento').style.display='none'" class="btn-cancelar"
+                style="margin-top:8px;">Fechar</button>
         </div>
     </div>
 
     <div class="container">
-        <div class="logo-area"><img src="assets/logo.png" alt="Logo" onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" /></div>
-
+        <div class="logo-area">
+            <img src="assets/logo.png" alt="Logo"
+                onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
+        </div>
         <div class="header-top">
-            <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
+            <div class="user-info"><span id="msg-ola">Piloto</span><span class="estrelas">★ 5.0</span></div>
             <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
         </div>
 
         <div id="tela-pedido" class="tela ativa">
-            
             <h2>NOVA SOLICITAÇÃO</h2>
-
             <div class="opcoes-servico">
                 <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
                     <span class="icon">🏍️</span>
                     <div class="card-title">MOTO TÁXI</div>
-                    <div class="preco">R$ 10,00 + Km</div>
+                    <div class="preco">R$ 10,00+Km</div>
                 </div>
                 <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
                     <span class="icon">📦</span>
                     <div class="card-title">ENTREGA</div>
-                    <div class="preco">R$ 8,50 + Km</div>
+                    <div class="preco">R$ 8,50+Km</div>
                 </div>
             </div>
 
             <div id="form-endereco">
-                
                 <label>📍 Onde vamos buscar? (Origem)</label>
                 <div class="address-container">
                     <div class="row-rua">
                         <div class="input-rua-wrapper">
-                            <input type="text" id="rua-origem" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
+                            <input type="text" id="rua-origem" placeholder="Busque a rua..."
+                                oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
                             <div id="lista-origem" class="sugestoes-lista"></div>
                         </div>
                         <button class="btn-map-icon" onclick="ativarMapa('origem')" title="Marcar no mapa">🗺️</button>
@@ -668,7 +702,8 @@ if ("serviceWorker" in navigator) {
                 <div class="address-container">
                     <div class="row-rua">
                         <div class="input-rua-wrapper">
-                            <input type="text" id="rua-destino" placeholder="Busque a rua..." oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
+                            <input type="text" id="rua-destino" placeholder="Busque a rua..."
+                                oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
                             <div id="lista-destino" class="sugestoes-lista"></div>
                         </div>
                         <button class="btn-map-icon" onclick="ativarMapa('destino')" title="Marcar no mapa">🗺️</button>
@@ -686,27 +721,27 @@ if ("serviceWorker" in navigator) {
 
                 <div id="detalhes-entrega-container">
                     <label>📦 O que vamos levar?</label>
-                    <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..." oninput="removerErro(this)">
+                    <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..."
+                        oninput="removerErro(this)">
                     <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
                 </div>
-
             </div>
 
             <div id="map"></div>
-            <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no mapa</p>
-
+            <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no
+                mapa</p>
             <div class="resumo-final" id="resumo"></div>
-
             <button onclick="pedir()" id="btn-pedir" class="btn" disabled>SELECIONE O SERVIÇO</button>
         </div>
-        
+
         <div id="tela-acompanhamento" class="tela">
             <h2>ACOMPANHANDO PEDIDO <span id="acompanhamento-id">#--</span></h2>
-            
-            <div id="acompanhamento-status-area" class="motoboy-box" style="border-color: #ffd700; background: rgba(255, 215, 0, 0.1);">
+            <div id="acompanhamento-status-area" class="motoboy-box"
+                style="border-color: #ffd700; background: rgba(255, 215, 0, 0.1);">
                 <div style="font-size: 36px; margin-bottom: 5px;">⏳</div>
                 <div class="nome" id="acompanhamento-status-titulo" style="color: #ffd700;">BUSCANDO PILOTO...</div>
-                <div class="placa" id="acompanhamento-status-desc" style="font-size: 16px;">Notificando parceiros próximos.</div>
+                <div class="placa" id="acompanhamento-status-desc" style="font-size: 16px;">Notificando parceiros
+                    próximos.</div>
             </div>
 
             <div id="motoboy-info-box" style="display:none; margin-top: 20px;">
@@ -716,10 +751,8 @@ if ("serviceWorker" in navigator) {
                     <div class="nome" id="motoboy-nome">--</div>
                     <div class="placa" id="motoboy-placa">--</div>
                 </div>
-
                 <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp" style="display: none;">
-                    <span style="font-size: 20px;">📞</span>
-                    CHAMAR NO WHATSAPP
+                    <span style="font-size: 20px;">📞</span>CHAMAR NO WHATSAPP
                 </a>
             </div>
 
@@ -738,24 +771,25 @@ if ("serviceWorker" in navigator) {
             </div>
 
             <button onclick="cancelarPedido()" id="btn-cancelar-acomp" class="btn-cancelar">CANCELAR PEDIDO</button>
-            <button onclick="reiniciarApp()" class="btn" style="background-color: #333; color: #ccc; margin-top: 10px;">FECHAR (apenas se finalizado)</button>
+            <button onclick="reiniciarApp()" class="btn"
+                style="background-color: #333; color: #ccc; margin-top: 10px;">FECHAR (apenas se finalizado)</button>
         </div>
-
     </div>
-
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
-    <script>
-        
-        // === CONFIGURAÇÃO E DADOS (AGORA COM O TOKEN DO MAPBOX) ===
+    <script> // === CONFIGURAÇÃO E DADOS (AGORA COM O TOKEN DO MAPBOX) ===
         const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtaW5sYnRtdDB1ZGIzZnB1OXhid2p4ZXQifQ.uAw7CNaemwsun4RGsyOOIQ'; // SEU TOKEN AQUI!
         const MEU_IP = 'https://falcoes-app.onrender.com';
         const LAT_TC = -21.6975;
         const LON_TC = -45.25; // longitude padrão (ajuste conforme sua cidade)
-        
+
+
         // Mock de usuário se não existir (para testes)
-        if(!localStorage.getItem("usuario")) {
-            localStorage.setItem("usuario", JSON.stringify({id: 1, nome: "Visitante", telefone: "00000000"}));
+        if (!localStorage.getItem("usuario")) {
+            localStorage.setItem("usuario", JSON.stringify({
+                id: 1, nome: "Visitante", telefone: "00000000"
+            }));
         }
+
         const usuario = JSON.parse(localStorage.getItem("usuario"));
         document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
 
@@ -764,16 +798,24 @@ if ("serviceWorker" in navigator) {
         let coordsOrigem = null;
         let coordsDestino = null;
         let timeoutBusca = null;
-        let mapMode = null; 
+        let mapMode = null;
         let markerOrigem = null;
         let markerDestino = null;
         let idPedidoAtual = null;
         let intervaloVerificacao = null;
 
         const precos = {
-            'moto-taxi': { base: 10.0, kmExtra: 3.15, franquia: 3 },
-            'entrega': { base: 8.50, kmExtra: 2.0, franquia: 3 }
-        };
+            'moto-taxi': {
+                base: 10.0, kmExtra: 3.15, franquia: 3
+            }
+
+            ,
+            'entrega': {
+                base: 8.50, kmExtra: 2.0, franquia: 3
+            }
+        }
+
+            ;
 
         // === FUNÇÕES DE GERENCIAMENTO DE TELA ===
         function mudarTela(novaTelaId) {
@@ -787,20 +829,21 @@ if ("serviceWorker" in navigator) {
             // Limpa o estado e recarrega para voltar à tela de pedido limpa
             localStorage.removeItem('idPedidoAtual');
             if (intervaloVerificacao) clearInterval(intervaloVerificacao);
-            window.location.reload(); 
+            window.location.reload();
         }
 
         // === INICIALIZAÇÃO DO MAPA (AGORA COM MAPBOX) ===
-const map = L.map('map').setView([LAT_TC, LON_TC], 14);
-// ** USANDO A CAMADA DE MAPA DO MAPBOX (REQUER O TOKEN) **
-L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-    attribution: 'Mapa &copy; <a href="https://www.mapbox.com/">Mapbox</a> | Dados &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-    maxZoom: 19,
-    id: 'mapbox/streets-v11', // Estilo do Mapa (pode ser trocado)
-    tileSize: 512,
-    zoomOffset: -1,
-    accessToken: MAPBOX_ACCESS_TOKEN 
-}).addTo(map);
+        const map = L.map('map').setView([LAT_TC, LON_TC], 14);
+
+        // ** USANDO A CAMADA DE MAPA DO MAPBOX (REQUER O TOKEN) **
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Mapa &copy; <a href="https://www.mapbox.com/">Mapbox</a> | Dados &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+            maxZoom: 19,
+            id: 'mapbox/streets-v11', // Estilo do Mapa (pode ser trocado)
+            tileSize: 512,
+            zoomOffset: -1,
+            accessToken: MAPBOX_ACCESS_TOKEN
+        }).addTo(map);
 
         map.on('click', async (e) => {
             if (!mapMode) {
@@ -808,41 +851,68 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
                 return;
             }
 
-            const { lat, lng } = e.latlng;
+            const {
+                lat, lng
+            }
+
+                = e.latlng;
             showToast("Buscando endereço com Mapbox...", "info", 1000);
 
             // ** Reverse Geocoding via Mapbox (LON,LAT) **
             try {
                 const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
+                console.log('[Mapbox reverse] URL:', urlMapbox);
 
                 const res = await fetch(urlMapbox);
+                if (!res.ok) {
+                    const data = await res.json();
+                    console.error('Mapbox reverse erro HTTP', res.status, txt.slice(0, 1000));
+                    throw new Error('Erro HTTP Mapbox reverse: ' + res.status);
+                }
                 const data = await res.json();
-                
+
                 let rua, bairro;
 
                 if (data.features && data.features.length > 0) {
                     const feature = data.features[0];
                     // Mapbox retorna o endereço completo no place_name. Pegamos o que está antes da primeira vírgula como rua.
-                    rua = feature.place_name.split(',')[0] || "Local Marcado"; 
-                    
+                    rua = feature.place_name.split(',')[0] || "Local Marcado";
+
                     // Tentamos obter o bairro do contexto
-                    const neighborhood = (feature.context||[]).find(c => c.id && c.id.startsWith && c.id.startsWith('neighborhood'));
+                    const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
                     bairro = (neighborhood && neighborhood.text) || "Três Corações";
-                } else {
+                }
+
+                else {
                     rua = "Local Marcado";
                     bairro = "Três Corações";
                 }
+
                 if (mapMode === 'origem') {
                     document.getElementById('rua-origem').value = rua;
                     document.getElementById('bairro-origem').value = bairro;
-                    coordsOrigem = { lat, lon: lng };
-                    if(markerOrigem) map.removeLayer(markerOrigem);
+                    document.getElementById('num-origem').focus();
+
+                    coordsOrigem = {
+                        lat, lon: lng
+                    }
+
+                        ;
+                    if (markerOrigem) map.removeLayer(markerOrigem);
                     markerOrigem = L.marker([lat, lng]).addTo(map);
-                } else {
+                }
+
+                else {
                     document.getElementById('rua-destino').value = rua;
                     document.getElementById('bairro-destino').value = bairro;
-                    coordsDestino = { lat, lon: lng };
-                    if(markerDestino) map.removeLayer(markerDestino);
+                    document.getElementById('num-destino').focus();
+
+                    coordsDestino = {
+                        lat, lon: lng
+                    }
+
+                        ;
+                    if (markerDestino) map.removeLayer(markerDestino);
                     markerDestino = L.marker([lat, lng]).addTo(map);
                 }
 
@@ -850,7 +920,9 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
                 mapMode = null; // Reset modo
                 calcularRota();
 
-            } catch (error) {
+            }
+
+            catch (error) {
                 showToast("Erro ao obter endereço do mapa.", "error");
             }
         });
@@ -858,31 +930,42 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
         // === FUNÇÕES DE UI (Permanece) ===
         function ativarMapa(modo) {
             mapMode = modo;
-            showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
+
+            showToast(`Toque no mapa para definir a $ {
+                    modo.toUpperCase()
+                }
+
+                `, "info");
+
             // Rola até o mapa
-            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('map').scrollIntoView({
+                behavior: 'smooth'
+            });
         }
 
         function selecionarServico(tipo, valorBase) {
             servicoSelecionado = tipo;
-            
+
             // Visual Cards
             document.querySelectorAll('.card').forEach(c => c.classList.remove('selecionado'));
-            if(tipo === 'moto-taxi') document.getElementById('card-moto').classList.add('selecionado');
+            if (tipo === 'moto-taxi') document.getElementById('card-moto').classList.add('selecionado');
             else document.getElementById('card-entrega').classList.add('selecionado');
 
             // Campo Detalhes da Entrega
             const detailsDiv = document.getElementById('detalhes-entrega-container');
-            if(tipo === 'entrega') {
+
+            if (tipo === 'entrega') {
                 detailsDiv.style.display = 'block';
-            } else {
+            }
+
+            else {
                 detailsDiv.style.display = 'none';
             }
 
             document.getElementById('btn-pedir').disabled = false;
             document.getElementById('btn-pedir').innerText = tipo === 'entrega' ? "SOLICITAR ENTREGA" : "CHAMAR MOTO TÁXI";
-            
-            calcularRota(); 
+
+            calcularRota();
         }
 
         function logout() {
@@ -902,134 +985,202 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
         });
 
         // LÓGICA DE ENDEREÇO e CÁLCULO DE ROTA (AGORA COM MAPBOX)
-function buscarEndereco(query, listId, type) { 
-    const list = document.getElementById(listId);
-    if (query.length < 3) {
-        list.style.display = 'none';
-        return;
-    }
+        function buscarEndereco(query, listId, type) {
+            const list = document.getElementById(listId);
 
-    clearTimeout(timeoutBusca);
-    timeoutBusca = setTimeout(async () => {
-        try {
-            // ** USANDO A API DE PESQUISA (Search) DO MAPBOX **
-            // Usa bbox para limitar a busca à área de Três Corações (ajusta a área conforme necessário)
-            const bounds = '-45.30,-21.75,-45.20,-21.65'; // [minLon, minLat, maxLon, maxLat]
-            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?country=BR&bbox=${bounds}&limit=5&access_token=${MAPBOX_ACCESS_TOKEN}`;
-            
-            const res = await fetch(url);
-            const data = await res.json();
-
-            list.innerHTML = '';
-            
-            if (data.features && data.features.length > 0) {
-                data.features.forEach(item => {
-                    const rua = item.place_name.split(',')[0];
-                    const context = item.context || [];
-                    const neighborhood = context.find(c => c.id && c.id.startsWith && c.id.startsWith('neighborhood'));
-                    const bairro = (neighborhood && neighborhood.text) || "Três Corações";
-
-                    const div = document.createElement('div');
-                    div.className = 'sugestao-item';
-                    div.innerHTML = `<span class="rua-texto">${rua}</span><span class="bairro-texto">${bairro}</span>`;
-                    
-                    div.onclick = () => {
-                        document.getElementById(`rua-${type}`).value = rua;
-                        document.getElementById(`bairro-${type}`).value = bairro;
-                        
-                        // Mapbox usa [lon, lat], convertemos para {lat, lon}
-                        const coords = { lat: item.center[1], lon: item.center[0] }; 
-                        if(type === 'origem') coordsOrigem = coords;
-                        else coordsDestino = coords;
-
-                        list.style.display = 'none';
-                        
-                        const numInput = document.getElementById(`num-${type}`);
-                        // NÃO chamamos numInput.focus() automaticamente para evitar teclado móvel
-                        if (numInput) {
-                            numInput.classList.add('erro');
-                            setTimeout(() => numInput.classList.remove('erro'), 500);
-                        }
-
-                        calcularRota();
-                    };
-                    list.appendChild(div);
-                });
-                list.style.display = 'block';
-            } else {
+            if (query.length < 3) {
                 list.style.display = 'none';
+                return;
             }
-        } catch (e) {
-            console.error("Erro busca Mapbox", e);
+
+            clearTimeout(timeoutBusca);
+
+            timeoutBusca = setTimeout(async () => {
+                try {
+                    // ** USANDO A API DE PESQUISA (Search) DO MAPBOX **
+                    // Usa bbox para limitar a busca à área de Três Corações (ajusta a área conforme necessário)
+                    const bounds = '-45.30,-21.75,-45.20,-21.65'; // [minLon, minLat, maxLon, maxLat]
+                    // novo — sem espaços, e com verificação de erro e log
+                    const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
+                    console.log('[Mapbox reverse] URL:', urlMapbox);
+
+                    const res = await fetch(urlMapbox);
+                    if (!res.ok) {
+                        const txt = await res.text();
+                        console.error('Mapbox reverse erro HTTP', res.status, txt.slice(0, 1000));
+                        throw new Error('Erro HTTP Mapbox reverse: ' + res.status);
+                    }
+                    const data = await res.json();
+
+
+                    list.innerHTML = '';
+
+                    if (data.features && data.features.length > 0) {
+                        data.features.forEach(item => {
+                            const rua = item.place_name.split(',')[0];
+                            const context = item.context || [];
+                            const neighborhood = context.find(c => c.id.startsWith('neighborhood'));
+                            const bairro = (neighborhood && neighborhood.text) || "Três Corações";
+
+                            const div = document.createElement('div');
+                            div.className = 'sugestao-item';
+
+                            div.innerHTML = `<span class="rua-texto" >$ {
+                                        rua
+                                    }
+
+                                    </span><span class="bairro-texto" >$ {
+                                        bairro
+                                    }
+
+                                    </span>`;
+
+                            div.onclick = () => {
+                                document.getElementById(`rua-$ {
+                                                type
+                                            }
+
+                                            `).value = rua;
+
+                                document.getElementById(`bairro-$ {
+                                                type
+                                            }
+
+                                            `).value = bairro;
+
+                                // Mapbox usa [lon, lat], convertemos para {lat, lon}
+                                const coords = {
+                                    lat: item.center[1], lon: item.center[0]
+                                }
+
+                                    ;
+                                if (type === 'origem') coordsOrigem = coords;
+                                else coordsDestino = coords;
+
+                                list.style.display = 'none';
+
+                                const numInput = document.getElementById(`num-$ {
+                                                type
+                                            }
+
+                                            `);
+                                numInput.focus();
+                                numInput.classList.add('erro');
+                                setTimeout(() => numInput.classList.remove('erro'), 500);
+
+                                calcularRota();
+                            }
+
+                                ;
+                            list.appendChild(div);
+                        });
+                        list.style.display = 'block';
+                    }
+
+                    else {
+                        list.style.display = 'none';
+                    }
+                }
+
+                catch (e) {
+                    console.error("Erro busca Mapbox", e);
+                }
+            }
+
+                , 500);
         }
-    }, 500); 
-}
 
         // === FUNÇÃO DE CÁLCULO DE ROTA (AGORA COM MAPBOX DIRECTIONS API) ===
-async function calcularRota() {
-    if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
+        async function calcularRota() {
+            if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
 
-    const resumo = document.getElementById('resumo');
-    resumo.style.display = 'block';
-    resumo.innerText = "Calculando rota com Mapbox...";
+            const resumo = document.getElementById('resumo');
+            resumo.style.display = 'block';
+            resumo.innerText = "Calculando rota com Mapbox...";
 
-    try {
-        // Directions API Mapbox: coordenadas no formato LON,LAT;LON,LAT
-        const coordenadas = `${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}`;
-        
-        // Mapbox Directions API
-        const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordenadas}?geometries=geojson&steps=false&access_token=${MAPBOX_ACCESS_TOKEN}`;
-        
-        const res = await fetch(url);
-        const json = await res.json();
+            try {
 
-        let distanciaKm = 0;
-        let tempoSegundos = 0; 
-        
-        if (json.routes && json.routes.length > 0) {
-            // Distância em metros e Duração em segundos
-            distanciaKm = json.routes[0].distance / 1000;
-            tempoSegundos = json.routes[0].duration;
-        } else {
-            // Fallback: Distância em linha reta se a rota falhar
-            distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
-            tempoSegundos = (distanciaKm / 0.3) * 60; // Estima tempo a 18km/h
+                // Directions API Mapbox: coordenadas no formato LON,LAT;LON,LAT
+                // novo — montando corretamente sem espaços extras
+                const coordenadas = `${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}`;
+                const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordenadas}?geometries=geojson&steps=false&access_token=${MAPBOX_ACCESS_TOKEN}`;
+                console.log('[Mapbox directions] URL:', url);
+
+                const res = await fetch(url);
+                if (!res.ok) {
+                    const t = await res.text();
+                    console.error('Mapbox directions erro HTTP', res.status, t.slice(0, 1000));
+                    throw new Error('Mapbox directions retornou ' + res.status);
+                }
+                const json = await res.json();
+
+
+                let distanciaKm = 0;
+                let tempoSegundos = 0;
+
+                if (json.routes && json.routes.length > 0) {
+                    // Distância em metros e Duração em segundos
+                    distanciaKm = json.routes[0].distance / 1000;
+                    tempoSegundos = json.routes[0].duration;
+                }
+
+                else {
+                    // Fallback: Distância em linha reta se a rota falhar
+                    distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
+                    tempoSegundos = (distanciaKm / 0.3) * 60; // Estima tempo a 18km/h
+                }
+
+                const regra = precos[servicoSelecionado];
+                const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
+                const total = regra.base + (kmCobrado * regra.kmExtra);
+
+                const tempoMinutos = Math.ceil(tempoSegundos / 60);
+
+                resumo.innerHTML = ` <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: $ {
+                    distanciaKm.toFixed(1)
+                }
+
+                km &nbsp;
+                | &nbsp;
+
+                Tempo: $ {
+                    tempoMinutos
+                }
+
+                min</div><div>TOTAL: R$ $ {
+                    total.toFixed(2).replace('.', ',')
+                }
+
+                </div>`;
+
+                window.valorCalculado = total;
+
+            }
+
+            catch (e) {
+                console.error("Erro rota Mapbox", e);
+                resumo.innerText = "Erro ao calcular rota.";
+            }
         }
 
-        const regra = precos[servicoSelecionado];
-        const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
-        const total = regra.base + (kmCobrado * regra.kmExtra);
-
-        const tempoMinutos = Math.ceil(tempoSegundos / 60);
-
-        resumo.innerHTML = `
-            <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km &nbsp; | &nbsp; Tempo: ${tempoMinutos} min</div>
-            <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
-        `;
-        
-        window.valorCalculado = total;
-
-    } catch (e) {
-        console.error("Erro rota Mapbox", e);
-        resumo.innerText = "Erro ao calcular rota.";
-    }
-}
-         
-function calcDistanciaReta(c1, c2) {
-    const R = 6371; 
-    const dLat = (c2.lat - c1.lat) * Math.PI / 180;
-    const dLon = (c2.lon - c1.lon) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-}
+        function calcDistanciaReta(c1, c2) {
+            const R = 6371;
+            const dLat = (c2.lat - c1.lat) * Math.PI / 180;
+            const dLon = (c2.lon - c1.lon) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
 
         // === ENVIO DE PEDIDO (Alterada para usar a nova tela) ===
         async function pedir() {
+
             // ... (Validação e montagem de dados idêntica à anterior) ...
-            if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
+            if (!servicoSelecionado) {
+                showToast("Selecione Moto Táxi ou Entrega", "error");
+                return;
+            }
+
             const ruaOrigem = document.getElementById('rua-origem').value;
             const numOrigem = document.getElementById('num-origem').value;
             const bairroOrigem = document.getElementById('bairro-origem').value;
@@ -1039,22 +1190,83 @@ function calcDistanciaReta(c1, c2) {
             const detalhes = document.getElementById('detalhes-entrega').value;
 
             let erro = false;
-            if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
-            if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
-            if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
-            if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
-            if (servicoSelecionado === 'entrega' && !detalhes.trim()) { document.getElementById('detalhes-entrega').classList.add('erro'); showToast("Descreva o que vamos entregar!", "error"); return; }
-            if (erro) { showToast("⚠️ Preencha o NÚMERO dos endereços!", "error"); return; }
-            
-            const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
-            const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
-            const strDestinoFinal = servicoSelecionado === 'entrega' 
-                ? `${strDestino} (ITEM: ${detalhes})` 
-                : strDestino;
+
+            if (!ruaOrigem) {
+                showToast("Preencha a Rua de Origem", "error");
+                return;
+            }
+
+            if (!numOrigem.trim()) {
+                document.getElementById('num-origem').classList.add('erro');
+                erro = true;
+            }
+
+            if (!ruaDestino) {
+                showToast("Preencha a Rua de Destino", "error");
+                return;
+            }
+
+            if (!numDestino.trim()) {
+                document.getElementById('num-destino').classList.add('erro');
+                erro = true;
+            }
+
+            if (servicoSelecionado === 'entrega' && !detalhes.trim()) {
+                document.getElementById('detalhes-entrega').classList.add('erro');
+                showToast("Descreva o que vamos entregar!", "error");
+                return;
+            }
+
+            if (erro) {
+                showToast("⚠️ Preencha o NÚMERO dos endereços!", "error");
+                return;
+            }
+
+            const strOrigem = `$ {
+                ruaOrigem
+            }
+
+            ,
+            Nº $ {
+                numOrigem
+            }
+
+            ,
+            $ {
+                bairroOrigem
+            }
+
+            `;
+
+            const strDestino = `$ {
+                ruaDestino
+            }
+
+            ,
+            Nº $ {
+                numDestino
+            }
+
+            ,
+            $ {
+                bairroDestino
+            }
+
+            `;
+            const strDestinoFinal = servicoSelecionado === 'entrega'
+
+                ? `$ {
+                strDestino
+            }
+
+            (ITEM: $ {
+                    detalhes
+                })` : strDestino;
             // ... (Fim da validação) ...
 
-
             // 1. Mostrar o modal de carregamento
+            document.getElementById('modal-busca').style.display = 'flex';
+            document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
             document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
 
             try {
@@ -1064,7 +1276,9 @@ function calcDistanciaReta(c1, c2) {
                     destino: strDestinoFinal,
                     valor: window.valorCalculado || 10.0,
                     tipo_servico: servicoSelecionado
-                };
+                }
+
+                    ;
 
                 const res = await fetch(`${MEU_IP}/pedir-corrida`, {
                     method: 'POST',
@@ -1073,16 +1287,25 @@ function calcDistanciaReta(c1, c2) {
                 });
 
                 const json = await res.json();
-                
+
                 if (json.success) {
                     idPedidoAtual = json.id;
-                    localStorage.setItem('idPedidoAtual', idPedidoAtual); 
-                    
+                    localStorage.setItem('idPedidoAtual', idPedidoAtual);
+
                     // 2. Preencher a nova tela com os dados iniciais
-                    document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
+                    document.getElementById('acompanhamento-id').innerText = `#$ {
+                    idPedidoAtual
+                }
+
+                `;
                     document.getElementById('detalhe-origem').innerText = strOrigem;
                     document.getElementById('detalhe-destino').innerText = strDestino;
-                    document.getElementById('detalhe-valor').innerText = `R$ ${window.valorCalculado.toFixed(2).replace('.', ',')}`;
+
+                    document.getElementById('detalhe-valor').innerText = `R$ $ {
+                    window.valorCalculado.toFixed(2).replace('.', ',')
+                }
+
+                `;
 
                     // 3. Trocar para a tela de Acompanhamento e fechar o modal
                     mudarTela('tela-acompanhamento');
@@ -1092,11 +1315,15 @@ function calcDistanciaReta(c1, c2) {
                     intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
                     showToast("Solicitação enviada. Buscando piloto...", "info");
 
-                } else {
+                }
+
+                else {
                     throw new Error(json.message);
                 }
 
-            } catch (e) {
+            }
+
+            catch (e) {
                 document.getElementById('modal-busca').style.display = 'none';
                 showToast("Erro ao enviar pedido: " + e.message, "error");
             }
@@ -1105,13 +1332,21 @@ function calcDistanciaReta(c1, c2) {
         // === VERIFICAÇÃO DE STATUS (Mantida) ===
         async function verificarStatus(id) {
             try {
-                const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+                const res = await fetch(`$ {
+                        MEU_IP
+                    }
+
+                    /status-pedido/$ {
+                        id
+                    }
+
+                    `);
                 const data = await res.json();
                 const pedido = data.pedido;
                 console.log('[DEBUG] verificarStatus -> data:', data);
-console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.status);
+                console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.status);
 
-                
+
                 if (!data.success || !pedido) {
                     // Trata erro de API
                     console.error("Erro ao obter status. Tentando novamente...");
@@ -1125,12 +1360,12 @@ console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.statu
                 const motoboyBox = document.getElementById('motoboy-info-box');
                 const btnWpp = document.getElementById('btn-whatsapp-motoboy');
                 const btnCancelar = document.getElementById('btn-cancelar-acomp');
-                
+
                 // Limpa quaisquer classes de cor
                 statusArea.style.borderColor = '#ffd700';
                 statusArea.style.background = 'rgba(255, 215, 0, 0.1)';
                 statusTitulo.style.color = '#ffd700';
-                
+
                 motoboyBox.style.display = 'none';
                 btnWpp.style.display = 'none';
 
@@ -1141,56 +1376,113 @@ console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.statu
                     statusTitulo.style.color = 'var(--neon-green)';
                     statusTitulo.innerText = "FALCÃO A CAMINHO!";
                     statusDesc.innerText = "Seu piloto está indo até você.";
-                    
+
                     document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
                     document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
                     motoboyBox.style.display = 'block';
 
                     // Lógica do botão WHATSAPP
                     if (pedido.telefone_motoboy) {
-                        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, ''); 
-                        const numeroInternacional = foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo; 
-                        
-                        const textoWpp = encodeURIComponent(`Olá, sou o cliente do pedido #${id} no app Falcões. Gostaria de confirmar a sua chegada.`);
+                        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
+
+                        const numeroInternacional = foneLimpo.length === 11 ? `55$ {
+                            foneLimpo
+                        }
+
+                        ` : foneLimpo;
+
+                        const textoWpp = encodeURIComponent(`Olá, sou o cliente do pedido #$ {
+                                id
+                            }
+
+                            no app Falcões. Gostaria de confirmar a sua chegada.`);
                         const linkWpp = `https://wa.me/${numeroInternacional}?text=${textoWpp}`;
-                        
+
                         btnWpp.href = linkWpp;
                         btnWpp.style.display = 'flex';
                     }
 
                     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                    
-                } else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
+
+                }
+
+                else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
                     // Pedido finalizado pelo motoboy / sistema: pedir confirmação do cliente
                     statusArea.style.borderColor = 'blue';
                     statusArea.style.background = 'rgba(0, 0, 255, 0.05)';
                     statusTitulo.style.color = 'blue';
                     statusTitulo.innerText = "CORRIDA FINALIZADA (A CONFIRMAR)";
-                    statusDesc.innerText = `Valor estimado: R$ ${ (pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',') }`;
+
+                    statusDesc.innerText = `Valor estimado: R$ $ {
+                        (pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',')
+                    }
+
+                    `;
 
                     // Remove botão de cancelar para evitar conflitos
                     btnCancelar.style.display = 'none';
 
                     // Abre o modal de confirmação (se não estiver já aberto)
                     const modalEnc = document.getElementById('modal-encerramento');
-try {
-    const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
-    if (modalEnc && modalDisplay === 'none') {
-        console.log('[DEBUG] abrirModalEncerramento() chamado — status finalizado recebido.');
-        abrirModalEncerramento('A corrida foi finalizada. Confirme e, se desejar, deixe uma observação.');
-    } else {
-        console.log('[DEBUG] modal-encerramento já visível ou ausente (display=' + modalDisplay + ')');
-    }
-} catch (err) {
-    console.warn('[DEBUG] erro ao avaliar modal-encerramento:', err);
-    if (modalEnc) abrirModalEncerramento('A corrida foi finalizada. Confirme e, se desejar, deixe uma observação.');
-}
 
-                } else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
+                    try {
+                        const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
+
+                        if (modalEnc && modalDisplay === 'none') {
+                            console.log('[DEBUG] abrirModalEncerramento() chamado — status finalizado recebido.');
+                            // CORRIGIDO: O código original tentava chamar uma função inexistente.
+                            // Vou chamar diretamente a exibição do modal e o foco.
+                            modalEnc.style.display = 'flex';
+                            const campoEnc = document.getElementById('campo-encerramento');
+
+                            setTimeout(() => {
+                                try {
+                                    campoEnc.focus();
+                                }
+
+                                catch (e) { }
+                            }
+
+                                , 220);
+                        }
+
+                        else {
+                            console.log('[DEBUG] modal-encerramento já visível ou ausente (display=' + modalDisplay + ')');
+                        }
+                    }
+
+                    catch (err) {
+                        console.warn('[DEBUG] erro ao avaliar modal-encerramento:', err);
+
+                        // Fallback para abrir se der erro na verificação do estilo
+                        if (modalEnc) {
+                            modalEnc.style.display = 'flex';
+                            const campoEnc = document.getElementById('campo-encerramento');
+
+                            setTimeout(() => {
+                                try {
+                                    campoEnc.focus();
+                                }
+
+                                catch (e) { }
+                            }
+
+                                , 220);
+                        }
+                    }
+
+                }
+
+                else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
                     // Pedido cancelado/expirado
                     clearInterval(intervaloVerificacao);
                     statusTitulo.innerText = "PEDIDO CANCELADO!";
-                    statusDesc.innerText = `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado!O motoboy teve um imprevisto.    Pedimos desculpas!Por favor,   faça um novo pedido. Obrigado!"}`;
+
+                    statusDesc.innerText = `Motivo: $ {
+                        pedido.motivo_cancelamento || "⚠️ Pedido Cancelado!O motoboy teve um imprevisto.    Pedimos desculpas!Por favor,   faça um novo pedido. Obrigado!"
+                    }
+
+                    `;
                     statusArea.style.borderColor = 'var(--error-color)';
                     statusArea.style.background = 'rgba(255, 0, 0, 0.1)';
                     statusTitulo.style.color = 'var(--error-color)';
@@ -1199,107 +1491,66 @@ try {
                     showToast("Pedido cancelado. Use o botão 'FECHAR' abaixo para voltar.", "error", 5000);
                 }
 
-            } catch (e) { 
-                console.error("Erro na verificação de status:", e); 
+            }
+
+            catch (e) {
+                console.error("Erro na verificação de status:", e);
             }
         }
-        
+
         // Função para continuar acompanhando o pedido se o usuário recarregar a página
         function checkPersistedOrder() {
             const persistedId = localStorage.getItem('idPedidoAtual');
+
             if (persistedId) {
                 idPedidoAtual = persistedId;
-                
+
                 // Mudar para a tela de acompanhamento e iniciar a verificação
                 mudarTela('tela-acompanhamento');
-                
+
                 // Tenta buscar o status imediatamente para preencher os dados
-                verificarStatus(idPedidoAtual); 
+                verificarStatus(idPedidoAtual);
                 intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-            } else {
+            }
+
+            else {
                 // Se não houver pedido, garante que a tela inicial esteja ativa
                 mudarTela('tela-pedido');
             }
         }
-        
+
         // Chama a função ao carregar a página
         window.onload = checkPersistedOrder;
 
 
-        // === FUNÇÃO ÚNICA E SEGURA: abrir modal de justificativa (cancelamento) ===
-function cancelarPedido() {
-    if (!idPedidoAtual) {
-        showToast("Nenhum pedido ativo para cancelar.", "error");
-        return;
-    }
+        // === FUNÇÕES DE CANCELAMENTO ATUALIZADAS PARA USAR MODAL DE JUSTIFICATIVA ===
 
-    // Fecha qualquer modal de carregamento (se estiver aberto)
-    const busca = document.getElementById('modal-busca');
-    if (busca) busca.style.display = 'none';
-
-    const modal = document.getElementById('modal-justificativa');
-    const campo = document.getElementById('campo-justificativa');
-    const titulo = document.getElementById('justificativa-titulo');
-
-    if (!modal) {
-        console.warn('Modal de justificativa não encontrado.');
-        return;
-    }
-
-    if (titulo) titulo.innerText = 'Por que deseja cancelar?';
-    if (campo) campo.value = '';
-
-    modal.style.display = 'flex';
-
-    // Opcional: foco controlado (desativado para evitar teclado automático)
-    // setTimeout(() => { try { campo && campo.focus(); } catch (e) {} }, 200);
-}
-
-
-        async function confirmarCancelamentoCliente() {
-            const motivo = document.getElementById('campo-justificativa').value.trim();
-            
-            if (motivo.length < 5) {
-                showToast("Dê uma breve justificativa (mínimo 5 caracteres).", "error");
+        // CORRIGIDO: Esta função agora chama o modal de justificativa correto.
+        function cancelarPedido() {
+            if (!idPedidoAtual) {
+                showToast("Nenhum pedido ativo para cancelar.", "error");
                 return;
             }
 
-            // Fecha o modal de justificativa e abre o de carregamento/status
-            document.getElementById('modal-justificativa').style.display = 'none';
-            document.getElementById('modal-busca').style.display = 'flex';
-            document.getElementById('status-titulo-modal').innerText = "CANCELANDO PEDIDO...";
-            document.getElementById('status-desc-modal').innerText = "Enviando justificativa: " + motivo.substring(0, 30) + "...";
-            document.getElementById('btn-cancelar-pedido-modal').style.display = 'none';
+            // O modal de busca (carregamento) deve ser fechado antes de abrir o de justificativa
+            const busca = document.getElementById('modal-busca');
+            if (busca) busca.style.display = 'none';
 
-            try {
-                const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        id: idPedidoAtual, 
-                        motivo: `[CLIENTE] ${motivo}` 
-                    })
-                });
-                
-                const json = await res.json();
+            // Chama a função que abre o modal de justificativa do cliente (definida no IIFE)
+            if (typeof window.abrirJustificativaCliente === 'function') {
+                window.abrirJustificativaCliente();
+            }
 
-                if (json.success) {
-                    clearInterval(intervaloVerificacao);
-                    verificarStatus(idPedidoAtual); 
-                    showToast("Pedido cancelado. O piloto foi notificado.", "success", 5000);
-                } else {
-                     throw new Error(json.message || "Erro desconhecido ao cancelar.");
-                }
-
-            } catch (e) {
-                document.getElementById('modal-busca').style.display = 'none';
-                showToast("Falha ao cancelar: " + e.message, "error");
-            } finally {
-                 // Limpa o campo de justificativa para o próximo uso
-                 document.getElementById('campo-justificativa').value = '';
+            else {
+                showToast("Erro: Função de cancelamento indisponível.", "error");
             }
         }
 
+        // REMOVIDO: A função 'confirmarCancelamentoCliente()' problemática foi removida.
+        // A nova lógica do IIFE a substitui (btnConfirm.addEventListener('click', ...)).
+
+
+        // ======= NOVAS FUNÇÕES: ABRIR E CONFIRMAR ENCERRAMENTO (CLIENTE) =======
 
         // Função que envia confirmação do cliente ao backend
         async function confirmarEncerramentoCliente() {
@@ -1309,14 +1560,23 @@ function cancelarPedido() {
             document.getElementById('modal-encerramento').style.display = 'none';
             document.getElementById('modal-busca').style.display = 'flex';
             document.getElementById('status-titulo-modal').innerText = "Registrando finalização...";
-            document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
+            document.getElementById('status-desc-modal').innerText = "Enviando confirmação..."; // CORRIGIDO: remova .style
 
             try {
+
                 // Se houver observação, envie como mensagem para o backend (rota já existente)
                 if (observacao && idPedidoAtual) {
-                    await fetch(`${MEU_IP}/enviar-mensagem`, {
+                    await fetch(`$ {
+                            MEU_IP
+                        }
+
+                        /enviar-mensagem`, {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+
+                        ,
                         body: JSON.stringify({
                             corrida_id: idPedidoAtual,
                             remetente: 'cliente',
@@ -1341,7 +1601,9 @@ function cancelarPedido() {
                 // volta à tela principal depois de curto delay
                 setTimeout(() => reiniciarApp(), 1400);
 
-            } catch (e) {
+            }
+
+            catch (e) {
                 document.getElementById('modal-busca').style.display = 'none';
                 showToast("Falha ao registrar finalização: " + e.message, "error");
             }
@@ -1351,17 +1613,325 @@ function cancelarPedido() {
         function showToast(msg, type, duration = 3000) {
             const container = document.getElementById('toast-container');
             const div = document.createElement('div');
-            div.className = `toast ${type}`;
-            div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
+
+            div.className = `toast $ {
+                type
+            }
+
+            `;
+
+            div.innerHTML = `<span class="msg">$ {
+                msg
+            }
+
+            </span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
             container.appendChild(div);
+
             // Remove toasts antigos para manter apenas 1 ou 2 visíveis
-            while(container.children.length > 3) {
+            while (container.children.length > 3) {
                 container.firstChild.remove();
             }
+
             setTimeout(() => div.remove(), duration);
         }
 
-    </script>
+        // ===== Lógica de justificativa (CLIENTE) =====
+        (function () {
+            const modalId = 'modal-justificativa-cliente';
+            const campoId = 'campo-justificativa-cliente';
+            const btnConfirmId = 'btn-confirmar-just-cliente';
+            const btnFecharId = 'btn-fechar-just-cliente';
+            const erroId = 'erro-just-cliente';
 
+            const modal = document.getElementById(modalId);
+            const campo = document.getElementById(campoId);
+            const btnConfirm = document.getElementById(btnConfirmId);
+            const btnFechar = document.getElementById(btnFecharId);
+            const erro = document.getElementById(erroId);
+
+            // Configura o botão Voltar/Fechar para fechar o modal.
+            if (btnFechar) {
+                btnFechar.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+            }
+
+            // Abre o modal (chame esta função no clique do botão "CANCELAR PEDIDO")
+            window.abrirJustificativaCliente = function () {
+                // valida se existe pedido ativo (adapte se seu código usa outro nome)
+                const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
+
+                if (false) {
+                    // (!id) {
+                    // use sua função de toast para avisar
+                    if (typeof showToast === 'function') showToast("Nenhum pedido ativo para cancelar.", "error");
+                    else alert("Nenhum pedido ativo para cancelar.");
+                    return;
+                }
+
+                // fecha modal-busca se estiver aberto
+                const mb = document.getElementById('modal-busca');
+                if (mb) mb.style.display = 'none';
+
+                campo.value = '';
+                btnConfirm.disabled = true;
+                erro.style.display = 'none';
+
+                modal.style.display = 'flex';
+
+                // garante foco após renderização
+                setTimeout(() => {
+                    try {
+                        campo.focus();
+                    }
+
+                    catch (e) { }
+                }
+
+                    , 100);
+            }
+
+                ;
+
+            // Habilita botão quando tiver >= 5 chars
+            if (campo) {
+                campo.addEventListener('input', () => {
+                    const v = campo.value.trim();
+                    btnConfirm.disabled = v.length < 5;
+                    if (v.length >= 5) erro.style.display = 'none';
+                });
+            }
+
+            // Confirmar e enviar cancelamento
+            if (btnConfirm) {
+                btnConfirm.addEventListener('click', async () => {
+                    const motivo = campo.value.trim();
+
+                    if (motivo.length < 5) {
+                        erro.style.display = 'block';
+                        return;
+                    }
+
+                    modal.style.display = 'none';
+
+                    // mostra modal-busca (se você usa para carregamento/status)
+                    const mb = document.getElementById('modal-busca');
+
+                    if (mb) {
+                        mb.style.display = 'flex';
+                        const titulo = document.getElementById('status-titulo-modal');
+                        const desc = document.getElementById('status-desc-modal');
+                        if (titulo) titulo.innerText = "CANCELANDO PEDIDO...";
+                        if (desc) desc.innerText = "Enviando justificativa...";
+                    }
+
+                    try {
+                        const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
+                        if (!id) throw new Error('ID do pedido não encontrado.');
+
+                        // ajuste MEU_IP se seu projeto usa outro nome
+                        const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : window.MEU_IP || "https://falcoes-app.onrender.com";
+
+                        const res = await fetch(`$ {
+                                        MEU_IP_GLOBAL
+                                    }
+
+                                    /cancelar-pedido`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+
+                            ,
+                            body: JSON.stringify({
+                                id: id, motivo: `[CLIENTE] $ {
+                                            motivo
+                                        }
+
+                                        `
+                            })
+                        });
+
+                        const json = await res.json().catch(() => ({
+                            success: false
+                        }));
+
+                        if (json.success) {
+                            // limpa estado local
+                            if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
+                            localStorage.removeItem('idPedidoAtual');
+                            window.idPedidoAtual = null;
+
+                            if (typeof showToast === 'function') showToast("Pedido cancelado. O piloto foi notificado.", "success", 5000);
+                            else alert("Pedido cancelado.");
+                            // atualiza UI: chama função que verifica status/atualiza tela
+                            if (typeof verificarStatus === 'function') verificarStatus(id);
+                            if (typeof verificarEstado === 'function') verificarEstado();
+                        }
+
+                        else {
+                            throw new Error(json.message || 'Falha ao cancelar pedido.');
+                        }
+                    }
+
+                    catch (e) {
+                        if (mb) mb.style.display = 'none';
+                        if (typeof showToast === 'function') showToast("Falha ao cancelar: " + (e.message || e), "error");
+                        else alert("Falha ao cancelar: " + (e.message || e));
+                    }
+
+                    finally {
+                        campo.value = '';
+                        if (mb) mb.style.display = 'none';
+                    }
+                });
+            }
+        })();
+
+    </script>
+    <script> // CORREÇÃO: Sobrescrever lógica de justificativa para permitir cancelamento sem ID
+
+        window.abrirJustificativaCliente = function () {
+            // Permite abrir sempre
+            const modal = document.getElementById('modal-justificativa-cliente');
+            const campo = document.getElementById('campo-justificativa-cliente');
+            const btnConfirm = document.getElementById('btn-confirmar-just-cliente');
+            const erro = document.getElementById('erro-just-cliente');
+
+            // Fecha modal de busca se houver
+            const mb = document.getElementById('modal-busca');
+            if (mb) mb.style.display = 'none';
+
+            if (campo) campo.value = '';
+            if (btnConfirm) btnConfirm.disabled = true;
+            if (erro) erro.style.display = 'none';
+
+            if (modal) {
+                modal.style.display = 'flex';
+
+                setTimeout(() => {
+                    try {
+                        campo.focus();
+                    }
+
+                    catch (e) { }
+                }
+
+                    , 100);
+            }
+        }
+
+            ;
+
+        // Re-adicionar listener do botão de confirmação
+        const btnConfirm = document.getElementById('btn-confirmar-just-cliente');
+
+        if (btnConfirm) {
+            // Clone para remover listeners antigos
+            const newBtn = btnConfirm.cloneNode(true);
+            btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
+
+            const campo = document.getElementById('campo-justificativa-cliente');
+            const erro = document.getElementById('erro-just-cliente');
+            const modal = document.getElementById('modal-justificativa-cliente');
+
+            // Re-adicionar listener de input (pois o clone perdeu)
+            if (campo) {
+                campo.addEventListener('input', () => {
+                    const v = campo.value.trim();
+                    newBtn.disabled = v.length < 5;
+                    if (v.length >= 5 && erro) erro.style.display = 'none';
+                });
+            }
+
+            newBtn.addEventListener('click', async () => {
+                const motivo = campo.value.trim();
+
+                if (motivo.length < 5) {
+                    if (erro) erro.style.display = 'block';
+                    return;
+                }
+
+                if (modal) modal.style.display = 'none';
+
+                // Mostra busca/loading
+                const mb = document.getElementById('modal-busca');
+
+                if (mb) {
+                    mb.style.display = 'flex';
+                    const titulo = document.getElementById('status-titulo-modal');
+                    const desc = document.getElementById('status-desc-modal');
+                    if (titulo) titulo.innerText = "CANCELANDO...";
+                    if (desc) desc.innerText = "Processando...";
+                }
+
+                try {
+                    const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
+
+                    if (id) {
+                        // Com ID: cancela no servidor
+                        const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : window.MEU_IP || "https://falcoes-app.onrender.com";
+
+                        const res = await fetch(`$ {
+                                    MEU_IP_GLOBAL
+                                }
+
+                                /cancelar-pedido`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+
+                            ,
+                            body: JSON.stringify({
+                                id: id, motivo: `[CLIENTE] $ {
+                                        motivo
+                                    }
+
+                                    `
+                            })
+                        });
+
+                        const json = await res.json().catch(() => ({
+                            success: false
+                        }));
+
+                        if (json.success) {
+                            if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
+                            localStorage.removeItem('idPedidoAtual');
+                            window.idPedidoAtual = null;
+                            if (typeof showToast === 'function') showToast("Pedido cancelado.", "success");
+                            else alert("Pedido cancelado.");
+
+                            if (typeof verificarStatus === 'function') verificarStatus(id); // Para atualizar UI se precisar
+                            // Mas geralmente queremos resetar
+                            setTimeout(() => window.location.reload(), 1000);
+                        }
+
+                        else {
+                            throw new Error(json.message || 'Falha ao cancelar.');
+                        }
+                    }
+
+                    else {
+                        // Sem ID: cancelamento local
+                        if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
+                        localStorage.removeItem('idPedidoAtual');
+                        window.idPedidoAtual = null;
+                        if (typeof showToast === 'function') showToast("Busca cancelada.", "info");
+                        setTimeout(() => window.location.reload(), 500);
+                    }
+                }
+
+                catch (e) {
+                    if (mb) mb.style.display = 'none';
+                    if (typeof showToast === 'function') showToast("Erro: " + e.message, "error");
+                    else alert("Erro: " + e.message);
+                }
+            });
+        }
+
+    </script>
 </body>
+
 </html>
