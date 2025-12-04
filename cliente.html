@@ -1332,15 +1332,7 @@
         // === VERIFICAÇÃO DE STATUS (Mantida) ===
         async function verificarStatus(id) {
             try {
-                const res = await fetch(`$ {
-                        MEU_IP
-                    }
-
-                    /status-pedido/$ {
-                        id
-                    }
-
-                    `);
+                const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
                 const data = await res.json();
                 const pedido = data.pedido;
                 console.log('[DEBUG] verificarStatus -> data:', data);
@@ -1732,23 +1724,13 @@
                         // ajuste MEU_IP se seu projeto usa outro nome
                         const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : window.MEU_IP || "https://falcoes-app.onrender.com";
 
-                        const res = await fetch(`$ {
-                                        MEU_IP_GLOBAL
-                                    }
-
-                                    /cancelar-pedido`, {
+                        const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
-                            }
-
-                            ,
+                            },
                             body: JSON.stringify({
-                                id: id, motivo: `[CLIENTE] $ {
-                                            motivo
-                                        }
-
-                                        `
+                                id: id, motivo: `[CLIENTE] ${motivo}`
                             })
                         });
 
@@ -1872,11 +1854,8 @@
                         // Com ID: cancela no servidor
                         const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : window.MEU_IP || "https://falcoes-app.onrender.com";
 
-                        const res = await fetch(`$ {
-                                    MEU_IP_GLOBAL
-                                }
-
-                                /cancelar-pedido`, {
+                        const res = await fetch(`${MEU_IP_GLOBAL}
+/cancelar-pedido`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -1884,11 +1863,7 @@
 
                             ,
                             body: JSON.stringify({
-                                id: id, motivo: `[CLIENTE] $ {
-                                        motivo
-                                    }
-
-                                    `
+                                id: id, motivo: `[CLIENTE] ${motivo}`
                             })
                         });
 
