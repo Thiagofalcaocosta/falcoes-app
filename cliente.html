@@ -865,9 +865,7 @@
         const LON_TC = -45.25; // longitude padrão (ajuste conforme sua cidade)
 
         // Mock de usuário se não existir (para testes)
-        if (!localStorage.getItem("usuario")) {
-            localStorage.setItem("usuario", JSON.stringify({ id: 1, nome: "Visitante", telefone: "00000000" }));
-        }
+
         const usuario = JSON.parse(localStorage.getItem("usuario"));
         document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
 
