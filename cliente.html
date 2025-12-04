@@ -685,28 +685,7 @@
 
         </div>
     </div>
-    <div id="modal-justificativa-cliente" class="modal-overlay" style="display:none;">
-        <div class="modal-box" style="max-width:420px;">
-            <div class="modal-titulo texto-vermelho">⚠️ Cancelar Pedido</div>
-            <div class="modal-desc" id="modal-justificativa-desc">Por favor, diga por que deseja cancelar (mínimo 5
-                caracteres).</div>
 
-            <textarea id="campo-justificativa-cliente"
-                placeholder="Ex: Não preciso mais, endereço errado, demora do piloto..."
-                style="width:100%;height:110px;padding:10px;border-radius:8px;background:var(--card-color);border:1px solid var(--border-color);color:#fff;margin-top:10px;"></textarea>
-
-            <div style="display:flex;gap:10px;margin-top:14px;">
-                <button id="btn-fechar-just-cliente" class="btn-cancelar btn-nao" style="flex:1">Voltar</button>
-                <button id="btn-confirmar-just-cliente" class="btn-cancelar"
-                    style="flex:1;background:var(--error-color);color:#fff;font-weight:800; border: none;" disabled>
-                    CONFIRMAR CANCELAMENTO
-                </button>
-            </div>
-
-            <div id="erro-just-cliente" style="color:#ff8888;font-size:13px;margin-top:10px;display:none">Escreva uma
-                justificativa com pelo menos 5 caracteres.</div>
-        </div>
-    </div>
 
     <div class="modal-overlay" id="modal-encerramento" style="display:none;">
         <div class="modal-content">
@@ -848,6 +827,25 @@
             <div id="viagem-valor" class="info-card" style="text-align:center; border: 1px solid var(--neon-green);">
                 <div class="label">Total Estimado</div>
                 <div class="value" id="detalhe-valor" style="color: var(--neon-green); font-size: 20px;">R$ --</div>
+            </div>
+            <div id="area-justificativa-integrada" style="display:none; margin-top: 15px; margin-bottom: 10px;">
+                <label
+                    style="color:var(--error-color); font-size:14px; margin-bottom: 5px; text-transform:none; letter-spacing:normal;">
+                    Diga por que deseja cancelar (mínimo 5 caracteres)
+                </label>
+                <textarea id="campo-justificativa-integrada"
+                    placeholder="Ex: Não preciso mais, endereço errado, demora..."
+                    style="width:100%; height:80px; padding:10px; border-radius:8px; background:var(--input-bg); border:1px solid var(--border-color); color:#fff; resize:none; font-family:inherit;"></textarea>
+
+                <div id="erro-just-integrada"
+                    style="color:var(--error-color); font-size:12px; margin-top:5px; display:none">
+                    Escreva uma justificativa válida.
+                </div>
+
+                <button id="btn-confirmar-cancelamento" class="btn"
+                    style="margin-top:10px; background:var(--error-color); color:#fff; font-weight:800;" disabled>
+                    CONFIRMAR CANCELAMENTO
+                </button>
             </div>
 
             <button onclick="cancelarPedido()" id="btn-cancelar-acomp" class="btn-cancelar">CANCELAR PEDIDO</button>
@@ -1352,23 +1350,23 @@
 
         // === FUNÇÕES DE CANCELAMENTO ATUALIZADAS PARA USAR MODAL DE JUSTIFICATIVA ===
 
-        // CORRIGIDO: Esta função agora chama o modal de justificativa correto.
+        // Linha 1121:
         function cancelarPedido() {
-            if (!idPedidoAtual) {
-                showToast("Nenhum pedido ativo para cancelar.", "error");
-                return;
-            }
+            // Esconde o botão original "CANCELAR PEDIDO"
+            const btnCancelar = document.getElementById('btn-cancelar-acomp');
+            if (btnCancelar) btnCancelar.style.display = 'none';
 
-            // O modal de busca (carregamento) deve ser fechado antes de abrir o de justificativa
-            const busca = document.getElementById('modal-busca');
-            if (busca) busca.style.display = 'none';
+            // Mostra o campo de justificativa integrada
+            const areaJustificativa = document.getElementById('area-justificativa-integrada');
+            if (areaJustificativa) areaJustificativa.style.display = 'block';
 
-            // Chama a função que abre o modal de justificativa do cliente (definida no IIFE)
-            if (typeof window.abrirJustificativaCliente === 'function') {
-                window.abrirJustificativaCliente();
-            } else {
-                showToast("Erro: Função de cancelamento indisponível.", "error");
-            }
+            // Foca no campo de texto e ajusta o botão de confirmação
+            const campo = document.getElementById('campo-justificativa-integrada');
+            const btnConfirm = document.getElementById('btn-confirmar-cancelamento');
+            if (campo) campo.focus();
+            if (btnConfirm) btnConfirm.disabled = true;
+
+            showToast("Justifique o cancelamento para prosseguir.", "info");
         }
 
         // REMOVIDO: A função 'confirmarCancelamentoCliente()' problemática foi removida.
@@ -1436,122 +1434,72 @@
             }
             setTimeout(() => div.remove(), duration);
         }
-        // ===== Lógica de justificativa (CLIENTE) =====
-        (function () {
-            const modalId = 'modal-justificativa-cliente';
-            const campoId = 'campo-justificativa-cliente';
-            const btnConfirmId = 'btn-confirmar-just-cliente';
-            const btnFecharId = 'btn-fechar-just-cliente';
-            const erroId = 'erro-just-cliente';
+        // --- Lógica de Justificativa Integrada (Validação e Envio) ---
 
-            const modal = document.getElementById(modalId);
-            const campo = document.getElementById(campoId);
-            const btnConfirm = document.getElementById(btnConfirmId);
-            const btnFechar = document.getElementById(btnFecharId);
-            const erro = document.getElementById(erroId);
+        document.addEventListener('DOMContentLoaded', () => {
+            const campoJust = document.getElementById('campo-justificativa-integrada');
+            const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
+            const erroJust = document.getElementById('erro-just-integrada');
 
-            // Configura o botão Voltar/Fechar para fechar o modal.
-            if (btnFechar) {
-                btnFechar.addEventListener('click', () => {
-                    modal.style.display = 'none';
+            // Habilita o botão se a justificativa tiver >= 5 caracteres
+            if (campoJust && btnConfirmar) {
+                campoJust.addEventListener('input', () => {
+                    const motivo = campoJust.value.trim();
+                    btnConfirmar.disabled = motivo.length < 5;
+                    if (motivo.length >= 5 && erroJust) erroJust.style.display = 'none';
                 });
             }
 
-            // Abre o modal (chame esta função no clique do botão "CANCELAR PEDIDO")
-            window.abrirJustificativaCliente = function () {
-                // valida se existe pedido ativo (adapte se seu código usa outro nome)
-                const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
-                if (!id) {
-                    // use sua função de toast para avisar
-                    if (typeof showToast === 'function') showToast("Nenhum pedido ativo para cancelar.", "error");
-                    else alert("Nenhum pedido ativo para cancelar.");
-                    return;
-                }
-
-                // fecha modal-busca se estiver aberto
-                const mb = document.getElementById('modal-busca');
-                if (mb) mb.style.display = 'none';
-
-                campo.value = '';
-                btnConfirm.disabled = true;
-                erro.style.display = 'none';
-
-                modal.style.display = 'flex';
-                // garante foco após renderização
-                setTimeout(() => { try { campo.focus(); } catch (e) { } }, 100);
-            };
-
-            // Habilita botão quando tiver >= 5 chars
-            if (campo) {
-                campo.addEventListener('input', () => {
-                    const v = campo.value.trim();
-                    btnConfirm.disabled = v.length < 5;
-                    if (v.length >= 5) erro.style.display = 'none';
-                });
-            }
-
-            // Confirmar e enviar cancelamento
-            if (btnConfirm) {
-                btnConfirm.addEventListener('click', async () => {
-                    const motivo = campo.value.trim();
+            // Lógica de ENVIO DE CANCELAMENTO (Chamada pelo novo botão)
+            if (btnConfirmar) {
+                btnConfirmar.addEventListener('click', async () => {
+                    const motivo = campoJust.value.trim();
                     if (motivo.length < 5) {
-                        erro.style.display = 'block';
+                        if (erroJust) erroJust.style.display = 'block';
                         return;
                     }
 
-                    modal.style.display = 'none';
-
-                    // mostra modal-busca (se você usa para carregamento/status)
+                    // Oculta a área de justificativa e mostra o loading
+                    document.getElementById('area-justificativa-integrada').style.display = 'none';
                     const mb = document.getElementById('modal-busca');
                     if (mb) {
                         mb.style.display = 'flex';
-                        const titulo = document.getElementById('status-titulo-modal');
-                        const desc = document.getElementById('status-desc-modal');
-                        if (titulo) titulo.innerText = "CANCELANDO PEDIDO...";
-                        if (desc) desc.innerText = "Enviando justificativa...";
+                        document.getElementById('status-titulo-modal').innerText = "PROCESSANDO CANCELAMENTO...";
                     }
 
+                    const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
+
                     try {
-                        const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
-                        if (!id) throw new Error('ID do pedido não encontrado.');
+                        if (id) {
+                            // --- Cancelamento Remoto (Pedido Ativo) ---
+                            const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : window.MEU_IP || "https://falcoes-app.onrender.com";
 
-                        // ajuste MEU_IP se seu projeto usa outro nome
-                        const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : window.MEU_IP || "https://falcoes-app.onrender.com";
+                            const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
+                            });
+                            const json = await res.json().catch(() => ({ success: false }));
 
-                        const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
-                        });
-
-                        const json = await res.json().catch(() => ({ success: false }));
-
-                        if (json.success) {
-                            // limpa estado local
-                            if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
-                            localStorage.removeItem('idPedidoAtual');
-                            window.idPedidoAtual = null;
-
-                            if (typeof showToast === 'function') showToast("Pedido cancelado. O piloto foi notificado.", "success", 5000);
-                            else alert("Pedido cancelado.");
-                            // atualiza UI: chama função que verifica status/atualiza tela
-                            if (typeof verificarStatus === 'function') verificarStatus(id);
-                            if (typeof verificarEstado === 'function') verificarEstado();
+                            if (json.success) {
+                                showToast("Pedido cancelado. O piloto foi notificado.", "success");
+                            } else {
+                                throw new Error(json.message || 'Falha ao cancelar no servidor.');
+                            }
                         } else {
-                            throw new Error(json.message || 'Falha ao cancelar pedido.');
+                            // --- Cancelamento Local (Busca) ---
+                            showToast("Busca cancelada.", "info");
                         }
                     } catch (e) {
-                        if (mb) mb.style.display = 'none';
-                        if (typeof showToast === 'function') showToast("Falha ao cancelar: " + (e.message || e), "error");
-                        else alert("Falha ao cancelar: " + (e.message || e));
+                        showToast("Erro: " + (e.message || e), "error");
                     } finally {
-                        campo.value = '';
+                        // Limpeza e Reinício
                         if (mb) mb.style.display = 'none';
+                        reiniciarApp();
                     }
                 });
             }
-        })();
-
+        });
     </script>
 
 </body>
