@@ -544,6 +544,16 @@
         }
 
         .toast {
+            width: 100%;
+            max-width: 400px;
+            background: #000;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            display: flex;
+            gap: 12px;
+            align-items: center;
             opacity: 0;
             transform: translateY(10px);
             animation: toast-in 0.3s forwards;
@@ -559,6 +569,56 @@
             }
         }
 
+        .toast.error {
+            border-color: var(--error-color);
+        }
+
+        .toast .msg {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .toast .close {
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        /* FORÇA o modal a ficar SEMPRE acima de TUDO, inclusive do mapa */
+        #modal-justificativa,
+        #modal-encerramento,
+        #modal-busca,
+        #modal-justificativa-cliente {
+            /* Adicionado o novo ID aqui */
+            z-index: 2147483646 !important;
+            /* número muito alto, garante prioridade */
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            display: none;
+            /* o JS abre com display:flex quando necessário */
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(0, 0, 0, 0.85) !important;
+            /* leve escurecimento por cima do app */
+        }
+
+        #modal-busca .modal-content,
+        #modal-justificativa .modal-content,
+        #modal-encerramento .modal-content,
+        #modal-justificativa-cliente .modal-box {
+            /* Ajustado para modal-box */
+            z-index: 2147483647 !important;
+            position: relative !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+            margin: auto !important;
+        }
+
         /* Estilo para a modal-box no modal-justificativa-cliente */
         #modal-justificativa-cliente .modal-box {
             background: var(--card-color);
@@ -572,12 +632,10 @@
         }
 
         #modal-justificativa-cliente .modal-titulo {
-            font-size: 20px;
-            font-weight: 800;
-            margin-bottom: 15px;
+            font-size: 24px;
             color: var(--error-color);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            margin-bottom: 15px;
+            font-weight: bold;
         }
 
         #modal-justificativa-cliente .modal-desc {
@@ -588,51 +646,63 @@
         }
     </style>
     <script type="importmap">
-    {
-        "imports": {
-            "react/": "https://aistudiocdn.com/react@^19.2.0/",
-            "react": "https://aistudiocdn.com/react@^19.2.0",
-            "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-            "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
-        }
+{
+    "imports": {
+        "react/": "https://aistudiocdn.com/react@^19.2.0/",
+        "react": "https://aistudiocdn.com/react@^19.2.0",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
     }
-    </script>
-    <script>if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/service-worker.js").then(() => console.log("SW registrado!")).catch(err => console.log("Erro SW:", err));
+}
+</script>
+    <script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker
+                .register("/service-worker.js")
+                .then(() => console.log("SW registrado!"))
+                .catch(err => console.log("Erro SW:", err));
         }
     </script>
+
     <link rel="stylesheet" href="/style.css">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
 
 <body>
+
     <div class="toast-container" id="toast-container"></div>
 
     <div class="modal-overlay" id="modal-busca">
         <div class="modal-content">
             <div id="area-spinner" class="spinner"></div>
+
             <div id="status-titulo-modal"
                 style="font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px;">BUSCANDO PILOTO...</div>
             <div id="status-desc-modal" style="font-size: 14px; color: #aaa;">Notificando parceiros próximos.</div>
+
             <button class="btn-cancelar" onclick="abrirJustificativaCliente()">CANCELAR PEDIDO</button>
+
         </div>
     </div>
-
     <div id="modal-justificativa-cliente" class="modal-overlay" style="display:none;">
         <div class="modal-box" style="max-width:420px;">
             <div class="modal-titulo texto-vermelho">⚠️ Cancelar Pedido</div>
             <div class="modal-desc" id="modal-justificativa-desc">Por favor, diga por que deseja cancelar (mínimo 5
                 caracteres).</div>
+
             <textarea id="campo-justificativa-cliente"
                 placeholder="Ex: Não preciso mais, endereço errado, demora do piloto..."
                 style="width:100%;height:110px;padding:10px;border-radius:8px;background:var(--card-color);border:1px solid var(--border-color);color:#fff;margin-top:10px;"></textarea>
+
             <div style="display:flex;gap:10px;margin-top:14px;">
                 <button id="btn-fechar-just-cliente" class="btn-cancelar btn-nao" style="flex:1">Voltar</button>
                 <button id="btn-confirmar-just-cliente" class="btn-cancelar"
-                    style="flex:1;background:var(--error-color);color:#fff;font-weight:800; border: none;"
-                    disabled>CONFIRMAR CANCELAMENTO</button>
+                    style="flex:1;background:var(--error-color);color:#fff;font-weight:800; border: none;" disabled>
+                    CONFIRMAR CANCELAMENTO
+                </button>
             </div>
+
             <div id="erro-just-cliente" style="color:#ff8888;font-size:13px;margin-top:10px;display:none">Escreva uma
                 justificativa com pelo menos 5 caracteres.</div>
         </div>
@@ -641,42 +711,46 @@
     <div class="modal-overlay" id="modal-encerramento" style="display:none;">
         <div class="modal-content">
             <div style="font-size: 22px; color: var(--neon-green); margin-bottom: 12px;">✅ Corrida Finalizada</div>
-            <div id="encerramento-titulo" style="font-size:16px; color:#fff; margin-bottom:8px;">A corrida foi
-                finalizada. Confirme e, se desejar,
-                deixe uma observação (opcional) </div><textarea id="campo-encerramento"
-                placeholder="Ex: Tudo ok, atraso, avaria..."></textarea><button onclick="confirmarEncerramentoCliente()"
-                class="btn" style="margin-top:12px;">CONFIRMAR ENCERRAMENTO</button><button
-                onclick="document.getElementById('modal-encerramento').style.display='none'" class="btn-cancelar"
+            <div id="encerramento-titulo" style="font-size:16px; color:#fff; margin-bottom:8px;">
+                A corrida foi finalizada. Confirme e, se desejar, deixe uma observação (opcional)
+            </div>
+            <textarea id="campo-encerramento" placeholder="Ex: Tudo ok, atraso, avaria..."></textarea>
+            <button onclick="confirmarEncerramentoCliente()" class="btn" style="margin-top:12px;">CONFIRMAR
+                ENCERRAMENTO</button>
+            <button onclick="document.getElementById('modal-encerramento').style.display='none'" class="btn-cancelar"
                 style="margin-top:8px;">Fechar</button>
         </div>
     </div>
 
     <div class="container">
-        <div class="logo-area">
-            <img src="assets/logo.png" alt="Logo"
+        <div class="logo-area"><img src="assets/logo.png" alt="Logo"
                 onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
         </div>
+
         <div class="header-top">
-            <div class="user-info"><span id="msg-ola">Piloto</span><span class="estrelas">★ 5.0</span></div>
+            <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
             <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
         </div>
 
         <div id="tela-pedido" class="tela ativa">
+
             <h2>NOVA SOLICITAÇÃO</h2>
+
             <div class="opcoes-servico">
                 <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
                     <span class="icon">🏍️</span>
                     <div class="card-title">MOTO TÁXI</div>
-                    <div class="preco">R$ 10,00+Km</div>
+                    <div class="preco">R$ 10,00 + Km</div>
                 </div>
                 <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
                     <span class="icon">📦</span>
                     <div class="card-title">ENTREGA</div>
-                    <div class="preco">R$ 8,50+Km</div>
+                    <div class="preco">R$ 8,50 + Km</div>
                 </div>
             </div>
 
             <div id="form-endereco">
+
                 <label>📍 Onde vamos buscar? (Origem)</label>
                 <div class="address-container">
                     <div class="row-rua">
@@ -725,17 +799,21 @@
                         oninput="removerErro(this)">
                     <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
                 </div>
+
             </div>
 
             <div id="map"></div>
             <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no
                 mapa</p>
+
             <div class="resumo-final" id="resumo"></div>
+
             <button onclick="pedir()" id="btn-pedir" class="btn" disabled>SELECIONE O SERVIÇO</button>
         </div>
 
         <div id="tela-acompanhamento" class="tela">
             <h2>ACOMPANHANDO PEDIDO <span id="acompanhamento-id">#--</span></h2>
+
             <div id="acompanhamento-status-area" class="motoboy-box"
                 style="border-color: #ffd700; background: rgba(255, 215, 0, 0.1);">
                 <div style="font-size: 36px; margin-bottom: 5px;">⏳</div>
@@ -751,8 +829,10 @@
                     <div class="nome" id="motoboy-nome">--</div>
                     <div class="placa" id="motoboy-placa">--</div>
                 </div>
+
                 <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp" style="display: none;">
-                    <span style="font-size: 20px;">📞</span>CHAMAR NO WHATSAPP
+                    <span style="font-size: 20px;">📞</span>
+                    CHAMAR NO WHATSAPP
                 </a>
             </div>
 
@@ -774,22 +854,22 @@
             <button onclick="reiniciarApp()" class="btn"
                 style="background-color: #333; color: #ccc; margin-top: 10px;">FECHAR (apenas se finalizado)</button>
         </div>
+
     </div>
+
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
-    <script> // === CONFIGURAÇÃO E DADOS (AGORA COM O TOKEN DO MAPBOX) ===
+    <script>
+
+        // === CONFIGURAÇÃO E DADOS (AGORA COM O TOKEN DO MAPBOX) ===
         const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtaW5sYnRtdDB1ZGIzZnB1OXhid2p4ZXQifQ.uAw7CNaemwsun4RGsyOOIQ'; // SEU TOKEN AQUI!
         const MEU_IP = 'https://falcoes-app.onrender.com';
         const LAT_TC = -21.6975;
         const LON_TC = -45.25; // longitude padrão (ajuste conforme sua cidade)
 
-
         // Mock de usuário se não existir (para testes)
         if (!localStorage.getItem("usuario")) {
-            localStorage.setItem("usuario", JSON.stringify({
-                id: 1, nome: "Visitante", telefone: "00000000"
-            }));
+            localStorage.setItem("usuario", JSON.stringify({ id: 1, nome: "Visitante", telefone: "00000000" }));
         }
-
         const usuario = JSON.parse(localStorage.getItem("usuario"));
         document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
 
@@ -805,17 +885,9 @@
         let intervaloVerificacao = null;
 
         const precos = {
-            'moto-taxi': {
-                base: 10.0, kmExtra: 3.15, franquia: 3
-            }
-
-            ,
-            'entrega': {
-                base: 8.50, kmExtra: 2.0, franquia: 3
-            }
-        }
-
-            ;
+            'moto-taxi': { base: 10.0, kmExtra: 3.15, franquia: 3 },
+            'entrega': { base: 8.50, kmExtra: 2.0, franquia: 3 }
+        };
 
         // === FUNÇÕES DE GERENCIAMENTO DE TELA ===
         function mudarTela(novaTelaId) {
@@ -834,7 +906,6 @@
 
         // === INICIALIZAÇÃO DO MAPA (AGORA COM MAPBOX) ===
         const map = L.map('map').setView([LAT_TC, LON_TC], 14);
-
         // ** USANDO A CAMADA DE MAPA DO MAPBOX (REQUER O TOKEN) **
         L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
             attribution: 'Mapa &copy; <a href="https://www.mapbox.com/">Mapbox</a> | Dados &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
@@ -851,24 +922,14 @@
                 return;
             }
 
-            const {
-                lat, lng
-            }
-
-                = e.latlng;
+            const { lat, lng } = e.latlng;
             showToast("Buscando endereço com Mapbox...", "info", 1000);
 
             // ** Reverse Geocoding via Mapbox (LON,LAT) **
             try {
                 const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
-                console.log('[Mapbox reverse] URL:', urlMapbox);
 
                 const res = await fetch(urlMapbox);
-                if (!res.ok) {
-                    const data = await res.json();
-                    console.error('Mapbox reverse erro HTTP', res.status, txt.slice(0, 1000));
-                    throw new Error('Erro HTTP Mapbox reverse: ' + res.status);
-                }
                 const data = await res.json();
 
                 let rua, bairro;
@@ -881,37 +942,22 @@
                     // Tentamos obter o bairro do contexto
                     const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
                     bairro = (neighborhood && neighborhood.text) || "Três Corações";
-                }
-
-                else {
+                } else {
                     rua = "Local Marcado";
                     bairro = "Três Corações";
                 }
-
                 if (mapMode === 'origem') {
                     document.getElementById('rua-origem').value = rua;
                     document.getElementById('bairro-origem').value = bairro;
                     document.getElementById('num-origem').focus();
-
-                    coordsOrigem = {
-                        lat, lon: lng
-                    }
-
-                        ;
+                    coordsOrigem = { lat, lon: lng };
                     if (markerOrigem) map.removeLayer(markerOrigem);
                     markerOrigem = L.marker([lat, lng]).addTo(map);
-                }
-
-                else {
+                } else {
                     document.getElementById('rua-destino').value = rua;
                     document.getElementById('bairro-destino').value = bairro;
                     document.getElementById('num-destino').focus();
-
-                    coordsDestino = {
-                        lat, lon: lng
-                    }
-
-                        ;
+                    coordsDestino = { lat, lon: lng };
                     if (markerDestino) map.removeLayer(markerDestino);
                     markerDestino = L.marker([lat, lng]).addTo(map);
                 }
@@ -920,9 +966,7 @@
                 mapMode = null; // Reset modo
                 calcularRota();
 
-            }
-
-            catch (error) {
+            } catch (error) {
                 showToast("Erro ao obter endereço do mapa.", "error");
             }
         });
@@ -930,17 +974,9 @@
         // === FUNÇÕES DE UI (Permanece) ===
         function ativarMapa(modo) {
             mapMode = modo;
-
-            showToast(`Toque no mapa para definir a $ {
-                    modo.toUpperCase()
-                }
-
-                `, "info");
-
+            showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
             // Rola até o mapa
-            document.getElementById('map').scrollIntoView({
-                behavior: 'smooth'
-            });
+            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
         }
 
         function selecionarServico(tipo, valorBase) {
@@ -953,12 +989,9 @@
 
             // Campo Detalhes da Entrega
             const detailsDiv = document.getElementById('detalhes-entrega-container');
-
             if (tipo === 'entrega') {
                 detailsDiv.style.display = 'block';
-            }
-
-            else {
+            } else {
                 detailsDiv.style.display = 'none';
             }
 
@@ -987,31 +1020,21 @@
         // LÓGICA DE ENDEREÇO e CÁLCULO DE ROTA (AGORA COM MAPBOX)
         function buscarEndereco(query, listId, type) {
             const list = document.getElementById(listId);
-
             if (query.length < 3) {
                 list.style.display = 'none';
                 return;
             }
 
             clearTimeout(timeoutBusca);
-
             timeoutBusca = setTimeout(async () => {
                 try {
                     // ** USANDO A API DE PESQUISA (Search) DO MAPBOX **
                     // Usa bbox para limitar a busca à área de Três Corações (ajusta a área conforme necessário)
                     const bounds = '-45.30,-21.75,-45.20,-21.65'; // [minLon, minLat, maxLon, maxLat]
-                    // novo — sem espaços, e com verificação de erro e log
-                    const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
-                    console.log('[Mapbox reverse] URL:', urlMapbox);
+                    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?country=BR&bbox=${bounds}&limit=5&access_token=${MAPBOX_ACCESS_TOKEN}`;
 
-                    const res = await fetch(urlMapbox);
-                    if (!res.ok) {
-                        const txt = await res.text();
-                        console.error('Mapbox reverse erro HTTP', res.status, txt.slice(0, 1000));
-                        throw new Error('Erro HTTP Mapbox reverse: ' + res.status);
-                    }
+                    const res = await fetch(url);
                     const data = await res.json();
-
 
                     list.innerHTML = '';
 
@@ -1024,70 +1047,36 @@
 
                             const div = document.createElement('div');
                             div.className = 'sugestao-item';
-
-                            div.innerHTML = `<span class="rua-texto" >$ {
-                                        rua
-                                    }
-
-                                    </span><span class="bairro-texto" >$ {
-                                        bairro
-                                    }
-
-                                    </span>`;
+                            div.innerHTML = `<span class="rua-texto">${rua}</span><span class="bairro-texto">${bairro}</span>`;
 
                             div.onclick = () => {
-                                document.getElementById(`rua-$ {
-                                                type
-                                            }
-
-                                            `).value = rua;
-
-                                document.getElementById(`bairro-$ {
-                                                type
-                                            }
-
-                                            `).value = bairro;
+                                document.getElementById(`rua-${type}`).value = rua;
+                                document.getElementById(`bairro-${type}`).value = bairro;
 
                                 // Mapbox usa [lon, lat], convertemos para {lat, lon}
-                                const coords = {
-                                    lat: item.center[1], lon: item.center[0]
-                                }
-
-                                    ;
+                                const coords = { lat: item.center[1], lon: item.center[0] };
                                 if (type === 'origem') coordsOrigem = coords;
                                 else coordsDestino = coords;
 
                                 list.style.display = 'none';
 
-                                const numInput = document.getElementById(`num-$ {
-                                                type
-                                            }
-
-                                            `);
+                                const numInput = document.getElementById(`num-${type}`);
                                 numInput.focus();
                                 numInput.classList.add('erro');
                                 setTimeout(() => numInput.classList.remove('erro'), 500);
 
                                 calcularRota();
-                            }
-
-                                ;
+                            };
                             list.appendChild(div);
                         });
                         list.style.display = 'block';
-                    }
-
-                    else {
+                    } else {
                         list.style.display = 'none';
                     }
-                }
-
-                catch (e) {
+                } catch (e) {
                     console.error("Erro busca Mapbox", e);
                 }
-            }
-
-                , 500);
+            }, 500);
         }
 
         // === FUNÇÃO DE CÁLCULO DE ROTA (AGORA COM MAPBOX DIRECTIONS API) ===
@@ -1099,21 +1088,14 @@
             resumo.innerText = "Calculando rota com Mapbox...";
 
             try {
-
                 // Directions API Mapbox: coordenadas no formato LON,LAT;LON,LAT
-                // novo — montando corretamente sem espaços extras
                 const coordenadas = `${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}`;
+
+                // Mapbox Directions API
                 const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordenadas}?geometries=geojson&steps=false&access_token=${MAPBOX_ACCESS_TOKEN}`;
-                console.log('[Mapbox directions] URL:', url);
 
                 const res = await fetch(url);
-                if (!res.ok) {
-                    const t = await res.text();
-                    console.error('Mapbox directions erro HTTP', res.status, t.slice(0, 1000));
-                    throw new Error('Mapbox directions retornou ' + res.status);
-                }
                 const json = await res.json();
-
 
                 let distanciaKm = 0;
                 let tempoSegundos = 0;
@@ -1122,9 +1104,7 @@
                     // Distância em metros e Duração em segundos
                     distanciaKm = json.routes[0].distance / 1000;
                     tempoSegundos = json.routes[0].duration;
-                }
-
-                else {
+                } else {
                     // Fallback: Distância em linha reta se a rota falhar
                     distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
                     tempoSegundos = (distanciaKm / 0.3) * 60; // Estima tempo a 18km/h
@@ -1136,28 +1116,14 @@
 
                 const tempoMinutos = Math.ceil(tempoSegundos / 60);
 
-                resumo.innerHTML = ` <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: $ {
-                    distanciaKm.toFixed(1)
-                }
-
-                km &nbsp;
-                | &nbsp;
-
-                Tempo: $ {
-                    tempoMinutos
-                }
-
-                min</div><div>TOTAL: R$ $ {
-                    total.toFixed(2).replace('.', ',')
-                }
-
-                </div>`;
+                resumo.innerHTML = `
+            <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km &nbsp; | &nbsp; Tempo: ${tempoMinutos} min</div>
+            <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
+        `;
 
                 window.valorCalculado = total;
 
-            }
-
-            catch (e) {
+            } catch (e) {
                 console.error("Erro rota Mapbox", e);
                 resumo.innerText = "Erro ao calcular rota.";
             }
@@ -1167,20 +1133,17 @@
             const R = 6371;
             const dLat = (c2.lat - c1.lat) * Math.PI / 180;
             const dLon = (c2.lon - c1.lon) * Math.PI / 180;
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
         }
 
         // === ENVIO DE PEDIDO (Alterada para usar a nova tela) ===
         async function pedir() {
-
             // ... (Validação e montagem de dados idêntica à anterior) ...
-            if (!servicoSelecionado) {
-                showToast("Selecione Moto Táxi ou Entrega", "error");
-                return;
-            }
-
+            if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
             const ruaOrigem = document.getElementById('rua-origem').value;
             const numOrigem = document.getElementById('num-origem').value;
             const bairroOrigem = document.getElementById('bairro-origem').value;
@@ -1190,78 +1153,18 @@
             const detalhes = document.getElementById('detalhes-entrega').value;
 
             let erro = false;
+            if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
+            if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
+            if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
+            if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
+            if (servicoSelecionado === 'entrega' && !detalhes.trim()) { document.getElementById('detalhes-entrega').classList.add('erro'); showToast("Descreva o que vamos entregar!", "error"); return; }
+            if (erro) { showToast("⚠️ Preencha o NÚMERO dos endereços!", "error"); return; }
 
-            if (!ruaOrigem) {
-                showToast("Preencha a Rua de Origem", "error");
-                return;
-            }
-
-            if (!numOrigem.trim()) {
-                document.getElementById('num-origem').classList.add('erro');
-                erro = true;
-            }
-
-            if (!ruaDestino) {
-                showToast("Preencha a Rua de Destino", "error");
-                return;
-            }
-
-            if (!numDestino.trim()) {
-                document.getElementById('num-destino').classList.add('erro');
-                erro = true;
-            }
-
-            if (servicoSelecionado === 'entrega' && !detalhes.trim()) {
-                document.getElementById('detalhes-entrega').classList.add('erro');
-                showToast("Descreva o que vamos entregar!", "error");
-                return;
-            }
-
-            if (erro) {
-                showToast("⚠️ Preencha o NÚMERO dos endereços!", "error");
-                return;
-            }
-
-            const strOrigem = `$ {
-                ruaOrigem
-            }
-
-            ,
-            Nº $ {
-                numOrigem
-            }
-
-            ,
-            $ {
-                bairroOrigem
-            }
-
-            `;
-
-            const strDestino = `$ {
-                ruaDestino
-            }
-
-            ,
-            Nº $ {
-                numDestino
-            }
-
-            ,
-            $ {
-                bairroDestino
-            }
-
-            `;
+            const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
+            const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
             const strDestinoFinal = servicoSelecionado === 'entrega'
-
-                ? `$ {
-                strDestino
-            }
-
-            (ITEM: $ {
-                    detalhes
-                })` : strDestino;
+                ? `${strDestino} (ITEM: ${detalhes})`
+                : strDestino;
             // ... (Fim da validação) ...
 
             // 1. Mostrar o modal de carregamento
@@ -1276,9 +1179,7 @@
                     destino: strDestinoFinal,
                     valor: window.valorCalculado || 10.0,
                     tipo_servico: servicoSelecionado
-                }
-
-                    ;
+                };
 
                 const res = await fetch(`${MEU_IP}/pedir-corrida`, {
                     method: 'POST',
@@ -1293,19 +1194,10 @@
                     localStorage.setItem('idPedidoAtual', idPedidoAtual);
 
                     // 2. Preencher a nova tela com os dados iniciais
-                    document.getElementById('acompanhamento-id').innerText = `#$ {
-                    idPedidoAtual
-                }
-
-                `;
+                    document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
                     document.getElementById('detalhe-origem').innerText = strOrigem;
                     document.getElementById('detalhe-destino').innerText = strDestino;
-
-                    document.getElementById('detalhe-valor').innerText = `R$ $ {
-                    window.valorCalculado.toFixed(2).replace('.', ',')
-                }
-
-                `;
+                    document.getElementById('detalhe-valor').innerText = `R$ ${window.valorCalculado.toFixed(2).replace('.', ',')}`;
 
                     // 3. Trocar para a tela de Acompanhamento e fechar o modal
                     mudarTela('tela-acompanhamento');
@@ -1315,15 +1207,11 @@
                     intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
                     showToast("Solicitação enviada. Buscando piloto...", "info");
 
-                }
-
-                else {
+                } else {
                     throw new Error(json.message);
                 }
 
-            }
-
-            catch (e) {
+            } catch (e) {
                 document.getElementById('modal-busca').style.display = 'none';
                 showToast("Erro ao enviar pedido: " + e.message, "error");
             }
@@ -1376,18 +1264,9 @@
                     // Lógica do botão WHATSAPP
                     if (pedido.telefone_motoboy) {
                         const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
+                        const numeroInternacional = foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
 
-                        const numeroInternacional = foneLimpo.length === 11 ? `55$ {
-                            foneLimpo
-                        }
-
-                        ` : foneLimpo;
-
-                        const textoWpp = encodeURIComponent(`Olá, sou o cliente do pedido #$ {
-                                id
-                            }
-
-                            no app Falcões. Gostaria de confirmar a sua chegada.`);
+                        const textoWpp = encodeURIComponent(`Olá, sou o cliente do pedido #${id} no app Falcões. Gostaria de confirmar a sua chegada.`);
                         const linkWpp = `https://wa.me/${numeroInternacional}?text=${textoWpp}`;
 
                         btnWpp.href = linkWpp;
@@ -1396,85 +1275,46 @@
 
                     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
 
-                }
-
-                else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
+                } else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
                     // Pedido finalizado pelo motoboy / sistema: pedir confirmação do cliente
                     statusArea.style.borderColor = 'blue';
                     statusArea.style.background = 'rgba(0, 0, 255, 0.05)';
                     statusTitulo.style.color = 'blue';
                     statusTitulo.innerText = "CORRIDA FINALIZADA (A CONFIRMAR)";
-
-                    statusDesc.innerText = `Valor estimado: R$ $ {
-                        (pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',')
-                    }
-
-                    `;
+                    statusDesc.innerText = `Valor estimado: R$ ${(pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',')}`;
 
                     // Remove botão de cancelar para evitar conflitos
                     btnCancelar.style.display = 'none';
 
                     // Abre o modal de confirmação (se não estiver já aberto)
                     const modalEnc = document.getElementById('modal-encerramento');
-
                     try {
                         const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
-
                         if (modalEnc && modalDisplay === 'none') {
                             console.log('[DEBUG] abrirModalEncerramento() chamado — status finalizado recebido.');
                             // CORRIGIDO: O código original tentava chamar uma função inexistente.
                             // Vou chamar diretamente a exibição do modal e o foco.
                             modalEnc.style.display = 'flex';
                             const campoEnc = document.getElementById('campo-encerramento');
-
-                            setTimeout(() => {
-                                try {
-                                    campoEnc.focus();
-                                }
-
-                                catch (e) { }
-                            }
-
-                                , 220);
-                        }
-
-                        else {
+                            setTimeout(() => { try { campoEnc.focus(); } catch (e) { } }, 220);
+                        } else {
                             console.log('[DEBUG] modal-encerramento já visível ou ausente (display=' + modalDisplay + ')');
                         }
-                    }
-
-                    catch (err) {
+                    } catch (err) {
                         console.warn('[DEBUG] erro ao avaliar modal-encerramento:', err);
-
                         // Fallback para abrir se der erro na verificação do estilo
                         if (modalEnc) {
                             modalEnc.style.display = 'flex';
                             const campoEnc = document.getElementById('campo-encerramento');
-
-                            setTimeout(() => {
-                                try {
-                                    campoEnc.focus();
-                                }
-
-                                catch (e) { }
-                            }
-
-                                , 220);
+                            setTimeout(() => { try { campoEnc.focus(); } catch (e) { } }, 220);
                         }
                     }
 
-                }
-
-                else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
+                } else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
                     // Pedido cancelado/expirado
                     clearInterval(intervaloVerificacao);
                     statusTitulo.innerText = "PEDIDO CANCELADO!";
-
-                    statusDesc.innerText = `Motivo: $ {
-                        pedido.motivo_cancelamento || "⚠️ Pedido Cancelado!O motoboy teve um imprevisto.    Pedimos desculpas!Por favor,   faça um novo pedido. Obrigado!"
-                    }
-
-                    `;
+                    statusDesc.innerText = `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado!O motoboy teve um imprevisto.    Pedimos desculpas!Por favor,   faça um novo pedido. Obrigado!"}`;
                     statusArea.style.borderColor = 'var(--error-color)';
                     statusArea.style.background = 'rgba(255, 0, 0, 0.1)';
                     statusTitulo.style.color = 'var(--error-color)';
@@ -1483,9 +1323,7 @@
                     showToast("Pedido cancelado. Use o botão 'FECHAR' abaixo para voltar.", "error", 5000);
                 }
 
-            }
-
-            catch (e) {
+            } catch (e) {
                 console.error("Erro na verificação de status:", e);
             }
         }
@@ -1493,7 +1331,6 @@
         // Função para continuar acompanhando o pedido se o usuário recarregar a página
         function checkPersistedOrder() {
             const persistedId = localStorage.getItem('idPedidoAtual');
-
             if (persistedId) {
                 idPedidoAtual = persistedId;
 
@@ -1503,9 +1340,7 @@
                 // Tenta buscar o status imediatamente para preencher os dados
                 verificarStatus(idPedidoAtual);
                 intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-            }
-
-            else {
+            } else {
                 // Se não houver pedido, garante que a tela inicial esteja ativa
                 mudarTela('tela-pedido');
             }
@@ -1531,9 +1366,7 @@
             // Chama a função que abre o modal de justificativa do cliente (definida no IIFE)
             if (typeof window.abrirJustificativaCliente === 'function') {
                 window.abrirJustificativaCliente();
-            }
-
-            else {
+            } else {
                 showToast("Erro: Função de cancelamento indisponível.", "error");
             }
         }
@@ -1555,20 +1388,11 @@
             document.getElementById('status-desc-modal').innerText = "Enviando confirmação..."; // CORRIGIDO: remova .style
 
             try {
-
                 // Se houver observação, envie como mensagem para o backend (rota já existente)
                 if (observacao && idPedidoAtual) {
-                    await fetch(`$ {
-                            MEU_IP
-                        }
-
-                        /enviar-mensagem`, {
+                    await fetch(`${MEU_IP}/enviar-mensagem`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-
-                        ,
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             corrida_id: idPedidoAtual,
                             remetente: 'cliente',
@@ -1593,9 +1417,7 @@
                 // volta à tela principal depois de curto delay
                 setTimeout(() => reiniciarApp(), 1400);
 
-            }
-
-            catch (e) {
+            } catch (e) {
                 document.getElementById('modal-busca').style.display = 'none';
                 showToast("Falha ao registrar finalização: " + e.message, "error");
             }
@@ -1605,28 +1427,15 @@
         function showToast(msg, type, duration = 3000) {
             const container = document.getElementById('toast-container');
             const div = document.createElement('div');
-
-            div.className = `toast $ {
-                type
-            }
-
-            `;
-
-            div.innerHTML = `<span class="msg">$ {
-                msg
-            }
-
-            </span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
+            div.className = `toast ${type}`;
+            div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
             container.appendChild(div);
-
             // Remove toasts antigos para manter apenas 1 ou 2 visíveis
             while (container.children.length > 3) {
                 container.firstChild.remove();
             }
-
             setTimeout(() => div.remove(), duration);
         }
-
         // ===== Lógica de justificativa (CLIENTE) =====
         (function () {
             const modalId = 'modal-justificativa-cliente';
@@ -1652,9 +1461,7 @@
             window.abrirJustificativaCliente = function () {
                 // valida se existe pedido ativo (adapte se seu código usa outro nome)
                 const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
-
-                if (false) {
-                    // (!id) {
+                if (!id) {
                     // use sua função de toast para avisar
                     if (typeof showToast === 'function') showToast("Nenhum pedido ativo para cancelar.", "error");
                     else alert("Nenhum pedido ativo para cancelar.");
@@ -1670,20 +1477,9 @@
                 erro.style.display = 'none';
 
                 modal.style.display = 'flex';
-
                 // garante foco após renderização
-                setTimeout(() => {
-                    try {
-                        campo.focus();
-                    }
-
-                    catch (e) { }
-                }
-
-                    , 100);
-            }
-
-                ;
+                setTimeout(() => { try { campo.focus(); } catch (e) { } }, 100);
+            };
 
             // Habilita botão quando tiver >= 5 chars
             if (campo) {
@@ -1698,7 +1494,6 @@
             if (btnConfirm) {
                 btnConfirm.addEventListener('click', async () => {
                     const motivo = campo.value.trim();
-
                     if (motivo.length < 5) {
                         erro.style.display = 'block';
                         return;
@@ -1708,7 +1503,6 @@
 
                     // mostra modal-busca (se você usa para carregamento/status)
                     const mb = document.getElementById('modal-busca');
-
                     if (mb) {
                         mb.style.display = 'flex';
                         const titulo = document.getElementById('status-titulo-modal');
@@ -1726,17 +1520,11 @@
 
                         const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                id: id, motivo: `[CLIENTE] ${motivo}`
-                            })
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
                         });
 
-                        const json = await res.json().catch(() => ({
-                            success: false
-                        }));
+                        const json = await res.json().catch(() => ({ success: false }));
 
                         if (json.success) {
                             // limpa estado local
@@ -1749,20 +1537,14 @@
                             // atualiza UI: chama função que verifica status/atualiza tela
                             if (typeof verificarStatus === 'function') verificarStatus(id);
                             if (typeof verificarEstado === 'function') verificarEstado();
-                        }
-
-                        else {
+                        } else {
                             throw new Error(json.message || 'Falha ao cancelar pedido.');
                         }
-                    }
-
-                    catch (e) {
+                    } catch (e) {
                         if (mb) mb.style.display = 'none';
                         if (typeof showToast === 'function') showToast("Falha ao cancelar: " + (e.message || e), "error");
                         else alert("Falha ao cancelar: " + (e.message || e));
-                    }
-
-                    finally {
+                    } finally {
                         campo.value = '';
                         if (mb) mb.style.display = 'none';
                     }
@@ -1771,142 +1553,7 @@
         })();
 
     </script>
-    <script> // CORREÇÃO: Sobrescrever lógica de justificativa para permitir cancelamento sem ID
 
-        window.abrirJustificativaCliente = function () {
-            // Permite abrir sempre
-            const modal = document.getElementById('modal-justificativa-cliente');
-            const campo = document.getElementById('campo-justificativa-cliente');
-            const btnConfirm = document.getElementById('btn-confirmar-just-cliente');
-            const erro = document.getElementById('erro-just-cliente');
-
-            // Fecha modal de busca se houver
-            const mb = document.getElementById('modal-busca');
-            if (mb) mb.style.display = 'none';
-
-            if (campo) campo.value = '';
-            if (btnConfirm) btnConfirm.disabled = true;
-            if (erro) erro.style.display = 'none';
-
-            if (modal) {
-                modal.style.display = 'flex';
-
-                setTimeout(() => {
-                    try {
-                        campo.focus();
-                    }
-
-                    catch (e) { }
-                }
-
-                    , 100);
-            }
-        }
-
-            ;
-
-        // Re-adicionar listener do botão de confirmação
-        const btnConfirm = document.getElementById('btn-confirmar-just-cliente');
-
-        if (btnConfirm) {
-            // Clone para remover listeners antigos
-            const newBtn = btnConfirm.cloneNode(true);
-            btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
-
-            const campo = document.getElementById('campo-justificativa-cliente');
-            const erro = document.getElementById('erro-just-cliente');
-            const modal = document.getElementById('modal-justificativa-cliente');
-
-            // Re-adicionar listener de input (pois o clone perdeu)
-            if (campo) {
-                campo.addEventListener('input', () => {
-                    const v = campo.value.trim();
-                    newBtn.disabled = v.length < 5;
-                    if (v.length >= 5 && erro) erro.style.display = 'none';
-                });
-            }
-
-            newBtn.addEventListener('click', async () => {
-                const motivo = campo.value.trim();
-
-                if (motivo.length < 5) {
-                    if (erro) erro.style.display = 'block';
-                    return;
-                }
-
-                if (modal) modal.style.display = 'none';
-
-                // Mostra busca/loading
-                const mb = document.getElementById('modal-busca');
-
-                if (mb) {
-                    mb.style.display = 'flex';
-                    const titulo = document.getElementById('status-titulo-modal');
-                    const desc = document.getElementById('status-desc-modal');
-                    if (titulo) titulo.innerText = "CANCELANDO...";
-                    if (desc) desc.innerText = "Processando...";
-                }
-
-                try {
-                    const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
-
-                    if (id) {
-                        // Com ID: cancela no servidor
-                        const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : window.MEU_IP || "https://falcoes-app.onrender.com";
-
-                        const res = await fetch(`${MEU_IP_GLOBAL}
-/cancelar-pedido`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-
-                            ,
-                            body: JSON.stringify({
-                                id: id, motivo: `[CLIENTE] ${motivo}`
-                            })
-                        });
-
-                        const json = await res.json().catch(() => ({
-                            success: false
-                        }));
-
-                        if (json.success) {
-                            if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
-                            localStorage.removeItem('idPedidoAtual');
-                            window.idPedidoAtual = null;
-                            if (typeof showToast === 'function') showToast("Pedido cancelado.", "success");
-                            else alert("Pedido cancelado.");
-
-                            if (typeof verificarStatus === 'function') verificarStatus(id); // Para atualizar UI se precisar
-                            // Mas geralmente queremos resetar
-                            setTimeout(() => window.location.reload(), 1000);
-                        }
-
-                        else {
-                            throw new Error(json.message || 'Falha ao cancelar.');
-                        }
-                    }
-
-                    else {
-                        // Sem ID: cancelamento local
-                        if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
-                        localStorage.removeItem('idPedidoAtual');
-                        window.idPedidoAtual = null;
-                        if (typeof showToast === 'function') showToast("Busca cancelada.", "info");
-                        setTimeout(() => window.location.reload(), 500);
-                    }
-                }
-
-                catch (e) {
-                    if (mb) mb.style.display = 'none';
-                    if (typeof showToast === 'function') showToast("Erro: " + e.message, "error");
-                    else alert("Erro: " + e.message);
-                }
-            });
-        }
-
-    </script>
 </body>
 
 </html>
