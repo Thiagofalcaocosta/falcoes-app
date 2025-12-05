@@ -14,7 +14,6 @@ if (!fetchFn) {
   }
 }
 
-
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -60,48 +59,12 @@ app.get('/reverse', async (req, res) => {
     return res.status(500).json({ error: 'proxy failed', details: String(err) });
   }
 });
-// PROXY para Nominatim (reverse geocoding) - evita CORS no browser
-app.get('/reverse', async (req, res) => {
-  try {
-    const lat = req.query.lat;
-    const lon = req.query.lon;
-    if (!lat || !lon) return res.status(400).json({ error: 'missing lat or lon' });
-
-    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=18&addressdetails=1`;
-
-    const r = await fetchFn(nominatimUrl, {
-      headers: {
-        // **TROQUE PELO SEU EMAIL REAL AQUI**
-        'User-Agent': 'FalcaoApp/1.0 (seu-email@exemplo.com)'
-      },
-      timeout: 10000
-    });
-
-    const text = await r.text();
-    if (!r.ok) {
-      // repassa o status e a mensagem do nominatim (p.ex. 503)
-      return res.status(r.status).send(text);
-    }
-
-    try {
-      const json = JSON.parse(text);
-      return res.json(json);
-    } catch (err) {
-      return res.send(text);
-    }
-  } catch (err) {
-    console.error('proxy /reverse error:', err);
-    return res.status(500).json({ error: 'proxy failed', details: String(err) });
-  }
-});
 
 // rota curta /app redireciona para /install.html
 app.get('/app', (req, res) => {
   res.sendFile(path.join(__dirname, 'app.html'));
 });
 
-
-// COLE A ROTA /install APÓS AQUI
 app.get('/install', (req, res) => {
   res.sendFile(path.join(__dirname, 'install.html'));
 });
@@ -127,7 +90,7 @@ const pool = new Pool({
 // --- CRIAÇÃO DAS TABELAS (SEGURANÇA) ---
 const initDB = async () => {
   try {
-    // 1. Criação de Usuários (Base)
+    // 1. Criação de Usuários (Base) - COM CAMPOS ONLINE
     await pool.query(`
 CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY,
@@ -142,6 +105,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
     categoria VARCHAR(50),
     aprovado BOOLEAN DEFAULT false,
     bloqueado_ate TIMESTAMP,
+    online_ate TIMESTAMP,
+    latitude DECIMAL(10,8),
+    longitude DECIMAL(11,8),
     foto_cnh VARCHAR(255),
     foto_moto VARCHAR(255),
     foto_rosto VARCHAR(255)
@@ -176,14 +142,16 @@ CREATE TABLE IF NOT EXISTS mensagens (
 );
 `);
 
-    // 4. Criação de Exposição (Depende de Usuários e Corridas)
+    // 4. Criação de Exposição (MODIFICADA - com ciclo)
     await pool.query(`
 CREATE TABLE IF NOT EXISTS exposicao_corrida (
+    id SERIAL PRIMARY KEY,
     corrida_id INTEGER REFERENCES corridas(id),
     motoboy_id INTEGER REFERENCES usuarios(id),
+    ciclo INTEGER DEFAULT 1,
     data_exposicao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status_exposicao VARCHAR(20) DEFAULT 'ativo',
-    PRIMARY KEY (corrida_id, motoboy_id)
+    expirada BOOLEAN DEFAULT false,
+    UNIQUE(corrida_id, motoboy_id)
 );
 `);
 
@@ -192,6 +160,108 @@ CREATE TABLE IF NOT EXISTS exposicao_corrida (
 };
 initDB();
 
+// --- NOVAS FUNÇÕES PARA DISTRIBUIÇÃO DE CORRIDAS ---
+
+// FUNÇÃO 1: Distribui corrida para motoboys
+async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
+    try {
+        const categoriaFiltro = tipoServico === 'moto-taxi' ? 'Passageiro' : 
+                               tipoServico === 'entrega' ? 'Entregas' : null;
+        
+        let filtroCategoria = '';
+        if (categoriaFiltro) {
+            filtroCategoria = `AND (categoria = '${categoriaFiltro}' OR categoria = 'Geral')`;
+        }
+        
+        const motoboys = await pool.query(`
+            SELECT id FROM usuarios 
+            WHERE tipo = 'motoboy' 
+            AND aprovado = true 
+            AND online_ate > NOW()
+            ${filtroCategoria}
+            ORDER BY id
+        `);
+        
+        if (motoboys.rows.length === 0) {
+            console.log(`⚠️ Nenhum motoboy online para corrida ${corridaId} - tentando novamente em 10s`);
+            
+            setTimeout(async () => {
+                await distribuirCorridaParaMotoboys(corridaId, tipoServico);
+            }, 10000);
+            
+            return;
+        }
+        
+        console.log(`📢 Corrida ${corridaId} distribuída para ${motoboys.rows.length} motoboys`);
+        
+        await pool.query("DELETE FROM exposicao_corrida WHERE corrida_id = $1", [corridaId]);
+        
+        for (let i = 0; i < motoboys.rows.length; i++) {
+            await pool.query(`
+                INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo) 
+                VALUES ($1, $2, 1)
+            `, [corridaId, motoboys.rows[i].id]);
+        }
+        
+    } catch (err) {
+        console.error('Erro ao distribuir corrida:', err);
+    }
+}
+
+// FUNÇÃO 2: Reinicia ciclo quando todos viram
+async function reiniciarCicloCorrida(corridaId) {
+    try {
+        const corridaCheck = await pool.query(
+            "SELECT tipo_servico FROM corridas WHERE id = $1 AND status = 'pendente'",
+            [corridaId]
+        );
+        
+        if (corridaCheck.rows.length === 0) {
+            return;
+        }
+        
+        const tipoServico = corridaCheck.rows[0].tipo_servico;
+        
+        console.log(`🔄 Reiniciando ciclo para corrida ${corridaId}`);
+        
+        // Incrementa o ciclo para todos motoboys
+        await pool.query(`
+            UPDATE exposicao_corrida 
+            SET ciclo = ciclo + 1, 
+                expirada = false,
+                data_exposicao = CURRENT_TIMESTAMP
+            WHERE corrida_id = $1
+        `, [corridaId]);
+        
+    } catch (err) {
+        console.error('Erro ao reiniciar ciclo:', err);
+    }
+}
+
+// FUNÇÃO 3: Verifica se todos já viram
+async function verificarExposicaoCompleta(corridaId) {
+    try {
+        const exposicoes = await pool.query(`
+            SELECT COUNT(*) as total, SUM(CASE WHEN expirada = true THEN 1 ELSE 0 END) as expiradas
+            FROM exposicao_corrida 
+            WHERE corrida_id = $1
+        `, [corridaId]);
+        
+        const { total, expiradas } = exposicoes.rows[0];
+        
+        if (parseInt(expiradas) === parseInt(total) && parseInt(total) > 0) {
+            console.log(`⭕ Todos ${total} motoboys viram corrida ${corridaId} - Reiniciando ciclo...`);
+            
+            setTimeout(() => {
+                reiniciarCicloCorrida(corridaId);
+            }, 2000);
+        }
+        
+    } catch (err) {
+        console.error('Erro ao verificar exposição completa:', err);
+    }
+}
+
 // --- ROTAS DO APP ---
 
 // ROTA DE CADASTRO INTELIGENTE
@@ -199,20 +269,17 @@ app.post('/cadastro', async (req, res) => {
   const { nome, email, senha, tipo, telefone, placa, modelo_moto, cor_moto, categoria } = req.body;
 
   try {
-    // 1. Verifica quantos usuários existem no banco
     const contagem = await pool.query("SELECT COUNT(*) FROM usuarios");
     const totalUsuarios = parseInt(contagem.rows[0].count);
 
     let estaAprovado = false;
-    let tipoFinal = tipo; // O tipo que a pessoa escolheu
+    let tipoFinal = tipo;
 
-    // 2. SE FOR O PRIMEIRO DO MUNDO, VIRA CHEFE
     if (totalUsuarios === 0) {
       tipoFinal = 'admin';
-      estaAprovado = true; // O primeiro já entra aprovado
+      estaAprovado = true;
       console.log("👑 PRIMEIRO USUÁRIO DETECTADO: Criando Admin Supremo.");
     } else {
-      // Se for cliente, aprova direto
       estaAprovado = tipo === 'cliente' ? true : false;
     }
 
@@ -232,6 +299,7 @@ app.post('/cadastro', async (req, res) => {
     res.status(500).json({ success: false, message: 'Erro ao cadastrar. Email já existe?' });
   }
 });
+
 app.post('/login', async (req, res) => {
   const { email, senha } = req.body;
   try {
@@ -245,6 +313,7 @@ app.post('/login', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: "Erro no servidor" }); }
 });
 
+// ROTA MODIFICADA: Agora distribui corrida para motoboys
 app.post('/pedir-corrida', async (req, res) => {
   const { cliente_id, origem, destino, valor, tipo_servico } = req.body;
   try {
@@ -252,6 +321,10 @@ app.post('/pedir-corrida', async (req, res) => {
       'INSERT INTO corridas (cliente_id, origem, destino, valor, status, tipo_servico) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
       [cliente_id, origem, destino, valor, 'pendente', tipo_servico]
     );
+    
+    // DISTRIBUI A CORRIDA PARA OS MOTOBOYS
+    await distribuirCorridaParaMotoboys(result.rows[0].id, tipo_servico);
+    
     res.json({ success: true, message: 'Enviado!', id: result.rows[0].id });
   } catch (err) { res.status(500).json({ success: false }); }
 });
@@ -260,68 +333,85 @@ app.post('/cancelar-pedido', async (req, res) => {
   const { id, motivo } = req.body;
   try {
     await pool.query("UPDATE corridas SET status = 'cancelada', motivo_cancelamento = $1 WHERE id = $2", [motivo, id]);
+    // Remove exposições desta corrida
+    await pool.query("DELETE FROM exposicao_corrida WHERE corrida_id = $1", [id]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// ROTA ATUALIZADA: Implementa o tempo limite de 30 segundos
+// ROTA ATUALIZADA: Agora mostra corridas distribuídas para o motoboy
 app.post('/corridas-pendentes', async (req, res) => {
   const { motoboy_id } = req.body;
-  const TEMPO_LIMITE_SEGUNDOS = 30; // Novo tempo limite de 30 segundos
+  const TEMPO_LIMITE_SEGUNDOS = 30;
 
   try {
     // 1. VERIFICAR BLOQUEIO
-    const motoboyQuery = await pool.query("SELECT bloqueado_ate, categoria FROM usuarios WHERE id = $1", [motoboy_id]);
+    const motoboyQuery = await pool.query(
+      "SELECT bloqueado_ate, categoria, online_ate FROM usuarios WHERE id = $1",
+      [motoboy_id]
+    );
     const motoboy = motoboyQuery.rows[0];
 
     if (!motoboy) return res.status(404).json({ error: 'Motoboy não encontrado.' });
+    
     if (motoboy.bloqueado_ate && new Date(motoboy.bloqueado_ate) > new Date()) {
       const min = Math.ceil((new Date(motoboy.bloqueado_ate) - new Date()) / 60000);
       return res.json({ success: false, bloqueado: true, tempo: min });
     }
+    
+    // 2. VERIFICAR SE MOTOBOY ESTÁ ONLINE
+    if (!motoboy.online_ate || new Date(motoboy.online_ate) < new Date()) {
+      return res.json({ success: false, offline: true, message: 'Você precisa estar online para ver corridas.' });
+    }
 
-    // 2. BUSCAR CORRIDA DISPONÍVEL (Com lógica de exposição/timeout)
+    // 3. BUSCAR CORRIDA DISPONÍVEL PARA ESTE MOTOBOY
     const categoriaFiltro = motoboy.categoria === 'Passageiro' ? 'moto-taxi' : 'entrega';
-    // Se a categoria for geral, não filtra por tipo. 
     const filtroTipo = (categoriaFiltro === 'moto-taxi' || categoriaFiltro === 'entrega')
       ? `AND c.tipo_servico = '${categoriaFiltro}'`
       : '';
 
     const result = await pool.query(`
             SELECT 
-                c.id, c.origem, c.destino, c.valor, c.tipo_servico, u.nome as nome_cliente, u.telefone as telefone_cliente,
-                EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) as segundos_passados
-            FROM corridas c 
-            JOIN usuarios u ON c.cliente_id = u.id 
-            LEFT JOIN exposicao_corrida ec ON c.id = ec.corrida_id AND ec.motoboy_id = $1
-            WHERE c.status = 'pendente'
+                c.id, c.origem, c.destino, c.valor, c.tipo_servico, 
+                u.nome as nome_cliente, u.telefone as telefone_cliente,
+                EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) as segundos_passados,
+                ec.ciclo
+            FROM exposicao_corrida ec
+            JOIN corridas c ON ec.corrida_id = c.id
+            JOIN usuarios u ON c.cliente_id = u.id
+            WHERE ec.motoboy_id = $1
+            AND c.status = 'pendente'
+            AND ec.expirada = false
+            AND EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) < $2
             ${filtroTipo}
-            AND (
-                ec.motoboy_id IS NULL OR 
-                (ec.motoboy_id = $1 AND EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) > $2)
-            )
-            ORDER BY c.data_hora ASC
+            ORDER BY ec.data_exposicao ASC
             LIMIT 1
         `, [motoboy_id, TEMPO_LIMITE_SEGUNDOS]);
 
-    // 3. SE ENCONTRAR CORRIDA: REGISTRAR EXPOSIÇÃO E RETORNAR TEMPO RESTANTE
+    // 4. SE ENCONTRAR CORRIDA NO TURNO
     if (result.rows.length > 0) {
       const corrida = result.rows[0];
       const segundosPassados = corrida.segundos_passados || 0;
       const tempoRestante = TEMPO_LIMITE_SEGUNDOS - segundosPassados;
 
       if (tempoRestante > 0) {
-        // Remove registro antigo (se houver) e insere um novo
-        await pool.query("DELETE FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2", [corrida.id, motoboy_id]);
-        await pool.query("INSERT INTO exposicao_corrida (corrida_id, motoboy_id) VALUES ($1, $2)", [corrida.id, motoboy_id]);
-
+        // Adiciona informação do ciclo
         corrida.tempo_restante = Math.ceil(tempoRestante);
-
+        corrida.ciclo_atual = corrida.ciclo || 1;
         return res.json({ success: true, corridas: [corrida] });
+      } else {
+        // Tempo expirou para este motoboy, marca como expirada
+        await pool.query(
+          "UPDATE exposicao_corrida SET expirada = true WHERE corrida_id = $1 AND motoboy_id = $2",
+          [corrida.id, motoboy_id]
+        );
+        
+        // Verifica se todos motoboys já viram esta corrida
+        await verificarExposicaoCompleta(corrida.id);
       }
     }
 
-    // 4. SE NÃO ENCONTRAR: RETORNA LISTA VAZIA
+    // 5. SE NÃO ENCONTRAR: RETORNA LISTA VAZIA
     res.json({ success: true, corridas: [] });
 
   } catch (err) {
@@ -333,20 +423,24 @@ app.post('/corridas-pendentes', async (req, res) => {
 // ROTA ATUALIZADA: Implementa a verificação de tempo limite antes de aceitar
 app.post('/aceitar-corrida', async (req, res) => {
   const { corrida_id, motoboy_id } = req.body;
-  const TEMPO_LIMITE_SEGUNDOS = 30; // O mesmo tempo limite
+  const TEMPO_LIMITE_SEGUNDOS = 30;
 
   try {
     // 1. VERIFICAR SE O TEMPO DE EXPOSIÇÃO EXPIROU
     const exposicao = await pool.query(
-      "SELECT EXTRACT(EPOCH FROM (NOW() - data_exposicao)) as segundos_passados FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2",
+      `SELECT EXTRACT(EPOCH FROM (NOW() - data_exposicao)) as segundos_passados, expirada 
+       FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2`,
       [corrida_id, motoboy_id]
     );
 
-    const segundosPassados = exposicao.rows.length > 0 ? exposicao.rows[0].segundos_passados : TEMPO_LIMITE_SEGUNDOS + 1;
+    if (exposicao.rows.length === 0) {
+      return res.status(403).json({ success: false, message: 'Corrida não disponível para você.' });
+    }
 
-    if (segundosPassados > TEMPO_LIMITE_SEGUNDOS) {
-      // Remove o registro expirado
-      await pool.query("DELETE FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2", [corrida_id, motoboy_id]);
+    const segundosPassados = exposicao.rows[0].segundos_passados || TEMPO_LIMITE_SEGUNDOS + 1;
+    const expirada = exposicao.rows[0].expirada;
+
+    if (expirada || segundosPassados > TEMPO_LIMITE_SEGUNDOS) {
       return res.status(403).json({ success: false, message: 'Tempo limite expirado. Corrida removida.' });
     }
 
@@ -357,15 +451,11 @@ app.post('/aceitar-corrida', async (req, res) => {
     );
 
     if (updateCorrida.rowCount === 0) {
-      // Corrida já foi aceita/cancelada
       return res.status(409).json({ success: false, message: 'Corrida indisponível (já aceita ou cancelada).' });
     }
 
-    // 3. Sucesso: Limpar exposições
+    // 3. Sucesso: Limpar exposições desta corrida
     await pool.query("DELETE FROM exposicao_corrida WHERE corrida_id = $1", [corrida_id]);
-
-    // **REMOVIDO:** A penalidade de 10 minutos (que estava aqui) foi movida para a rota /expirar-corrida.
-    // await pool.query("UPDATE usuarios SET bloqueado_ate = NOW() + interval '10 minutes' WHERE id = $1", [motoboy_id]);
 
     res.json({ success: true, message: 'Corrida aceita com sucesso.' });
 
@@ -375,23 +465,30 @@ app.post('/aceitar-corrida', async (req, res) => {
   }
 });
 
-// --- NOVA ROTA: GERENCIA EXPIRAÇÃO DO TEMPO LIMITE E PENALIZAÇÃO ---
+// ROTA ATUALIZADA: Expira corrida para um motoboy específico
 app.post('/expirar-corrida', async (req, res) => {
   const { corrida_id, motoboy_id } = req.body;
   const TEMPO_BLOQUEIO_MINUTOS = 10;
 
   try {
-    // 1. Remove o registro de exposição para que a corrida fique livre para outros motoboys
-    await pool.query("DELETE FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2",
-      [corrida_id, motoboy_id]);
+    // 1. Marca exposição como expirada para este motoboy
+    await pool.query(
+      "UPDATE exposicao_corrida SET expirada = true WHERE corrida_id = $1 AND motoboy_id = $2",
+      [corrida_id, motoboy_id]
+    );
 
     // 2. Penaliza o Motoboy com o bloqueio de 10 minutos
-    await pool.query("UPDATE usuarios SET bloqueado_ate = NOW() + interval '10 minutes' WHERE id = $1",
-      [motoboy_id]);
+    await pool.query(
+      "UPDATE usuarios SET bloqueado_ate = NOW() + interval '10 minutes' WHERE id = $1",
+      [motoboy_id]
+    );
+
+    // 3. Verifica se todos já viram para reiniciar ciclo
+    await verificarExposicaoCompleta(corrida_id);
 
     console.log(`[EXPIRADO] Motoboy ${motoboy_id} bloqueado por ${TEMPO_BLOQUEIO_MINUTOS} minutos.`);
 
-    // 3. Retorna a informação de bloqueio
+    // 4. Retorna a informação de bloqueio
     res.json({ success: true, bloqueado: true, tempo: TEMPO_BLOQUEIO_MINUTOS });
 
   } catch (err) {
@@ -400,9 +497,11 @@ app.post('/expirar-corrida', async (req, res) => {
   }
 });
 
-
 app.post('/finalizar-corrida', async (req, res) => {
-  try { await pool.query("UPDATE corridas SET status = 'concluida' WHERE id = $1", [req.body.corrida_id]); res.json({ success: true }); } catch (err) { res.status(500).json({ success: false }); }
+  try { 
+    await pool.query("UPDATE corridas SET status = 'concluida' WHERE id = $1", [req.body.corrida_id]); 
+    res.json({ success: true }); 
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.get('/minha-corrida-atual/:id', async (req, res) => {
@@ -430,8 +529,35 @@ app.get('/mensagens/:id', async (req, res) => {
   try { const result = await pool.query("SELECT * FROM mensagens WHERE corrida_id = $1 ORDER BY data_hora ASC", [req.params.id]); res.json(result.rows); } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// --- ROTAS DO ADMIN (EXISTENTES) ---
+// --- ROTA DE STATUS ONLINE PARA MOTOBOYS ---
+app.post('/motoboy/status-online', async (req, res) => {
+  const { motoboy_id, online, latitude, longitude } = req.body;
 
+  try {
+    if (online) {
+      await pool.query(
+        `UPDATE usuarios SET 
+                    online_ate = NOW() + interval '60 seconds',
+                    latitude = $2,
+                    longitude = $3
+                 WHERE id = $1`,
+        [motoboy_id, latitude, longitude]
+      );
+      console.log(`✅ Motoboy ${motoboy_id} agora está ONLINE`);
+    } else {
+      await pool.query("UPDATE usuarios SET online_ate = NULL WHERE id = $1", [motoboy_id]);
+      console.log(`🔴 Motoboy ${motoboy_id} agora está OFFLINE`);
+    }
+
+    res.json({ success: true, status: online ? 'ONLINE' : 'OFFLINE' });
+
+  } catch (err) {
+    console.error('Erro em /motoboy/status-online:', err);
+    res.status(500).json({ success: false, message: 'Erro ao atualizar status.' });
+  }
+});
+
+// --- ROTAS DO ADMIN ---
 app.get('/admin/dashboard', async (req, res) => {
   try {
     const hoje = await pool.query("SELECT COUNT(*) FROM corridas WHERE data_hora::date = CURRENT_DATE");
@@ -464,15 +590,11 @@ app.post('/admin/rejeitar', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// --- ROTAS NOVAS DE ADMIN PARA GESTÃO DE USUÁRIOS E REMOÇÃO (SOLICITADAS) ---
-
-/**
- * ROTA SOLICITADA: Retorna a lista de motoboys APROVADOS e ATIVOS.
- */
 app.get('/admin/motoboys', async (req, res) => {
   try {
     const result = await pool.query(`
-            SELECT id, nome, email, telefone, placa, modelo_moto, cor_moto, categoria, aprovado 
+            SELECT id, nome, email, telefone, placa, modelo_moto, cor_moto, categoria, aprovado,
+                   CASE WHEN online_ate > NOW() THEN 'Online' ELSE 'Offline' END as status_online
             FROM usuarios 
             WHERE tipo = 'motoboy' AND aprovado = true 
             ORDER BY nome ASC
@@ -484,9 +606,6 @@ app.get('/admin/motoboys', async (req, res) => {
   }
 });
 
-/**
- * ROTA SOLICITADA: Retorna a lista de clientes.
- */
 app.get('/admin/clientes', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -502,9 +621,6 @@ app.get('/admin/clientes', async (req, res) => {
   }
 });
 
-/**
- * ROTA SOLICITADA: Remove um usuário (motoboy, cliente ou admin) pelo ID.
- */
 app.delete('/admin/remover/:id', async (req, res) => {
   const userId = req.params.id;
   try {
@@ -517,66 +633,13 @@ app.delete('/admin/remover/:id', async (req, res) => {
     res.json({ success: true, message: 'Usuário removido com sucesso.' });
   } catch (err) {
     console.error('Erro ao remover usuário:', err);
-    if (err.code === '23503') { // PostgreSQL error code for foreign key violation
+    if (err.code === '23503') {
       return res.status(409).json({ success: false, message: 'Não é possível remover o usuário. Ele ainda possui dados associados (corridas/mensagens).' });
     }
     res.status(500).json({ success: false, message: 'Erro interno ao remover o usuário.' });
   }
 });
 
-
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
-
-// --- NOVA ROTA: REGISTRA STATUS E LOCALIZAÇÃO ---
-app.post('/motoboy/status-online', async (req, res) => {
-  const { motoboy_id, online, latitude, longitude } = req.body;
-
-  try {
-    // Se o status for 'online', atualiza o campo bloqueado_ate
-    // Usamos bloqueado_ate de forma reversa: se for NULL, está offline. Se for um timestamp futuro, está bloqueado/online.
-    // Vamos usar um campo novo 'ultima_localizacao' ou 'online_ate' para gerenciar o status.
-
-    // **IMPORTANTE: Se o seu PostgreSQL não tem os campos 'latitude'/'longitude' na tabela 'usuarios', você deve adicioná-los primeiro!**
-
-    if (online) {
-      // Atualiza o tempo de vida (Heartbeat) para os próximos 60 segundos
-      await pool.query(
-        `UPDATE usuarios SET 
-                    online_ate = NOW() + interval '60 seconds',
-                    latitude = $2,
-                    longitude = $3
-                 WHERE id = $1`,
-        [motoboy_id, latitude, longitude]
-      );
-    } else {
-      // Se offline, limpa o status
-      await pool.query("UPDATE usuarios SET online_ate = NULL WHERE id = $1", [motoboy_id]);
-    }
-
-    res.json({ success: true, status: online ? 'ONLINE' : 'OFFLINE' });
-
-  } catch (err) {
-    console.error('Erro em /motoboy/status-online:', err);
-    res.status(500).json({ success: false, message: 'Erro ao atualizar status.' });
-  }
-});
-
-// **Ajuste na ROTA /corridas-pendentes (REVISÃO NECESSÁRIA)**
-// Sua rota de corridas pendentes atual não filtra por status online/offline.
-// Para fazer isso, você precisará modificar a lógica do backend:
-/*
-// REMOVA a rota antiga /corridas-pendentes e use a nova lógica:
-
-app.post('/corridas-pendentes', async (req, res) => {
-    // ... (restante da lógica de motoboy bloqueado) ...
-
-    // 2. BUSCAR CORRIDA DISPONÍVEL (APENAS 1):
-    // ... (Restante do SELECT)
-    // ADICIONE ESTA CLÁUSULA NO SEU SELECT PRINCIPAL DE CORRIDAS PENDENTES:
-    // **AND u.online_ate > NOW()**
-    
-    // ... (Restante do SELECT) ...
-});
-*/
