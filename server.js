@@ -1,3 +1,9 @@
+/* server.fixed.js
+   Versão com melhorias de diagnóstico, validação de entradas e handlers globais.
+   Mantive todas as rotas e funções existentes (distribuição, ciclos, exposicao, etc.)
+   Substitua seu server.js por este arquivo e reinicie a aplicação no Render.
+*/
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
@@ -25,42 +31,7 @@ app.use(cors());
 app.use(express.static(path.join(__dirname)));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-// PROXY para Nominatim (reverse geocoding) - evita CORS no browser
-app.get('/reverse', async (req, res) => {
-  try {
-    const lat = req.query.lat;
-    const lon = req.query.lon;
-    if (!lat || !lon) return res.status(400).json({ error: 'missing lat or lon' });
-
-    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=18&addressdetails=1`;
-
-    const r = await fetchFn(nominatimUrl, {
-      headers: {
-        // **TROQUE PELO SEU EMAIL REAL AQUI**
-        'User-Agent': 'FalcaoApp/1.0 (seu-email@exemplo.com)'
-      },
-      timeout: 10000
-    });
-
-    const text = await r.text();
-    if (!r.ok) {
-      // repassa o status e a mensagem do nominatim (p.ex. 503)
-      return res.status(r.status).send(text);
-    }
-
-    try {
-      const json = JSON.parse(text);
-      return res.json(json);
-    } catch (err) {
-      return res.send(text);
-    }
-  } catch (err) {
-    console.error('proxy /reverse error:', err);
-    return res.status(500).json({ error: 'proxy failed', details: String(err) });
-  }
-});
-
-// rota curta /app redireciona para /install.html
+// ROTA curta /app redireciona para /install.html
 app.get('/app', (req, res) => {
   res.sendFile(path.join(__dirname, 'app.html'));
 });
@@ -84,8 +55,38 @@ app.get('/', (req, res) => {
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:123456@localhost:5432/falcoes_app';
 const pool = new Pool({
   connectionString: connectionString,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+  // ajustes de pool para produção/Render
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000
 });
+
+// HANDLERS GLOBAIS E POOL ERROR
+pool.on('error', (err) => {
+  console.error('❌ Pool Postgres: erro não tratado', err && err.stack ? err.stack : err);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err && err.stack ? err.stack : err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('UNHANDLED REJECTION:', reason && reason.stack ? reason.stack : reason);
+});
+
+// CHECK CONNECT / LOGS
+async function checkDBConnection() {
+  try {
+    const client = await pool.connect();
+    await client.query('SELECT 1');
+    client.release();
+    console.log('✅ Conexão com o banco OK');
+  } catch (err) {
+    console.error('❌ ERRO: Não foi possível conectar ao banco de dados:', err && err.message ? err.message : err);
+    // não encerre automaticamente em Render — apenas um aviso, mas útil para debug
+  }
+}
+checkDBConnection();
 
 // --- CRIAÇÃO DAS TABELAS (SEGURANÇA) ---
 const initDB = async () => {
@@ -156,7 +157,7 @@ CREATE TABLE IF NOT EXISTS exposicao_corrida (
 `);
 
     console.log('✅ Tabelas Verificadas/Criadas!');
-  } catch (err) { console.error('❌ Erro ao criar tabelas:', err); }
+  } catch (err) { console.error('❌ Erro ao criar tabelas:', err && err.stack ? err.stack : err); }
 };
 initDB();
 
@@ -204,7 +205,7 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
         }
         
     } catch (err) {
-        console.error('Erro ao distribuir corrida:', err);
+        console.error('Erro ao distribuir corrida:', err && err.stack ? err.stack : err);
     }
 }
 
@@ -234,7 +235,7 @@ async function reiniciarCicloCorrida(corridaId) {
         `, [corridaId]);
         
     } catch (err) {
-        console.error('Erro ao reiniciar ciclo:', err);
+        console.error('Erro ao reiniciar ciclo:', err && err.stack ? err.stack : err);
     }
 }
 
@@ -258,7 +259,7 @@ async function verificarExposicaoCompleta(corridaId) {
         }
         
     } catch (err) {
-        console.error('Erro ao verificar exposição completa:', err);
+        console.error('Erro ao verificar exposição completa:', err && err.stack ? err.stack : err);
     }
 }
 
@@ -295,7 +296,7 @@ app.post('/cadastro', async (req, res) => {
     }
 
   } catch (err) {
-    console.error(err);
+    console.error('Erro em /cadastro:', err && err.stack ? err.stack : err);
     res.status(500).json({ success: false, message: 'Erro ao cadastrar. Email já existe?' });
   }
 });
@@ -310,7 +311,7 @@ app.post('/login', async (req, res) => {
       if (!user.aprovado) return res.status(401).json({ success: false, message: 'Sua conta está em análise.' });
       res.json({ success: true, user });
     } else { res.status(401).json({ success: false, message: 'Email ou senha incorretos.' }); }
-  } catch (err) { res.status(500).json({ success: false, message: "Erro no servidor" }); }
+  } catch (err) { console.error('Erro em /login:', err && err.stack ? err.stack : err); res.status(500).json({ success: false, message: "Erro no servidor" }); }
 });
 
 // ROTA MODIFICADA: Agora distribui corrida para motoboys
@@ -326,7 +327,7 @@ app.post('/pedir-corrida', async (req, res) => {
     await distribuirCorridaParaMotoboys(result.rows[0].id, tipo_servico);
     
     res.json({ success: true, message: 'Enviado!', id: result.rows[0].id });
-  } catch (err) { res.status(500).json({ success: false }); }
+  } catch (err) { console.error('Erro em /pedir-corrida:', err && err.stack ? err.stack : err); res.status(500).json({ success: false }); }
 });
 
 app.post('/cancelar-pedido', async (req, res) => {
@@ -336,13 +337,15 @@ app.post('/cancelar-pedido', async (req, res) => {
     // Remove exposições desta corrida
     await pool.query("DELETE FROM exposicao_corrida WHERE corrida_id = $1", [id]);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false }); }
+  } catch (err) { console.error('Erro em /cancelar-pedido:', err && err.stack ? err.stack : err); res.status(500).json({ success: false }); }
 });
 
 // ROTA ATUALIZADA: Agora mostra corridas distribuídas para o motoboy
 app.post('/corridas-pendentes', async (req, res) => {
   const { motoboy_id } = req.body;
   const TEMPO_LIMITE_SEGUNDOS = 30;
+
+  if (!motoboy_id) return res.status(400).json({ error: 'motoboy_id é obrigatório' });
 
   try {
     // 1. VERIFICAR BLOQUEIO
@@ -415,15 +418,17 @@ app.post('/corridas-pendentes', async (req, res) => {
     res.json({ success: true, corridas: [] });
 
   } catch (err) {
-    console.error('Erro em /corridas-pendentes:', err);
+    console.error('Erro em /corridas-pendentes:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Erro no servidor' });
   }
 });
 
-// ROTA ATUALIZADA: Implementa a verificação de tempo limite antes de aceitar
+// ROTA ATUALIZADA: Agora verifica tempo antes de aceitar
 app.post('/aceitar-corrida', async (req, res) => {
   const { corrida_id, motoboy_id } = req.body;
   const TEMPO_LIMITE_SEGUNDOS = 30;
+
+  if (!corrida_id || !motoboy_id) return res.status(400).json({ error: 'corrida_id e motoboy_id são obrigatórios' });
 
   try {
     // 1. VERIFICAR SE O TEMPO DE EXPOSIÇÃO EXPIROU
@@ -460,7 +465,7 @@ app.post('/aceitar-corrida', async (req, res) => {
     res.json({ success: true, message: 'Corrida aceita com sucesso.' });
 
   } catch (err) {
-    console.error('Erro em /aceitar-corrida:', err);
+    console.error('Erro em /aceitar-corrida:', err && err.stack ? err.stack : err);
     res.status(500).json({ success: false, message: 'Erro interno ao aceitar.' });
   }
 });
@@ -469,6 +474,8 @@ app.post('/aceitar-corrida', async (req, res) => {
 app.post('/expirar-corrida', async (req, res) => {
   const { corrida_id, motoboy_id } = req.body;
   const TEMPO_BLOQUEIO_MINUTOS = 10;
+
+  if (!corrida_id || !motoboy_id) return res.status(400).json({ error: 'corrida_id e motoboy_id são obrigatórios' });
 
   try {
     // 1. Marca exposição como expirada para este motoboy
@@ -492,7 +499,7 @@ app.post('/expirar-corrida', async (req, res) => {
     res.json({ success: true, bloqueado: true, tempo: TEMPO_BLOQUEIO_MINUTOS });
 
   } catch (err) {
-    console.error('Erro em /expirar-corrida:', err);
+    console.error('Erro em /expirar-corrida:', err && err.stack ? err.stack : err);
     res.status(500).json({ success: false, message: 'Erro interno ao processar expiração.' });
   }
 });
@@ -501,7 +508,7 @@ app.post('/finalizar-corrida', async (req, res) => {
   try { 
     await pool.query("UPDATE corridas SET status = 'concluida' WHERE id = $1", [req.body.corrida_id]); 
     res.json({ success: true }); 
-  } catch (err) { res.status(500).json({ success: false }); }
+  } catch (err) { console.error('Erro em /finalizar-corrida:', err && err.stack ? err.stack : err); res.status(500).json({ success: false }); }
 });
 
 app.get('/minha-corrida-atual/:id', async (req, res) => {
@@ -509,7 +516,7 @@ app.get('/minha-corrida-atual/:id', async (req, res) => {
     const result = await pool.query(`SELECT c.*, u.nome as nome_cliente, u.telefone as telefone_cliente FROM corridas c JOIN usuarios u ON c.cliente_id = u.id WHERE c.motoboy_id = $1 AND c.status = 'aceita'`, [req.params.id]);
     if (result.rows.length > 0) res.json({ tem_corrida: true, corrida: result.rows[0] });
     else res.json({ tem_corrida: false });
-  } catch (err) { res.status(500).json({ error: 'Erro' }); }
+  } catch (err) { console.error('Erro em /minha-corrida-atual:', err && err.stack ? err.stack : err); res.status(500).json({ error: 'Erro' }); }
 });
 
 app.get('/status-pedido/:id', async (req, res) => {
@@ -517,21 +524,24 @@ app.get('/status-pedido/:id', async (req, res) => {
     const result = await pool.query(`SELECT c.status, u.nome as nome_motoboy, u.telefone as telefone_motoboy, u.modelo_moto, u.placa, u.cor_moto FROM corridas c LEFT JOIN usuarios u ON c.motoboy_id = u.id WHERE c.id = $1`, [req.params.id]);
     if (result.rows.length > 0) res.json({ success: true, pedido: result.rows[0] });
     else res.json({ success: false });
-  } catch (err) { res.status(500).json({ success: false }); }
+  } catch (err) { console.error('Erro em /status-pedido:', err && err.stack ? err.stack : err); res.status(500).json({ success: false }); }
 });
 
 app.post('/enviar-mensagem', async (req, res) => {
   const { corrida_id, remetente, texto } = req.body;
-  try { await pool.query("INSERT INTO mensagens (corrida_id, remetente, texto) VALUES ($1, $2, $3)", [corrida_id, remetente, texto]); res.json({ success: true }); } catch (err) { res.status(500).json({ success: false }); }
+  if (!corrida_id || !remetente || !texto) return res.status(400).json({ error: 'corrida_id, remetente e texto são obrigatórios' });
+  try { await pool.query("INSERT INTO mensagens (corrida_id, remetente, texto) VALUES ($1, $2, $3)", [corrida_id, remetente, texto]); res.json({ success: true }); } catch (err) { console.error('Erro em /enviar-mensagem:', err && err.stack ? err.stack : err); res.status(500).json({ success: false }); }
 });
 
 app.get('/mensagens/:id', async (req, res) => {
-  try { const result = await pool.query("SELECT * FROM mensagens WHERE corrida_id = $1 ORDER BY data_hora ASC", [req.params.id]); res.json(result.rows); } catch (err) { res.status(500).json({ success: false }); }
+  try { const result = await pool.query("SELECT * FROM mensagens WHERE corrida_id = $1 ORDER BY data_hora ASC", [req.params.id]); res.json(result.rows); } catch (err) { console.error('Erro em /mensagens/:id:', err && err.stack ? err.stack : err); res.status(500).json({ success: false }); }
 });
 
 // --- ROTA DE STATUS ONLINE PARA MOTOBOYS ---
 app.post('/motoboy/status-online', async (req, res) => {
   const { motoboy_id, online, latitude, longitude } = req.body;
+
+  if (!motoboy_id || typeof online === 'undefined') return res.status(400).json({ error: 'motoboy_id e online são obrigatórios' });
 
   try {
     if (online) {
@@ -552,7 +562,7 @@ app.post('/motoboy/status-online', async (req, res) => {
     res.json({ success: true, status: online ? 'ONLINE' : 'OFFLINE' });
 
   } catch (err) {
-    console.error('Erro em /motoboy/status-online:', err);
+    console.error('Erro em /motoboy/status-online:', err && err.stack ? err.stack : err);
     res.status(500).json({ success: false, message: 'Erro ao atualizar status.' });
   }
 });
@@ -566,28 +576,28 @@ app.get('/admin/dashboard', async (req, res) => {
     const motoTaxi = await pool.query("SELECT COUNT(*) FROM corridas WHERE tipo_servico = 'moto-taxi'");
     const historico = await pool.query(`SELECT c.id, c.origem, c.destino, c.valor, c.tipo_servico, c.status, c.motivo_cancelamento, u.nome as nome_motoboy FROM corridas c LEFT JOIN usuarios u ON c.motoboy_id = u.id ORDER BY c.id DESC LIMIT 10`);
     res.json({ total_hoje: hoje.rows[0].count, total_mes: mes.rows[0].count, qtd_entrega: entregas.rows[0].count, qtd_moto: motoTaxi.rows[0].count, historico: historico.rows });
-  } catch (err) { res.status(500).json({ error: 'Erro' }); }
+  } catch (err) { console.error('Erro em /admin/dashboard:', err && err.stack ? err.stack : err); res.status(500).json({ error: 'Erro' }); }
 });
 
 app.get('/admin/pendentes', async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM usuarios WHERE aprovado = false AND tipo = 'motoboy' ORDER BY id DESC");
     res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Erro' }); }
+  } catch (err) { console.error('Erro em /admin/pendentes:', err && err.stack ? err.stack : err); res.status(500).json({ error: 'Erro' }); }
 });
 
 app.post('/admin/aprovar', async (req, res) => {
   try {
     await pool.query("UPDATE usuarios SET aprovado = true WHERE id = $1", [req.body.id]);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false }); }
+  } catch (err) { console.error('Erro em /admin/aprovar:', err && err.stack ? err.stack : err); res.status(500).json({ success: false }); }
 });
 
 app.post('/admin/rejeitar', async (req, res) => {
   try {
     await pool.query("DELETE FROM usuarios WHERE id = $1", [req.body.id]);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false }); }
+  } catch (err) { console.error('Erro em /admin/rejeitar:', err && err.stack ? err.stack : err); res.status(500).json({ success: false }); }
 });
 
 app.get('/admin/motoboys', async (req, res) => {
@@ -601,7 +611,7 @@ app.get('/admin/motoboys', async (req, res) => {
         `);
     res.json(result.rows);
   } catch (err) {
-    console.error('Erro ao buscar motoboys:', err);
+    console.error('Erro ao buscar motoboys:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Erro ao buscar motoboys' });
   }
 });
@@ -616,7 +626,7 @@ app.get('/admin/clientes', async (req, res) => {
         `);
     res.json(result.rows);
   } catch (err) {
-    console.error('Erro ao buscar clientes:', err);
+    console.error('Erro ao buscar clientes:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Erro ao buscar clientes' });
   }
 });
@@ -632,11 +642,56 @@ app.delete('/admin/remover/:id', async (req, res) => {
 
     res.json({ success: true, message: 'Usuário removido com sucesso.' });
   } catch (err) {
-    console.error('Erro ao remover usuário:', err);
+    console.error('Erro ao remover usuário:', err && err.stack ? err.stack : err);
     if (err.code === '23503') {
       return res.status(409).json({ success: false, message: 'Não é possível remover o usuário. Ele ainda possui dados associados (corridas/mensagens).' });
     }
     res.status(500).json({ success: false, message: 'Erro interno ao remover o usuário.' });
+  }
+});
+
+// PROXY para Nominatim (reverse geocoding) - evita CORS no browser
+app.get('/reverse', async (req, res) => {
+  try {
+    const lat = req.query.lat;
+    const lon = req.query.lon;
+    if (!lat || !lon) return res.status(400).json({ error: 'missing lat or lon' });
+
+    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=18&addressdetails=1`;
+
+    const r = await fetchFn(nominatimUrl, {
+      headers: {
+        // **TROQUE PELO SEU EMAIL REAL AQUI**
+        'User-Agent': 'FalcaoApp/1.0 (seu-email@exemplo.com)'
+      },
+      timeout: 10000
+    });
+
+    const text = await r.text();
+    if (!r.ok) {
+      // repassa o status e a mensagem do nominatim (p.ex. 503)
+      return res.status(r.status).send(text);
+    }
+
+    try {
+      const json = JSON.parse(text);
+      return res.json(json);
+    } catch (err) {
+      return res.send(text);
+    }
+  } catch (err) {
+    console.error('proxy /reverse error:', err && err.stack ? err.stack : err);
+    return res.status(500).json({ error: 'proxy failed', details: String(err) });
+  }
+});
+
+// HEALTH endpoint para debug (DB + app)
+app.get('/health', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT 1');
+    res.json({ ok: true, db: !!r });
+  } catch (err) {
+    res.status(500).json({ ok: false, dbError: String(err.message || err) });
   }
 });
 
