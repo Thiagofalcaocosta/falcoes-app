@@ -144,10 +144,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     bloqueado_ate TIMESTAMP,
     foto_cnh VARCHAR(255),
     foto_moto VARCHAR(255),
-    foto_rosto VARCHAR(255),
-    latitude DECIMAL(10, 7),     -- ADICIONADO
-    longitude DECIMAL(10, 7),    -- ADICIONADO
-    online_ate TIMESTAMP         -- ADICIONADO
+    foto_rosto VARCHAR(255)
 );
 `);
 
@@ -267,63 +264,28 @@ app.post('/cancelar-pedido', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// --- ROTA NOVA: REGISTRA STATUS E LOCALIZAÇÃO (HEARTBEAT) ---
-app.post('/motoboy/status-online', async (req, res) => {
-  const { motoboy_id, online, latitude, longitude } = req.body;
-
-  try {
-    if (online) {
-      // Se online, atualiza o tempo de vida (próximos 60 segundos) e a localização
-      await pool.query(
-        `UPDATE usuarios SET 
-                    online_ate = NOW() + interval '60 seconds',
-                    latitude = $2,
-                    longitude = $3
-                 WHERE id = $1`,
-        [motoboy_id, latitude, longitude]
-      );
-    } else {
-      // Se offline, remove o status online
-      await pool.query("UPDATE usuarios SET online_ate = NULL WHERE id = $1", [motoboy_id]);
-    }
-
-    res.json({ success: true, status: online ? 'ONLINE' : 'OFFLINE' });
-
-  } catch (err) {
-    console.error('Erro em /motoboy/status-online:', err);
-    res.status(500).json({ success: false, message: 'Erro ao atualizar status.' });
-  }
-});
-
-
-// ROTA ATUALIZADA: Implementa o filtro ONLINE/OFFLINE e a lógica de 30s
+// ROTA ATUALIZADA: Implementa o tempo limite de 30 segundos
 app.post('/corridas-pendentes', async (req, res) => {
   const { motoboy_id } = req.body;
   const TEMPO_LIMITE_SEGUNDOS = 30; // Novo tempo limite de 30 segundos
 
   try {
-    // 1. VERIFICAR BLOQUEIO, CATEGORIA E STATUS ONLINE DO MOTOBOY
-    const motoboyQuery = await pool.query("SELECT bloqueado_ate, categoria, online_ate FROM usuarios WHERE id = $1", [motoboy_id]);
+    // 1. VERIFICAR BLOQUEIO
+    const motoboyQuery = await pool.query("SELECT bloqueado_ate, categoria FROM usuarios WHERE id = $1", [motoboy_id]);
     const motoboy = motoboyQuery.rows[0];
 
     if (!motoboy) return res.status(404).json({ error: 'Motoboy não encontrado.' });
-
-    // Verifica se está bloqueado
     if (motoboy.bloqueado_ate && new Date(motoboy.bloqueado_ate) > new Date()) {
       const min = Math.ceil((new Date(motoboy.bloqueado_ate) - new Date()) / 60000);
       return res.json({ success: false, bloqueado: true, tempo: min });
     }
 
-    // ** FILTRO CRÍTICO: Se não está online ou o Heartbeat expirou, retorna vazio **
-    if (!motoboy.online_ate || new Date(motoboy.online_ate) <= new Date()) {
-      return res.json({ success: true, corridas: [] });
-    }
-
-
     // 2. BUSCAR CORRIDA DISPONÍVEL (Com lógica de exposição/timeout)
     const categoriaFiltro = motoboy.categoria === 'Passageiro' ? 'moto-taxi' : 'entrega';
-    const filtroTipo = `AND c.tipo_servico = '${categoriaFiltro}'`;
-
+    // Se a categoria for geral, não filtra por tipo. 
+    const filtroTipo = (categoriaFiltro === 'moto-taxi' || categoriaFiltro === 'entrega')
+      ? `AND c.tipo_servico = '${categoriaFiltro}'`
+      : '';
 
     const result = await pool.query(`
             SELECT 
@@ -342,8 +304,7 @@ app.post('/corridas-pendentes', async (req, res) => {
             LIMIT 1
         `, [motoboy_id, TEMPO_LIMITE_SEGUNDOS]);
 
-
-    // 3. REGISTRAR EXPOSIÇÃO E RETORNAR TEMPO
+    // 3. SE ENCONTRAR CORRIDA: REGISTRAR EXPOSIÇÃO E RETORNAR TEMPO RESTANTE
     if (result.rows.length > 0) {
       const corrida = result.rows[0];
       const segundosPassados = corrida.segundos_passados || 0;
@@ -360,7 +321,7 @@ app.post('/corridas-pendentes', async (req, res) => {
       }
     }
 
-    // 4. RETORNA LISTA VAZIA
+    // 4. SE NÃO ENCONTRAR: RETORNA LISTA VAZIA
     res.json({ success: true, corridas: [] });
 
   } catch (err) {
@@ -403,7 +364,7 @@ app.post('/aceitar-corrida', async (req, res) => {
     // 3. Sucesso: Limpar exposições
     await pool.query("DELETE FROM exposicao_corrida WHERE corrida_id = $1", [corrida_id]);
 
-    // **REMOVIDO:** A penalidade de 10 minutos foi movida para a rota /expirar-corrida.
+    // **REMOVIDO:** A penalidade de 10 minutos (que estava aqui) foi movida para a rota /expirar-corrida.
     // await pool.query("UPDATE usuarios SET bloqueado_ate = NOW() + interval '10 minutes' WHERE id = $1", [motoboy_id]);
 
     res.json({ success: true, message: 'Corrida aceita com sucesso.' });
@@ -567,3 +528,55 @@ app.delete('/admin/remover/:id', async (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
+
+// --- NOVA ROTA: REGISTRA STATUS E LOCALIZAÇÃO ---
+app.post('/motoboy/status-online', async (req, res) => {
+  const { motoboy_id, online, latitude, longitude } = req.body;
+
+  try {
+    // Se o status for 'online', atualiza o campo bloqueado_ate
+    // Usamos bloqueado_ate de forma reversa: se for NULL, está offline. Se for um timestamp futuro, está bloqueado/online.
+    // Vamos usar um campo novo 'ultima_localizacao' ou 'online_ate' para gerenciar o status.
+
+    // **IMPORTANTE: Se o seu PostgreSQL não tem os campos 'latitude'/'longitude' na tabela 'usuarios', você deve adicioná-los primeiro!**
+
+    if (online) {
+      // Atualiza o tempo de vida (Heartbeat) para os próximos 60 segundos
+      await pool.query(
+        `UPDATE usuarios SET 
+                    online_ate = NOW() + interval '60 seconds',
+                    latitude = $2,
+                    longitude = $3
+                 WHERE id = $1`,
+        [motoboy_id, latitude, longitude]
+      );
+    } else {
+      // Se offline, limpa o status
+      await pool.query("UPDATE usuarios SET online_ate = NULL WHERE id = $1", [motoboy_id]);
+    }
+
+    res.json({ success: true, status: online ? 'ONLINE' : 'OFFLINE' });
+
+  } catch (err) {
+    console.error('Erro em /motoboy/status-online:', err);
+    res.status(500).json({ success: false, message: 'Erro ao atualizar status.' });
+  }
+});
+
+// **Ajuste na ROTA /corridas-pendentes (REVISÃO NECESSÁRIA)**
+// Sua rota de corridas pendentes atual não filtra por status online/offline.
+// Para fazer isso, você precisará modificar a lógica do backend:
+/*
+// REMOVA a rota antiga /corridas-pendentes e use a nova lógica:
+
+app.post('/corridas-pendentes', async (req, res) => {
+    // ... (restante da lógica de motoboy bloqueado) ...
+
+    // 2. BUSCAR CORRIDA DISPONÍVEL (APENAS 1):
+    // ... (Restante do SELECT)
+    // ADICIONE ESTA CLÁUSULA NO SEU SELECT PRINCIPAL DE CORRIDAS PENDENTES:
+    // **AND u.online_ate > NOW()**
+    
+    // ... (Restante do SELECT) ...
+});
+*/
