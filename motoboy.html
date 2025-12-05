@@ -397,8 +397,8 @@
             <div class="user-area">
                 <span id="msg-ola" class="moto-saudacao">OLÁ, PILOTO</span>
                 <div class="status-wrapper">
-                    <span id="status-online-indicator" class="status-moto">● ONLINE</span>
-                    <a href="index.html" class="logout" onclick="deslogar()">SAIR</a>
+                    <span class="status-moto">● ONLINE</span>
+                    <a href="index.html" class="logout" onclick="localStorage.clear()">SAIR</a>
                 </div>
             </div>
         </div>
@@ -472,7 +472,6 @@
         let idCorridaSelecionada = null;
         let idCorridaAtual = null;
         let corridasVisiveis = []; // Para controlar o som
-        let onlineInterval = null; // Para controlar o intervalo de status online
 
         // NOVO: Armazena os IDs dos setIntervals para os contadores
         let intervalosContadores = {};
@@ -480,82 +479,6 @@
         // FILA LOCAL E CONTROLE DE NOTIFICAÇÃO (garante 1 por vez)
         let corridaQueue = [];
         let notificacaoAtiva = false; // indica que estamos mostrando/contando UMA corrida agora
-
-        /***********************
-         *  FUNÇÕES DE STATUS ONLINE
-         ***********************/
-
-        // Função para atualizar status online no servidor
-        async function atualizarStatusOnline() {
-            try {
-                // Obter localização atual
-                let latitude = null;
-                let longitude = null;
-
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            latitude = position.coords.latitude;
-                            longitude = position.coords.longitude;
-                            enviarStatusOnline(true, latitude, longitude);
-                        },
-                        () => {
-                            // Se falhar a geolocalização, envia sem coordenadas
-                            enviarStatusOnline(true, null, null);
-                        }
-                    );
-                } else {
-                    // Se não suportar geolocalização, envia sem coordenadas
-                    enviarStatusOnline(true, null, null);
-                }
-            } catch (err) {
-                console.error("Erro ao atualizar status online:", err);
-            }
-        }
-
-        async function enviarStatusOnline(online, latitude, longitude) {
-            try {
-                const response = await fetch(`${MEU_IP}/motoboy/status-online`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        motoboy_id: usuario.id,
-                        online: online,
-                        latitude: latitude,
-                        longitude: longitude
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    const statusElement = document.getElementById('status-online-indicator');
-                    if (online) {
-                        statusElement.innerText = "● ONLINE";
-                        statusElement.style.backgroundColor = "var(--neon-green)";
-                    } else {
-                        statusElement.innerText = "● OFFLINE";
-                        statusElement.style.backgroundColor = "#666";
-                    }
-                }
-            } catch (err) {
-                console.error("Erro ao enviar status online:", err);
-            }
-        }
-
-        // Função para deslogar (marca como offline)
-        function deslogar() {
-            // Marca como offline no servidor
-            enviarStatusOnline(false, null, null);
-
-            // Limpa o intervalo de atualização online
-            if (onlineInterval) {
-                clearInterval(onlineInterval);
-            }
-
-            // Limpa localStorage e redireciona
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
 
         /***********************
          *  ÁUDIO / NOTIFICAÇÃO
@@ -606,7 +529,7 @@
 
                     // Avisa o backend que o prazo acabou (rota que combinamos)
                     try {
-                        await fetch(`${MEU_IP}/expirar-corrida`, {
+                        await fetch(`${MEU_IP}/corrida-tempo-esgotado`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -623,7 +546,7 @@
                     return;
                 }
 
-                contadorElement.innerText = `⏳ AGORA É SUA VEZ: ${tempoRestante}s`;
+                contadorElement.innerText = `⏳ Tempo para aceite: ${tempoRestante}s`;
                 tempoRestante--;
             };
 
@@ -673,26 +596,13 @@
                     limparContadores(); // Limpa se o motoboy está bloqueado
                     mostrarTela('bloqueio');
                     document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
-                } else if (dadosLista.success === false && dadosLista.offline) {
-                    // Motoboy está offline - não pode ver corridas
-                    document.getElementById('lista-corridas').innerHTML =
-                        '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE PARA VER CORRIDAS</div>';
-                    mostrarTela('lista');
                 } else {
                     mostrarTela('lista');
                     // atualiza fila local com corridas vindas do backend
                     renderizarLista(dadosLista.corridas || []);
                 }
 
-            } catch (err) {
-                console.error("Erro ao verificar estado:", err);
-                // Se houver erro de conexão, verifica se é por estar offline
-                if (err.message && err.message.includes('Failed to fetch')) {
-                    document.getElementById('lista-corridas').innerHTML =
-                        '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ SEM CONEXÃO COM O SERVIDOR</div>';
-                    mostrarTela('lista');
-                }
-            }
+            } catch (err) { console.error(err); }
         }
 
         function mostrarTela(tela) {
@@ -814,29 +724,7 @@
         }
 
         // aceitarCorrida mantém a abertura do modal (igual antes)
-        async function aceitarCorrida(id) {
-            // Verificar se está online antes de permitir aceitar
-            try {
-                const response = await fetch(`${MEU_IP}/motoboy/status-online`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        motoboy_id: usuario.id,
-                        online: true,
-                        latitude: null,
-                        longitude: null
-                    })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    abrirModalAceitar(id);
-                } else {
-                    mostrarErro("Você precisa estar online para aceitar corridas.");
-                }
-            } catch (err) {
-                mostrarErro("Erro de conexão ao verificar status.");
-            }
-        }
+        async function aceitarCorrida(id) { abrirModalAceitar(id); }
 
         // confirmarAceite: chama backend e, em caso de sucesso, libera fila local e mostra próxima
         async function confirmarAceite() {
@@ -861,12 +749,7 @@
                         document.getElementById('modal-sucesso').style.display = 'none';
                     }, 2500);
                 } else { mostrarErro("Erro: " + result.message); }
-            } catch (err) {
-                fecharModal('modal-confirmacao');
-                btn.innerText = "CONFIRMAR";
-                btn.disabled = false;
-                mostrarErro("Erro conexão.");
-            }
+            } catch (err) { fecharModal('modal-confirmacao'); btn.innerText = "CONFIRMAR"; btn.disabled = false; mostrarErro("Erro conexão."); }
         }
 
         async function finalizarCorrida() {
@@ -922,4 +805,42 @@
 
                 if (json.success) {
                     // Sucesso no cancelamento
-                    document.querySelector('#modal;
+                    document.querySelector('#modal-erro .modal-titulo').innerText = "CANCELADO COM SUCESSO";
+                    document.querySelector('#modal-erro .modal-icon-erro').innerText = "✅";
+                    document.getElementById('msg-erro-texto').innerText = "O cliente foi notificado. Você será redirecionado em 3s.";
+                    document.querySelector('#modal-erro .modal-box').style.borderColor = 'var(--neon-green)';
+                    document.querySelector('#modal-erro .modal-titulo').classList.remove('texto-vermelho');
+                    document.querySelector('#modal-erro .modal-titulo').classList.add('texto-verde');
+
+
+                    setTimeout(() => {
+                        verificarEstado(); // Atualiza a tela, deve voltar para a lista
+                        fecharModal('modal-erro');
+                    }, 3000);
+
+                } else {
+                    // Falha no cancelamento
+                    document.querySelector('#modal-erro .modal-titulo').innerText = "FALHA NO CANCELAMENTO";
+                    document.querySelector('#modal-erro .modal-icon-erro').innerText = "⚠️";
+                    document.getElementById('msg-erro-texto').innerText = json.message || "Erro desconhecido. Tente novamente.";
+                    document.querySelector('#modal-erro .modal-box').style.borderColor = 'var(--danger-color)';
+                    document.querySelector('#modal-erro .btn-modal').style.display = 'block'; // Mostra o botão fechar
+                }
+
+            } catch (e) {
+                document.querySelector('#modal-erro .modal-titulo').innerText = "ERRO DE CONEXÃO";
+                document.getElementById('msg-erro-texto').innerText = "Não foi possível conectar ao servidor para cancelar.";
+                document.querySelector('#modal-erro .btn-modal').style.display = 'block';
+            }
+        }
+
+        /***********************
+         *  INICIALIZAÇÃO
+         ***********************/
+        verificarEstado();
+        // Polling aumentado para 5s
+        setInterval(verificarEstado, 5000);
+    </script>
+</body>
+
+</html>
