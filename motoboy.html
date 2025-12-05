@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Motoboy - Falcões</title>
     <style>
-        /* --- ESTILOS ORIGINAIS RESTAURADOS --- */
-        :root {
+        /* --- IDENTIDADE VISUAL DARK --- */
+        :rot {
             --bg-color: #121212;
             --card-color: #1e1e1e;
             --neon-green: #00e640;
@@ -139,7 +139,7 @@
             margin-bottom: 5px;
         }
 
-        /* NOVO: ESTILO PARA O CONTADOR (necessário) */
+        /* NOVO: ESTILO PARA O CONTADOR */
         .contador-tempo {
             font-size: 18px;
             font-weight: 800;
@@ -450,7 +450,7 @@
 
     <script>
         /***********************
-         *  VARIÁVEIS GLOBAIS
+         *  VARIÁVEIS GLOBAIS
          ***********************/
         const usuario = JSON.parse(localStorage.getItem('usuario'));
         // Corrigindo a verificação de tipo para ser robusta (garante que não seja o cliente)
@@ -478,15 +478,17 @@
 
         // FILA LOCAL E CONTROLE DE NOTIFICAÇÃO (garante 1 por vez)
         let corridaQueue = [];
-        let notificacaoAtiva = false;
+        let notificacaoAtiva = false; // indica que estamos mostrando/contando UMA corrida agora
 
         /***********************
-         *  ÁUDIO / NOTIFICAÇÃO
+         *  ÁUDIO / NOTIFICAÇÃO
          ***********************/
+        // toca som, mas garante que não sobreponha (pause/restart)
         function tocarAlerta() {
             const audio = document.getElementById('som-alerta');
             if (!audio) return;
             try {
+                // se já estiver tocando, reinicia do início (para chamar atenção)
                 audio.pause();
                 audio.currentTime = 0;
                 audio.play().catch(err => console.log("Som bloqueado até interação do usuário"));
@@ -496,54 +498,17 @@
         }
 
         /***********************
-         *  CONTADORES E EXPIRAÇÃO (Penalidade)
+         *  CONTADORES
          ***********************/
+        // --- FUNÇÕES PARA GERENCIAR INTERVALOS ---
         function limparContadores() {
             Object.values(intervalosContadores).forEach(clearInterval);
             intervalosContadores = {};
         }
 
-        // --- FUNÇÃO PARA ENVIAR EXPIRAÇÃO AO BACKEND E APLICAR BLOQUEIO ---
-        async function enviarExpiracao(corridaId, motoboyId) {
-            try {
-                // Remove o registro do contador local (Se o contador ainda estava rodando)
-                if (intervalosContadores[corridaId]) {
-                    clearInterval(intervalosContadores[corridaId]);
-                    delete intervalosContadores[corridaId];
-                }
-
-                // 1. Envia a penalidade para o Backend (O backend deve estar com a rota /expirar-corrida)
-                const res = await fetch(`${MEU_IP}/expirar-corrida`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        corrida_id: corridaId,
-                        motoboy_id: motoboyId,
-                        motivo: "[EXPIRAÇÃO] O Motoboy deixou o tempo limite esgotar."
-                    })
-                });
-                const json = await res.json();
-
-                // 2. Se o backend confirmou o bloqueio, forçamos a atualização da tela
-                if (json.success && json.bloqueado) {
-                    console.log(`[EXPIRAÇÃO] Bloqueado por ${json.tempo} minutos.`);
-                    // Chama verificarEstado para ir para a tela de bloqueio
-                    setTimeout(verificarEstado, 500);
-                } else if (json.success) {
-                    // Se a expiração foi registrada, mas não houve bloqueio (ou corrida já aceita), apenas atualiza
-                    setTimeout(verificarEstado, 500);
-                }
-            } catch (e) {
-                console.error("Erro ao enviar expiração/penalidade:", e);
-                // Chama verificarEstado para tentar reverter qualquer estado quebrado
-                setTimeout(verificarEstado, 500);
-            }
-        }
-
-
-        // --- LÓGICA PRINCIPAL DO CONTADOR ---
+        // iniciaContador agora aceita onTimeout callback
         function iniciarContador(id, tempoInicial, onTimeout) {
-            // Se o contador já estiver rodando, não faz nada para evitar reiniciar
+            // Se o contador já estiver rodando, não faz nada
             if (intervalosContadores[id]) {
                 return;
             }
@@ -554,24 +519,33 @@
 
             if (!contadorElement) return;
 
-            // Função de Decremento
             const decremento = async () => {
                 if (tempoRestante <= 0) {
                     clearInterval(intervalosContadores[id]);
                     delete intervalosContadores[id];
 
-                    // 1. AÇÃO CRÍTICA: Penaliza e libera a corrida no Backend
-                    enviarExpiracao(id, usuario.id);
-
-                    // 2. Remove o card da lista
+                    // Remove o card da tela (se ainda existir)
                     if (cardElement) cardElement.remove();
 
-                    // 3. Libera notificação local e processa próximo item (se houver)
-                    notificacaoAtiva = false;
-                    await processQueue();
+                    // Avisa o backend que o prazo acabou (rota que combinamos)
+                    try {
+                        await fetch(`${MEU_IP}/corrida-tempo-esgotado`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                corrida_id: id,
+                                motoboy_id: usuario.id
+                            })
+                        });
+                    } catch (e) {
+                        console.error("Erro ao notificar timeout da corrida:", e);
+                    }
 
+                    // Garante que a notificação/local foi encerrada
+                    if (typeof onTimeout === 'function') onTimeout();
                     return;
                 }
+
                 contadorElement.innerText = `⏳ Tempo para aceite: ${tempoRestante}s`;
                 tempoRestante--;
             };
@@ -582,7 +556,20 @@
         }
 
         /***********************
-         *  POLLING / ESTADO
+         *  MODAIS E AJUDA
+         ***********************/
+        function fecharModal(idModal) {
+            document.getElementById(idModal).style.display = 'none';
+            if (idModal === 'modal-confirmacao') idCorridaSelecionada = null;
+        }
+
+        function mostrarErro(mensagem) {
+            document.getElementById('msg-erro-texto').innerText = mensagem;
+            document.getElementById('modal-erro').style.display = 'flex';
+        }
+
+        /***********************
+         *  POLLING / ESTADO
          ***********************/
         async function verificarEstado() {
             try {
@@ -611,7 +598,7 @@
                     document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
                 } else {
                     mostrarTela('lista');
-                    // 3. Processa a lista
+                    // atualiza fila local com corridas vindas do backend
                     renderizarLista(dadosLista.corridas || []);
                 }
 
@@ -639,40 +626,36 @@
         }
 
         /***********************
-         *  FILA LOCAL E RENDERIZAÇÃO (1 POR VEZ)
+         *  FILA LOCAL E RENDERIZAÇÃO (1 POR VEZ)
          ***********************/
+        // renderizarLista: recebe todas as corridas do backend e adiciona novas na fila local
         function renderizarLista(todasCorridas) {
-            const container = document.getElementById('lista-corridas');
+            // Filtra por categoria do motoboy (reaproveitando sua lógica)
+            const filtradas = todasCorridas.filter(c => {
+                if (usuario.tipo === 'admin') return true;
+                const minhaCategoria = usuario.categoria;
+                if (minhaCategoria === 'Passageiro') return c.tipo_servico === 'moto-taxi';
+                if (minhaCategoria === 'Entregas') return c.tipo_servico === 'entrega';
+                return true;
+            });
 
-            // 1. Atualiza a fila local (corridaQueue) com novas corridas do backend
+            // Mantém apenas corridas únicas na fila (por ID)
             const idsAtuais = corridaQueue.map(x => x.id);
-            todasCorridas.forEach(c => {
-                // Adiciona na fila se for nova (e não estiver sendo exibida agora)
-                if (!idsAtuais.includes(c.id) && !notificacaoAtiva) {
+            filtradas.forEach(c => {
+                if (!idsAtuais.includes(c.id) && !corridasVisiveis.includes(c.id)) {
+                    // adiciona no final da fila
                     corridaQueue.push(c);
                 }
             });
 
-            // 2. Processa a fila (mostra a próxima se a notificação atual não estiver ativa)
-            processQueue();
-
-            // 3. Lógica de limpeza de cards (apenas remove o card do DOM se o backend não estiver mais retornando)
-            const novosIds = todasCorridas.map(c => c.id);
-            Array.from(container.children).forEach(child => {
-                if (child.id.startsWith('card-')) {
-                    const id = parseInt(child.id.split('-')[1]);
-                    if (!novosIds.includes(id)) {
-                        clearInterval(intervalosContadores[id]);
-                        delete intervalosContadores[id];
-                        container.removeChild(child);
-                    }
-                }
-            });
-
-            // 4. Se não houver nada na fila e nenhum card ativo, mostra mensagem de vazio
-            if (corridaQueue.length === 0 && !notificacaoAtiva && container.children.length === 0) {
+            // Se não houver nada na fila e nenhum card ativo, limpa DOM
+            const container = document.getElementById('lista-corridas');
+            if (corridaQueue.length === 0 && !notificacaoAtiva) {
                 container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
             }
+
+            // Processa fila (mostra a próxima se possível)
+            processQueue();
         }
 
         // processQueue: mostra/ toca/ conta apenas uma corrida por vez
@@ -694,6 +677,7 @@
 
             // Marca que estamos exibindo uma corrida
             notificacaoAtiva = true;
+            corridasVisiveis = [proxima.id]; // marca pra tocar som só uma vez
 
             // Remove qualquer HTML antigo e mostra só o card atual
             container.innerHTML = '';
@@ -730,20 +714,24 @@
             });
         }
 
-        // MODAIS E AÇÕES (Igual anterior)
+        /***********************
+         *  ACEITAR / CONFIRMAR / FINALIZAR
+         ***********************/
+        // abrirModalAceitar mantida
         function abrirModalAceitar(id) {
             idCorridaSelecionada = id;
             document.getElementById('modal-confirmacao').style.display = 'flex';
         }
 
+        // aceitarCorrida mantém a abertura do modal (igual antes)
         async function aceitarCorrida(id) { abrirModalAceitar(id); }
 
+        // confirmarAceite: chama backend e, em caso de sucesso, libera fila local e mostra próxima
         async function confirmarAceite() {
             if (!idCorridaSelecionada) return;
             const btn = document.getElementById('btn-confirma-final');
             btn.innerText = "..."; btn.disabled = true;
             try {
-                // O aceitar-corrida no backend remove a corrida da exposição e limpa o banco
                 const response = await fetch(`${MEU_IP}/aceitar-corrida`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ corrida_id: idCorridaSelecionada, motoboy_id: usuario.id })
@@ -753,11 +741,11 @@
                 if (result.success) {
                     limparContadores(); // Limpa todos os contadores ao aceitar
                     document.getElementById('modal-sucesso').style.display = 'flex';
-                    // Libera notificação local para processar próxima (se houver)
+                    // libera a fila local e mostra próximo item
                     notificacaoAtiva = false;
                     setTimeout(() => {
                         verificarEstado();
-                        processQueue(); // Tenta processar o próximo item da fila
+                        processQueue();
                         document.getElementById('modal-sucesso').style.display = 'none';
                     }, 2500);
                 } else { mostrarErro("Erro: " + result.message); }
@@ -775,7 +763,9 @@
             } catch (err) { alert("Erro ao finalizar."); }
         }
 
-        // === NOVAS FUNÇÕES DE CANCELAMENTO COM JUSTIFICATIVA ===
+        /***********************
+         *  CANCELAMENTO COM JUSTIFICATIVA
+         ***********************/
         function cancelarCorridaMotoboy() {
             if (!idCorridaAtual) return;
             // 1. Abre o modal de justificativa
@@ -845,7 +835,7 @@
         }
 
         /***********************
-         *  INICIALIZAÇÃO
+         *  INICIALIZAÇÃO
          ***********************/
         verificarEstado();
         // Polling aumentado para 5s
