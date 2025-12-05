@@ -1,374 +1,771 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Motoboy - Falcões</title>
     <style>
         /* --- IDENTIDADE VISUAL DARK --- */
-        :root {
-            --bg-color: #121212; --card-color: #1e1e1e; --neon-green: #00e640;
-            --text-color: #ffffff; --border-color: #333; --danger-color: #ff4444;
+        :rot {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --neon-green: #00e640;
+            --text-color: #ffffff;
+            --border-color: #333;
+            --danger-color: #ff4444;
         }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color); padding: 20px; margin: 0; }
-        .container { max-width: 600px; margin: 0 auto; }
 
-        .header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); gap: 15px; padding-bottom: 15px;}
-        .logo-pequeno { height: 60px; }
-        .moto-saudacao { font-weight: 800; color: white; font-size: 18px; text-transform: uppercase; margin-bottom: 8px; display: block; text-align: center;}
-        .status-moto { background-color: var(--neon-green); color: #000; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
-        .logout { color: var(--danger-color); text-decoration: none; font-weight: 700; font-size: 13px; border: 1px solid var(--danger-color); padding: 4px 10px; border-radius: 15px; margin-left: 10px;}
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            margin: 0;
+        }
 
-        #tela-lista, #tela-bloqueio, #tela-corrida-ativa { display: none; }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 15px;
+            padding-bottom: 15px;
+        }
+
+        .logo-pequeno {
+            height: 60px;
+        }
+
+        .moto-saudacao {
+            font-weight: 800;
+            color: white;
+            font-size: 18px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
+            text-align: center;
+        }
+
+        .status-moto {
+            background-color: var(--neon-green);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .logout {
+            color: var(--danger-color);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 13px;
+            border: 1px solid var(--danger-color);
+            padding: 4px 10px;
+            border-radius: 15px;
+            margin-left: 10px;
+        }
+
+        #tela-lista,
+        #tela-bloqueio,
+        #tela-corrida-ativa {
+            display: none;
+        }
 
         /* CARD CORRIDA */
-        .card-corrida { background-color: var(--card-color); border: 1px solid var(--border-color); border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); animation: slideIn 0.5s ease;}
-        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .card-corrida {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s ease;
+        }
 
-        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .tipo-servico { font-weight: bold; font-size: 14px; text-transform: uppercase; background: #333; padding: 5px 10px; border-radius: 5px; color: #ccc; }
-        .valor { font-size: 24px; font-weight: 800; color: var(--neon-green); }
-        .rota { margin-bottom: 20px; font-size: 15px; line-height: 1.6; }
-        .destaque-endereco { color: white; font-weight: bold; display: block; margin-bottom: 5px;}
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
 
-        .btn-acao { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 18px; font-weight: 800; text-transform: uppercase; cursor: pointer; margin-top: 10px;}
-        .btn-verde { background-color: var(--neon-green); color: #000; }
-        .btn-vermelho { background-color: var(--danger-color); color: white; } /* NOVO ESTILO DO BOTÃO DE CANCELAMENTO */
-        
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .tipo-servico {
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            background: #333;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: #ccc;
+        }
+
+        .valor {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--neon-green);
+        }
+
+        .rota {
+            margin-bottom: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .destaque-endereco {
+            color: white;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* NOVO: ESTILO PARA O CONTADOR */
+        .contador-tempo {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--danger-color);
+            text-align: right;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-acao {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-verde {
+            background-color: var(--neon-green);
+            color: #000;
+        }
+
+        .btn-vermelho {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        /* NOVO ESTILO DO BOTÃO DE CANCELAMENTO */
+
         /* TELA BLOQUEIO */
-        .aviso-bloqueio { text-align: center; padding: 40px 20px; border: 1px solid var(--danger-color); border-radius: 15px; background: rgba(255, 68, 68, 0.1); }
-        .tempo-bloqueio { font-size: 40px; font-weight: 800; color: var(--danger-color); margin: 20px 0; display: block;}
+        .aviso-bloqueio {
+            text-align: center;
+            padding: 40px 20px;
+            border: 1px solid var(--danger-color);
+            border-radius: 15px;
+            background: rgba(255, 68, 68, 0.1);
+        }
+
+        .tempo-bloqueio {
+            font-size: 40px;
+            font-weight: 800;
+            color: var(--danger-color);
+            margin: 20px 0;
+            display: block;
+        }
 
         /* TELA ATIVA */
-        .titulo-ativa { text-align: center; color: var(--neon-green); font-size: 22px; margin-bottom: 20px; font-weight: 800; animation: piscar 2s infinite; }
-        .info-cliente { background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #333; }
-        @keyframes piscar { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
+        .titulo-ativa {
+            text-align: center;
+            color: var(--neon-green);
+            font-size: 22px;
+            margin-bottom: 20px;
+            font-weight: 800;
+            animation: piscar 2s infinite;
+        }
+
+        .info-cliente {
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
+        }
+
+        @keyframes piscar {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
 
         /* --- MODAIS --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: none; justify-content: center; align-items: center; z-index: 9999; }
-        .modal-box { background: var(--card-color); border: 1px solid var(--border-color); padding: 30px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 0 30px rgba(0, 230, 64, 0.1); animation: popup 0.3s ease; }
-        .modal-titulo { font-size: 20px; font-weight: 800; color: white; margin-bottom: 10px; text-transform: uppercase; }
-        .modal-desc { color: #aaa; margin-bottom: 25px; font-size: 15px; }
-        .modal-botoes { display: flex; gap: 10px; }
-        .btn-modal { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; }
-        .btn-sim { background-color: var(--neon-green); color: black; }
-        .btn-nao { background-color: #333; color: white; }
-        .modal-icon-sucesso, .modal-icon-erro { font-size: 50px; margin-bottom: 10px; display: block; }
-        .texto-verde { color: var(--neon-green); } .texto-vermelho { color: var(--danger-color); }
-        @keyframes popup { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .modal-box {
+            background: var(--card-color);
+            border: 1px solid var(--border-color);
+            padding: 30px;
+            border-radius: 20px;
+            width: 85%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 230, 64, 0.1);
+            animation: popup 0.3s ease;
+        }
+
+        .modal-titulo {
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .modal-desc {
+            color: #aaa;
+            margin-bottom: 25px;
+            font-size: 15px;
+        }
+
+        .modal-botoes {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-sim {
+            background-color: var(--neon-green);
+            color: black;
+        }
+
+        .btn-nao {
+            background-color: #333;
+            color: white;
+        }
+
+        .modal-icon-sucesso,
+        .modal-icon-erro {
+            font-size: 50px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .texto-verde {
+            color: var(--neon-green);
+        }
+
+        .texto-vermelho {
+            color: var(--danger-color);
+        }
+
+        @keyframes popup {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
 
         /* ESTILO PARA O CAMPO TEXTAREA NO MODAL DE CANCELAMENTO */
         .modal-box textarea {
-            width: 100%; 
-            height: 80px; 
-            padding: 10px; 
-            box-sizing: border-box; 
-            border-radius: 8px; 
-            border: 1px solid var(--border-color); 
-            background: var(--card-color); 
-            color: white; 
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--card-color);
+            color: white;
             resize: none;
             font-family: inherit;
             margin-top: 10px;
         }
     </style>
     <script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("/service-worker.js")
-    .then(() => console.log("SW registrado!"))
-    .catch(err => console.log("Erro SW:", err));
-}
-</script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker
+                .register("/service-worker.js")
+                .then(() => console.log("SW registrado!"))
+                .catch(err => console.log("Erro SW:", err));
+        }
+    </script>
 
     <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#00e640">
+    <meta name="theme-color" content="#00e640">
 </head>
+
 <body>
 
-    <audio id="som-alerta" src="assets/som.mp3"></audio>
+    <audio id="som-alerta" src="assets/som.mp3"></audio>
 
-    <div id="modal-confirmacao" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-titulo">Aceitar Corrida?</div>
-            <p class="modal-desc">Você se compromete a buscar o passageiro/encomenda imediatamente.</p>
-            <div class="modal-botoes">
-                <button class="btn-modal btn-nao" onclick="fecharModal('modal-confirmacao')">CANCELAR</button>
-                <button id="btn-confirma-final" class="btn-modal btn-sim" onclick="confirmarAceite()">CONFIRMAR</button>
-            </div>
-        </div>
-    </div>
+    <div id="modal-confirmacao" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-titulo">Aceitar Corrida?</div>
+            <p class="modal-desc">Você se compromete a buscar o passageiro/encomenda imediatamente.</p>
+            <div class="modal-botoes">
+                <button class="btn-modal btn-nao" onclick="fecharModal('modal-confirmacao')">CANCELAR</button>
+                <button id="btn-confirma-final" class="btn-modal btn-sim" onclick="confirmarAceite()">CONFIRMAR</button>
+            </div>
+        </div>
+    </div>
 
-    <div id="modal-sucesso" class="modal-overlay">
-        <div class="modal-box" style="border-color: var(--neon-green);">
-            <span class="modal-icon-sucesso">✅</span>
-            <div class="modal-titulo texto-verde">CORRIDA ACEITA!</div>
-            <p class="modal-desc">Vá para o local de busca.<br>Boa viagem, Falcão.</p>
-        </div>
-    </div>
+    <div id="modal-sucesso" class="modal-overlay">
+        <div class="modal-box" style="border-color: var(--neon-green);">
+            <span class="modal-icon-sucesso">✅</span>
+            <div class="modal-titulo texto-verde">CORRIDA ACEITA!</div>
+            <p class="modal-desc">Vá para o local de busca.<br>Boa viagem, Falcão.</p>
+        </div>
+    </div>
 
-    <div id="modal-erro" class="modal-overlay">
-        <div class="modal-box" style="border-color: var(--danger-color);">
-            <span class="modal-icon-erro">⚠️</span>
-            <div class="modal-titulo texto-vermelho">OCORREU UM ERRO</div>
-            <p class="modal-desc" id="msg-erro-texto">Não foi possível aceitar a corrida.</p>
-            <button class="btn-modal btn-nao" onclick="fecharModal('modal-erro')">FECHAR</button>
-        </div>
-    </div>
-    
+    <div id="modal-erro" class="modal-overlay">
+        <div class="modal-box" style="border-color: var(--danger-color);">
+            <span class="modal-icon-erro">⚠️</span>
+            <div class="modal-titulo texto-vermelho">OCORREU UM ERRO</div>
+            <p class="modal-desc" id="msg-erro-texto">Não foi possível aceitar a corrida.</p>
+            <button class="btn-modal btn-nao" onclick="fecharModal('modal-erro')">FECHAR</button>
+        </div>
+    </div>
+
     <div id="modal-cancelamento-motoboy" class="modal-overlay">
         <div class="modal-box" style="border-color: var(--danger-color); box-shadow: 0 0 30px rgba(255, 68, 68, 0.2);">
             <div class="modal-titulo texto-vermelho">🚫 CANCELAR CORRIDA</div>
-            <p class="modal-desc">Você será bloqueado temporariamente se cancelar após aceitar sem justificativa válida.</p>
-            <textarea id="justificativa-motoboy" placeholder="Qual o motivo do cancelamento? (mínimo 5 caracteres)"></textarea>
-            
+            <p class="modal-desc">Você será bloqueado temporariamente se cancelar após aceitar sem justificativa válida.
+            </p>
+            <textarea id="justificativa-motoboy"
+                placeholder="Qual o motivo do cancelamento? (mínimo 5 caracteres)"></textarea>
+
             <div class="modal-botoes" style="margin-top: 20px;">
                 <button class="btn-modal btn-nao" onclick="fecharModal('modal-cancelamento-motoboy')">VOLTAR</button>
-                <button class="btn-modal btn-vermelho" onclick="confirmarCancelamentoMotoboy()">CANCELAR E NOTIFICAR</button>
+                <button class="btn-modal btn-vermelho" onclick="confirmarCancelamentoMotoboy()">CANCELAR E
+                    NOTIFICAR</button>
             </div>
         </div>
     </div>
 
 
-    <div class="container">
-        <div class="header">
-            <img src="assets/logo.png" alt="Logo" class="logo-pequeno">
-            <div class="user-area">
-                <span id="msg-ola" class="moto-saudacao">OLÁ, PILOTO</span>
-                <div class="status-wrapper">
-                    <span class="status-moto">● ONLINE</span>
-                    <a href="index.html" class="logout" onclick="localStorage.clear()">SAIR</a>
-                </div>
-            </div>
-        </div>
+    <div class="container">
+        <div class="header">
+            <img src="assets/logo.png" alt="Logo" class="logo-pequeno">
+            <div class="user-area">
+                <span id="msg-ola" class="moto-saudacao">OLÁ, PILOTO</span>
+                <div class="status-wrapper">
+                    <span class="status-moto">● ONLINE</span>
+                    <a href="index.html" class="logout" onclick="localStorage.clear()">SAIR</a>
+                </div>
+            </div>
+        </div>
 
-        <span id="label-categoria" class="categoria-badge">CATEGORIA: --</span>
-        
-        <div id="tela-lista">
-            <h2 style="text-align:center; color:var(--neon-green)">CORRIDAS DISPONÍVEIS</h2>
-            <div id="lista-corridas">Carregando...</div>
-        </div>
+        <span id="label-categoria" class="categoria-badge">CATEGORIA: --</span>
 
-        <div id="tela-corrida-ativa">
-            <div class="titulo-ativa">● CORRIDA EM ANDAMENTO</div>
-            <div class="card-corrida" style="border-color: var(--neon-green);">
-                <div class="card-top">
-                    <span class="tipo-servico" id="ativa-tipo">MOTO TÁXI</span>
-                    <span class="valor" id="ativa-valor">R$ 0,00</span>
-                </div>
-                <div class="info-cliente">
-                    <div style="color:#aaa; font-size:12px;">CLIENTE:</div>
-                    <div style="font-weight:bold; font-size:18px;" id="ativa-cliente">--</div>
-                    <div style="color:#fff; margin-top:5px;" id="ativa-fone">--</div>
-                </div>
-                <div class="rota">
-                    <div style="margin-bottom: 15px;">
-                        <span style="color:#aaa; font-size:12px;">BUSCAR EM:</span>
-                        <span class="destaque-endereco" id="ativa-origem">--</span>
-                    </div>
-                    <div>
-                        <span style="color:#aaa; font-size:12px;">LEVAR PARA:</span>
-                        <span class="destaque-endereco" id="ativa-destino">--</span>
-                    </div>
-                </div>
-                <button class="btn-acao btn-verde" onclick="finalizarCorrida()">✅ FINALIZAR CORRIDA</button>
-                <button class="btn-acao btn-vermelho" onclick="cancelarCorridaMotoboy()">❌ CANCELAR CORRIDA</button>             </div>
-        </div>
+        <div id="tela-lista">
+            <h2 style="text-align:center; color:var(--neon-green)">CORRIDAS DISPONÍVEIS</h2>
+            <div id="lista-corridas">Carregando...</div>
+        </div>
 
-        <div id="tela-bloqueio">
-            <div class="aviso-bloqueio">
-                <h2 style="color:var(--danger-color); margin:0;">PAUSA OBRIGATÓRIA</h2>
-                <span class="tempo-bloqueio" id="tempo-restante">--</span>
-                <p>Novas corridas aparecerão após este tempo.</p>
-                <button onclick="verificarEstado()" style="background:transparent; border:1px solid #555; color:#aaa; padding:10px; border-radius:5px; cursor:pointer;">Atualizar</button>
-            </div>
-        </div>
-    </div>
+        <div id="tela-corrida-ativa">
+            <div class="titulo-ativa">● CORRIDA EM ANDAMENTO</div>
+            <div class="card-corrida" style="border-color: var(--neon-green);">
+                <div class="card-top">
+                    <span class="tipo-servico" id="ativa-tipo">MOTO TÁXI</span>
+                    <span class="valor" id="ativa-valor">R$ 0,00</span>
+                </div>
+                <div class="info-cliente">
+                    <div style="color:#aaa; font-size:12px;">CLIENTE:</div>
+                    <div style="font-weight:bold; font-size:18px;" id="ativa-cliente">--</div>
+                    <div style="color:#fff; margin-top:5px;" id="ativa-fone">--</div>
+                </div>
+                <div class="rota">
+                    <div style="margin-bottom: 15px;">
+                        <span style="color:#aaa; font-size:12px;">BUSCAR EM:</span>
+                        <span class="destaque-endereco" id="ativa-origem">--</span>
+                    </div>
+                    <div>
+                        <span style="color:#aaa; font-size:12px;">LEVAR PARA:</span>
+                        <span class="destaque-endereco" id="ativa-destino">--</span>
+                    </div>
+                </div>
+                <button class="btn-acao btn-verde" onclick="finalizarCorrida()">✅ FINALIZAR CORRIDA</button>
+                <button class="btn-acao btn-vermelho" onclick="cancelarCorridaMotoboy()">❌ CANCELAR CORRIDA</button>
+            </div>
+        </div>
 
-    <script>
-        const usuario = JSON.parse(localStorage.getItem('usuario'));
-        // Corrigindo a verificação de tipo para ser robusta (garante que não seja o cliente)
-        if (!usuario || usuario.tipo !== 'motoboy') {
+        <div id="tela-bloqueio">
+            <div class="aviso-bloqueio">
+                <h2 style="color:var(--danger-color); margin:0;">PAUSA OBRIGATÓRIA</h2>
+                <span class="tempo-bloqueio" id="tempo-restante">--</span>
+                <p>Novas corridas aparecerão após este tempo.</p>
+                <button onclick="verificarEstado()"
+                    style="background:transparent; border:1px solid #555; color:#aaa; padding:10px; border-radius:5px; cursor:pointer;">Atualizar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /***********************
+         *  VARIÁVEIS GLOBAIS
+         ***********************/
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        // Corrigindo a verificação de tipo para ser robusta (garante que não seja o cliente)
+        if (!usuario || usuario.tipo !== 'motoboy') {
             // Se não houver 'motoboy' logado, cria um mock básico para testes ou redireciona
             if (!usuario) {
-                localStorage.setItem("usuario", JSON.stringify({id: 99, nome: "Piloto Teste", tipo: "motoboy", categoria: "Passageiro"}));
+                localStorage.setItem("usuario", JSON.stringify({ id: 99, nome: "Piloto Teste", tipo: "motoboy", categoria: "Passageiro" }));
                 window.location.reload();
-            } else if(usuario.tipo !== 'motoboy') {
+            } else if (usuario.tipo !== 'motoboy') {
                 window.location.href = 'index.html';
             }
         }
-        
-        document.getElementById('msg-ola').innerText = "OLÁ, " + usuario.nome.split(' ')[0].toUpperCase();
-        const catExibicao = usuario.categoria ? usuario.categoria.toUpperCase() : "GERAL";
-        document.getElementById('label-categoria').innerText = `SUA CATEGORIA: ${catExibicao}`;
 
-        let idCorridaSelecionada = null;
-        let idCorridaAtual = null;
-        let corridasVisiveis = []; // Para controlar o som
+        document.getElementById('msg-ola').innerText = "OLÁ, " + usuario.nome.split(' ')[0].toUpperCase();
+        const catExibicao = usuario.categoria ? usuario.categoria.toUpperCase() : "GERAL";
+        document.getElementById('label-categoria').innerText = `SUA CATEGORIA: ${catExibicao}`;
 
-        // --- TOCA SOM ---
-        function tocarAlerta() {
-            const audio = document.getElementById('som-alerta');
-            // Tenta tocar. Se o navegador bloquear, paciência (precisa de interação do usuário)
-            audio.play().catch(err => console.log("Som bloqueado até interação do usuário"));
-        }
+        const MEU_IP = 'https://falcoes-app.onrender.com';
+        let idCorridaSelecionada = null;
+        let idCorridaAtual = null;
+        let corridasVisiveis = []; // Para controlar o som
 
-        // MODAIS E AÇÕES (Função fecharModal foi mantida, mas é útil aqui)
+        // NOVO: Armazena os IDs dos setIntervals para os contadores
+        let intervalosContadores = {};
+
+        // FILA LOCAL E CONTROLE DE NOTIFICAÇÃO (garante 1 por vez)
+        let corridaQueue = [];
+        let notificacaoAtiva = false; // indica que estamos mostrando/contando UMA corrida agora
+
+        /***********************
+         *  ÁUDIO / NOTIFICAÇÃO
+         ***********************/
+        // toca som, mas garante que não sobreponha (pause/restart)
+        function tocarAlerta() {
+            const audio = document.getElementById('som-alerta');
+            if (!audio) return;
+            try {
+                // se já estiver tocando, reinicia do início (para chamar atenção)
+                audio.pause();
+                audio.currentTime = 0;
+                audio.play().catch(err => console.log("Som bloqueado até interação do usuário"));
+            } catch (e) {
+                console.log("Erro ao tocar som:", e);
+            }
+        }
+
+        /***********************
+         *  CONTADORES
+         ***********************/
+        // --- FUNÇÕES PARA GERENCIAR INTERVALOS ---
+        function limparContadores() {
+            Object.values(intervalosContadores).forEach(clearInterval);
+            intervalosContadores = {};
+        }
+
+        // iniciaContador agora aceita onTimeout callback
+        function iniciarContador(id, tempoInicial, onTimeout) {
+            // Se o contador já estiver rodando, não faz nada
+            if (intervalosContadores[id]) {
+                return;
+            }
+
+            let tempoRestante = tempoInicial;
+            const cardElement = document.getElementById(`card-${id}`);
+            const contadorElement = cardElement ? cardElement.querySelector('.contador-tempo') : null;
+
+            if (!contadorElement) return;
+
+            const decremento = async () => {
+                if (tempoRestante <= 0) {
+                    clearInterval(intervalosContadores[id]);
+                    delete intervalosContadores[id];
+
+                    // Remove o card da tela (se ainda existir)
+                    if (cardElement) cardElement.remove();
+
+                    // Avisa o backend que o prazo acabou (rota que combinamos)
+                    try {
+                        await fetch(`${MEU_IP}/corrida-tempo-esgotado`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                corrida_id: id,
+                                motoboy_id: usuario.id
+                            })
+                        });
+                    } catch (e) {
+                        console.error("Erro ao notificar timeout da corrida:", e);
+                    }
+
+                    // Garante que a notificação/local foi encerrada
+                    if (typeof onTimeout === 'function') onTimeout();
+                    return;
+                }
+
+                contadorElement.innerText = `⏳ Tempo para aceite: ${tempoRestante}s`;
+                tempoRestante--;
+            };
+
+            // Executa imediatamente e depois a cada segundo
+            decremento();
+            intervalosContadores[id] = setInterval(decremento, 1000);
+        }
+
+        /***********************
+         *  MODAIS E AJUDA
+         ***********************/
         function fecharModal(idModal) {
-            document.getElementById(idModal).style.display = 'none';
-            if(idModal === 'modal-confirmacao') idCorridaSelecionada = null;
-        }
+            document.getElementById(idModal).style.display = 'none';
+            if (idModal === 'modal-confirmacao') idCorridaSelecionada = null;
+        }
+
         function mostrarErro(mensagem) {
-            document.getElementById('msg-erro-texto').innerText = mensagem;
-            document.getElementById('modal-erro').style.display = 'flex';
-        }
+            document.getElementById('msg-erro-texto').innerText = mensagem;
+            document.getElementById('modal-erro').style.display = 'flex';
+        }
 
-        async function verificarEstado() {
-            try {
-                const MEU_IP = 'https://falcoes-app.onrender.com';
-                const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
-                const dadosAtiva = await resAtiva.json();
+        /***********************
+         *  POLLING / ESTADO
+         ***********************/
+        async function verificarEstado() {
+            try {
+                // 1. VERIFICA CORRIDA ATIVA
+                const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
+                const dadosAtiva = await resAtiva.json();
 
-                if (dadosAtiva.tem_corrida) {
-                    mostrarTela('ativa');
-                    preencherDadosAtiva(dadosAtiva.corrida);
-                    return; 
-                }
+                if (dadosAtiva.tem_corrida) {
+                    limparContadores(); // Limpa se uma corrida foi aceita
+                    mostrarTela('ativa');
+                    preencherDadosAtiva(dadosAtiva.corrida);
+                    return;
+                }
 
-                const resLista = await fetch('https://falcoes-app.onrender.com/corridas-pendentes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ motoboy_id: usuario.id })
-                });
-                const dadosLista = await resLista.json();
+                // 2. VERIFICA BLOQUEIO OU CORRIDAS PENDENTES
+                const resLista = await fetch(`${MEU_IP}/corridas-pendentes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ motoboy_id: usuario.id })
+                });
+                const dadosLista = await resLista.json();
 
-                if (dadosLista.success === false && dadosLista.bloqueado) {
-                    mostrarTela('bloqueio');
-                    document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
-                } else {
-                    mostrarTela('lista');
-                    renderizarLista(dadosLista.corridas || []);
-                }
+                if (dadosLista.success === false && dadosLista.bloqueado) {
+                    limparContadores(); // Limpa se o motoboy está bloqueado
+                    mostrarTela('bloqueio');
+                    document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
+                } else {
+                    mostrarTela('lista');
+                    // atualiza fila local com corridas vindas do backend
+                    renderizarLista(dadosLista.corridas || []);
+                }
 
-            } catch (err) { console.error(err); }
-        }
+            } catch (err) { console.error(err); }
+        }
 
-        function mostrarTela(tela) {
-            document.getElementById('tela-lista').style.display = 'none';
-            document.getElementById('tela-corrida-ativa').style.display = 'none';
-            document.getElementById('tela-bloqueio').style.display = 'none';
+        function mostrarTela(tela) {
+            document.getElementById('tela-lista').style.display = 'none';
+            document.getElementById('tela-corrida-ativa').style.display = 'none';
+            document.getElementById('tela-bloqueio').style.display = 'none';
 
-            if(tela === 'lista') document.getElementById('tela-lista').style.display = 'block';
-            if(tela === 'ativa') document.getElementById('tela-corrida-ativa').style.display = 'block';
-            if(tela === 'bloqueio') document.getElementById('tela-bloqueio').style.display = 'block';
-        }
+            if (tela === 'lista') document.getElementById('tela-lista').style.display = 'block';
+            if (tela === 'ativa') document.getElementById('tela-corrida-ativa').style.display = 'block';
+            if (tela === 'bloqueio') document.getElementById('tela-bloqueio').style.display = 'block';
+        }
 
-        function preencherDadosAtiva(c) {
-            idCorridaAtual = c.id;
-            document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
-            document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
-            document.getElementById('ativa-cliente').innerText = c.nome_cliente;
-            document.getElementById('ativa-fone').innerText = c.telefone_cliente;
-            document.getElementById('ativa-origem').innerText = c.origem;
-            document.getElementById('ativa-destino').innerText = c.destino;
-        }
+        function preencherDadosAtiva(c) {
+            idCorridaAtual = c.id;
+            document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
+            document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
+            document.getElementById('ativa-cliente').innerText = c.nome_cliente;
+            document.getElementById('ativa-fone').innerText = c.telefone_cliente;
+            document.getElementById('ativa-origem').innerText = c.origem;
+            document.getElementById('ativa-destino').innerText = c.destino;
+        }
 
-        function renderizarLista(todasCorridas) {
-            const container = document.getElementById('lista-corridas');
-            if(document.getElementById('modal-confirmacao').style.display === 'flex') return;
+        /***********************
+         *  FILA LOCAL E RENDERIZAÇÃO (1 POR VEZ)
+         ***********************/
+        // renderizarLista: recebe todas as corridas do backend e adiciona novas na fila local
+        function renderizarLista(todasCorridas) {
+            // Filtra por categoria do motoboy (reaproveitando sua lógica)
+            const filtradas = todasCorridas.filter(c => {
+                if (usuario.tipo === 'admin') return true;
+                const minhaCategoria = usuario.categoria;
+                if (minhaCategoria === 'Passageiro') return c.tipo_servico === 'moto-taxi';
+                if (minhaCategoria === 'Entregas') return c.tipo_servico === 'entrega';
+                return true;
+            });
 
-            container.innerHTML = ''; 
+            // Mantém apenas corridas únicas na fila (por ID)
+            const idsAtuais = corridaQueue.map(x => x.id);
+            filtradas.forEach(c => {
+                if (!idsAtuais.includes(c.id) && !corridasVisiveis.includes(c.id)) {
+                    // adiciona no final da fila
+                    corridaQueue.push(c);
+                }
+            });
 
-            // Filtra pela categoria
-            const filtradas = todasCorridas.filter(c => {
-                if (usuario.tipo === 'admin') return true;
-                const minhaCategoria = usuario.categoria; 
-                if (minhaCategoria === 'Passageiro') return c.tipo_servico === 'moto-taxi';
-                if (minhaCategoria === 'Entregas') return c.tipo_servico === 'entrega';
-                return true;
-            });
+            // Se não houver nada na fila e nenhum card ativo, limpa DOM
+            const container = document.getElementById('lista-corridas');
+            if (corridaQueue.length === 0 && !notificacaoAtiva) {
+                container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
+            }
 
-            // --- LÓGICA DO SOM ---
-            // Verifica se tem algum ID novo que não estava na lista anterior
-            let temNova = false;
-            filtradas.forEach(nova => {
-                // Se esse ID não estava na lista 'corridasVisiveis'
-                if (!corridasVisiveis.includes(nova.id)) {
-                    temNova = true;
-                }
-            });
+            // Processa fila (mostra a próxima se possível)
+            processQueue();
+        }
 
-            // Se tem nova, toca o som!
-            if (temNova) {
-                tocarAlerta();
-            }
+        // processQueue: mostra/ toca/ conta apenas uma corrida por vez
+        async function processQueue() {
+            const container = document.getElementById('lista-corridas');
 
-            // Atualiza a lista de conhecidos para a próxima verificação
-            corridasVisiveis = filtradas.map(c => c.id);
-            // ---------------------
+            // Se já tem uma notificação/contagem ativa, não mostra outra
+            if (notificacaoAtiva) return;
 
-            if (filtradas.length === 0) {
-                container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
-                return;
-            }
+            // Pega próxima corrida da fila
+            const proxima = corridaQueue.shift();
+            if (!proxima) {
+                // nada a exibir
+                if (container.children.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
+                }
+                return;
+            }
 
-            filtradas.forEach(c => {
-                const html = `
-                    <div class="card-corrida">
-                        <div class="card-top">
-                            <span class="tipo-servico">${c.tipo_servico}</span>
-                            <span class="valor">R$ ${parseFloat(c.valor).toFixed(2)}</span>
-                        </div>
-                        <div class="rota">
-                            <div style="color:#ddd; margin-bottom:5px;">📍 ${c.origem}</div>
-                            <div style="color:#ddd;">🏁 ${c.destino}</div>
-                        </div>
-                        <button class="btn-acao btn-verde" onclick="aceitarCorrida(${c.id})">ACEITAR</button>
-                    </div>
-                `;
-                container.innerHTML += html;
-            });
-        }
+            // Marca que estamos exibindo uma corrida
+            notificacaoAtiva = true;
+            corridasVisiveis = [proxima.id]; // marca pra tocar som só uma vez
 
-        // MODAIS E AÇÕES (Igual anterior)
-        function abrirModalAceitar(id) {
-            idCorridaSelecionada = id;
-            document.getElementById('modal-confirmacao').style.display = 'flex';
-        }
-        // fecharModal já foi definida acima
+            // Remove qualquer HTML antigo e mostra só o card atual
+            container.innerHTML = '';
+            const div = document.createElement('div');
+            div.className = 'card-corrida';
+            div.id = `card-${proxima.id}`;
 
-        async function aceitarCorrida(id) { abrirModalAceitar(id); }
+            const htmlConteudo = `
+                <div class="card-top">
+                    <span class="tipo-servico">${proxima.tipo_servico}</span>
+                    <span class="valor">R$ ${parseFloat(proxima.valor).toFixed(2)}</span>
+                </div>
+                <div class="rota">
+                    <div style="color:#ddd; margin-bottom:5px;">📍 ${proxima.origem}</div>
+                    <div style="color:#ddd;">🏁 ${proxima.destino}</div>
+                </div>
+                <div class="contador-tempo" id="contador-${proxima.id}"></div>
+                <button class="btn-acao btn-verde" onclick="aceitarCorrida(${proxima.id})">ACEITAR</button>
+            `;
+            div.innerHTML = htmlConteudo;
+            container.appendChild(div);
 
-        async function confirmarAceite() {
-            if (!idCorridaSelecionada) return;
-            const btn = document.getElementById('btn-confirma-final');
-            btn.innerText = "..."; btn.disabled = true;
-            try {
-                const response = await fetch('https://falcoes-app.onrender.com/aceitar-corrida', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ corrida_id: idCorridaSelecionada, motoboy_id: usuario.id })
-                });
-                const result = await response.json();
-                fecharModal('modal-confirmacao'); btn.innerText = "CONFIRMAR"; btn.disabled = false;
-                if (result.success) {
-                    document.getElementById('modal-sucesso').style.display = 'flex';
-                    setTimeout(() => { verificarEstado(); document.getElementById('modal-sucesso').style.display = 'none'; }, 2500);
-                } else { mostrarErro("Erro: " + result.message); }
-            } catch (err) { fecharModal('modal-confirmacao'); btn.innerText = "CONFIRMAR"; btn.disabled = false; mostrarErro("Erro conexão."); }
-        }
+            // toca som **apenas** quando a corrida entra para exibição
+            tocarAlerta();
 
-        async function finalizarCorrida() {
-            if(!confirm("Finalizar corrida?")) return;
-            try {
-                await fetch('https://falcoes-app.onrender.com/finalizar-corrida', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ corrida_id: idCorridaAtual })
-                });
-                verificarEstado();
-            } catch (err) { alert("Erro ao finalizar."); }
-        }
-        
-        // === NOVAS FUNÇÕES DE CANCELAMENTO COM JUSTIFICATIVA ===
+            // inicia o contador e passa callback para quando expirar
+            const tempo = proxima.tempo_restante ? proxima.tempo_restante : 30;
+            iniciarContador(proxima.id, tempo, async () => {
+                // callback executado quando o contador chegar a 0 (timeout)
+                // Marca notificação como finalizada e processa próximo item
+                notificacaoAtiva = false;
+                // possibilita próxima corrida
+                await processQueue();
+            });
+        }
+
+        /***********************
+         *  ACEITAR / CONFIRMAR / FINALIZAR
+         ***********************/
+        // abrirModalAceitar mantida
+        function abrirModalAceitar(id) {
+            idCorridaSelecionada = id;
+            document.getElementById('modal-confirmacao').style.display = 'flex';
+        }
+
+        // aceitarCorrida mantém a abertura do modal (igual antes)
+        async function aceitarCorrida(id) { abrirModalAceitar(id); }
+
+        // confirmarAceite: chama backend e, em caso de sucesso, libera fila local e mostra próxima
+        async function confirmarAceite() {
+            if (!idCorridaSelecionada) return;
+            const btn = document.getElementById('btn-confirma-final');
+            btn.innerText = "..."; btn.disabled = true;
+            try {
+                const response = await fetch(`${MEU_IP}/aceitar-corrida`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ corrida_id: idCorridaSelecionada, motoboy_id: usuario.id })
+                });
+                const result = await response.json();
+                fecharModal('modal-confirmacao'); btn.innerText = "CONFIRMAR"; btn.disabled = false;
+                if (result.success) {
+                    limparContadores(); // Limpa todos os contadores ao aceitar
+                    document.getElementById('modal-sucesso').style.display = 'flex';
+                    // libera a fila local e mostra próximo item
+                    notificacaoAtiva = false;
+                    setTimeout(() => {
+                        verificarEstado();
+                        processQueue();
+                        document.getElementById('modal-sucesso').style.display = 'none';
+                    }, 2500);
+                } else { mostrarErro("Erro: " + result.message); }
+            } catch (err) { fecharModal('modal-confirmacao'); btn.innerText = "CONFIRMAR"; btn.disabled = false; mostrarErro("Erro conexão."); }
+        }
+
+        async function finalizarCorrida() {
+            if (!confirm("Finalizar corrida?")) return;
+            try {
+                await fetch(`${MEU_IP}/finalizar-corrida`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ corrida_id: idCorridaAtual })
+                });
+                verificarEstado();
+            } catch (err) { alert("Erro ao finalizar."); }
+        }
+
+        /***********************
+         *  CANCELAMENTO COM JUSTIFICATIVA
+         ***********************/
         function cancelarCorridaMotoboy() {
             if (!idCorridaAtual) return;
             // 1. Abre o modal de justificativa
@@ -379,7 +776,7 @@ if ("serviceWorker" in navigator) {
 
         async function confirmarCancelamentoMotoboy() {
             const motivo = document.getElementById('justificativa-motoboy').value.trim();
-            
+
             if (motivo.length < 5) {
                 mostrarErro("A justificativa deve ter pelo menos 5 caracteres.");
                 return;
@@ -394,17 +791,16 @@ if ("serviceWorker" in navigator) {
             document.querySelector('#modal-erro .btn-modal').style.display = 'none'; // Esconde o botão fechar temporariamente
 
             try {
-                const MEU_IP = 'https://falcoes-app.onrender.com';
                 const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     // Envia a justificativa do motoboy
-                    body: JSON.stringify({ 
-                        id: idCorridaAtual, 
-                        motivo: `[MOTOBOY] ${motivo}` 
+                    body: JSON.stringify({
+                        id: idCorridaAtual,
+                        motivo: `[MOTOBOY] ${motivo}`
                     })
                 });
-                
+
                 const json = await res.json();
 
                 if (json.success) {
@@ -423,7 +819,7 @@ if ("serviceWorker" in navigator) {
                     }, 3000);
 
                 } else {
-                     // Falha no cancelamento
+                    // Falha no cancelamento
                     document.querySelector('#modal-erro .modal-titulo').innerText = "FALHA NO CANCELAMENTO";
                     document.querySelector('#modal-erro .modal-icon-erro').innerText = "⚠️";
                     document.getElementById('msg-erro-texto').innerText = json.message || "Erro desconhecido. Tente novamente.";
@@ -438,8 +834,13 @@ if ("serviceWorker" in navigator) {
             }
         }
 
-        verificarEstado();
-        setInterval(verificarEstado, 5000);
-    </script>
+        /***********************
+         *  INICIALIZAÇÃO
+         ***********************/
+        verificarEstado();
+        // Polling aumentado para 5s
+        setInterval(verificarEstado, 5000);
+    </script>
 </body>
+
 </html>
