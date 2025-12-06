@@ -378,6 +378,7 @@ const sql = `
   ORDER BY ec.data_exposicao ASC
   LIMIT 1
 `;
+const result = await pool.query(sql, params);
 
  
   
