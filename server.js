@@ -260,18 +260,14 @@ async function monitorarExpiracoes() {
           `[MONITOR] Motoboy ${motoboyExpiradoId} expirou a Corrida ${corridaId}.`
         );
 
-        // 3. Remove a exposição e bloqueia o motoboy
+        // 3. SÓ REMOVE A EXPOSIÇÃO (NÃO BLOQUEIA)
         await pool.query(
           "DELETE FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2",
           [corridaId, motoboyExpiradoId]
         );
-        await pool.query(
-          "UPDATE usuarios SET bloqueado_ate = NOW() + interval '10 minutes' WHERE id = $1",
-          [motoboyExpiradoId]
-        );
 
         console.log(
-          `[MONITOR] Motoboy ${motoboyExpiradoId} bloqueado por 10 minutos.`
+          `[MONITOR] Exposição removida para motoboy ${motoboyExpiradoId}.`
         );
 
         // 4. Chama distribuição para o PRÓXIMO motoboy
@@ -300,6 +296,7 @@ async function monitorarExpiracoes() {
     );
   }
 }
+
 
 // --- ROTAS DO APP ---
 
@@ -413,7 +410,16 @@ app.post('/corridas-pendentes', async (req, res) => {
 
     // Bloqueado
     if (motoboy.bloqueado_ate && new Date(motoboy.bloqueado_ate) > new Date()) {
-      return res.json({ success: false, bloqueado: true });
+      const minutos = Math.ceil(
+  (new Date(motoboy.bloqueado_ate) - new Date()) / 60000
+);
+
+return res.json({
+  success: false,
+  bloqueado: true,
+  tempo: minutos,
+});
+
     }
 
     // Offline
