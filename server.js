@@ -379,32 +379,28 @@ app.post('/corridas-pendentes', async (req, res) => {
       tipoClause = `AND c.tipo_servico = $${params.length}`;
     }
 
-    const sql = `
-      SELECT 
-        c.id AS corrida_id,
-        c.origem,
-        c.destino,
-        c.valor,
-        c.tipo_servico,
-        u.nome as nome_cliente,
-        u.telefone as telefone_cliente,
-        EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) as segundos_passados,
-        ec.ciclo,
-        ec.data_exposicao,
-        ec.status_exposicao
-      FROM exposicao_corrida ec
-      JOIN corridas c ON ec.corrida_id = c.id
-      JOIN usuarios u ON c.cliente_id = u.id
-      WHERE ec.motoboy_id = $1
-        AND c.status = 'pendente'
-        AND ec.status_exposicao = 'ativo'
-        AND EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) < $2
-        ${tipoClause}
-      ORDER BY ec.data_exposicao ASC
-      LIMIT 1
-    `;
-
-    const result = await pool.query(sql, params);
+  const result = await pool.query(`
+  SELECT
+    c.id AS corrida_id,
+    c.origem,
+    c.destino,
+    c.valor,
+    c.tipo_servico,
+    u.nome AS nome_cliente,
+    u.telefone AS telefone_cliente,
+    EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) AS segundos_passados,
+    ec.ciclo
+  FROM exposicao_corrida ec
+  JOIN corridas c ON ec.corrida_id = c.id
+  JOIN usuarios u ON c.cliente_id = u.id
+  WHERE ec.motoboy_id = $1
+    AND c.status = 'pendente'
+    AND ec.expirada = false
+    AND EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) < $2
+  ORDER BY ec.data_exposicao ASC
+  LIMIT 1
+`, [motoboy_id, TEMPO_LIMITE_SEGUNDOS]);
+  
 
     if (!result.rows || result.rows.length === 0) {
       return res.json({ success: true, corrida: null, message: 'Nenhuma corrida disponível no momento.' });
