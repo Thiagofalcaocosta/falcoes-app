@@ -842,6 +842,57 @@
             document.getElementById('justificativa-motoboy').focus();
         }
 
+async function confirmarCancelamentoMotoboy() {
+    if (!idCorridaAtual) {
+        alert('Nenhuma corrida ativa para cancelar.');
+        return;
+    }
+
+    const motivo = document.getElementById('justificativa-motoboy').value.trim();
+
+    if (!motivo) {
+        alert('Por favor, informe o motivo do cancelamento.');
+        return;
+    }
+
+    try {
+        const res = await fetch('/motoboy-cancelar-corrida', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                corrida_id: idCorridaAtual,          // ID da corrida atual
+                motoboy_id: usuarioLogado.id,        // ID do motoboy logado
+                motivo: motivo                       // texto do motivo
+            }),
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+            alert(data.message || 'Erro ao cancelar corrida.');
+            return;
+        }
+
+        // Esconde o modal
+        document.getElementById('modal-cancelamento-motoboy').style.display = 'none';
+
+        // Limpa info da corrida atual na tela
+        idCorridaAtual = null;
+        if (typeof limparTelaCorrida === 'function') {
+            limparTelaCorrida();
+        }
+
+        alert('Corrida cancelada. Você ficará alguns minutos sem receber novas corridas.');
+
+    } catch (err) {
+        console.error('Erro ao cancelar corrida pelo motoboy:', err);
+        alert('Erro de comunicação com o servidor.');
+    }
+}
+
+
         async function confirmarCancelamentoMotoboy() {
             const motivo = document.getElementById('justificativa-motoboy').value.trim();
 

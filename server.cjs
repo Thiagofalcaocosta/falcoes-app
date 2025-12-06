@@ -526,11 +526,19 @@ app.post('/expirar-corrida', async (req, res) => {
   }
 
   try {
-    // ✅ APENAS remove a exposição
-    await pool.query(
-      "DELETE FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2",
-      [corrida_id, motoboy_id]
-    );
+    
+    // ✅ Marca que já expirou para esse motoboy,
+//    sem apagar o registro (pra não voltar pra ele)
+await pool.query(
+  `
+  UPDATE exposicao_corrida
+  SET data_exposicao = NOW() - interval '120 seconds'
+  WHERE corrida_id = $1
+    AND motoboy_id = $2
+  `,
+  [corrida_id, motoboy_id]
+);
+
 
     console.log(`⏭️ Corrida ${corrida_id} expirou para motoboy ${motoboy_id}`);
 
