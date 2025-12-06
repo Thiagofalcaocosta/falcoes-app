@@ -162,53 +162,60 @@ initDB();
 
 // --- FUNÇÕES DE DISTRIBUIÇÃO ---
 
+// --- FUNÇÕES DE DISTRIBUIÇÃO CORRIGIDAS (ROUND-ROBIN) ---
+
 async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
-  try {
-    const categoriaFiltro =
-      tipoServico === 'moto-taxi' ? 'Passageiro' : tipoServico === 'entrega' ? 'Entregas' : null;
+    try {
+        const categoriaFiltro =
+            tipoServico === 'moto-taxi' ? 'Passageiro' : tipoServico === 'entrega' ? 'Entregas' : null;
 
-    let filtroCategoria = '';
-    if (categoriaFiltro) {
-      filtroCategoria = `AND (categoria = '${categoriaFiltro}' OR categoria = 'Geral')`;
-    }
+        let filtroCategoria = '';
+        if (categoriaFiltro) {
+            filtroCategoria = `AND (categoria = '${categoriaFiltro}' OR categoria = 'Geral')`;
+        }
+        
+        // 1. ACHAR O PRÓXIMO MOTOBOY ELEGÍVEL
+        //    Filtra por online, aprovado, não bloqueado e que NUNCA viu essa corrida (não está na exposicao_corrida).
+        const motoboyElegivel = await pool.query(
+            `
+            SELECT u.id 
+            FROM usuarios u
+            LEFT JOIN exposicao_corrida ec ON ec.motoboy_id = u.id AND ec.corrida_id = $1
+            WHERE u.tipo = 'motoboy'
+              AND u.aprovado = true
+              AND u.online_ate > NOW()
+              AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW())
+              AND ec.motoboy_id IS NULL  -- Garante que ele nunca recebeu a oferta no ciclo atual
+              ${filtroCategoria}
+            ORDER BY u.id ASC -- Usa ID como Round-Robin simples. Para produção, use localização.
+            LIMIT 1
+            `,
+            [corridaId]
+        );
 
-    const motoboys = await pool.query(
-      `
-      SELECT id FROM usuarios
-      WHERE tipo = 'motoboy'
-        AND aprovado = true
-        AND online_ate > NOW()
-        ${filtroCategoria}
-      ORDER BY id
-    `
-    );
+        if (motoboyElegivel.rows.length === 0) {
+            console.log(`⚠️ Nenhum motoboy elegível para corrida ${corridaId} neste ciclo.`);
+            // Se não houver ninguém elegível, o monitoramento cíclico se encarrega
+            // de reiniciar o ciclo quando todos tiverem expirado o tempo.
+            return;
+        }
 
-    if (motoboys.rows.length === 0) {
-      console.log(
-        `⚠️ Nenhum motoboy online para corrida ${corridaId} - tentando novamente em 10s`
-      );
-      setTimeout(async () => {
-        await distribuirCorridaParaMotoboys(corridaId, tipoServico);
-      }, 10000);
-      return;
-    }
+        const motoboyId = motoboyElegivel.rows[0].id;
+        
+        // 2. REGISTRAR EXPOSIÇÃO APENAS PARA O PRÓXIMO
+        await pool.query(
+            `
+            INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo)
+            VALUES ($1, $2, 1)
+            `,
+            [corridaId, motoboyId]
+        );
+        
+        console.log(`📢 Corrida ${corridaId} distribuída para o Motoboy ${motoboyId}.`);
 
-    console.log(`📢 Corrida ${corridaId} distribuída para ${motoboys.rows.length} motoboys`);
-
-    await pool.query('DELETE FROM exposicao_corrida WHERE corrida_id = $1', [corridaId]);
-
-    for (let i = 0; i < motoboys.rows.length; i++) {
-      await pool.query(
-        `
-        INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo)
-        VALUES ($1, $2, 1)
-      `,
-        [corridaId, motoboys.rows[i].id]
-      );
-    }
-  } catch (err) {
-    console.error('Erro ao distribuir corrida:', err && err.stack ? err.stack : err);
-  }
+    } catch (err) {
+        console.error('Erro ao distribuir corrida (Round-Robin):', err && err.stack ? err.stack : err);
+    }
 }
 
 async function reiniciarCicloCorrida(corridaId) {
@@ -237,44 +244,59 @@ async function reiniciarCicloCorrida(corridaId) {
     console.error('Erro ao reiniciar ciclo:', err && err.stack ? err.stack : err);
   }
 }
+
 // --- FUNÇÕES DE MONITORAMENTO CÍCLICO ---
 
 async function monitorarExpiracoes() {
     try {
-        // 1. Encontra corridas pendentes no BD
+        // 1. Encontra corridas PENDENTES no BD
         const corridasPendentes = await pool.query(
             "SELECT id, tipo_servico FROM corridas WHERE status = 'pendente'"
         );
 
         for (const corrida of corridasPendentes.rows) {
             const corridaId = corrida.id;
-            
-            // 2. Verifica se a exposição acabou para TODOS os motoboys
-            //    Isso é feito vendo se todas as exposições já passaram de 60 segundos
-            //    OU se a tabela exposicao_corrida estiver vazia para essa corrida (todos expiraram/recusaram)
+            const tipoServico = corrida.tipo_servico;
 
-            const exposicoesAtivas = await pool.query(
+            // 2. Tenta encontrar UMA exposição expirada para avançar a fila
+            const exposicaoExpirada = await pool.query(
                 `
-                SELECT COUNT(*) FROM exposicao_corrida
+                SELECT corrida_id, motoboy_id
+                FROM exposicao_corrida
                 WHERE corrida_id = $1
-                  AND EXTRACT(EPOCH FROM (NOW() - data_exposicao)) < 60
+                  AND EXTRACT(EPOCH FROM (NOW() - data_exposicao)) >= 60 -- Tempo de 60s expirou
+                ORDER BY data_exposicao ASC
+                LIMIT 1
                 `,
                 [corridaId]
             );
 
-            // Se NENHUM motoboy estiver vendo a corrida (contador <= 0 para todos)
-            if (parseInt(exposicoesAtivas.rows[0].count) === 0) {
-                
-                // 3. Se a corrida nunca foi aceita, reinicia o ciclo
-                console.log(`⏳ Ciclo de exposição esgotado para Corrida ${corridaId}. Redistribuindo.`);
-                
-                // Re-insere a corrida para TODOS os motoboys online elegíveis que não estão bloqueados
-                await pool.query('DELETE FROM exposicao_corrida WHERE corrida_id = $1', [corridaId]);
-                await distribuirCorridaParaMotoboys(corridaId, corrida.tipo_servico);
+            if (exposicaoExpirada.rows.length > 0) {
+                const motoboyExpiradoId = exposicaoExpirada.rows[0].motoboy_id;
 
-                // Incrementa o ciclo de exposição para quem foi atingido.
-                await reiniciarCicloCorrida(corridaId); // Esta função apenas incrementa o ciclo visualmente.
-            }
+                console.log(`[MONITOR] Motoboy ${motoboyExpiradoId} expirou a Corrida ${corridaId}.`);
+                
+                // 3. BLOQUEIA O MOTOBOY E REMOVE A EXPOSIÇÃO DELE
+                await pool.query('DELETE FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2', [corridaId, motoboyExpiradoId]);
+                await pool.query("UPDATE usuarios SET bloqueado_ate = NOW() + interval '10 minutes' WHERE id = $1", [motoboyExpiradoId]);
+
+                console.log(`[MONITOR] Motoboy ${motoboyExpiradoId} bloqueado por 10 minutos.`);
+                
+                // 4. CHAMA A DISTRIBUIÇÃO NOVAMENTE (para o PRÓXIMO motoboy)
+                await distribuirCorridaParaMotoboys(corridaId, tipoServico);
+            } else {
+                // Se não há exposições expiradas, mas também não há exposições ATIVAS,
+                // significa que o ciclo terminou.
+                const exposicoesAtivasCount = await pool.query('SELECT COUNT(*) FROM exposicao_corrida WHERE corrida_id = $1', [corridaId]);
+                
+                if (parseInt(exposicoesAtivasCount.rows[0].count) === 0) {
+                    console.log(`[MONITOR] Ciclo encerrado para Corrida ${corridaId}. Reiniciando.`);
+
+                    // Reinicia a lista de exposições para o próximo ciclo
+                    await reiniciarCicloCorrida(corridaId); // Incrementa o ciclo visualmente
+                    await distribuirCorridaParaMotoboys(corridaId, tipoServico); // Começa o ciclo do zero
+                }
+            }
         }
     } catch (err) {
         console.error('Erro no monitoramento cíclico:', err && err.stack ? err.stack : err);
