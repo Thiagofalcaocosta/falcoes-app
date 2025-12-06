@@ -276,30 +276,31 @@ async function monitorarExpiracoes() {
 
                 console.log(`[MONITOR] Motoboy ${motoboyExpiradoId} expirou a Corrida ${corridaId}.`);
                 
-                // 3. BLOQUEIA O MOTOBOY E REMOVE A EXPOSIÇÃO DELE
+                // 3. BLOQUEIA O MOTOBOY E REMOVE A EXPOSIÇÃO DELE
                 await pool.query('DELETE FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2', [corridaId, motoboyExpiradoId]);
                 await pool.query("UPDATE usuarios SET bloqueado_ate = NOW() + interval '10 minutes' WHERE id = $1", [motoboyExpiradoId]);
 
                 console.log(`[MONITOR] Motoboy ${motoboyExpiradoId} bloqueado por 10 minutos.`);
                 
-                // 4. CHAMA A DISTRIBUIÇÃO NOVAMENTE (para o PRÓXIMO motoboy)
+                // 4. CHAMA A DISTRIBUIÇÃO NOVAMENTE (para o PRÓXIMO motoboy no Round-Robin)
                 await distribuirCorridaParaMotoboys(corridaId, tipoServico);
-            } else {
-                // Se não há exposições expiradas, mas também não há exposições ATIVAS,
-                // significa que o ciclo terminou.
-                const exposicoesAtivasCount = await pool.query('SELECT COUNT(*) FROM exposicao_corrida WHERE corrida_id = $1', [corridaId]);
-                
-                if (parseInt(exposicoesAtivasCount.rows[0].count) === 0) {
-                    console.log(`[MONITOR] Ciclo encerrado para Corrida ${corridaId}. Reiniciando.`);
 
-                    // Reinicia a lista de exposições para o próximo ciclo
-                    await reiniciarCicloCorrida(corridaId); // Incrementa o ciclo visualmente
-                    await distribuirCorridaParaMotoboys(corridaId, tipoServico); // Começa o ciclo do zero
-                }
-            }
+            } else {
+                // 5. Se não houver exposições ATIVAS ou expiradas na tabela, o ciclo encerrou.
+                const exposicoesAtivasCount = await pool.query('SELECT COUNT(*) FROM exposicao_corrida WHERE corrida_id = $1', [corridaId]);
+                
+                if (parseInt(exposicoesAtivasCount.rows[0].count) === 0) {
+                    console.log(`[MONITOR] Ciclo encerrado para Corrida ${corridaId}. Reiniciando.`);
+
+                    // 6. Reinicia a lista de exposições (chamando o Round-Robin do zero)
+                    await reiniciarCicloCorrida(corridaId); 
+                    await distribuirCorridaParaMotoboys(corridaId, tipoServico);
+                }
+            }
         }
     } catch (err) {
-        console.error('Erro no monitoramento cíclico:', err && err.stack ? err.stack : err);
+        // Este console.log corrigido deve parar de dar erro de sintaxe
+        console.error('❌ ERRO NO MONITORAMENTO CÍCLICO:', err && err.stack ? err.stack : err);
     }
 }
 
