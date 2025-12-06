@@ -411,60 +411,99 @@ app.post('/corridas-pendentes', async (req, res) => {
   }
 });
 
-// --- /aceitar-corrida ---
+// --- /corridas-pendentes ---
 
-app.post('/aceitar-corrida', async (req, res) => {
-  const { corrida_id, motoboy_id } = req.body;
-  const TEMPO_LIMITE_SEGUNDOS = 60;
+app.post('/corridas-pendentes', async (req, res) => {
+  const { motoboy_id } = req.body;
+  const TEMPO_LIMITE_SEGUNDOS = 60;
 
-  if (!corrida_id || !motoboy_id)
-    return res.status(400).json({ error: 'corrida_id e motoboy_id são obrigatórios' });
+  if (!motoboy_id) return res.status(400).json({ error: 'motoboy_id é obrigatório' });
 
-  try {
-    const exposicao = await pool.query(
-      `
-      SELECT EXTRACT(EPOCH FROM (NOW() - data_exposicao)) AS segundos_passados
-      FROM exposicao_corrida
-      WHERE corrida_id = $1 AND motoboy_id = $2
-    `,
-      [corrida_id, motoboy_id]
-    );
+  try {
+    const motoboyQuery = await pool.query(
+      'SELECT bloqueado_ate, categoria, online_ate FROM usuarios WHERE id = $1',
+      [motoboy_id]
+    );
+    const motoboy = motoboyQuery.rows[0];
 
-    if (exposicao.rows.length === 0) {
-      return res
-        .status(403)
-        .json({ success: false, message: 'Corrida não disponível para você.' });
-    }
+    if (!motoboy) return res.status(404).json({ error: 'Motoboy não encontrado.' });
 
-    const segundosPassados =
-      exposicao.rows[0].segundos_passados || TEMPO_LIMITE_SEGUNDOS + 1;
+    if (motoboy.bloqueado_ate && new Date(motoboy.bloqueado_ate) > new Date()) {
+      const min = Math.ceil((new Date(motoboy.bloqueado_ate) - new Date()) / 60000);
+      return res.json({ success: false, bloqueado: true, tempo: min });
+    }
 
-    if (segundosPassados > TEMPO_LIMITE_SEGUNDOS) {
-      return res
-        .status(403)
-        .json({ success: false, message: 'Tempo limite expirado. Corrida removida.' });
-    }
+    if (!motoboy.online_ate || new Date(motoboy.online_ate) < new Date()) {
+      return res.json({
+        success: false,
+        offline: true,
+        message: 'Você precisa estar online para ver corridas.',
+      });
+    }
 
-    const updateCorrida = await pool.query(
-      "UPDATE corridas SET status = 'aceita', motoboy_id = $1 WHERE id = $2 AND status = 'pendente' RETURNING id",
-      [motoboy_id, corrida_id]
-    );
+    // --- LÓGICA DE FILTRO CORRIGIDA AQUI ---
+    // Aplica o filtro de tipo de serviço se a categoria for específica ('Passageiro' ou 'Entregas').
+    // Motoboys 'Geral' verão todos os tipos de corridas distribuídas para eles.
+    let tipoServicoFiltro = null;
 
-    if (updateCorrida.rowCount === 0) {
-      return res
-        .status(409)
-        .json({ success: false, message: 'Corrida indisponível (já aceita ou cancelada).' });
-    }
+    if (motoboy.categoria === 'Passageiro') {
+        tipoServicoFiltro = 'moto-taxi';
+    } else if (motoboy.categoria === 'Entregas') {
+        tipoServicoFiltro = 'entrega';
+    }
+    
+    let params = [motoboy_id, TEMPO_LIMITE_SEGUNDOS];
+    let tipoClause = '';
 
-    await pool.query('DELETE FROM exposicao_corrida WHERE corrida_id = $1', [corrida_id]);
+    if (tipoServicoFiltro) {
+        params.push(tipoServicoFiltro);
+        tipoClause = `AND c.tipo_servico = $${params.length}`;
+    }
+    // --- FIM DA LÓGICA DE FILTRO CORRIGIDA ---
 
-    res.json({ success: true, message: 'Corrida aceita com sucesso.' });
-  } catch (err) {
-    console.error('Erro em /aceitar-corrida:', err && err.stack ? err.stack : err);
-    res.status(500).json({ success: false, message: 'Erro interno ao aceitar.' });
-  }
+
+    const sql = `
+      SELECT 
+        c.id AS corrida_id,
+        c.origem,
+        c.destino,
+        c.valor,
+        c.tipo_servico,
+        u.nome AS nome_cliente,
+        u.telefone AS telefone_cliente,
+        EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) AS segundos_passados,
+        ec.ciclo,
+        ec.data_exposicao
+      FROM exposicao_corrida ec
+      JOIN corridas c ON ec.corrida_id = c.id
+      JOIN usuarios u ON c.cliente_id = u.id
+      WHERE ec.motoboy_id = $1
+        AND c.status = 'pendente'
+        AND EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) < $2
+        ${tipoClause}
+      ORDER BY ec.data_exposicao ASC
+      LIMIT 1
+    `;
+
+    const result = await pool.query(sql, params);
+
+    if (!result.rows || result.rows.length === 0) {
+      return res.json({
+        success: true,
+        corrida: null,
+        message: 'Nenhuma corrida disponível no momento.',
+      });
+    }
+
+    const corrida = result.rows[0];
+    return res.json({ success: true, corrida });
+  } catch (err) {
+    console.error('Erro em /corridas-pendentes:', err && err.stack ? err.stack : err);
+    return res
+      .status(500)
+      .json({ success: false, message: 'Erro ao buscar corridas pendentes.' });
+  }
 });
-
 // --- /expirar-corrida ---
 
 app.post('/expirar-corrida', async (req, res) => {
