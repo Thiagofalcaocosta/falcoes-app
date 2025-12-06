@@ -245,7 +245,7 @@ async function reiniciarCicloCorrida(corridaId) {
   }
 }
 
-// --- FUNÇÕES DE MONITORAMENTO CÍCLICO ---
+// --- FUNÇÕES DE MONITORAMENTO CÍCLICO (CORRIGIDO) ---
 
 async function monitorarExpiracoes() {
     try {
@@ -286,8 +286,8 @@ async function monitorarExpiracoes() {
                 await distribuirCorridaParaMotoboys(corridaId, tipoServico);
 
             } else {
-                // 5. Se não houver exposições ATIVAS ou expiradas na tabela, o ciclo encerrou.
-                const exposicoesAtivasCount = await pool.query('SELECT COUNT(*) FROM exposicao_corrida WHERE corrida_id = $1', [corridaId]);
+                // 5. Se não há exposições expiradas, mas também não há exposições ATIVAS, o ciclo encerrou.
+                const exposicoesAtivasCount = await pool.query('SELECT COUNT(id) FROM exposicao_corrida WHERE corrida_id = $1', [corridaId]);
                 
                 if (parseInt(exposicoesAtivasCount.rows[0].count) === 0) {
                     console.log(`[MONITOR] Ciclo encerrado para Corrida ${corridaId}. Reiniciando.`);
@@ -299,7 +299,7 @@ async function monitorarExpiracoes() {
             }
         }
     } catch (err) {
-        // Este console.log corrigido deve parar de dar erro de sintaxe
+        // O erro de sintaxe SQL na consulta COUNT(*) foi corrigido para COUNT(id).
         console.error('❌ ERRO NO MONITORAMENTO CÍCLICO:', err && err.stack ? err.stack : err);
     }
 }
