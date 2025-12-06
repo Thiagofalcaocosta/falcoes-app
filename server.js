@@ -375,18 +375,35 @@ app.post('/pedir-corrida', async (req, res) => {
 
 app.post('/cancelar-pedido', async (req, res) => {
   const { id, motivo } = req.body;
+
   try {
+    // 1. Cancela a corrida e desvincula o motoboy
     await pool.query(
-      "UPDATE corridas SET status = 'cancelada', motivo_cancelamento = $1 WHERE id = $2",
+      `
+      UPDATE corridas
+      SET status = 'cancelada',
+          motivo_cancelamento = $1,
+          motoboy_id = NULL
+      WHERE id = $2
+      `,
       [motivo, id]
     );
-    await pool.query('DELETE FROM exposicao_corrida WHERE corrida_id = $1', [id]);
+
+    // 2. Remove TODAS as exposições dessa corrida
+    await pool.query(
+      "DELETE FROM exposicao_corrida WHERE corrida_id = $1",
+      [id]
+    );
+
+    console.log(`🚫 Corrida ${id} cancelada e exposições limpas.`);
+
     res.json({ success: true });
   } catch (err) {
     console.error('Erro em /cancelar-pedido:', err && err.stack ? err.stack : err);
     res.status(500).json({ success: false });
   }
 });
+
 
 app.post('/corridas-pendentes', async (req, res) => {
   const { motoboy_id } = req.body;
@@ -604,6 +621,10 @@ app.get('/mensagens/:id', async (req, res) => {
 });
 
 // --- STATUS ONLINE MOTOBOY ---
+await pool.query(
+  "UPDATE usuarios SET bloqueado_ate = NULL WHERE id = $1 AND bloqueado_ate < NOW()",
+  [motoboy_id]
+);
 
 app.post('/motoboy/status-online', async (req, res) => {
   const { motoboy_id, online, latitude, longitude } = req.body;
