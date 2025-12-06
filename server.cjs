@@ -233,7 +233,25 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
 }
 async function monitorarExpiracoes() {
   try {
-    // 1. Corridas pendentes
+
+    // 🛡️ GUARDA-COSTAS: mata corridas zumbis
+    await pool.query(`
+      UPDATE corridas
+      SET status = 'cancelada',
+          motivo_cancelamento = '[SYSTEM] Encerrada por timeout'
+      WHERE status = 'pendente'
+        AND data_hora < NOW() - interval '15 minutes'
+    `);
+
+    // 🧹 Remove exposições de corridas que não estão mais pendentes
+    await pool.query(`
+      DELETE FROM exposicao_corrida
+      WHERE corrida_id IN (
+        SELECT id FROM corridas WHERE status != 'pendente'
+      )
+    `);
+
+    // 1. Corridas realmente pendentes
     const corridasPendentes = await pool.query(
       "SELECT id, tipo_servico FROM corridas WHERE status = 'pendente'"
     );
@@ -241,6 +259,7 @@ async function monitorarExpiracoes() {
     for (const corrida of corridasPendentes.rows) {
       const corridaId = corrida.id;
       const tipoServico = corrida.tipo_servico;
+
 
       // 2. Procurar uma exposição expirada (tempo esgotou)
       const exposicaoExpirada = await pool.query(
