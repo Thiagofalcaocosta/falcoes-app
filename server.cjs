@@ -621,10 +621,6 @@ app.get('/mensagens/:id', async (req, res) => {
 });
 
 // --- STATUS ONLINE MOTOBOY ---
-await pool.query(
-  "UPDATE usuarios SET bloqueado_ate = NULL WHERE id = $1 AND bloqueado_ate < NOW()",
-  [motoboy_id]
-);
 
 app.post('/motoboy/status-online', async (req, res) => {
   const { motoboy_id, online, latitude, longitude } = req.body;
@@ -641,6 +637,12 @@ app.post('/motoboy/status-online', async (req, res) => {
   }
 
   try {
+    // 🔹 LIMPA BLOQUEIO VENCIDO
+    await pool.query(
+      "UPDATE usuarios SET bloqueado_ate = NULL WHERE id = $1 AND bloqueado_ate < NOW()",
+      [idNum]
+    );
+
     const lat =
       latitude === null || latitude === undefined ? null : Number(latitude);
     const lng =
@@ -687,6 +689,7 @@ app.post('/motoboy/status-online', async (req, res) => {
     return res.status(500).json({ success: false, message: 'Erro ao atualizar status.' });
   }
 });
+
 
 // --- ROTAS ADMIN ---
 
