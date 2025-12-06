@@ -449,502 +449,464 @@
     </div>
 
     <script>
-        /***********************
-         *  VARIÁVEIS GLOBAIS - CORRIGIDO
-         ***********************/
-        const usuario = JSON.parse(localStorage.getItem('usuario'));
-        
-        // VERIFICAÇÃO SIMPLES E CORRETA
-        if (!usuario || usuario.tipo !== 'motoboy') {
-            window.location.href = 'index.html';
-            throw new Error("Usuário não autorizado");
-        }
+        /***********************
+         *  VARIÁVEIS GLOBAIS
+         ***********************/
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        
+        // VERIFICAÇÃO SIMPLES E CORRETA
+        if (!usuario || usuario.tipo !== 'motoboy') {
+            window.location.href = 'index.html';
+            throw new Error("Usuário não autorizado");
+        }
 
-        // AGORA SIM MOSTRA O NOME E CATEGORIA
-        document.getElementById('msg-ola').innerText = "OLÁ, " + usuario.nome.split(' ')[0].toUpperCase();
-        
-        // VERIFICA CATEGORIA CORRETAMENTE
-        const categoriaExibicao = usuario.categoria || "GERAL";
-        document.getElementById('label-categoria').innerText = `SUA CATEGORIA: ${categoriaExibicao.toUpperCase()}`;
+        // AGORA SIM MOSTRA O NOME E CATEGORIA
+        document.getElementById('msg-ola').innerText = "OLÁ, " + usuario.nome.split(' ')[0].toUpperCase();
+        
+        // VERIFICA CATEGORIA CORRETAMENTE
+        const categoriaExibicao = usuario.categoria || "GERAL";
+        document.getElementById('label-categoria').innerText = `SUA CATEGORIA: ${categoriaExibicao.toUpperCase()}`;
 
-        const MEU_IP = 'https://falcoes-app.onrender.com';
-        let idCorridaSelecionada = null;
-        let idCorridaAtual = null;
-        let corridasVisiveis = [];
-        let onlineInterval = null;
+        const MEU_IP = 'https://falcoes-app.onrender.com';
+        let idCorridaSelecionada = null;
+        let idCorridaAtual = null;
+        let onlineInterval = null;
 
-        // NOVO: Armazena os IDs dos setIntervals para os contadores
-        let intervalosContadores = {};
+        // Armazena os IDs dos setIntervals para os contadores
+        let intervalosContadores = {};
 
-        // FILA LOCAL E CONTROLE DE NOTIFICAÇÃO (garante 1 por vez)
-        let corridaQueue = [];
-        let notificacaoAtiva = false;
+        // NOVO: Controle da corrida sendo exibida (apenas 1 por vez, conforme o backend)
+        let corridaSendoExibida = null;
+        let notificacaoAtiva = false;
 
-        /***********************
-         *  FUNÇÕES DE STATUS ONLINE - SIMPLIFICADO
-         ***********************/
-        
-        async function enviarStatusOnline(online) {
-            try {
-                const response = await fetch(`${MEU_IP}/motoboy/status-online`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        motoboy_id: usuario.id,
-                        online: online,
-                        latitude: null,
-                        longitude: null
-                    })
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    const statusElement = document.getElementById('status-online-indicator');
-                    if (online) {
-                        statusElement.innerText = "● ONLINE";
-                        statusElement.style.backgroundColor = "var(--neon-green)";
-                    } else {
-                        statusElement.innerText = "● OFFLINE";
-                        statusElement.style.backgroundColor = "#666";
+        /***********************
+         *  FUNÇÕES DE STATUS ONLINE
+         ***********************/
+        
+        async function enviarStatusOnline(online) {
+            try {
+                const response = await fetch(`${MEU_IP}/motoboy/status-online`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        motoboy_id: usuario.id,
+                        online: online,
+                        latitude: null,
+                        longitude: null
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    const statusElement = document.getElementById('status-online-indicator');
+                    if (online) {
+                        statusElement.innerText = "● ONLINE";
+                        statusElement.style.backgroundColor = "var(--neon-green)";
+                    } else {
+                        statusElement.innerText = "● OFFLINE";
+                        statusElement.style.backgroundColor = "#666";
+                    }
+                }
+            } catch (err) {
+                console.error("Erro ao enviar status online:", err);
+            }
+        }
+
+        // Função para deslogar
+        function deslogar() {
+            enviarStatusOnline(false);
+            if (onlineInterval) {
+                clearInterval(onlineInterval);
+            }
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // INICIALIZA STATUS ONLINE AO CARREGAR A PÁGINA
+        document.addEventListener('DOMContentLoaded', function() {
+            enviarStatusOnline(true);
+            onlineInterval = setInterval(() => {
+                enviarStatusOnline(true);
+            }, 5000); // Polling de status online reduzido para 5s
+        });
+
+        /***********************
+         *  ÁUDIO / NOTIFICAÇÃO
+         ***********************/
+        function tocarAlerta() {
+            const audio = document.getElementById('som-alerta');
+            if (!audio) return;
+            try {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.play().catch(err => console.log("Som bloqueado até interação do usuário"));
+            } catch (e) {
+                console.log("Erro ao tocar som:", e);
+            }
+        }
+
+        /***********************
+         *  CONTADORES
+         ***********************/
+        function limparContadores() {
+            Object.values(intervalosContadores).forEach(clearInterval);
+            intervalosContadores = {};
+        }
+
+        function iniciarContador(id, tempoInicial, onTimeout) {
+            limparContadores(); 
+
+            let tempoRestante = tempoInicial;
+            const cardElement = document.getElementById(`card-${id}`);
+            const contadorElement = cardElement ? cardElement.querySelector('.contador-tempo') : null;
+
+            if (!contadorElement) return;
+
+            const decremento = async () => {
+                if (tempoRestante <= 0) {
+                    clearInterval(intervalosContadores[id]);
+                    delete intervalosContadores[id];
+
+                    if (cardElement) cardElement.remove();
+
+                    try {
+                        await fetch(`${MEU_IP}/expirar-corrida`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                corrida_id: id,
+                                motoboy_id: usuario.id
+                            })
+                        });
+                    } catch (e) {
+                        console.error("Erro ao notificar timeout da corrida:", e);
+                    }
+
+                    if (typeof onTimeout === 'function') onTimeout();
+                    return;
+                }
+
+                contadorElement.innerText = `⏳ SUA VEZ: ${tempoRestante}s`;
+                tempoRestante--;
+            };
+
+            decremento();
+            intervalosContadores[id] = setInterval(decremento, 1000);
+        }
+
+        /***********************
+         *  MODAIS E AJUDA
+         ***********************/
+        function fecharModal(idModal) {
+            document.getElementById(idModal).style.display = 'none';
+            if (idModal === 'modal-confirmacao') idCorridaSelecionada = null;
+        }
+
+        function mostrarErro(mensagem) {
+            document.getElementById('msg-erro-texto').innerText = mensagem;
+            document.getElementById('modal-erro').style.display = 'flex';
+        }
+
+        /***********************
+         *  POLLING / ESTADO
+         ***********************/
+        async function verificarEstado() {
+            try {
+                // 1. VERIFICA CORRIDA ATIVA
+                const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
+                const dadosAtiva = await resAtiva.json();
+
+                if (dadosAtiva.tem_corrida) {
+                    limparContadores();
+                    mostrarTela('ativa');
+                    preencherDadosAtiva(dadosAtiva.corrida);
+                    return;
+                }
+
+                // 2. VERIFICA BLOQUEIO OU CORRIDAS PENDENTES
+                const resLista = await fetch(`${MEU_IP}/corridas-pendentes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ motoboy_id: usuario.id })
+                });
+                const dadosLista = await resLista.json();
+
+                if (dadosLista.success === false && dadosLista.bloqueado) {
+                    limparContadores();
+                    mostrarTela('bloqueio');
+                    document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
+                } else if (dadosLista.success === false && dadosLista.offline) {
+                    document.getElementById('lista-corridas').innerHTML = 
+                        '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE</div>';
+                    mostrarTela('lista');
+                } else {
+                    mostrarTela('lista');
+                    
+                    // CORREÇÃO DA LÓGICA: Busca o campo "corrida" (singular)
+                    let corrida = null;
+                    if (dadosLista.corrida) {
+                        corrida = dadosLista.corrida;
                     }
-                }
-            } catch (err) {
-                console.error("Erro ao enviar status online:", err);
-            }
-        }
+                    renderizarLista(corrida);
+                }
 
-        // Função para deslogar
-        function deslogar() {
-            // Marca como offline no servidor
-            enviarStatusOnline(false);
+            } catch (err) { 
+                console.error("Erro ao verificar estado:", err);
+            }
+        }
+
+        function mostrarTela(tela) {
+            document.getElementById('tela-lista').style.display = 'none';
+            document.getElementById('tela-corrida-ativa').style.display = 'none';
+            document.getElementById('tela-bloqueio').style.display = 'none';
+
+            if (tela === 'lista') document.getElementById('tela-lista').style.display = 'block';
+            if (tela === 'ativa') document.getElementById('tela-corrida-ativa').style.display = 'block';
+            if (tela === 'bloqueio') document.getElementById('tela-bloqueio').style.display = 'block';
+        }
+
+        function preencherDadosAtiva(c) {
+            idCorridaAtual = c.corrida_id; // Usa corrida_id do backend, que tem o nome correto.
+            document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
+            document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
+            document.getElementById('ativa-cliente').innerText = c.nome_cliente;
+            document.getElementById('ativa-fone').innerText = c.telefone_cliente;
+            document.getElementById('ativa-origem').innerText = c.origem;
+            document.getElementById('ativa-destino').innerText = c.destino;
+        }
+
+        /***********************
+         *  CRIAÇÃO E RENDERIZAÇÃO
+         ***********************/
+
+        // Função para criar e exibir o card (mantida e adaptada)
+        function criarCardCorrida(corrida) {
+            const container = document.getElementById('lista-corridas');
+
+            const div = document.createElement('div');
+            div.className = 'card-corrida';
+            div.id = `card-${corrida.corrida_id}`;
+
+            const htmlConteudo = `
+        <div class="card-top">
+            <span class="tipo-servico">${corrida.tipo_servico.toUpperCase()}</span>
+            <span class="valor">R$ ${parseFloat(corrida.valor).toFixed(2)}</span>
+        </div>
+        ${corrida.ciclo && corrida.ciclo > 1 ? 
+            `<div style="background: #333; color: #ff9900; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 12px; text-align: center;">
+                ⚡ CICLO ${corrida.ciclo}
+            </div>` 
+            : ''
+        }
+        <div class="rota">
+            <div style="color:#ddd; margin-bottom:5px;">📍 ${corrida.origem}</div>
+            <div style="color:#ddd;">🏁 ${corrida.destino}</div>
+        </div>
+        <div class="contador-tempo" id="contador-${corrida.corrida_id}"></div>
+        <button class="btn-acao btn-verde" onclick="aceitarCorrida(${corrida.corrida_id})">ACEITAR</button>
+    `;
+            div.innerHTML = htmlConteudo;
+            container.appendChild(div);
+
+            // Calcula o tempo restante: 60 segundos menos os segundos já passados
+            const tempoRestante = 60 - Math.ceil(parseFloat(corrida.segundos_passados || 0));
+            
+            // Inicia o contador
+            if (tempoRestante > 0) {
+                tocarAlerta();
+                iniciarContador(corrida.corrida_id, tempoRestante, () => {
+                    // Se o tempo acabar, limpa a tela de lista e verifica estado
+                    document.getElementById('lista-corridas').innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
+                    notificacaoAtiva = false;
+                    verificarEstado();
+                });
+            } else {
+                // Se a corrida já expirou no backend, apenas ignora
+                div.remove(); 
+                verificarEstado(); // Verifica se há uma próxima
+            }
+        }
+
+
+        function renderizarLista(corrida) {
+            const container = document.getElementById('lista-corridas');
+            
+            // Se não houver corrida, exibe mensagem e limpa o estado
+            if (!corrida) {
+                container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
+                limparContadores();
+                notificacaoAtiva = false;
+                corridaSendoExibida = null;
+                return;
+            }
             
-            // Limpa o intervalo de atualização online
-            if (onlineInterval) {
-                clearInterval(onlineInterval);
-            }
-            
-            // Limpa localStorage e redireciona
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
+            // Corrige o bug de só ver corridas da sua categoria. O filtro é feito pelo backend.
+            
+            // Se já estiver exibindo a mesma corrida, não faz nada
+            if (corridaSendoExibida && corridaSendoExibida.corrida_id === corrida.corrida_id) {
+                return;
+            }
+            
+            // Limpa a tela e começa a exibir a nova corrida (apenas 1 por vez)
+            container.innerHTML = '';
+            limparContadores();
+            corridaSendoExibida = corrida;
+            notificacaoAtiva = true;
+            
+            // Cria o card e inicia o contador
+            criarCardCorrida(corrida);
+        }
 
-        // INICIALIZA STATUS ONLINE AO CARREGAR A PÁGINA
-        document.addEventListener('DOMContentLoaded', function() {
-            // Marca como online
-            enviarStatusOnline(true);
-            
-            // Atualiza status a cada 30 segundos
-            onlineInterval = setInterval(() => {
-                enviarStatusOnline(true);
-            }, 30000); // 30 segundos
-        });
 
-        /***********************
-         *  ÁUDIO / NOTIFICAÇÃO
-         ***********************/
-        function tocarAlerta() {
-            const audio = document.getElementById('som-alerta');
-            if (!audio) return;
-            try {
-                audio.pause();
-                audio.currentTime = 0;
-                audio.play().catch(err => console.log("Som bloqueado até interação do usuário"));
-            } catch (e) {
-                console.log("Erro ao tocar som:", e);
-            }
-        }
+        /***********************
+         *  ACEITAR / CONFIRMAR / FINALIZAR
+         ***********************/
+        function abrirModalAceitar(id) {
+            idCorridaSelecionada = id;
+            document.getElementById('modal-confirmacao').style.display = 'flex';
+        }
 
-        /***********************
-         *  CONTADORES - MANTIDO IGUAL
-         ***********************/
-        function limparContadores() {
-            Object.values(intervalosContadores).forEach(clearInterval);
-            intervalosContadores = {};
-        }
-
-        function iniciarContador(id, tempoInicial, onTimeout) {
-            if (intervalosContadores[id]) {
-                return;
-            }
-
-            let tempoRestante = tempoInicial;
-            const cardElement = document.getElementById(`card-${id}`);
-            const contadorElement = cardElement ? cardElement.querySelector('.contador-tempo') : null;
-
-            if (!contadorElement) return;
-
-            const decremento = async () => {
-                if (tempoRestante <= 0) {
-                    clearInterval(intervalosContadores[id]);
-                    delete intervalosContadores[id];
-
-                    if (cardElement) cardElement.remove();
-
-                    try {
-                        await fetch(`${MEU_IP}/expirar-corrida`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                corrida_id: id,
-                                motoboy_id: usuario.id
-                            })
-                        });
-                    } catch (e) {
-                        console.error("Erro ao notificar timeout da corrida:", e);
-                    }
-
-                    if (typeof onTimeout === 'function') onTimeout();
-                    return;
-                }
-
-                // MUDANÇA AQUI: texto mais claro
-                contadorElement.innerText = `⏳ SUA VEZ: ${tempoRestante}s`;
-                tempoRestante--;
-            };
-
-            decremento();
-            intervalosContadores[id] = setInterval(decremento, 1000);
-        }
-
-        /***********************
-         *  MODAIS E AJUDA - MANTIDO IGUAL
-         ***********************/
-        function fecharModal(idModal) {
-            document.getElementById(idModal).style.display = 'none';
-            if (idModal === 'modal-confirmacao') idCorridaSelecionada = null;
-        }
-
-        function mostrarErro(mensagem) {
-            document.getElementById('msg-erro-texto').innerText = mensagem;
-            document.getElementById('modal-erro').style.display = 'flex';
-        }
-
-        /***********************
-         *  POLLING / ESTADO - MANTIDO IGUAL
-         ***********************/
-        async function verificarEstado() {
-            try {
-                // 1. VERIFICA CORRIDA ATIVA
-                const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
-                const dadosAtiva = await resAtiva.json();
-
-                if (dadosAtiva.tem_corrida) {
-                    limparContadores();
-                    mostrarTela('ativa');
-                    preencherDadosAtiva(dadosAtiva.corrida);
-                    return;
-                }
-
-                // 2. VERIFICA BLOQUEIO OU CORRIDAS PENDENTES
-                const resLista = await fetch(`${MEU_IP}/corridas-pendentes`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ motoboy_id: usuario.id })
-                });
-                const dadosLista = await resLista.json();
-
-                if (dadosLista.success === false && dadosLista.bloqueado) {
-                    limparContadores();
-                    mostrarTela('bloqueio');
-                    document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
-                } else if (dadosLista.success === false && dadosLista.offline) {
-                    document.getElementById('lista-corridas').innerHTML = 
-                        '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE</div>';
-                    mostrarTela('lista');
-                } else {
-                    mostrarTela('lista');
-                    renderizarLista(dadosLista.corridas || []);
-                }
-
-            } catch (err) { 
-                console.error("Erro ao verificar estado:", err);
-            }
-        }
-
-        function mostrarTela(tela) {
-            document.getElementById('tela-lista').style.display = 'none';
-            document.getElementById('tela-corrida-ativa').style.display = 'none';
-            document.getElementById('tela-bloqueio').style.display = 'none';
-
-            if (tela === 'lista') document.getElementById('tela-lista').style.display = 'block';
-            if (tela === 'ativa') document.getElementById('tela-corrida-ativa').style.display = 'block';
-            if (tela === 'bloqueio') document.getElementById('tela-bloqueio').style.display = 'block';
-        }
-
-        function preencherDadosAtiva(c) {
-            idCorridaAtual = c.id;
-            document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
-            document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
-            document.getElementById('ativa-cliente').innerText = c.nome_cliente;
-            document.getElementById('ativa-fone').innerText = c.telefone_cliente;
-            document.getElementById('ativa-origem').innerText = c.origem;
-            document.getElementById('ativa-destino').innerText = c.destino;
-        }
-
-        /***********************
-         *  FILA LOCAL E RENDERIZAÇÃO - MANTIDO IGUAL
-         ***********************/
-        function renderizarLista(todasCorridas) {
-            const filtradas = todasCorridas.filter(c => {
-                if (usuario.tipo === 'admin') return true;
-                const minhaCategoria = usuario.categoria;
-                if (minhaCategoria === 'Passageiro') return c.tipo_servico === 'moto-taxi';
-                if (minhaCategoria === 'Entregas') return c.tipo_servico === 'entrega';
-                return true;
-            });
-
-            const idsAtuais = corridaQueue.map(x => x.id);
-            filtradas.forEach(c => {
-                if (!idsAtuais.includes(c.id) && !corridasVisiveis.includes(c.id)) {
-                    corridaQueue.push(c);
-                }
-            });
-
-            const container = document.getElementById('lista-corridas');
-            if (corridaQueue.length === 0 && !notificacaoAtiva) {
-                container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
-            }
-
-            processQueue();
-        }
-
-        async function processQueue() {
-            const container = document.getElementById('lista-corridas');
-
-            if (notificacaoAtiva) return;
-
-            const proxima = corridaQueue.shift();
-            if (!proxima) {
-                if (container.children.length === 0) {
-                    container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
-                }
-                return;
-            }
-
-            notificacaoAtiva = true;
-            corridasVisiveis = [proxima.id];
-
-            container.innerHTML = '';
-            const div = document.createElement('div');
-            div.className = 'card-corrida';
-            div.id = `card-${proxima.id}`;
-
-            const htmlConteudo = `
-    <div class="card-top">
-        <span class="tipo-servico">${proxima.tipo_servico}</span>
-        <span class="valor">R$ ${parseFloat(proxima.valor).toFixed(2)}</span>
-    </div>
-    ${proxima.ciclo_atual && proxima.ciclo_atual > 1 ? 
-        `<div style="background: #333; color: #ff9900; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 12px; text-align: center;">
-            ⚡ CICLO ${proxima.ciclo_atual}
-        </div>` 
-        : ''
-    }
-    <div class="rota">
-        <div style="color:#ddd; margin-bottom:5px;">📍 ${proxima.origem}</div>
-        <div style="color:#ddd;">🏁 ${proxima.destino}</div>
-    </div>
-    <div class="contador-tempo" id="contador-${proxima.id}"></div>
-    <button class="btn-acao btn-verde" onclick="aceitarCorrida(${proxima.id})">ACEITAR</button>
-`;
-            div.innerHTML = htmlConteudo;
-            container.appendChild(div);
-
-            tocarAlerta();
-
-            const tempo = proxima.tempo_restante ? proxima.tempo_restante : 30;
-            iniciarContador(proxima.id, tempo, async () => {
-                notificacaoAtiva = false;
-                await processQueue();
-            });
-        }
-
-        /***********************
-         *  ACEITAR / CONFIRMAR / FINALIZAR - MANTIDO IGUAL
-         ***********************/
-        function abrirModalAceitar(id) {
-            idCorridaSelecionada = id;
-            document.getElementById('modal-confirmacao').style.display = 'flex';
-        }
-
-        async function aceitarCorrida(id) { 
-    try {
-        // Garante que está online
-        await enviarStatusOnline(true);
-        
-        // Verifica se ainda pode aceitar (não expirou)
-        const cardElement = document.getElementById(`card-${id}`);
-        if (!cardElement) {
-            mostrarErro("Corrida não disponível mais.");
-            return;
-        }
-        
-        abrirModalAceitar(id);
-    } catch (err) {
-        console.error("Erro ao aceitar corrida:", err);
-        mostrarErro("Erro ao processar. Tente novamente.");
-    }
+        async function aceitarCorrida(id) { 
+    try {
+        // Garante que está online
+        await enviarStatusOnline(true);
+        
+        // Verifica se ainda pode aceitar (não expirou)
+        const cardElement = document.getElementById(`card-${id}`);
+        if (!cardElement) {
+            mostrarErro("Corrida não disponível mais.");
+            return;
+        }
+        
+        abrirModalAceitar(id);
+    } catch (err) {
+        console.error("Erro ao aceitar corrida:", err);
+        mostrarErro("Erro ao processar. Tente novamente.");
+    }
 }
 
-        async function confirmarAceite() {
-            if (!idCorridaSelecionada) return;
-            const btn = document.getElementById('btn-confirma-final');
-            btn.innerText = "..."; btn.disabled = true;
-            try {
-                const response = await fetch(`${MEU_IP}/aceitar-corrida`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ corrida_id: idCorridaSelecionada, motoboy_id: usuario.id })
-                });
-                const result = await response.json();
-                fecharModal('modal-confirmacao'); btn.innerText = "CONFIRMAR"; btn.disabled = false;
-                if (result.success) {
-    limparContadores();
-    document.getElementById('modal-sucesso').style.display = 'flex';
-    notificacaoAtiva = false;
-    
-    // Remove o card específico que foi aceito
-    const cardElement = document.getElementById(`card-${idCorridaSelecionada}`);
-    if (cardElement) cardElement.remove();
-    
-    setTimeout(() => {
-        verificarEstado();
-        processQueue();
-        document.getElementById('modal-sucesso').style.display = 'none';
-    }, 2500);
+        async function confirmarAceite() {
+            if (!idCorridaSelecionada) return;
+            const btn = document.getElementById('btn-confirma-final');
+            btn.innerText = "..."; btn.disabled = true;
+            try {
+                const response = await fetch(`${MEU_IP}/aceitar-corrida`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ corrida_id: idCorridaSelecionada, motoboy_id: usuario.id })
+                });
+                const result = await response.json();
+                fecharModal('modal-confirmacao'); btn.innerText = "CONFIRMAR"; btn.disabled = false;
+                if (result.success) {
+    limparContadores();
+    document.getElementById('modal-sucesso').style.display = 'flex';
+    notificacaoAtiva = false;
+    corridaSendoExibida = null; // Limpa o estado
+    
+    // Remove o card específico que foi aceito
+    const cardElement = document.getElementById(`card-${idCorridaSelecionada}`);
+    if (cardElement) cardElement.remove();
+    
+    setTimeout(() => {
+        verificarEstado();
+        document.getElementById('modal-sucesso').style.display = 'none';
+    }, 2500);
 } else { 
-    mostrarErro("Erro: " + (result.message || "Não foi possível aceitar a corrida.")); 
+    mostrarErro("Erro: " + (result.message || "Não foi possível aceitar a corrida.")); 
 }
-            } catch (err) { 
-                fecharModal('modal-confirmacao'); 
-                btn.innerText = "CONFIRMAR"; 
-                btn.disabled = false; 
-                mostrarErro("Erro conexão."); 
-            }
-        }
+            } catch (err) { 
+                fecharModal('modal-confirmacao'); 
+                btn.innerText = "CONFIRMAR"; 
+                btn.disabled = false; 
+                mostrarErro("Erro conexão."); 
+            }
+        }
 
-        async function finalizarCorrida() {
-            if (!confirm("Finalizar corrida?")) return;
-            try {
-                await fetch(`${MEU_IP}/finalizar-corrida`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ corrida_id: idCorridaAtual })
-                });
-                verificarEstado();
-            } catch (err) { alert("Erro ao finalizar."); }
-        }
+        async function finalizarCorrida() {
+            if (!confirm("Finalizar corrida?")) return;
+            try {
+                await fetch(`${MEU_IP}/finalizar-corrida`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ corrida_id: idCorridaAtual })
+                });
+                verificarEstado();
+            } catch (err) { alert("Erro ao finalizar."); }
+        }
 
-        /***********************
-         *  CANCELAMENTO COM JUSTIFICATIVA - MANTIDO IGUAL
-         ***********************/
-        function cancelarCorridaMotoboy() {
-            if (!idCorridaAtual) return;
-            document.getElementById('modal-cancelamento-motoboy').style.display = 'flex';
-            document.getElementById('justificativa-motoboy').value = '';
-            document.getElementById('justificativa-motoboy').focus();
-        }
+        /***********************
+         *  CANCELAMENTO COM JUSTIFICATIVA
+         ***********************/
+        function cancelarCorridaMotoboy() {
+            if (!idCorridaAtual) return;
+            document.getElementById('modal-cancelamento-motoboy').style.display = 'flex';
+            document.getElementById('justificativa-motoboy').value = '';
+            document.getElementById('justificativa-motoboy').focus();
+        }
 
-        async function confirmarCancelamentoMotoboy() {
-            const motivo = document.getElementById('justificativa-motoboy').value.trim();
+        async function confirmarCancelamentoMotoboy() {
+            const motivo = document.getElementById('justificativa-motoboy').value.trim();
 
-            if (motivo.length < 5) {
-                mostrarErro("A justificativa deve ter pelo menos 5 caracteres.");
-                return;
-            }
+            if (motivo.length < 5) {
+                mostrarErro("A justificativa deve ter pelo menos 5 caracteres.");
+                return;
+            }
 
-            fecharModal('modal-cancelamento-motoboy');
-            document.getElementById('modal-erro').style.display = 'flex';
-            document.getElementById('msg-erro-texto').innerText = "Processando cancelamento e notificando o cliente...";
-            document.querySelector('#modal-erro .modal-titulo').innerText = "ENVIANDO CANCELAMENTO";
-            document.querySelector('#modal-erro .modal-icon-erro').innerText = "⏳";
-            document.querySelector('#modal-erro .btn-modal').style.display = 'none';
+            fecharModal('modal-cancelamento-motoboy');
+            document.getElementById('modal-erro').style.display = 'flex';
+            document.getElementById('msg-erro-texto').innerText = "Processando cancelamento e notificando o cliente...";
+            document.querySelector('#modal-erro .modal-titulo').innerText = "ENVIANDO CANCELAMENTO";
+            document.querySelector('#modal-erro .modal-icon-erro').innerText = "⏳";
+            document.querySelector('#modal-erro .btn-modal').style.display = 'none';
 
-            try {
-                const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: idCorridaAtual,
-                        motivo: `[MOTOBOY] ${motivo}`
-                    })
-                });
+            try {
+                const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: idCorridaAtual,
+                        motivo: `[MOTOBOY] ${motivo}`
+                    })
+                });
 
-                const json = await res.json();
+                const json = await res.json();
 
-                if (json.success) {
-                    document.querySelector('#modal-erro .modal-titulo').innerText = "CANCELADO COM SUCESSO";
-                    document.querySelector('#modal-erro .modal-icon-erro').innerText = "✅";
-                    document.getElementById('msg-erro-texto').innerText = "O cliente foi notificado. Você será redirecionado em 3s.";
-                    document.querySelector('#modal-erro .modal-box').style.borderColor = 'var(--neon-green)';
-                    document.querySelector('#modal-erro .modal-titulo').classList.remove('texto-vermelho');
-                    document.querySelector('#modal-erro .modal-titulo').classList.add('texto-verde');
+                if (json.success) {
+                    document.querySelector('#modal-erro .modal-titulo').innerText = "CANCELADO COM SUCESSO";
+                    document.querySelector('#modal-erro .modal-icon-erro').innerText = "✅";
+                    document.getElementById('msg-erro-texto').innerText = "O cliente foi notificado. Você será redirecionado em 3s.";
+                    document.querySelector('#modal-erro .modal-box').style.borderColor = 'var(--neon-green)';
+                    document.querySelector('#modal-erro .modal-titulo').classList.remove('texto-vermelho');
+                    document.querySelector('#modal-erro .modal-titulo').classList.add('texto-verde');
 
-                    setTimeout(() => {
-                        verificarEstado();
-                        fecharModal('modal-erro');
-                    }, 3000);
+                    setTimeout(() => {
+                        verificarEstado();
+                        fecharModal('modal-erro');
+                    }, 3000);
 
-                } else {
-                    document.querySelector('#modal-erro .modal-titulo').innerText = "FALHA NO CANCELAMENTO";
-                    document.querySelector('#modal-erro .modal-icon-erro').innerText = "⚠️";
-                    document.getElementById('msg-erro-texto').innerText = json.message || "Erro desconhecido. Tente novamente.";
-                    document.querySelector('#modal-erro .modal-box').style.borderColor = 'var(--danger-color)';
-                    document.querySelector('#modal-erro .btn-modal').style.display = 'block';
-                }
+                } else {
+                    document.querySelector('#modal-erro .modal-titulo').innerText = "FALHA NO CANCELAMENTO";
+                    document.querySelector('#modal-erro .modal-icon-erro').innerText = "⚠️";
+                    document.getElementById('msg-erro-texto').innerText = json.message || "Erro desconhecido. Tente novamente.";
+                    document.querySelector('#modal-erro .modal-box').style.borderColor = 'var(--danger-color)';
+                    document.querySelector('#modal-erro .btn-modal').style.display = 'block';
+                }
 
-            } catch (e) {
-                document.querySelector('#modal-erro .modal-titulo').innerText = "ERRO DE CONEXÃO";
-                document.getElementById('msg-erro-texto').innerText = "Não foi possível conectar ao servidor para cancelar.";
-                document.querySelector('#modal-erro .btn-modal').style.display = 'block';
-            }
-        }
+            } catch (e) {
+                document.querySelector('#modal-erro .modal-titulo').innerText = "ERRO DE CONEXÃO";
+                document.getElementById('msg-erro-texto').innerText = "Não foi possível conectar ao servidor para cancelar.";
+                document.querySelector('#modal-erro .btn-modal').style.display = 'block';
+            }
+        }
 
-        /***********************
-         *  INICIALIZAÇÃO - CORRIGIDO
-         ***********************/
-        // Inicia a verificação
-        setTimeout(() => {
-            verificarEstado();
-            // Polling aumentado para 5s
-            setInterval(verificarEstado, 5000);
-        }, 1000);
+        /***********************
+         *  INICIALIZAÇÃO
+         ***********************/
+        // Inicia a verificação
+        setTimeout(() => {
+            verificarEstado();
+            // Polling para 5s
+            setInterval(verificarEstado, 5000);
+        }, 1000);
 
-        // Função de debug para verificar dados recebidos
-function debugCorrida(corrida) {
-    console.log("📊 Dados da corrida recebida:", {
-        id: corrida.id,
-        tipo: corrida.tipo_servico,
-        valor: corrida.valor,
-        ciclo_atual: corrida.ciclo_atual,
-        tempo_restante: corrida.tempo_restante
-    });
-}
-
-// Modifique a função renderizarLista para usar debug
-function renderizarLista(todasCorridas) {
-    console.log("🔍 Corridas recebidas do backend:", todasCorridas);
-
-    const lista = document.getElementById('lista-corridas');
-
-    // ✅ SE NÃO TEM CORRIDAS
-    if (!todasCorridas || todasCorridas.length === 0) {
-        lista.innerHTML = `
-            <p style="color:#888; text-align:center; margin-top:20px;">
-                Nenhuma corrida disponível no momento.
-            </p>
-        `;
-        return; // ⛔ PARA AQUI
-    }
-
-    // ✅ DEBUG DA PRIMEIRA CORRIDA
-    debugCorrida(todasCorridas[0]);
-
-    // ✅ LIMPA LISTA E RENDERIZA
-    lista.innerHTML = "";
-    todasCorridas.forEach(corrida => criarCardCorrida(corrida));
-
-
-    // ... resto do código existente ...
-}
-    </script>
+    </script>
 </body>
 </html>
