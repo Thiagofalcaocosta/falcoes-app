@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS exposicao_corrida (
     motoboy_id INTEGER REFERENCES usuarios(id),
     ciclo INTEGER DEFAULT 1,
     data_exposicao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expirada BOOLEAN DEFAULT false,
+    
     UNIQUE(corrida_id, motoboy_id)
 );
 `);
@@ -229,7 +229,7 @@ async function reiniciarCicloCorrida(corridaId) {
         await pool.query(`
             UPDATE exposicao_corrida 
             SET ciclo = ciclo + 1, 
-                expirada = false,
+                
                 data_exposicao = CURRENT_TIMESTAMP
             WHERE corrida_id = $1
         `, [corridaId]);
@@ -239,29 +239,6 @@ async function reiniciarCicloCorrida(corridaId) {
     }
 }
 
-// FUNÇÃO 3: Verifica se todos já viram
-async function verificarExposicaoCompleta(corridaId) {
-    try {
-        const exposicoes = await pool.query(`
-            SELECT COUNT(*) as total, SUM(CASE WHEN expirada = true THEN 1 ELSE 0 END) as expiradas
-            FROM exposicao_corrida 
-            WHERE corrida_id = $1
-        `, [corridaId]);
-        
-        const { total, expiradas } = exposicoes.rows[0];
-        
-        if (parseInt(expiradas) === parseInt(total) && parseInt(total) > 0) {
-            console.log(`⭕ Todos ${total} motoboys viram corrida ${corridaId} - Reiniciando ciclo...`);
-            
-            setTimeout(() => {
-                reiniciarCicloCorrida(corridaId);
-            }, 2000);
-        }
-        
-    } catch (err) {
-        console.error('Erro ao verificar exposição completa:', err && err.stack ? err.stack : err);
-    }
-}
 
 // --- ROTAS DO APP ---
 
@@ -429,7 +406,7 @@ app.post('/aceitar-corrida', async (req, res) => {
   try {
     // 1. VERIFICAR SE O TEMPO DE EXPOSIÇÃO EXPIROU
     const exposicao = await pool.query(
-      `SELECT EXTRACT(EPOCH FROM (NOW() - data_exposicao)) as segundos_passados, expirada 
+      `SELECT EXTRACT(EPOCH FROM (NOW() - data_exposicao)) as segundos_passados 
        FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2`,
       [corrida_id, motoboy_id]
     );
@@ -439,9 +416,9 @@ app.post('/aceitar-corrida', async (req, res) => {
     }
 
     const segundosPassados = exposicao.rows[0].segundos_passados || TEMPO_LIMITE_SEGUNDOS + 1;
-    const expirada = exposicao.rows[0].expirada;
+    
 
-    if (expirada || segundosPassados > TEMPO_LIMITE_SEGUNDOS) {
+    if ( segundosPassados > TEMPO_LIMITE_SEGUNDOS) {
       return res.status(403).json({ success: false, message: 'Tempo limite expirado. Corrida removida.' });
     }
 
@@ -476,7 +453,7 @@ app.post('/expirar-corrida', async (req, res) => {
   try {
     // 1. Marca exposição como expirada para este motoboy
     await pool.query(
-      "UPDATE exposicao_corrida SET expirada = true WHERE corrida_id = $1 AND motoboy_id = $2",
+      
       [corrida_id, motoboy_id]
     );
 
