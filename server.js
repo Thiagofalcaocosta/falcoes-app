@@ -395,7 +395,7 @@ const sql = `
   JOIN usuarios u ON c.cliente_id = u.id
   WHERE ec.motoboy_id = $1
     AND c.status = 'pendente'
-    AND ec.status_exposicao = 'ativo'
+    
     AND EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) < $2
     ${tipoClause}
   ORDER BY ec.data_exposicao ASC
