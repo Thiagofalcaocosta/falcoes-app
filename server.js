@@ -320,7 +320,7 @@ app.post('/cancelar-pedido', async (req, res) => {
 // ROTA ATUALIZADA: Agora mostra corridas distribuídas para o motoboy
 app.post('/corridas-pendentes', async (req, res) => {
   const { motoboy_id } = req.body;
-  const TEMPO_LIMITE_SEGUNDOS = 30;
+  const TEMPO_LIMITE_SEGUNDOS = 60;
 
   if (!motoboy_id) return res.status(400).json({ error: 'motoboy_id é obrigatório' });
 
@@ -400,7 +400,7 @@ const result = await pool.query(sql, params);
 // ROTA ATUALIZADA: Agora verifica tempo antes de aceitar
 app.post('/aceitar-corrida', async (req, res) => {
   const { corrida_id, motoboy_id } = req.body;
-  const TEMPO_LIMITE_SEGUNDOS = 30;
+  const TEMPO_LIMITE_SEGUNDOS = 60;
 
   if (!corrida_id || !motoboy_id) return res.status(400).json({ error: 'corrida_id e motoboy_id são obrigatórios' });
 
