@@ -922,11 +922,27 @@ function debugCorrida(corrida) {
 // Modifique a função renderizarLista para usar debug
 function renderizarLista(todasCorridas) {
     console.log("🔍 Corridas recebidas do backend:", todasCorridas);
-    
-    if (todasCorridas.length > 0) {
-        debugCorrida(todasCorridas[0]);
+
+    const lista = document.getElementById('lista-corridas');
+
+    // ✅ SE NÃO TEM CORRIDAS
+    if (!todasCorridas || todasCorridas.length === 0) {
+        lista.innerHTML = `
+            <p style="color:#888; text-align:center; margin-top:20px;">
+                Nenhuma corrida disponível no momento.
+            </p>
+        `;
+        return; // ⛔ PARA AQUI
     }
-    
+
+    // ✅ DEBUG DA PRIMEIRA CORRIDA
+    debugCorrida(todasCorridas[0]);
+
+    // ✅ LIMPA LISTA E RENDERIZA
+    lista.innerHTML = "";
+    todasCorridas.forEach(corrida => criarCardCorrida(corrida));
+
+
     // ... resto do código existente ...
 }
     </script>
