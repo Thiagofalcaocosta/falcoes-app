@@ -520,36 +520,27 @@ return res.json({
 
 app.post('/expirar-corrida', async (req, res) => {
   const { corrida_id, motoboy_id } = req.body;
-  const TEMPO_BLOQUEIO_MINUTOS = 10;
 
-  if (!corrida_id || !motoboy_id)
+  if (!corrida_id || !motoboy_id) {
     return res.status(400).json({ error: 'corrida_id e motoboy_id são obrigatórios' });
+  }
 
   try {
-    // Remove a exposição dessa corrida para este motoboy
+    // ✅ APENAS remove a exposição
     await pool.query(
-      'DELETE FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2',
+      "DELETE FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2",
       [corrida_id, motoboy_id]
     );
 
-    // Bloqueia o motoboy por 10 minutos
-    await pool.query(
-      "UPDATE usuarios SET bloqueado_ate = NOW() + interval '10 minutes' WHERE id = $1",
-      [motoboy_id]
-    );
+    console.log(`⏭️ Corrida ${corrida_id} expirou para motoboy ${motoboy_id}`);
 
-    console.log(
-      `[EXPIRADO] Motoboy ${motoboy_id} bloqueado por ${TEMPO_BLOQUEIO_MINUTOS} minutos.`
-    );
-
-    res.json({ success: true, bloqueado: true, tempo: TEMPO_BLOQUEIO_MINUTOS });
+    res.json({ success: true });
   } catch (err) {
-    console.error('Erro em /expirar-corrida:', err && err.stack ? err.stack : err);
-    res
-      .status(500)
-      .json({ success: false, message: 'Erro interno ao processar expiração.' });
+    console.error('Erro em /expirar-corrida:', err);
+    res.status(500).json({ success: false });
   }
 });
+
 
 app.post('/finalizar-corrida', async (req, res) => {
   try {
@@ -745,7 +736,91 @@ app.get('/admin/dashboard', async (req, res) => {
     console.error('Erro em /admin/dashboard:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Erro' });
   }
+}); 
+
+app.post('/aceitar-corrida', async (req, res) => {
+  const { corrida_id, motoboy_id } = req.body;
+
+  if (!corrida_id || !motoboy_id) {
+    return res.status(400).json({ error: 'corrida_id e motoboy_id são obrigatórios' });
+  }
+
+  try {
+    // 1️⃣ Tenta aceitar APENAS se ainda estiver pendente
+    const result = await pool.query(
+      `
+      UPDATE corridas
+      SET status = 'aceita',
+          motoboy_id = $2
+      WHERE id = $1
+        AND status = 'pendente'
+      RETURNING id
+      `,
+      [corrida_id, motoboy_id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.json({
+        success: false,
+        message: 'Corrida não está mais disponível',
+      });
+    }
+
+    // 2️⃣ Remove da fila (ninguém mais vê)
+    await pool.query(
+      "DELETE FROM exposicao_corrida WHERE corrida_id = $1",
+      [corrida_id]
+    );
+
+    console.log(`✅ Corrida ${corrida_id} aceita pelo motoboy ${motoboy_id}`);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erro ao aceitar corrida:', err);
+    res.status(500).json({ success: false });
+  }
 });
+app.post('/motoboy-cancelar-corrida', async (req, res) => {
+  const { corrida_id, motoboy_id, motivo } = req.body;
+
+  if (!corrida_id || !motoboy_id) {
+    return res.status(400).json({ error: 'Dados obrigatórios faltando' });
+  }
+
+  try {
+    // 1️⃣ Cancela a corrida
+    await pool.query(
+      `
+      UPDATE corridas
+      SET status = 'cancelada',
+          motivo_cancelamento = $3,
+          motoboy_id = NULL
+      WHERE id = $1 AND motoboy_id = $2
+      `,
+      [corrida_id, motoboy_id, motivo || 'Cancelada pelo motoboy']
+    );
+
+    // 2️⃣ Limpa fila
+    await pool.query(
+      "DELETE FROM exposicao_corrida WHERE corrida_id = $1",
+      [corrida_id]
+    );
+
+    // 3️⃣ ✅ AQUI SIM PUNE (leve)
+    await pool.query(
+      "UPDATE usuarios SET bloqueado_ate = NOW() + interval '2 minutes' WHERE id = $1",
+      [motoboy_id]
+    );
+
+    console.log(`⚠️ Motoboy ${motoboy_id} cancelou corrida ${corrida_id}`);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erro ao cancelar corrida pelo motoboy:', err);
+    res.status(500).json({ success: false });
+  }
+});
+
 
 app.get('/admin/pendentes', async (req, res) => {
   try {
