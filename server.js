@@ -287,9 +287,10 @@ async function monitorarExpiracoes() {
       } else {
         // 5. Se não há exposições expiradas, mas também não há exposições ATIVAS, o ciclo encerrou.
         const exposicoesAtivasCount = await pool.query(
-          'SELECT COUNT(id) AS total FROM exposicao_corrida WHERE corrida_id = $1',
-          [corridaId]
-        );
+  'SELECT COUNT(*) AS total FROM exposicao_corrida WHERE corrida_id = $1',
+  [corridaId]
+);
+
 
         if (parseInt(exposicoesAtivasCount.rows[0].total, 10) === 0) {
           console.log(`[MONITOR] Ciclo encerrado para Corrida ${corridaId}. Reiniciando.`);
