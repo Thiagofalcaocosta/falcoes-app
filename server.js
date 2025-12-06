@@ -165,55 +165,64 @@ initDB();
 // --- FUNÇÕES DE DISTRIBUIÇÃO CORRIGIDAS (ROUND-ROBIN) ---
 
 async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
-    try {
-        const categoriaFiltro =
-            tipoServico === 'moto-taxi' ? 'Passageiro' : tipoServico === 'entrega' ? 'Entregas' : null;
+  try {
+    let categoriaFiltro = null;
 
-        let filtroCategoria = '';
-        if (categoriaFiltro) {
-            filtroCategoria = `AND (u.categoria = '${categoriaFiltro}' OR u.categoria = 'Geral')`;
-        }
-        
-        // 1. ACHAR O PRÓXIMO MOTOBOY ELEGÍVEL (Round-Robin)
-        const motoboyElegivel = await pool.query(
-            `
-            SELECT u.id 
-            FROM usuarios u
-            LEFT JOIN exposicao_corrida ec ON ec.motoboy_id = u.id AND ec.corrida_id = $1
-            WHERE u.tipo = 'motoboy'
-              AND u.aprovado = true
-              AND u.online_ate > NOW()
-              AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW())
-              AND ec.motoboy_id IS NULL  -- Garante que ele nunca recebeu a oferta no ciclo atual
-              ${filtroCategoria}
-            ORDER BY u.id ASC 
-            LIMIT 1
-            `,
-            [corridaId]
-        );
+    if (tipoServico === 'moto-taxi') categoriaFiltro = 'Passageiro';
+    if (tipoServico === 'entrega') categoriaFiltro = 'Entregas';
 
-        if (motoboyElegivel.rows.length === 0) {
-            console.log(`⚠️ Nenhum motoboy elegível para corrida ${corridaId} neste ciclo.`);
-            return;
-        }
+    let sql = `
+      SELECT u.id
+      FROM usuarios u
+      LEFT JOIN exposicao_corrida ec
+        ON ec.motoboy_id = u.id
+       AND ec.corrida_id = $1
+      WHERE u.tipo = 'motoboy'
+        AND u.aprovado = true
+        AND u.online_ate > NOW()
+        AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW())
+        AND ec.motoboy_id IS NULL
+    `;
 
-        const motoboyId = motoboyElegivel.rows[0].id;
-        
-        // 2. REGISTRAR EXPOSIÇÃO APENAS PARA O PRÓXIMO
-        await pool.query(
-            `
-            INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo, data_exposicao)
-            VALUES ($1, $2, 1, CURRENT_TIMESTAMP)
-            `,
-            [corridaId, motoboyId]
-        );
-        
-        console.log(`📢 Corrida ${corridaId} distribuída para o Motoboy ${motoboyId}.`);
+    const params = [corridaId];
 
-    } catch (err) {
-        console.error('Erro ao distribuir corrida (Round-Robin):', err && err.stack ? err.stack : err);
-    }
+    if (categoriaFiltro) {
+      sql += ` AND (u.categoria = $2 OR u.categoria = 'Geral')`;
+      params.push(categoriaFiltro);
+    }
+
+    sql += `
+      ORDER BY u.id ASC
+      LIMIT 1
+    `;
+
+    const result = await pool.query(sql, params);
+
+    if (result.rows.length === 0) {
+      console.log(`⚠️ Nenhum motoboy elegível para corrida ${corridaId}`);
+      return;
+    }
+
+    const motoboyId = result.rows[0].id;
+
+    await pool.query(
+      `
+      INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo)
+      VALUES ($1, $2, 1)
+      ON CONFLICT (corrida_id, motoboy_id) DO NOTHING
+      `,
+      [corridaId, motoboyId]
+    );
+
+    console.log(`📢 Corrida ${corridaId} enviada para Motoboy ${motoboyId}`);
+  } catch (err) {
+    console.error(
+      'Erro ao distribuir corrida (Round-Robin):',
+      err && err.stack ? err.stack : err
+    );
+  }
 }
+
 
 async function reiniciarCicloCorrida(corridaId) {
   try {
