@@ -836,6 +836,7 @@
          *  CANCELAMENTO COM JUSTIFICATIVA
          ***********************/
         function cancelarCorridaMotoboy() {
+            console.log('ID CORRIDA ATUAL:', idCorridaAtual);
             if (!idCorridaAtual) return;
             document.getElementById('modal-cancelamento-motoboy').style.display = 'flex';
             document.getElementById('justificativa-motoboy').value = '';

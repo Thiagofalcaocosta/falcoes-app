@@ -285,6 +285,10 @@ async function monitorarExpiracoes() {
           [corridaId, motoboyExpiradoId]
         );
 
+        // 🔁 FORÇA IR PARA O PRÓXIMO
+        await distribuirCorridaParaMotoboys(corridaId, tipoServico);
+
+
         console.log(
           `[MONITOR] Exposição removida para motoboy ${motoboyExpiradoId}.`
         );
