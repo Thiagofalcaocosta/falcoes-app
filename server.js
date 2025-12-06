@@ -537,35 +537,65 @@ app.get('/mensagens/:id', async (req, res) => {
   try { const result = await pool.query("SELECT * FROM mensagens WHERE corrida_id = $1 ORDER BY data_hora ASC", [req.params.id]); res.json(result.rows); } catch (err) { console.error('Erro em /mensagens/:id:', err && err.stack ? err.stack : err); res.status(500).json({ success: false }); }
 });
 
-// --- ROTA DE STATUS ONLINE PARA MOTOBOYS ---
+// --- ROTA DE STATUS ONLINE PARA MOTOBOYS (VERSÃO CORRIGIDA) ---
 app.post('/motoboy/status-online', async (req, res) => {
   const { motoboy_id, online, latitude, longitude } = req.body;
 
-  if (!motoboy_id || typeof online === 'undefined') return res.status(400).json({ error: 'motoboy_id e online são obrigatórios' });
+  // validações básicas
+  if (!motoboy_id || typeof online === 'undefined') {
+    return res.status(400).json({ success: false, message: 'motoboy_id e online são obrigatórios.' });
+  }
+
+  // tentar converter id para número
+  const idNum = Number(motoboy_id);
+  if (!Number.isFinite(idNum)) {
+    return res.status(400).json({ success: false, message: 'motoboy_id inválido.' });
+  }
 
   try {
-    if (online) {
-      await pool.query(
-        `UPDATE usuarios SET 
-                    online_ate = NOW() + interval '60 seconds',
-                    latitude = $2,
-                    longitude = $3
-                 WHERE id = $1`,
-        [motoboy_id, latitude, longitude]
-      );
-      console.log(`✅ Motoboy ${motoboy_id} agora está ONLINE`);
-    } else {
-      await pool.query("UPDATE usuarios SET online_ate = NULL WHERE id = $1", [motoboy_id]);
-      console.log(`🔴 Motoboy ${motoboy_id} agora está OFFLINE`);
-    }
+    // converte latitude/longitude quando possível
+    const lat = latitude === null || latitude === undefined ? null : Number(latitude);
+    const lng = longitude === null || longitude === undefined ? null : Number(longitude);
+    const hasValidCoords = Number.isFinite(lat) && Number.isFinite(lng);
 
-    res.json({ success: true, status: online ? 'ONLINE' : 'OFFLINE' });
+    if (online) {
+      if (hasValidCoords) {
+        // atualiza online + coords (somente se coords válidas)
+        await pool.query(
+          `UPDATE usuarios SET 
+             online_ate = NOW() + interval '60 seconds',
+             latitude = $2,
+             longitude = $3
+           WHERE id = $1`,
+          [idNum, lat, lng]
+        );
+        console.log(`✅ Motoboy ${idNum} ONLINE (coords atualizadas: ${lat}, ${lng})`);
+      } else {
+        // atualiza apenas o online_ate — NÃO sobrescreve latitude/longitude com null
+        await pool.query(
+          `UPDATE usuarios SET 
+             online_ate = NOW() + interval '60 seconds'
+           WHERE id = $1`,
+          [idNum]
+        );
+        console.log(`✅ Motoboy ${idNum} ONLINE (sem coords ou coords inválidas)`);
+      }
+
+      return res.json({ success: true, status: 'ONLINE' });
+    } else {
+      // OFFLINE: remove online_ate (ou seta NULL)
+      await pool.query("UPDATE usuarios SET online_ate = NULL WHERE id = $1", [idNum]);
+      console.log(`🔴 Motoboy ${idNum} OFFLINE`);
+      return res.json({ success: true, status: 'OFFLINE' });
+    }
 
   } catch (err) {
     console.error('Erro em /motoboy/status-online:', err && err.stack ? err.stack : err);
-    res.status(500).json({ success: false, message: 'Erro ao atualizar status.' });
+    // devolve mensagem curta para o cliente
+    return res.status(500).json({ success: false, message: 'Erro ao atualizar status.' });
   }
 });
+
 
 // --- ROTAS DO ADMIN ---
 app.get('/admin/dashboard', async (req, res) => {
