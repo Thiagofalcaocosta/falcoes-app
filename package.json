@@ -2,9 +2,9 @@
   "name": "sistema-moto-taxi",
   "version": "1.0.0",
   "description": "Sistema de Moto Táxi e Entregas",
-  "main": "server.js",
+  "main": "server.cjs",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.cjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
