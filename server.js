@@ -160,41 +160,52 @@ CREATE TABLE IF NOT EXISTS exposicao_corrida (
 };
 initDB();
 
-// --- FUNÇÕES DE DISTRIBUIÇÃO ---
-
-// --- FUNÇÕES DE DISTRIBUIÇÃO CORRIGIDAS (ROUND-ROBIN) ---
-
 async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
   try {
     let categoriaFiltro = null;
 
-    if (tipoServico === 'moto-taxi') categoriaFiltro = 'Passageiro';
-    if (tipoServico === 'entrega') categoriaFiltro = 'Entregas';
-
-    let sql = `
-      SELECT u.id
-      FROM usuarios u
-      LEFT JOIN exposicao_corrida ec
-        ON ec.motoboy_id = u.id
-       AND ec.corrida_id = $1
-      WHERE u.tipo = 'motoboy'
-        AND u.aprovado = true
-        AND u.online_ate > NOW()
-        AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW())
-        AND ec.motoboy_id IS NULL
-    `;
-
-    const params = [corridaId];
-
-    if (categoriaFiltro) {
-      sql += ` AND (u.categoria = $2 OR u.categoria = 'Geral')`;
-      params.push(categoriaFiltro);
+    if (tipoServico === 'moto-taxi') {
+      categoriaFiltro = 'Passageiro';
+    } else if (tipoServico === 'entrega') {
+      categoriaFiltro = 'Entregas';
     }
 
-    sql += `
-      ORDER BY u.id ASC
-      LIMIT 1
-    `;
+    let sql;
+    let params;
+
+    if (categoriaFiltro) {
+      // Com filtro de categoria (Passageiro / Entregas)
+      sql =
+        'SELECT u.id ' +
+        'FROM usuarios u ' +
+        'LEFT JOIN exposicao_corrida ec ON ec.motoboy_id = u.id AND ec.corrida_id = $1 ' +
+        "WHERE u.tipo = 'motoboy' " +
+        'AND u.aprovado = true ' +
+        'AND u.online_ate > NOW() ' +
+        'AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW()) ' +
+        'AND ec.motoboy_id IS NULL ' +
+        'AND (u.categoria = $2 OR u.categoria = \'Geral\') ' +
+        'ORDER BY u.id ASC ' +
+        'LIMIT 1';
+      params = [corridaId, categoriaFiltro];
+    } else {
+      // Sem filtro de categoria (motoboy "Geral")
+      sql =
+        'SELECT u.id ' +
+        'FROM usuarios u ' +
+        'LEFT JOIN exposicao_corrida ec ON ec.motoboy_id = u.id AND ec.corrida_id = $1 ' +
+        "WHERE u.tipo = 'motoboy' " +
+        'AND u.aprovado = true ' +
+        'AND u.online_ate > NOW() ' +
+        'AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW()) ' +
+        'AND ec.motoboy_id IS NULL ' +
+        'ORDER BY u.id ASC ' +
+        'LIMIT 1';
+      params = [corridaId];
+    }
+
+    // LOG pra ver exatamente a query se ainda der erro
+    console.log('SQL distribuição:', sql, 'PARAMS:', params);
 
     const result = await pool.query(sql, params);
 
@@ -206,11 +217,9 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
     const motoboyId = result.rows[0].id;
 
     await pool.query(
-      `
-      INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo)
-      VALUES ($1, $2, 1)
-      ON CONFLICT (corrida_id, motoboy_id) DO NOTHING
-      `,
+      'INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo) ' +
+      'VALUES ($1, $2, 1) ' +
+      'ON CONFLICT (corrida_id, motoboy_id) DO NOTHING',
       [corridaId, motoboyId]
     );
 
@@ -220,34 +229,6 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
       'Erro ao distribuir corrida (Round-Robin):',
       err && err.stack ? err.stack : err
     );
-  }
-}
-
-
-async function reiniciarCicloCorrida(corridaId) {
-  try {
-    const corridaCheck = await pool.query(
-      'SELECT tipo_servico FROM corridas WHERE id = $1 AND status = \'pendente\'',
-      [corridaId]
-    );
-
-    if (corridaCheck.rows.length === 0) {
-      return;
-    }
-
-    console.log(`🔄 Reiniciando ciclo para corrida ${corridaId}`);
-
-    await pool.query(
-      `
-      UPDATE exposicao_corrida
-      SET ciclo = ciclo + 1,
-          data_exposicao = CURRENT_TIMESTAMP
-      WHERE corrida_id = $1
-    `,
-      [corridaId]
-    );
-  } catch (err) {
-    console.error('Erro ao reiniciar ciclo:', err && err.stack ? err.stack : err);
   }
 }
 
