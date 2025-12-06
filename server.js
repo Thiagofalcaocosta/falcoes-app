@@ -171,11 +171,10 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
 
         let filtroCategoria = '';
         if (categoriaFiltro) {
-            filtroCategoria = `AND (categoria = '${categoriaFiltro}' OR categoria = 'Geral')`;
+            filtroCategoria = `AND (u.categoria = '${categoriaFiltro}' OR u.categoria = 'Geral')`;
         }
         
-        // 1. ACHAR O PRÓXIMO MOTOBOY ELEGÍVEL
-        //    Filtra por online, aprovado, não bloqueado e que NUNCA viu essa corrida (não está na exposicao_corrida).
+        // 1. ACHAR O PRÓXIMO MOTOBOY ELEGÍVEL (Round-Robin)
         const motoboyElegivel = await pool.query(
             `
             SELECT u.id 
@@ -187,7 +186,7 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
               AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW())
               AND ec.motoboy_id IS NULL  -- Garante que ele nunca recebeu a oferta no ciclo atual
               ${filtroCategoria}
-            ORDER BY u.id ASC -- Usa ID como Round-Robin simples. Para produção, use localização.
+            ORDER BY u.id ASC 
             LIMIT 1
             `,
             [corridaId]
@@ -195,8 +194,6 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
 
         if (motoboyElegivel.rows.length === 0) {
             console.log(`⚠️ Nenhum motoboy elegível para corrida ${corridaId} neste ciclo.`);
-            // Se não houver ninguém elegível, o monitoramento cíclico se encarrega
-            // de reiniciar o ciclo quando todos tiverem expirado o tempo.
             return;
         }
 
@@ -205,8 +202,8 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
         // 2. REGISTRAR EXPOSIÇÃO APENAS PARA O PRÓXIMO
         await pool.query(
             `
-            INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo)
-            VALUES ($1, $2, 1)
+            INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo, data_exposicao)
+            VALUES ($1, $2, 1, CURRENT_TIMESTAMP)
             `,
             [corridaId, motoboyId]
         );
@@ -246,7 +243,6 @@ async function reiniciarCicloCorrida(corridaId) {
 }
 
 // --- FUNÇÕES DE MONITORAMENTO CÍCLICO (CORRIGIDO) ---
-
 async function monitorarExpiracoes() {
     try {
         // 1. Encontra corridas PENDENTES no BD
@@ -258,13 +254,13 @@ async function monitorarExpiracoes() {
             const corridaId = corrida.id;
             const tipoServico = corrida.tipo_servico;
 
-            // 2. Tenta encontrar UMA exposição expirada para avançar a fila
+            // 2. Tenta encontrar UMA exposição expirada (>= 60s)
             const exposicaoExpirada = await pool.query(
                 `
                 SELECT corrida_id, motoboy_id
                 FROM exposicao_corrida
                 WHERE corrida_id = $1
-                  AND EXTRACT(EPOCH FROM (NOW() - data_exposicao)) >= 60 -- Tempo de 60s expirou
+                  AND EXTRACT(EPOCH FROM (NOW() - data_exposicao)) >= 60 
                 ORDER BY data_exposicao ASC
                 LIMIT 1
                 `,
@@ -286,8 +282,9 @@ async function monitorarExpiracoes() {
                 await distribuirCorridaParaMotoboys(corridaId, tipoServico);
 
             } else {
-                // 5. Se não há exposições expiradas, mas também não há exposições ATIVAS, o ciclo encerrou.
-                const exposicoesAtivasCount = await pool.query('SELECT COUNT(id) FROM exposicao_corrida WHERE corrida_id = $1', [corridaId]);
+                // 5. Checa se o ciclo encerrou (todos já viram a oferta e expirou).
+                // CORREÇÃO FINAL DA SINTAXE SQL: Usando COUNT(id)
+                const exposicoesAtivasCount = await pool.query('SELECT COUNT(id) AS count FROM exposicao_corrida WHERE corrida_id = $1', [corridaId]);
                 
                 if (parseInt(exposicoesAtivasCount.rows[0].count) === 0) {
                     console.log(`[MONITOR] Ciclo encerrado para Corrida ${corridaId}. Reiniciando.`);
@@ -299,10 +296,10 @@ async function monitorarExpiracoes() {
             }
         }
     } catch (err) {
-        // O erro de sintaxe SQL na consulta COUNT(*) foi corrigido para COUNT(id).
         console.error('❌ ERRO NO MONITORAMENTO CÍCLICO:', err && err.stack ? err.stack : err);
     }
 }
+
 
 // --- ROTAS DO APP ---
 
