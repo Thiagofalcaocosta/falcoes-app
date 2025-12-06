@@ -237,6 +237,49 @@ async function reiniciarCicloCorrida(corridaId) {
     console.error('Erro ao reiniciar ciclo:', err && err.stack ? err.stack : err);
   }
 }
+// --- FUNÇÕES DE MONITORAMENTO CÍCLICO ---
+
+async function monitorarExpiracoes() {
+    try {
+        // 1. Encontra corridas pendentes no BD
+        const corridasPendentes = await pool.query(
+            "SELECT id, tipo_servico FROM corridas WHERE status = 'pendente'"
+        );
+
+        for (const corrida of corridasPendentes.rows) {
+            const corridaId = corrida.id;
+            
+            // 2. Verifica se a exposição acabou para TODOS os motoboys
+            //    Isso é feito vendo se todas as exposições já passaram de 60 segundos
+            //    OU se a tabela exposicao_corrida estiver vazia para essa corrida (todos expiraram/recusaram)
+
+            const exposicoesAtivas = await pool.query(
+                `
+                SELECT COUNT(*) FROM exposicao_corrida
+                WHERE corrida_id = $1
+                  AND EXTRACT(EPOCH FROM (NOW() - data_exposicao)) < 60
+                `,
+                [corridaId]
+            );
+
+            // Se NENHUM motoboy estiver vendo a corrida (contador <= 0 para todos)
+            if (parseInt(exposicoesAtivas.rows[0].count) === 0) {
+                
+                // 3. Se a corrida nunca foi aceita, reinicia o ciclo
+                console.log(`⏳ Ciclo de exposição esgotado para Corrida ${corridaId}. Redistribuindo.`);
+                
+                // Re-insere a corrida para TODOS os motoboys online elegíveis que não estão bloqueados
+                await pool.query('DELETE FROM exposicao_corrida WHERE corrida_id = $1', [corridaId]);
+                await distribuirCorridaParaMotoboys(corridaId, corrida.tipo_servico);
+
+                // Incrementa o ciclo de exposição para quem foi atingido.
+                await reiniciarCicloCorrida(corridaId); // Esta função apenas incrementa o ciclo visualmente.
+            }
+        }
+    } catch (err) {
+        console.error('Erro no monitoramento cíclico:', err && err.stack ? err.stack : err);
+    }
+}
 
 // --- ROTAS DO APP ---
 
@@ -871,3 +914,8 @@ app.get('/health', async (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
+// --- INICIALIZAÇÃO DO MONITORAMENTO ---
+
+// Inicia o monitoramento de expirações a cada 5 segundos
+// Isso garante que corridas expiradas para todos sejam redistribuídas.
+setInterval(monitorarExpiracoes, 5000);
