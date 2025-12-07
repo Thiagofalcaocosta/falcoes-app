@@ -348,7 +348,12 @@ if (!usuario || !usuario.id) {
     }
 
     // AGORA SIM MOSTRA O NOME E CATEGORIA
-    document.getElementById('msg-ola').innerText = "OLÁ, " + usuario.nome.split(' ')[0].toUpperCase();
+    const msgOla = document.getElementById('msg-ola');
+    if (msgOla && usuario.nome) { // <--- CORREÇÃO DE ERRO
+        msgOla.innerText = "OLÁ, " + usuario.nome.split(' ')[0].toUpperCase();
+    } else if (msgOla) {
+        msgOla.innerText = "OLÁ, PILOTO"; // Mantém o texto se o nome não vier
+    }
     
     // VERIFICA CATEGORIA CORRETAMENTE
     const categoriaExibicao = usuario.categoria || "GERAL";
@@ -420,7 +425,7 @@ function mostrarCorridaEmAndamento() {
             clearInterval(onlineInterval);
         }
         localStorage.clear();
-        window.location.href = 'index.html';
+        window.location.href = 'index.index';
     }
 
     // INICIALIZA STATUS ONLINE AO CARREGAR A PÁGINA
@@ -515,7 +520,7 @@ function mostrarCorridaEmAndamento() {
         document.querySelector('#modal-erro .btn-modal').style.display = 'block';
     }
 
-    // 🌟 FUNÇÃO ADICIONADA PARA ABRIR O MODAL DE ACEITE 🌟
+    // FUNÇÃO ADICIONADA PARA ABRIR O MODAL DE ACEITE
     function abrirModalAceitar(id) {
         idCorridaSelecionada = id;
         document.getElementById('modal-confirmacao').style.display = 'flex';
@@ -700,7 +705,7 @@ function mostrarCorridaEmAndamento() {
         console.log('📝 idCorridaSelecionada será definido como:', id);
         idCorridaSelecionada = id;
         
-        // 🌟 CHAMA A FUNÇÃO CORRETA AGORA QUE FOI DEFINIDA
+        // CHAMA A FUNÇÃO CORRETA
         abrirModalAceitar(id);
     } catch (err) {
         console.error("Erro ao aceitar corrida:", err);
@@ -708,7 +713,7 @@ function mostrarCorridaEmAndamento() {
     }
 }
 
-// 2. FUNÇÃO CONFIRMAR ACEITE (já existia no código, mas aqui com pequenas correções)
+// FUNÇÃO CONFIRMAR ACEITE
 async function confirmarAceite() {
     if (!idCorridaSelecionada) {
         alert('Nenhuma corrida selecionada.');
@@ -755,7 +760,7 @@ async function confirmarAceite() {
     }
 }
 
-// 3. FUNÇÃO FINALIZAR CORRIDA (agora definida)
+// FUNÇÃO FINALIZAR CORRIDA
 async function finalizarCorrida() {
     console.log('ID Corrida Atual para finalizar:', idCorridaAtual);
     
