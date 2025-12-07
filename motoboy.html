@@ -686,14 +686,20 @@ function mostrarCorridaEmAndamento() {
         }
 
         function preencherDadosAtiva(c) {
-            idCorridaAtual = c.corrida_id; // Usa corrida_id do backend, que tem o nome correto.
-            document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
-            document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
-            document.getElementById('ativa-cliente').innerText = c.nome_cliente;
-            document.getElementById('ativa-fone').innerText = c.telefone_cliente;
-            document.getElementById('ativa-origem').innerText = c.origem;
-            document.getElementById('ativa-destino').innerText = c.destino;
-        }
+    // DEBUG: Verifica o que está vindo do backend
+    console.log('📦 DADOS DA CORRIDA ATIVA RECEBIDOS:', c);
+    
+    // TENTE AMBAS AS POSSIBILIDADES DE NOME DE CAMPO
+    idCorridaAtual = c.corrida_id || c.id;
+    console.log('🔑 idCorridaAtual definido como:', idCorridaAtual);
+    
+    document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
+    document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
+    document.getElementById('ativa-cliente').innerText = c.nome_cliente;
+    document.getElementById('ativa-fone').innerText = c.telefone_cliente;
+    document.getElementById('ativa-origem').innerText = c.origem;
+    document.getElementById('ativa-destino').innerText = c.destino;
+}
 
         /***********************
          *  CRIAÇÃO E RENDERIZAÇÃO
@@ -781,34 +787,36 @@ function mostrarCorridaEmAndamento() {
         /***********************
          *  ACEITAR / CONFIRMAR / FINALIZAR
          ***********************/
-        function abrirModalAceitar(id) {
-            idCorridaSelecionada = id;
-            document.getElementById('modal-confirmacao').style.display = 'flex';
-        }
-
         async function aceitarCorrida(id) { 
-    try {
-        // Garante que está online
-        await enviarStatusOnline(true);
-        
-        // Verifica se ainda pode aceitar (não expirou)
-        const cardElement = document.getElementById(`card-${id}`);
-        if (!cardElement) {
-            mostrarErro("Corrida não disponível mais.");
-            return;
-        }
-        
-        abrirModalAceitar(id);
-    } catch (err) {
-        console.error("Erro ao aceitar corrida:", err);
-        mostrarErro("Erro ao processar. Tente novamente.");
-    }
+    try {
+        console.log('🎯 CLICOU EM ACEITAR CORRIDA ID:', id);
+        
+        // Garante que está online
+        await enviarStatusOnline(true);
+        
+        // Verifica se ainda pode aceitar (não expirou)
+        const cardElement = document.getElementById(`card-${id}`);
+        if (!cardElement) {
+            mostrarErro("Corrida não disponível mais.");
+            return;
+        }
+        
+        // DEBUG: Mostra o ID antes de abrir o modal
+        console.log('📝 idCorridaSelecionada será definido como:', id);
+        idCorridaSelecionada = id;
+        
+        abrirModalAceitar(id);
+    } catch (err) {
+        console.error("Erro ao aceitar corrida:", err);
+        mostrarErro("Erro ao processar. Tente novamente.");
+    }
 }
 
 async function confirmarAceitarCorrida() {
     if (!idCorridaSelecionada) {
         alert('Nenhuma corrida selecionada.');
         return;
+        
     }
 
     try {
