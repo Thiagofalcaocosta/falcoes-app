@@ -453,7 +453,13 @@
          *  VARIÁVEIS GLOBAIS
          ***********************/
         const usuario = JSON.parse(localStorage.getItem('usuario'));
-        
+        // 6. ADICIONE ESTE DEBUG
+console.log('Usuário logado:', usuario);
+if (!usuario || !usuario.id) {
+    console.error('Usuário não tem ID definido');
+    window.location.href = 'index.html';
+}
+
         // VERIFICAÇÃO SIMPLES E CORRETA
         if (!usuario || usuario.tipo !== 'motoboy') {
             window.location.href = 'index.html';
@@ -471,63 +477,20 @@
         let idCorridaSelecionada = null;
         let idCorridaAtual = null;
         let onlineInterval = null;
-async function confirmarAceite() {
-    if (!idCorridaSelecionada) {
-        alert('Nenhuma corrida selecionada.');
-        return;
-    }
 
-    // Descobrir o ID do motoboy logado (tenta pegar de usuario OU usuarioLogado)
-    const motoboyId =
-        (window.usuario && window.usuario.id) ||
-        (window.usuarioLogado && window.usuarioLogado.id);
-
-    if (!motoboyId) {
-        alert('Erro: não consegui identificar o motoboy logado.');
-        console.error('Motoboy não encontrado em usuario/usuarioLogado');
-        return;
-    }
-
-    try {
-        console.log('Confirmando aceite da corrida:', idCorridaSelecionada, 'motoboy:', motoboyId);
-
-        const res = await fetch('/aceitar-corrida', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                corrida_id: idCorridaSelecionada,
-                motoboy_id: motoboyId,
-            }),
+function mostrarCorridaEmAndamento() {
+    // Alterna para a tela de corrida ativa
+    mostrarTela('ativa');
+    
+    // Busca os dados atualizados da corrida
+    fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.tem_corrida) {
+                preencherDadosAtiva(data.corrida);
+            }
         });
-
-        const data = await res.json();
-
-        if (!data.success) {
-            alert(data.message || 'Não foi possível aceitar a corrida.');
-            console.warn('Resposta /aceitar-corrida:', data);
-            return;
-        }
-
-        // 🔥 AGORA MARCAMOS QUAL É A CORRIDA ATUAL
-        idCorridaAtual = idCorridaSelecionada;
-        console.log('ID CORRIDA ATUAL definido como:', idCorridaAtual);
-
-        // Fecha o modal de confirmação
-        document.getElementById('modal-confirmacao').style.display = 'none';
-
-        // Se tiver alguma função para atualizar a UI de corrida em andamento, chame aqui
-        if (typeof mostrarCorridaEmAndamento === 'function') {
-            mostrarCorridaEmAndamento();
-        }
-
-    } catch (err) {
-        console.error('Erro ao confirmar aceite da corrida:', err);
-        alert('Erro ao aceitar corrida.');
-    }
 }
-
 
         // Armazena os IDs dos setIntervals para os contadores
         let intervalosContadores = {};
@@ -887,77 +850,6 @@ async function confirmarAceitarCorrida() {
     }
 }
 
-
-        async function confirmarAceite() {
-            if (!idCorridaSelecionada) return;
-            const btn = document.getElementById('btn-confirma-final');
-            btn.innerText = "..."; btn.disabled = true;
-            try {
-                const response = await fetch(`${MEU_IP}/aceitar-corrida`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ corrida_id: idCorridaSelecionada, motoboy_id: usuario.id })
-                });
-                const result = await response.json();
-                fecharModal('modal-confirmacao'); btn.innerText = "CONFIRMAR"; btn.disabled = false;
-                if (result.success) {
-    limparContadores();
-    document.getElementById('modal-sucesso').style.display = 'flex';
-    notificacaoAtiva = false;
-    corridaSendoExibida = null; // Limpa o estado
-    
-    // Remove o card específico que foi aceito
-    const cardElement = document.getElementById(`card-${idCorridaSelecionada}`);
-    if (cardElement) cardElement.remove();
-    
-    setTimeout(() => {
-        verificarEstado();
-        document.getElementById('modal-sucesso').style.display = 'none';
-    }, 2500);
-} else { 
-    mostrarErro("Erro: " + (result.message || "Não foi possível aceitar a corrida.")); 
-}
-            } catch (err) { 
-                fecharModal('modal-confirmacao'); 
-                btn.innerText = "CONFIRMAR"; 
-                btn.disabled = false; 
-                mostrarErro("Erro conexão."); 
-            }
-        }
-
-        async function finalizarCorrida() {
-    console.log('ID CORRIDA ATUAL (finalizar):', idCorridaAtual);
-
-    if (!idCorridaAtual) {
-        alert('Nenhuma corrida ativa para finalizar.');
-        return;
-    }
-
-    if (!confirm("Finalizar corrida?")) return;
-
-    try {
-        const res = await fetch(`${MEU_IP}/finalizar-corrida`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ corrida_id: idCorridaAtual })
-        });
-
-        const data = await res.json().catch(() => ({}));
-
-        if (res.ok && data.success !== false) {
-            // limpa corrida atual
-            idCorridaAtual = null;
-            verificarEstado && verificarEstado();
-        } else {
-            alert(data.message || 'Erro ao finalizar corrida.');
-        }
-
-    } catch (err) {
-        console.error('Erro ao finalizar corrida:', err);
-        alert("Erro ao finalizar.");
-    }
-}
-
-
         /***********************
          *  CANCELAMENTO COM JUSTIFICATIVA
          ***********************/
@@ -968,56 +860,6 @@ async function confirmarAceitarCorrida() {
             document.getElementById('justificativa-motoboy').value = '';
             document.getElementById('justificativa-motoboy').focus();
         }
-
-async function confirmarCancelamentoMotoboy() {
-    if (!idCorridaAtual) {
-        alert('Nenhuma corrida ativa para cancelar.');
-        return;
-    }
-
-    const motivo = document.getElementById('justificativa-motoboy').value.trim();
-
-    if (!motivo) {
-        alert('Por favor, informe o motivo do cancelamento.');
-        return;
-    }
-
-    try {
-        const res = await fetch('/motoboy-cancelar-corrida', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                corrida_id: idCorridaAtual,          // ID da corrida atual
-                motoboy_id: usuarioLogado.id,        // ID do motoboy logado
-                motivo: motivo                       // texto do motivo
-            }),
-        });
-
-        const data = await res.json();
-
-        if (!data.success) {
-            alert(data.message || 'Erro ao cancelar corrida.');
-            return;
-        }
-
-        // Esconde o modal
-        document.getElementById('modal-cancelamento-motoboy').style.display = 'none';
-
-        // Limpa info da corrida atual na tela
-        idCorridaAtual = null;
-        if (typeof limparTelaCorrida === 'function') {
-            limparTelaCorrida();
-        }
-
-        alert('Corrida cancelada. Você ficará alguns minutos sem receber novas corridas.');
-
-    } catch (err) {
-        console.error('Erro ao cancelar corrida pelo motoboy:', err);
-        alert('Erro de comunicação com o servidor.');
-    }
-}
 
 
         async function confirmarCancelamentoMotoboy() {
@@ -1084,6 +926,155 @@ async function confirmarCancelamentoMotoboy() {
             // Polling para 5s
             setInterval(verificarEstado, 5000);
         }, 1000);
+// 1. ADICIONE ESTA FUNÇÃO NOVA (antes não existia)
+function mostrarCorridaEmAndamento() {
+    // Alterna para a tela de corrida ativa
+    mostrarTela('ativa');
+    
+    // Busca os dados atualizados da corrida
+    fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.tem_corrida) {
+                preencherDadosAtiva(data.corrida);
+            }
+        });
+}
+// 2. SUBSTITUA A FUNÇÃO confirmarAceite() com esta versão
+async function confirmarAceite() {
+    if (!idCorridaSelecionada) {
+        alert('Nenhuma corrida selecionada.');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${MEU_IP}/aceitar-corrida`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                corrida_id: idCorridaSelecionada,
+                motoboy_id: usuario.id
+            })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+            alert(data.message || 'Não foi possível aceitar a corrida.');
+            return;
+        }
+
+        // DEFINE A CORRIDA ATUAL CORRETAMENTE
+        idCorridaAtual = idCorridaSelecionada;
+        console.log('Corrida atual definida:', idCorridaAtual);
+
+        // Fecha o modal de confirmação
+        document.getElementById('modal-confirmacao').style.display = 'none';
+
+        // Mostra a corrida em andamento
+        mostrarCorridaEmAndamento();
+
+    } catch (err) {
+        console.error('Erro ao aceitar corrida:', err);
+        alert('Erro ao aceitar corrida.');
+    }
+}
+// 3. SUBSTITUA A FUNÇÃO finalizarCorrida() com esta versão
+async function finalizarCorrida() {
+    console.log('ID Corrida Atual para finalizar:', idCorridaAtual);
+    
+    if (!idCorridaAtual) {
+        alert('Nenhuma corrida ativa para finalizar.');
+        return;
+    }
+
+    if (!confirm("Tem certeza que deseja finalizar esta corrida?")) return;
+
+    try {
+        const res = await fetch(`${MEU_IP}/finalizar-corrida`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                corrida_id: idCorridaAtual,
+                motoboy_id: usuario.id 
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert('Corrida finalizada com sucesso!');
+            
+            // Limpa a corrida atual
+            idCorridaAtual = null;
+            
+            // Volta para a tela de listagem
+            verificarEstado();
+            
+        } else {
+            alert(data.message || 'Erro ao finalizar corrida.');
+        }
+
+    } catch (err) {
+        console.error('Erro ao finalizar corrida:', err);
+        alert('Erro de conexão. Tente novamente.');
+    }
+}
+
+// 4. SUBSTITUA A FUNÇÃO confirmarCancelamentoMotoboy() com esta versão
+async function confirmarCancelamentoMotoboy() {
+    const motivo = document.getElementById('justificativa-motoboy').value.trim();
+
+    if (motivo.length < 5) {
+        mostrarErro("A justificativa deve ter pelo menos 5 caracteres.");
+        return;
+    }
+
+    try {
+        // Use o endpoint correto para cancelamento pelo motoboy
+        const res = await fetch(`${MEU_IP}/motoboy-cancelar-corrida`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                corrida_id: idCorridaAtual,
+                motoboy_id: usuario.id,
+                motivo: motivo
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert('Corrida cancelada. O cliente será notificado.');
+            
+            // Limpa a corrida atual
+            idCorridaAtual = null;
+            
+            // Fecha o modal
+            fecharModal('modal-cancelamento-motoboy');
+            
+            // Volta para a tela de listagem
+            verificarEstado();
+            
+        } else {
+            mostrarErro(data.message || 'Erro ao cancelar corrida.');
+        }
+
+    } catch (err) {
+        console.error('Erro ao cancelar corrida:', err);
+        mostrarErro('Erro de conexão. Tente novamente.');
+    }
+}
+
+// 5. ADICIONE ESTA FUNÇÃO SE NÃO EXISTIR
+function limparTelaCorrida() {
+    document.getElementById('ativa-tipo').innerText = '--';
+    document.getElementById('ativa-valor').innerText = 'R$ 0,00';
+    document.getElementById('ativa-cliente').innerText = '--';
+    document.getElementById('ativa-fone').innerText = '--';
+    document.getElementById('ativa-origem').innerText = '--';
+    document.getElementById('ativa-destino').innerText = '--';
+}
 
     </script>
 </body>
