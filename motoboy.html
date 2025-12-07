@@ -477,7 +477,30 @@ if (!usuario || !usuario.id) {
         let idCorridaSelecionada = null;
         let idCorridaAtual = null;
         let onlineInterval = null;
+console.log('🔧 TESTE INICIALIZADO');
 
+// TESTE MANUAL: Force um clique no botão ACEITAR
+function testeAceiteManual() {
+    console.log('🧪 TESTE MANUAL INICIADO');
+    
+    // Simula um clique no primeiro botão ACEITAR que encontrar
+    const botaoAceitar = document.querySelector('.btn-verde');
+    if (botaoAceitar) {
+        console.log('✅ BOTÃO ENCONTRADO:', botaoAceitar);
+        console.log('📌 Onclick do botão:', botaoAceitar.getAttribute('onclick'));
+        
+        // Tenta executar o onclick
+        const onclick = botaoAceitar.getAttribute('onclick');
+        if (onclick) {
+            eval(onclick);
+        }
+    } else {
+        console.log('❌ NENHUM BOTÃO ACEITAR ENCONTRADO');
+    }
+}
+
+// Chama o teste após 3 segundos (dê tempo da página carregar)
+setTimeout(testeAceiteManual, 3000);
 function mostrarCorridaEmAndamento() {
     // Alterna para a tela de corrida ativa
     mostrarTela('ativa');
