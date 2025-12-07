@@ -352,7 +352,7 @@
             <p class="modal-desc">Você se compromete a buscar o passageiro/encomenda imediatamente.</p>
             <div class="modal-botoes">
                 <button class="btn-modal btn-nao" onclick="fecharModal('modal-confirmacao')">CANCELAR</button>
-                <button id="btn-confirma-final" class="btn-modal btn-sim" onclick="confirmarAceite()">CONFIRMAR</button>
+                <button id="btn-confirma-final" class="btn-modal btn-sim" onclick="confirmarAceitarCorrida()">CONFIRMAR</button>
             </div>
         </div>
     </div>
@@ -479,28 +479,7 @@ if (!usuario || !usuario.id) {
         let onlineInterval = null;
 console.log('🔧 TESTE INICIALIZADO');
 
-// TESTE MANUAL: Force um clique no botão ACEITAR
-function testeAceiteManual() {
-    console.log('🧪 TESTE MANUAL INICIADO');
-    
-    // Simula um clique no primeiro botão ACEITAR que encontrar
-    const botaoAceitar = document.querySelector('.btn-verde');
-    if (botaoAceitar) {
-        console.log('✅ BOTÃO ENCONTRADO:', botaoAceitar);
-        console.log('📌 Onclick do botão:', botaoAceitar.getAttribute('onclick'));
-        
-        // Tenta executar o onclick
-        const onclick = botaoAceitar.getAttribute('onclick');
-        if (onclick) {
-            eval(onclick);
-        }
-    } else {
-        console.log('❌ NENHUM BOTÃO ACEITAR ENCONTRADO');
-    }
-}
 
-// Chama o teste após 3 segundos (dê tempo da página carregar)
-setTimeout(testeAceiteManual, 3000);
 function mostrarCorridaEmAndamento() {
     // Alterna para a tela de corrida ativa
     mostrarTela('ativa');
@@ -810,6 +789,11 @@ function mostrarCorridaEmAndamento() {
         /***********************
          *  ACEITAR / CONFIRMAR / FINALIZAR
          ***********************/
+function abrirModalAceitar(id) {
+    console.log('📋 ABRIR MODAL para corrida ID:', id);
+    idCorridaSelecionada = id;
+    document.getElementById('modal-confirmacao').style.display = 'flex';
+}
         async function aceitarCorrida(id) { 
     try {
         console.log('🎯 CLICOU EM ACEITAR CORRIDA ID:', id);
@@ -971,45 +955,7 @@ function mostrarCorridaEmAndamento() {
             }
         });
 }
-// 2. SUBSTITUA A FUNÇÃO confirmarAceite() com esta versão
-async function confirmarAceite() {
-    if (!idCorridaSelecionada) {
-        alert('Nenhuma corrida selecionada.');
-        return;
-    }
 
-    try {
-        const res = await fetch(`${MEU_IP}/aceitar-corrida`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                corrida_id: idCorridaSelecionada,
-                motoboy_id: usuario.id
-            })
-        });
-
-        const data = await res.json();
-
-        if (!data.success) {
-            alert(data.message || 'Não foi possível aceitar a corrida.');
-            return;
-        }
-
-        // DEFINE A CORRIDA ATUAL CORRETAMENTE
-        idCorridaAtual = idCorridaSelecionada;
-        console.log('Corrida atual definida:', idCorridaAtual);
-
-        // Fecha o modal de confirmação
-        document.getElementById('modal-confirmacao').style.display = 'none';
-
-        // Mostra a corrida em andamento
-        mostrarCorridaEmAndamento();
-
-    } catch (err) {
-        console.error('Erro ao aceitar corrida:', err);
-        alert('Erro ao aceitar corrida.');
-    }
-}
 // 3. SUBSTITUA A FUNÇÃO finalizarCorrida() com esta versão
 async function finalizarCorrida() {
     console.log('ID Corrida Atual para finalizar:', idCorridaAtual);
