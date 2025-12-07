@@ -472,6 +472,52 @@
         let idCorridaAtual = null;
         let onlineInterval = null;
 
+async function confirmarAceite() {
+    if (!idCorridaSelecionada) {
+        alert('Nenhuma corrida selecionada.');
+        return;
+    }
+
+    try {
+        console.log('Confirmando aceite da corrida:', idCorridaSelecionada);
+
+        const res = await fetch('/aceitar-corrida', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                corrida_id: idCorridaSelecionada,
+                motoboy_id: usuario.id   // se der erro aqui, troque para usuarioLogado.id
+            }),
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+            alert(data.message || 'Não foi possível aceitar a corrida.');
+            return;
+        }
+
+        // 🔥 AGORA ESSA PASSA A SER A CORRIDA ATUAL
+        idCorridaAtual = idCorridaSelecionada;
+        console.log('ID CORRIDA ATUAL definido como:', idCorridaAtual);
+
+        // Fecha o modal de confirmação
+        document.getElementById('modal-confirmacao').style.display = 'none';
+
+        // Se você tiver uma função para ajustar a tela da corrida em andamento, chame aqui
+        if (typeof mostrarCorridaEmAndamento === 'function') {
+            mostrarCorridaEmAndamento();
+        }
+
+    } catch (err) {
+        console.error('Erro ao confirmar aceite da corrida:', err);
+        alert('Erro ao aceitar corrida.');
+    }
+}
+
+
         // Armazena os IDs dos setIntervals para os contadores
         let intervalosContadores = {};
 
@@ -784,6 +830,52 @@
         mostrarErro("Erro ao processar. Tente novamente.");
     }
 }
+
+async function confirmarAceitarCorrida() {
+    if (!idCorridaSelecionada) {
+        alert('Nenhuma corrida selecionada.');
+        return;
+    }
+
+    try {
+        console.log('Confirmando aceite da corrida:', idCorridaSelecionada);
+
+        const res = await fetch('/aceitar-corrida', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                corrida_id: idCorridaSelecionada,
+                motoboy_id: usuario.id || usuarioLogado.id // use o que existir no seu código
+            }),
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+            alert(data.message || 'Não foi possível aceitar a corrida.');
+            return;
+        }
+
+        // 🔥 AQUI definimos qual é a "corrida atual" do motoboy
+        idCorridaAtual = idCorridaSelecionada;
+        console.log('ID CORRIDA ATUAL definido como:', idCorridaAtual);
+
+        // Fecha o modal
+        document.getElementById('modal-confirmacao').style.display = 'none';
+
+        // Se você tiver uma função para mostrar a tela de corrida em andamento, chama aqui:
+        if (typeof mostrarCorridaEmAndamento === 'function') {
+            mostrarCorridaEmAndamento();
+        }
+
+    } catch (err) {
+        console.error('Erro ao confirmar aceite da corrida:', err);
+        alert('Erro ao aceitar corrida.');
+    }
+}
+
 
         async function confirmarAceite() {
             if (!idCorridaSelecionada) return;
