@@ -22,7 +22,8 @@ const port = process.env.PORT || 3000;
 
 // 2. CONFIGURAÇÃO MERCADO PAGO
 
-const mpAccessToken = process.env.MP_ACCESS_TOKEN_TEST || process.env.MP_ACCESS_TOKEN;
+const mpAccessToken = process.env.MP_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN_TEST;
+
 
 if (!mpAccessToken) {
   console.error('❌ Nenhum access token do Mercado Pago encontrado.');
