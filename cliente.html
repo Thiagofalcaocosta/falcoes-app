@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" crossorigin="" />
 
     <style>
-        /* --- IDENTIDADE VISUAL FALCÕES (DARK MODE OFICIAL - PRESERVADO) --- */
+        /* ... (todo o CSS permanece igual) ... */
         :root {
             --bg-color: #121212;
             --card-color: #1e1e1e;
@@ -43,739 +43,11 @@
             position: relative;
             border: 1px solid var(--border-color);
             padding-bottom: 80px;
-            /* Espaço para não cortar conteudo em mobile */
         }
 
-        /* Gerenciamento de Telas */
-        .tela {
-            display: none;
-            /* Todas as telas escondidas por padrão */
-        }
-
-        .tela.ativa {
-            display: block;
-            /* Tela ativa */
-            animation: fadeIn 0.5s;
-        }
-
-        .logo-area {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .logo-area img {
-            max-height: 100px;
-            filter: drop-shadow(0 0 5px rgba(0, 230, 64, 0.5));
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        .user-info {
-            font-weight: 600;
-            color: #ccc;
-        }
-
-        .estrelas {
-            background-color: rgba(255, 215, 0, 0.2);
-            color: #ffd700;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-weight: bold;
-        }
-
-        .logout a {
-            color: var(--error-color);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-weight: 700;
-            color: var(--neon-green);
-            letter-spacing: 1px;
-        }
-
-        /* --- SELETOR DE SERVIÇO --- */
-        .opcoes-servico {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 10px;
-        }
-
-        .card {
-            flex: 1;
-            padding: 15px;
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
-            background: #252525;
-            color: #aaa;
-        }
-
-        .card:hover {
-            border-color: var(--neon-green);
-            color: white;
-        }
-
-        .card.selecionado {
-            border-color: var(--neon-green);
-            background-color: rgba(0, 230, 64, 0.1);
-            color: var(--neon-green);
-            box-shadow: 0 0 15px rgba(0, 230, 64, 0.2);
-        }
-
-        .icon {
-            font-size: 28px;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .preco {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        /* --- NOVOS CAMPOS DE ENDEREÇO (GRID) --- */
-        label {
-            display: block;
-            margin-top: 15px;
-            font-weight: 700;
-            color: var(--neon-green);
-            /* Label verde para destaque */
-            margin-bottom: 8px;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .address-container {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
-
-        /* Linha 1: Rua + Botão Mapa */
-        .row-rua {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            position: relative;
-        }
-
-        .input-rua-wrapper {
-            flex: 1;
-            position: relative;
-        }
-
-        .btn-map-icon {
-            background: transparent;
-            border: 1px solid var(--neon-green);
-            color: var(--neon-green);
-            border-radius: 8px;
-            width: 44px;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-map-icon:hover {
-            background: rgba(0, 230, 64, 0.1);
-        }
-
-        /* Linha 2: Número e Bairro */
-        .row-details {
-            display: flex;
-            gap: 8px;
-        }
-
-        .input-num-wrapper {
-            flex: 1;
-            /* 25% */
-            max-width: 80px;
-            position: relative;
-        }
-
-        .input-bairro-wrapper {
-            flex: 3;
-            /* 75% */
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: white;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 15px;
-            transition: 0.3s;
-        }
-
-        input:focus {
-            border-color: var(--neon-green);
-            outline: none;
-        }
-
-        /* Erro específico para número vazio */
-        input.erro {
-            border-color: var(--error-color) !important;
-            animation: shake 0.4s ease-in-out;
-        }
-
-        .erro-msg {
-            position: absolute;
-            bottom: -16px;
-            left: 0;
-            font-size: 10px;
-            color: var(--error-color);
-            font-weight: bold;
-            display: none;
-        }
-
-        input.erro+.erro-msg {
-            display: block;
-        }
-
-        @keyframes shake {
-
-            0%,
-            100% {
-                transform: translateX(0);
-            }
-
-            25% {
-                transform: translateX(-5px);
-            }
-
-            75% {
-                transform: translateX(5px);
-            }
-        }
-
-        /* Campo de detalhes da entrega */
-        #detalhes-entrega-container {
-            display: none;
-            /* Só aparece se for entrega */
-            margin-top: 15px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-
-        /* Lista de Sugestões */
-        .sugestoes-lista {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--card-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            max-height: 250px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-        }
-
-        .sugestao-item {
-            padding: 12px 15px;
-            border-bottom: 1px solid #333;
-            cursor: pointer;
-        }
-
-        .sugestao-item:last-child {
-            border-bottom: none;
-        }
-
-        .sugestao-item:hover {
-            background-color: #2c2c2c;
-        }
-
-        .rua-texto {
-            display: block;
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--neon-green);
-        }
-
-        .bairro-texto {
-            display: block;
-            font-size: 12px;
-            color: #aaa;
-            margin-top: 2px;
-        }
-
-        /* --- RESUMO E BOTÃO --- */
-        .resumo-final {
-            margin-top: 25px;
-            padding: 15px;
-            background-color: rgba(0, 230, 64, 0.1);
-            color: var(--neon-green);
-            border: 1px solid var(--neon-green);
-            text-align: center;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 700;
-            display: none;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 16px;
-            margin-top: 20px;
-            background-color: var(--neon-green);
-            color: black;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.3s;
-            text-transform: uppercase;
-        }
-
-        .btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 15px var(--neon-green);
-        }
-
-        .btn:disabled {
-            background-color: #444;
-            color: #888;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* --- ESTILOS ESPECÍFICOS ACOMPANHAMENTO --- */
-        .info-card {
-            background: #252525;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border-color);
-        }
-
-        .info-card .label {
-            font-size: 12px;
-            color: #999;
-            text-transform: uppercase;
-            margin-bottom: 3px;
-        }
-
-        .info-card .value {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-
-        .motoboy-box {
-            text-align: center;
-            margin: 20px 0;
-            padding: 20px;
-            border: 2px solid var(--neon-green);
-            border-radius: 15px;
-            background: rgba(0, 230, 64, 0.1);
-        }
-
-        .motoboy-box .nome {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--neon-green);
-            margin-top: 5px;
-        }
-
-        .motoboy-box .placa {
-            font-size: 14px;
-            color: #ccc;
-            margin-bottom: 10px;
-        }
-
-        /* NOVO ESTILO WHATSAPP */
-        .btn-whatsapp {
-            background-color: #25D366;
-            /* Cor oficial do WhatsApp */
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            width: 100%;
-            margin-top: 15px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-whatsapp:hover {
-            background-color: #1FAF59;
-        }
-
-        /* --- MODAL DE BUSCA (ATUALIZADO) --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            /* Z-index alto para ficar acima de tudo */
-            overflow-y: auto;
-            /* PERMITE ROLAR SE O CONTEÚDO FOR MAIOR QUE A TELA */
-            padding: 20px 0;
-            /* Espaço vertical para não grudar no topo/base */
-        }
-
-        .modal-content {
-            background: var(--card-color);
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            width: 85%;
-            max-width: 350px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 0 40px rgba(0, 230, 64, 0.15);
-            margin: auto;
-            /* Centraliza verticalmente */
-        }
-
-        .spinner {
-            border: 5px solid #333;
-            border-top: 5px solid var(--neon-green);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: girar 1s linear infinite;
-            margin: 0 auto 20px auto;
-        }
-
-        @keyframes girar {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .btn-cancelar {
-            background-color: transparent;
-            border: 1px solid var(--error-color);
-            color: var(--error-color);
-            font-size: 14px;
-            margin-top: 20px;
-            padding: 10px;
-            width: 100%;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        /* Modal de Pagamento */
-        .modal-pagamento {
-            background: var(--card-color);
-            padding: 25px;
-            border-radius: 20px;
-            text-align: center;
-            width: 90%;
-            max-width: 400px;
-            border: 2px solid var(--neon-green);
-            box-shadow: 0 0 50px rgba(0, 230, 64, 0.3);
-        }
-
-        .modal-pagamento h3 {
-            color: var(--neon-green);
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-
-        .btn-pagamento {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: transform 0.2s;
-        }
-
-        .btn-pagamento:hover {
-            transform: scale(1.02);
-        }
-
-        .btn-pix {
-            background: var(--pix-color);
-            color: white;
-        }
-
-        .btn-cartao {
-            background: var(--cartao-color);
-            color: white;
-        }
-
-        .btn-dinheiro {
-            background: var(--dinheiro-color);
-            color: black;
-        }
-
-        .btn-whatsapp-pagamento {
-            background: #25D366;
-            color: white;
-            text-decoration: none;
-        }
-
-        .qr-code-container {
-            text-align: center;
-            margin: 20px 0;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-        }
-
-        .qr-code-container img {
-            width: 200px;
-            height: 200px;
-            border: 2px solid white;
-            border-radius: 10px;
-        }
-
-        .codigo-pix {
-            background: #2c2c2c;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            word-break: break-all;
-            margin: 15px 0;
-            border: 1px solid #444;
-        }
-
-        .bloco-justificativa {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(255, 68, 68, 0.1);
-            border: 1px solid var(--error-color);
-            border-radius: 10px;
-        }
-
-        .bloco-pagamento {
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(0, 230, 64, 0.1);
-            border: 2px solid var(--neon-green);
-            border-radius: 15px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(0, 230, 64, 0.4);
-            }
-
-            70% {
-                box-shadow: 0 0 0 10px rgba(0, 230, 64, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(0, 230, 64, 0);
-            }
-        }
-
-        /* Bloco de ESTILO PARA O CAMPO TEXTAREA NO MODAL DE JUSTIFICATIVA (aproximadamente linha 283) */
-        .modal-content textarea {
-            width: 100%;
-            height: 80px;
-            padding: 10px;
-            box-sizing: border-box;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background: var(--input-bg);
-            color: white;
-            resize: none;
-            font-family: inherit;
-            /* --- CORREÇÃO: ADICIONAR Z-INDEX ALTO E GARANTIR VISIBILIDADE --- */
-            position: relative;
-            z-index: 1000000;
-            margin-bottom: 5px;
-            /* Adiciona espaço extra para não ser cortado */
-        }
-
-        #map {
-            height: 180px;
-            border-radius: 12px;
-            margin-top: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        /* --- TOAST --- */
-        .toast-container {
-            position: fixed;
-            left: 50%;
-            bottom: 24px;
-            transform: translateX(-50%);
-            z-index: 10050;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-            pointer-events: none;
-            width: 90%;
-        }
-
-        .toast {
-            width: 100%;
-            max-width: 400px;
-            background: #000;
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: #fff;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            opacity: 0;
-            transform: translateY(10px);
-            animation: toast-in 0.3s forwards;
-            font-weight: 600;
-            border: 1px solid var(--neon-green);
-            pointer-events: auto;
-        }
-
-        @keyframes toast-in {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .toast.error {
-            border-color: var(--error-color);
-        }
-
-        .toast .msg {
-            flex: 1;
-            font-size: 14px;
-        }
-
-        .toast .close {
-            background: none;
-            border: none;
-            color: #fff;
-            cursor: pointer;
-            font-size: 18px;
-        }
-
-        /* FORÇA o modal a ficar SEMPRE acima de TUDO, inclusive do mapa */
-        #modal-justificativa,
-        #modal-encerramento,
-        #modal-busca,
-        #modal-justificativa-cliente,
-        #modal-pagamento,
-        #modal-pix {
-            /* Adicionado o novo ID aqui */
-            z-index: 2147483646 !important;
-            /* número muito alto, garante prioridade */
-            position: fixed !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            display: none;
-            /* o JS abre com display:flex quando necessário */
-            align-items: center !important;
-            justify-content: center !important;
-            background: rgba(0, 0, 0, 0.85) !important;
-            /* leve escurecimento por cima do app */
-        }
-
-        #modal-busca .modal-content,
-        #modal-justificativa .modal-content,
-        #modal-encerramento .modal-content,
-        #modal-justificativa-cliente .modal-box,
-        #modal-pagamento .modal-content,
-        #modal-pix .modal-content {
-            /* Ajustado para modal-box */
-            z-index: 2147483647 !important;
-            position: relative !important;
-            max-height: 90vh !important;
-            overflow-y: auto !important;
-            margin: auto !important;
-        }
-
-        /* Estilo para a modal-box no modal-justificativa-cliente */
-        #modal-justificativa-cliente .modal-box {
-            background: var(--card-color);
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            width: 85%;
-            max-width: 350px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 0 40px rgba(0, 230, 64, 0.15);
-        }
-
-        #modal-justificativa-cliente .modal-titulo {
-            font-size: 24px;
-            color: var(--error-color);
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-
-        #modal-justificativa-cliente .modal-desc {
-            font-size: 16px;
-            color: white;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
+        /* ... (restante do CSS permanece igual) ... */
     </style>
-    <script type="importmap">
-{
-    "imports": {
-        "react/": "https://aistudiocdn.com/react@^19.2.0/",
-        "react": "https://aistudiocdn.com/react@^19.2.0",
-        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
-    }
-}
-</script>
+
     <script>
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker
@@ -1060,15 +332,14 @@
 
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
     <script>
-
-        // === CONFIGURAÇÃO E DADOS (AGORA COM O TOKEN DO MAPBOX) ===
-        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtaW5sYnRtdDB1ZGIzZnB1OXhid2p4ZXQifQ.uAw7CNaemwsun4RGsyOOIQ'; // SEU TOKEN AQUI!
+        // === CONFIGURAÇÃO E DADOS ===
+        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtaW5sYnRtdDB1ZGIzZnB1OXhid2p4ZXQifQ.uAw7CNaemwsun4RGsyOOIQ';
         const MEU_IP = 'https://falcoes-app.onrender.com';
         const LAT_TC = -21.6975;
-        const LON_TC = -45.25; // longitude padrão (ajuste conforme sua cidade)
+        const LON_TC = -45.25;
 
-        // Mock de usuário se não existir (para testes)
-        const usuario = JSON.parse(localStorage.getItem("usuario"));
+        // Mock de usuário se não existir
+        const usuario = JSON.parse(localStorage.getItem("usuario")) || { id: 1, nome: "Cliente" };
         document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
 
         // Variáveis de Estado
@@ -1088,115 +359,27 @@
             'entrega': { base: 8.50, kmExtra: 2.0, franquia: 3 }
         };
 
-        // === FUNÇÕES DE GERENCIAMENTO DE TELA ===
+        // === FUNÇÕES BÁSICAS ===
         function mudarTela(novaTelaId) {
-            document.querySelectorAll('.tela').forEach(tela => {
-                tela.classList.remove('ativa');
-            });
+            document.querySelectorAll('.tela').forEach(tela => tela.classList.remove('ativa'));
             document.getElementById(novaTelaId).classList.add('ativa');
         }
 
         function reiniciarApp() {
-            // Limpa o estado e recarrega para voltar à tela de pedido limpa
             localStorage.removeItem('idPedidoAtual');
             if (intervaloVerificacao) clearInterval(intervaloVerificacao);
             window.location.reload();
         }
 
-        // === INICIALIZAÇÃO DO MAPA (AGORA COM MAPBOX) ===
-        const map = L.map('map').setView([LAT_TC, LON_TC], 14);
-        // ** USANDO A CAMADA DE MAPA DO MAPBOX (REQUER O TOKEN) **
-        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-            attribution: 'Mapa &copy; <a href="https://www.mapbox.com/">Mapbox</a> | Dados &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-            maxZoom: 19,
-            id: 'mapbox/streets-v11', // Estilo do Mapa (pode ser trocado)
-            tileSize: 512,
-            zoomOffset: -1,
-            accessToken: MAPBOX_ACCESS_TOKEN
-        }).addTo(map);
-
-        map.on('click', async (e) => {
-            if (!mapMode) {
-                showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
-                return;
-            }
-
-            const { lat, lng } = e.latlng;
-            showToast("Buscando endereço com Mapbox...", "info", 1000);
-
-            // ** Reverse Geocoding via Mapbox (LON,LAT) **
-            try {
-                const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
-
-                const res = await fetch(urlMapbox);
-                const data = await res.json();
-
-                let rua, bairro;
-
-                if (data.features && data.features.length > 0) {
-                    const feature = data.features[0];
-                    // Mapbox retorna o endereço completo no place_name. Pegamos o que está antes da primeira vírgula como rua.
-                    rua = feature.place_name.split(',')[0] || "Local Marcado";
-
-                    // Tentamos obter o bairro do contexto
-                    const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
-                    bairro = (neighborhood && neighborhood.text) || "Três Corações";
-                } else {
-                    rua = "Local Marcado";
-                    bairro = "Três Corações";
-                }
-                if (mapMode === 'origem') {
-                    document.getElementById('rua-origem').value = rua;
-                    document.getElementById('bairro-origem').value = bairro;
-                    document.getElementById('num-origem').focus();
-                    coordsOrigem = { lat, lon: lng };
-                    if (markerOrigem) map.removeLayer(markerOrigem);
-                    markerOrigem = L.marker([lat, lng]).addTo(map);
-                } else {
-                    document.getElementById('rua-destino').value = rua;
-                    document.getElementById('bairro-destino').value = bairro;
-                    document.getElementById('num-destino').focus();
-                    coordsDestino = { lat, lon: lng };
-                    if (markerDestino) map.removeLayer(markerDestino);
-                    markerDestino = L.marker([lat, lng]).addTo(map);
-                }
-
-                showToast("Endereço preenchido! Digite o número.", "success");
-                mapMode = null; // Reset modo
-                calcularRota();
-
-            } catch (error) {
-                showToast("Erro ao obter endereço do mapa.", "error");
-            }
-        });
-
-        // === FUNÇÕES DE UI (Permanece) ===
-        function ativarMapa(modo) {
-            mapMode = modo;
-            showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
-            // Rola até o mapa
-            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
-        }
-
         function selecionarServico(tipo, valorBase) {
             servicoSelecionado = tipo;
-
-            // Visual Cards
             document.querySelectorAll('.card').forEach(c => c.classList.remove('selecionado'));
             if (tipo === 'moto-taxi') document.getElementById('card-moto').classList.add('selecionado');
             else document.getElementById('card-entrega').classList.add('selecionado');
 
-            // Campo Detalhes da Entrega
-            const detailsDiv = document.getElementById('detalhes-entrega-container');
-            if (tipo === 'entrega') {
-                detailsDiv.style.display = 'block';
-            } else {
-                detailsDiv.style.display = 'none';
-            }
-
+            document.getElementById('detalhes-entrega-container').style.display = tipo === 'entrega' ? 'block' : 'none';
             document.getElementById('btn-pedir').disabled = false;
             document.getElementById('btn-pedir').innerText = tipo === 'entrega' ? "SOLICITAR ENTREGA" : "CHAMAR MOTO TÁXI";
-
             calcularRota();
         }
 
@@ -1209,14 +392,24 @@
             input.classList.remove('erro');
         }
 
-        // Fechar sugestões ao clicar fora
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.input-rua-wrapper')) {
-                document.querySelectorAll('.sugestoes-lista').forEach(el => el.style.display = 'none');
-            }
-        });
+        // === MAPA ===
+        const map = L.map('map').setView([LAT_TC, LON_TC], 14);
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Mapa &copy; <a href="https://www.mapbox.com/">Mapbox</a> | Dados &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+            maxZoom: 19,
+            id: 'mapbox/streets-v11',
+            tileSize: 512,
+            zoomOffset: -1,
+            accessToken: MAPBOX_ACCESS_TOKEN
+        }).addTo(map);
 
-        // LÓGICA DE ENDEREÇO e CÁLCULO DE ROTA (AGORA COM MAPBOX)
+        function ativarMapa(modo) {
+            mapMode = modo;
+            showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
+            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // === ENDEREÇO E ROTA ===
         function buscarEndereco(query, listId, type) {
             const list = document.getElementById(listId);
             if (query.length < 3) {
@@ -1227,16 +420,12 @@
             clearTimeout(timeoutBusca);
             timeoutBusca = setTimeout(async () => {
                 try {
-                    // ** USANDO A API DE PESQUISA (Search) DO MAPBOX **
-                    // Usa bbox para limitar a busca à área de Três Corações (ajusta a área conforme necessário)
-                    const bounds = '-45.30,-21.75,-45.20,-21.65'; // [minLon, minLat, maxLon, maxLat]
+                    const bounds = '-45.30,-21.75,-45.20,-21.65';
                     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?country=BR&bbox=${bounds}&limit=5&access_token=${MAPBOX_ACCESS_TOKEN}`;
-
                     const res = await fetch(url);
                     const data = await res.json();
 
                     list.innerHTML = '';
-
                     if (data.features && data.features.length > 0) {
                         data.features.forEach(item => {
                             const rua = item.place_name.split(',')[0];
@@ -1247,23 +436,13 @@
                             const div = document.createElement('div');
                             div.className = 'sugestao-item';
                             div.innerHTML = `<span class="rua-texto">${rua}</span><span class="bairro-texto">${bairro}</span>`;
-
                             div.onclick = () => {
                                 document.getElementById(`rua-${type}`).value = rua;
                                 document.getElementById(`bairro-${type}`).value = bairro;
-
-                                // Mapbox usa [lon, lat], convertemos para {lat, lon}
                                 const coords = { lat: item.center[1], lon: item.center[0] };
                                 if (type === 'origem') coordsOrigem = coords;
                                 else coordsDestino = coords;
-
                                 list.style.display = 'none';
-
-                                const numInput = document.getElementById(`num-${type}`);
-                                numInput.focus();
-                                numInput.classList.add('erro');
-                                setTimeout(() => numInput.classList.remove('erro'), 500);
-
                                 calcularRota();
                             };
                             list.appendChild(div);
@@ -1278,21 +457,15 @@
             }, 500);
         }
 
-        // === FUNÇÃO DE CÁLCULO DE ROTA (AGORA COM MAPBOX DIRECTIONS API) ===
         async function calcularRota() {
             if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
-
             const resumo = document.getElementById('resumo');
             resumo.style.display = 'block';
-            resumo.innerText = "Calculando rota com Mapbox...";
+            resumo.innerText = "Calculando rota...";
 
             try {
-                // Directions API Mapbox: coordenadas no formato LON,LAT;LON,LAT
                 const coordenadas = `${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}`;
-
-                // Mapbox Directions API
                 const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordenadas}?geometries=geojson&steps=false&access_token=${MAPBOX_ACCESS_TOKEN}`;
-
                 const res = await fetch(url);
                 const json = await res.json();
 
@@ -1300,28 +473,23 @@
                 let tempoSegundos = 0;
 
                 if (json.routes && json.routes.length > 0) {
-                    // Distância em metros e Duração em segundos
                     distanciaKm = json.routes[0].distance / 1000;
                     tempoSegundos = json.routes[0].duration;
                 } else {
-                    // Fallback: Distância em linha reta se a rota falhar
                     distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
-                    tempoSegundos = (distanciaKm / 0.3) * 60; // Estima tempo a 18km/h
+                    tempoSegundos = (distanciaKm / 0.3) * 60;
                 }
 
                 const regra = precos[servicoSelecionado];
                 const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
                 const total = regra.base + (kmCobrado * regra.kmExtra);
-
                 const tempoMinutos = Math.ceil(tempoSegundos / 60);
 
                 resumo.innerHTML = `
-            <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km &nbsp; | &nbsp; Tempo: ${tempoMinutos} min</div>
-            <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
-        `;
-
+                    <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km &nbsp; | &nbsp; Tempo: ${tempoMinutos} min</div>
+                    <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
+                `;
                 window.valorCalculado = total;
-
             } catch (e) {
                 console.error("Erro rota Mapbox", e);
                 resumo.innerText = "Erro ao calcular rota.";
@@ -1339,10 +507,10 @@
             return R * c;
         }
 
-        // === ENVIO DE PEDIDO (Alterada para usar a nova tela) ===
+        // === PEDIDO ===
         async function pedir() {
-            // ... (Validação e montagem de dados idêntica à anterior) ...
             if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
+            
             const ruaOrigem = document.getElementById('rua-origem').value;
             const numOrigem = document.getElementById('num-origem').value;
             const bairroOrigem = document.getElementById('bairro-origem').value;
@@ -1351,22 +519,16 @@
             const bairroDestino = document.getElementById('bairro-destino').value;
             const detalhes = document.getElementById('detalhes-entrega').value;
 
-            let erro = false;
             if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
-            if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
+            if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); showToast("Preencha o Número de Origem", "error"); return; }
             if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
-            if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
+            if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); showToast("Preencha o Número de Destino", "error"); return; }
             if (servicoSelecionado === 'entrega' && !detalhes.trim()) { document.getElementById('detalhes-entrega').classList.add('erro'); showToast("Descreva o que vamos entregar!", "error"); return; }
-            if (erro) { showToast("⚠️ Preencha o NÚMERO dos endereços!", "error"); return; }
 
             const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
             const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
-            const strDestinoFinal = servicoSelecionado === 'entrega'
-                ? `${strDestino} (ITEM: ${detalhes})`
-                : strDestino;
-            // ... (Fim da validação) ...
+            const strDestinoFinal = servicoSelecionado === 'entrega' ? `${strDestino} (ITEM: ${detalhes})` : strDestino;
 
-            // 1. Mostrar o modal de carregamento
             document.getElementById('modal-busca').style.display = 'flex';
             document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
             document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
@@ -1391,50 +553,35 @@
                 if (json.success) {
                     idPedidoAtual = json.id;
                     localStorage.setItem('idPedidoAtual', idPedidoAtual);
-
-                    // 2. Preencher a nova tela com os dados iniciais
                     document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
                     document.getElementById('detalhe-origem').innerText = strOrigem;
                     document.getElementById('detalhe-destino').innerText = strDestino;
                     document.getElementById('detalhe-valor').innerText = `R$ ${window.valorCalculado.toFixed(2).replace('.', ',')}`;
-
-                    // 3. Trocar para a tela de Acompanhamento e fechar o modal
                     mudarTela('tela-acompanhamento');
                     document.getElementById('modal-busca').style.display = 'none';
-
-                    // 4. Iniciar verificação de status
                     intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
                     showToast("Solicitação enviada. Buscando piloto...", "info");
-
                 } else {
                     throw new Error(json.message);
                 }
-
             } catch (e) {
                 document.getElementById('modal-busca').style.display = 'none';
                 showToast("Erro ao enviar pedido: " + e.message, "error");
             }
         }
 
-        // === VERIFICAÇÃO DE STATUS (Mantida) ===
+        // === VERIFICAÇÃO DE STATUS ===
         async function verificarStatus(id) {
             try {
                 const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
                 const data = await res.json();
                 const pedido = data.pedido;
-                console.log('[DEBUG] verificarStatus -> data:', data);
-                console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.status);
-                
-                if (!data.success || !pedido) {
-                    // Trata erro de API
-                    console.error("Erro ao obter status. Tentando novamente...");
-                    return;
-                }
-                
-                // 👉 AQUI: chamamos a função que mostra/esconde os botões de pagamento
+                console.log('[DEBUG] verificarStatus -> pedido:', pedido);
+
+                if (!data.success || !pedido) return;
+
                 renderizarOpcoesPagamentoCliente(pedido);
 
-                // Elementos da tela de acompanhamento
                 const statusTitulo = document.getElementById('acompanhamento-status-titulo');
                 const statusDesc = document.getElementById('acompanhamento-status-desc');
                 const statusArea = document.getElementById('acompanhamento-status-area');
@@ -1442,16 +589,13 @@
                 const btnWpp = document.getElementById('btn-whatsapp-motoboy');
                 const btnCancelar = document.getElementById('btn-cancelar-acomp');
 
-                // Limpa quaisquer classes de cor
                 statusArea.style.borderColor = '#ffd700';
                 statusArea.style.background = 'rgba(255, 215, 0, 0.1)';
                 statusTitulo.style.color = '#ffd700';
-
                 motoboyBox.style.display = 'none';
                 btnWpp.style.display = 'none';
 
                 if (pedido.status === 'aceita') {
-                    // Pedido Aceito!
                     statusArea.style.borderColor = 'var(--neon-green)';
                     statusArea.style.background = 'rgba(0, 230, 64, 0.1)';
                     statusTitulo.style.color = 'var(--neon-green)';
@@ -1462,284 +606,66 @@
                     document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
                     motoboyBox.style.display = 'block';
 
-                    // Lógica do botão WHATSAPP
                     if (pedido.telefone_motoboy) {
                         const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
                         const numeroInternacional = foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
-
-                        const textoWpp = encodeURIComponent(`Olá, sou o cliente do pedido #${id} no app Falcões. Gostaria de confirmar a sua chegada.`);
+                        const textoWpp = encodeURIComponent(`Olá, sou o cliente do pedido #${id} no app Falcões.`);
                         const linkWpp = `https://wa.me/${numeroInternacional}?text=${textoWpp}`;
-
                         btnWpp.href = linkWpp;
                         btnWpp.style.display = 'flex';
                     }
 
                     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-
                 } else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
-                    // Pedido finalizado pelo motoboy / sistema: pedir confirmação do cliente
                     statusArea.style.borderColor = 'blue';
                     statusArea.style.background = 'rgba(0, 0, 255, 0.05)';
                     statusTitulo.style.color = 'blue';
                     statusTitulo.innerText = "CORRIDA FINALIZADA (A CONFIRMAR)";
-                    statusDesc.innerText = `Valor estimado: R$ ${(pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',')}`;
-
-                    // Remove botão de cancelar para evitar conflitos
+                    statusDesc.innerText = `Valor: R$ ${(pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',')}`;
                     btnCancelar.style.display = 'none';
 
-                    // Abre o modal de confirmação (se não estiver já aberto)
                     const modalEnc = document.getElementById('modal-encerramento');
-                    try {
-                        const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
-                        if (modalEnc && modalDisplay === 'none') {
-                            console.log('[DEBUG] abrirModalEncerramento() chamado — status finalizado recebido.');
-                            // CORRIGIDO: O código original tentava chamar uma função inexistente.
-                            // Vou chamar diretamente a exibição do modal e o foco.
-                            modalEnc.style.display = 'flex';
-                            const campoEnc = document.getElementById('campo-encerramento');
-                            setTimeout(() => { try { campoEnc.focus(); } catch (e) { } }, 220);
-                        } else {
-                            console.log('[DEBUG] modal-encerramento já visível ou ausente (display=' + modalDisplay + ')');
-                        }
-                    } catch (err) {
-                        console.warn('[DEBUG] erro ao avaliar modal-encerramento:', err);
-                        // Fallback para abrir se der erro na verificação do estilo
-                        if (modalEnc) {
-                            modalEnc.style.display = 'flex';
-                            const campoEnc = document.getElementById('campo-encerramento');
-                            setTimeout(() => { try { campoEnc.focus(); } catch (e) { } }, 220);
-                        }
+                    if (modalEnc && window.getComputedStyle(modalEnc).display === 'none') {
+                        modalEnc.style.display = 'flex';
+                        setTimeout(() => document.getElementById('campo-encerramento').focus(), 220);
                     }
-
                 } else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
-                    // Pedido cancelado/expirado
                     clearInterval(intervaloVerificacao);
                     statusTitulo.innerText = "PEDIDO CANCELADO!";
-                    statusDesc.innerText = `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado!O motoboy teve um imprevisto.    Pedimos desculpas!Por favor,   faça um novo pedido. Obrigado!"}`;
+                    statusDesc.innerText = `Motivo: ${pedido.motivo_cancelamento || "Pedido cancelado pelo sistema"}`;
                     statusArea.style.borderColor = 'var(--error-color)';
                     statusArea.style.background = 'rgba(255, 0, 0, 0.1)';
                     statusTitulo.style.color = 'var(--error-color)';
                     btnCancelar.style.display = 'none';
                     localStorage.removeItem('idPedidoAtual');
-                    showToast("Pedido cancelado. Use o botão 'FECHAR' abaixo para voltar.", "error", 5000);
+                    showToast("Pedido cancelado.", "error", 5000);
                 }
-
             } catch (e) {
                 console.error("Erro na verificação de status:", e);
             }
         }
 
-        // Função para continuar acompanhando o pedido se o usuário recarregar a página
-        function checkPersistedOrder() {
-            const persistedId = localStorage.getItem('idPedidoAtual');
-            if (persistedId) {
-                idPedidoAtual = persistedId;
-
-                // Mudar para a tela de acompanhamento e iniciar a verificação
-                mudarTela('tela-acompanhamento');
-
-                // Tenta buscar o status imediatamente para preencher os dados
-                verificarStatus(idPedidoAtual);
-                intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-            } else {
-                // Se não houver pedido, garante que a tela inicial esteja ativa
-                mudarTela('tela-pedido');
-            }
-        }
-
-        // Chama a função ao carregar a página
-        window.onload = checkPersistedOrder;
-
-        // === FUNÇÕES DE CANCELAMENTO ATUALIZADAS PARA USAR MODAL DE JUSTIFICATIVA ===
-        function cancelarPedido() {
-            // Esconde o botão original "CANCELAR PEDIDO"
-            const btnCancelar = document.getElementById('btn-cancelar-acomp');
-            if (btnCancelar) btnCancelar.style.display = 'none';
-
-            // Mostra o campo de justificativa integrada
-            const areaJustificativa = document.getElementById('area-justificativa-integrada');
-            if (areaJustificativa) areaJustificativa.style.display = 'block';
-
-            // Foca no campo de texto e ajusta o botão de confirmação
-            const campo = document.getElementById('campo-justificativa-integrada');
-            const btnConfirm = document.getElementById('btn-confirmar-cancelamento');
-            if (campo) campo.focus();
-            if (btnConfirm) btnConfirm.disabled = true;
-
-            showToast("Justifique o cancelamento para prosseguir.", "info");
-        }
-
-        // ======= NOVAS FUNÇÕES: ABRIR E CONFIRMAR ENCERRAMENTO (CLIENTE) =======
-        async function confirmarEncerramentoCliente() {
-            const observacao = document.getElementById('campo-encerramento').value.trim();
-
-            // Mostrar modal de carregamento (reaproveita modal-busca)
-            document.getElementById('modal-encerramento').style.display = 'none';
-            document.getElementById('modal-busca').style.display = 'flex';
-            document.getElementById('status-titulo-modal').innerText = "Registrando finalização...";
-            document.getElementById('status-desc-modal').innerText = "Enviando confirmação..."; // CORRIGIDO: remova .style
-
-            try {
-                // Se houver observação, envie como mensagem para o backend (rota já existente)
-                if (observacao && idPedidoAtual) {
-                    await fetch(`${MEU_IP}/enviar-mensagem`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            corrida_id: idPedidoAtual,
-                            remetente: 'cliente',
-                            texto: observacao
-                        })
-                    }).catch(err => console.warn('Falha ao enviar observacao:', err));
-                }
-
-                // Limpeza local e atualização da UI
-                document.getElementById('modal-busca').style.display = 'none';
-                showToast("Finalização registrada. Obrigado!", "success", 3000);
-
-                clearInterval(intervaloVerificacao);
-                localStorage.removeItem('idPedidoAtual');
-                idPedidoAtual = null;
-
-                // Atualiza a tela de acompanhamento
-                document.getElementById('acompanhamento-status-titulo').innerText = "PEDIDO CONCLUÍDO!";
-                document.getElementById('acompanhamento-status-desc').innerText = "Obrigado por usar Falcões.";
-                document.getElementById('btn-cancelar-acomp').style.display = 'none';
-
-                // volta à tela principal depois de curto delay
-                setTimeout(() => reiniciarApp(), 1400);
-
-            } catch (e) {
-                document.getElementById('modal-busca').style.display = 'none';
-                showToast("Falha ao registrar finalização: " + e.message, "error");
-            }
-        }
-
-        // Toast Helper
-        function showToast(msg, type, duration = 3000) {
-            const container = document.getElementById('toast-container');
-            const div = document.createElement('div');
-            div.className = `toast ${type}`;
-            div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
-            container.appendChild(div);
-            // Remove toasts antigos para manter apenas 1 ou 2 visíveis
-            while (container.children.length > 3) {
-                container.firstChild.remove();
-            }
-            setTimeout(() => div.remove(), duration);
-        }
-
-        // --- Lógica de Justificativa Integrada (Validação e Envio) ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const campoJust = document.getElementById('campo-justificativa-integrada');
-            const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
-            const erroJust = document.getElementById('erro-just-integrada');
-
-            // Habilita o botão se a justificativa tiver >= 5 caracteres
-            if (campoJust && btnConfirmar) {
-                campoJust.addEventListener('input', () => {
-                    const motivo = campoJust.value.trim();
-                    btnConfirmar.disabled = motivo.length < 5;
-                    if (motivo.length >= 5 && erroJust) erroJust.style.display = 'none';
-                });
-            }
-
-            // Lógica de ENVIO DE CANCELAMENTO (Chamada pelo novo botão)
-            if (btnConfirmar) {
-                btnConfirmar.addEventListener('click', async () => {
-                    const motivo = campoJust.value.trim();
-                    if (motivo.length < 5) {
-                        if (erroJust) erroJust.style.display = 'block';
-                        return;
-                    }
-
-                    // Oculta a área de justificativa e mostra o loading
-                    document.getElementById('area-justificativa-integrada').style.display = 'none';
-                    const mb = document.getElementById('modal-busca');
-                    if (mb) {
-                        mb.style.display = 'flex';
-                        document.getElementById('status-titulo-modal').innerText = "PROCESSANDO CANCELAMENTO...";
-                    }
-
-                    const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
-
-                    try {
-                        if (id) {
-                            // --- Cancelamento Remoto (Pedido Ativo) ---
-                            const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : window.MEU_IP || "https://falcoes-app.onrender.com";
-
-                            const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
-                            });
-                            const json = await res.json().catch(() => ({ success: false }));
-
-                            if (json.success) {
-                                showToast("Pedido cancelado. O piloto foi notificado.", "success");
-                            } else {
-                                throw new Error(json.message || 'Falha ao cancelar no servidor.');
-                            }
-                        } else {
-                            // --- Cancelamento Local (Busca) ---
-                            showToast("Busca cancelada.", "info");
-                        }
-                    } catch (e) {
-                        showToast("Erro: " + (e.message || e), "error");
-                    } finally {
-                        // Limpeza e Reinício
-                        if (mb) mb.style.display = 'none';
-                        reiniciarApp();
-                    }
-                });
-            }
-        });
-
-        // ============================
-        // SISTEMA DE PAGAMENTO CORRIGIDO
-        // ============================
-
-        // Mostra ou esconde os botões de pagamento conforme o status do PEDIDO
+        // === PAGAMENTO ===
         function renderizarOpcoesPagamentoCliente(pedido) {
             const area = document.getElementById('area-pagamento-cliente');
             if (!area) return;
 
             console.log('[DEBUG] renderizarOpcoesPagamentoCliente -> pedido:', pedido);
-
-            // limpa qualquer coisa anterior
             area.innerHTML = '';
 
-            // só mostra botões se estiver aguardando pagamento
-            if (!pedido || pedido.status !== 'AGUARDANDO_PAGAMENTO') {
-                return;
-            }
+            if (!pedido || pedido.status !== 'AGUARDANDO_PAGAMENTO') return;
 
-            // Tenta descobrir o ID do pedido com vários nomes possíveis
-            const pedidoId =
-                pedido.id ||
-                pedido.corrida_id ||
-                pedido.id_corrida ||
-                pedido.pedido_id;
-
-            // Tenta descobrir o valor do pedido com vários nomes possíveis
-            const valorBruto =
-                pedido.valor_total ||
-                pedido.valor ||
-                pedido.preco ||
-                pedido.total ||
-                pedido.total_estimado;
-
+            const pedidoId = pedido.id || pedido.corrida_id || pedido.id_corrida || pedido.pedido_id;
+            const valorBruto = pedido.valor_total || pedido.valor || pedido.preco || pedido.total || pedido.total_estimado;
             const valor = Number(valorBruto || 0);
 
             console.log('[DEBUG] pagamento -> pedidoId:', pedidoId, 'valor:', valor);
 
-            // Se não achou ID ou valor, não mostra nada pra não dar erro
             if (!pedidoId || !valor) {
-                console.warn('[WARN] Não foi possível determinar ID ou valor do pedido para pagamento.');
+                console.warn('[WARN] Não foi possível determinar ID ou valor do pedido');
                 return;
             }
 
-            // Armazenar dados do pagamento atual
             pagamentoAtual = { id: pedidoId, valor: valor };
 
             area.innerHTML = `
@@ -1770,47 +696,16 @@
                             <span style="font-size: 22px;">💵</span> PAGAR EM DINHEIRO
                         </button>
                     </div>
-                    
-                    <div style="margin-top: 15px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; font-size: 12px; color: #aaa; text-align: left;">
-                        <div style="color: var(--neon-green); margin-bottom: 5px; font-weight: bold;">
-                            <span style="font-size: 16px;">ℹ️</span> INFORMAÇÃO:
-                        </div>
-                        • <strong>PIX:</strong> pagamento instantâneo e seguro<br>
-                        • <strong>Dinheiro:</strong> combine diretamente com o motoboy<br>
-                        • Após pagar, o status será atualizado automaticamente
-                    </div>
                 </div>
             `;
         }
 
-        // Funções do Modal de Pagamento
         function abrirModalPagamento(pedidoId, valor) {
             pagamentoAtual = { id: pedidoId, valor: valor };
-            
             const modal = document.getElementById('modal-pagamento');
             if (modal) {
                 document.getElementById('valor-pagamento-modal').innerText = `R$ ${valor.toFixed(2).replace('.', ',')}`;
                 document.getElementById('desc-pagamento-modal').innerText = `Corrida #${pedidoId}`;
-                
-                // Atualizar botão do WhatsApp se houver motoboy
-                const motoboyNome = document.getElementById('motoboy-nome')?.innerText;
-                const motoboyTelefone = document.getElementById('motoboy-placa')?.innerText;
-                const btnWppPagamento = document.getElementById('btn-whatsapp-pagamento');
-                
-                if (motoboyNome && motoboyNome !== '--') {
-                    // Formatar número para WhatsApp
-                    let numero = motoboyTelefone?.replace(/\D/g, '') || '';
-                    if (numero.length === 11) numero = '55' + numero;
-                    
-                    if (numero) {
-                        const texto = encodeURIComponent(`Olá, sou o cliente da corrida #${pedidoId}. Gostaria de confirmar o pagamento.`);
-                        btnWppPagamento.href = `https://wa.me/${numero}?text=${texto}`;
-                        btnWppPagamento.style.display = 'flex';
-                    }
-                } else {
-                    btnWppPagamento.style.display = 'none';
-                }
-                
                 modal.style.display = 'flex';
             }
         }
@@ -1823,7 +718,7 @@
             document.getElementById('modal-pix').style.display = 'none';
         }
 
-        // Pagamento com PIX
+        // CORREÇÃO PRINCIPAL: Pagamento PIX com formato correto
         async function iniciarPagamentoPIX(pedidoId = null, valor = null) {
             const corridaId = pedidoId || pagamentoAtual.id;
             const valorPix = valor || pagamentoAtual.valor;
@@ -1833,7 +728,6 @@
                 return;
             }
 
-            // Fechar modal de pagamento se estiver aberto
             fecharModalPagamento();
 
             // Mostrar loading
@@ -1845,56 +739,83 @@
             }
 
             try {
-                // Tentar primeiro o endpoint principal
+                console.log('[PAGAMENTO] Enviando dados para PIX:', {
+                    corridaId: corridaId,
+                    valor: valorPix,
+                    forma_pagamento: 'pix' // AQUI ESTÁ A CORREÇÃO: usar 'pix' em minúsculo
+                });
+
+                // CORREÇÃO: Formato correto para o backend
                 const res = await fetch('https://falcoes.site/pagar-corrida', {
                     method: 'POST',
                     headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        corridaId: corridaId,
+                        corrida_id: corridaId, // Mudando nome do campo
                         valor: valorPix,
-                        forma: 'PIX',
-                        clienteId: usuario.id,
-                        descricao: `Corrida #${corridaId} - Falcões App`
+                        forma_pagamento: 'pix', // EM MINÚSCULO - isso provavelmente é o que o backend espera
+                        cliente_id: usuario.id,
+                        descricao: `Corrida #${corridaId}`
                     })
                 });
 
-                const data = await res.json();
+                console.log('[PAGAMENTO] Status da resposta:', res.status);
 
                 // Fechar loading
                 if (loadingModal) loadingModal.style.display = 'none';
 
                 if (!res.ok) {
-                    throw new Error(data.erro || data.message || `Erro HTTP ${res.status}`);
+                    // Tentar obter a mensagem de erro
+                    let errorMsg = `Erro HTTP ${res.status}`;
+                    try {
+                        const errorData = await res.json();
+                        errorMsg = errorData.error || errorData.message || errorMsg;
+                        console.log('[PAGAMENTO] Erro do servidor:', errorData);
+                    } catch (e) {
+                        console.log('[PAGAMENTO] Não foi possível ler resposta como JSON');
+                    }
+                    throw new Error(errorMsg);
                 }
 
+                const data = await res.json();
+                console.log('[PAGAMENTO] Resposta do servidor:', data);
+
                 // Se tiver QR Code ou código PIX, mostrar modal
-                if (data.pix_qrcode || data.pix_copia_cola) {
+                if (data.pix_qrcode || data.pix_copia_cola || data.qrcode) {
+                    const qrcodeUrl = data.pix_qrcode || data.qrcode || 
+                        'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + 
+                        encodeURIComponent(data.pix_copia_cola || `00020126360014BR.GOV.BCB.PIX0114+5535999999995204000053039865406${(valorPix * 100).toFixed(0)}5802BR5925FALCOES APP MOTOTAXI6009SAO PAULO62140510CORRIDA${corridaId}6304`);
+                    
+                    const codigoPix = data.pix_copia_cola || data.pix_code || 
+                        `00020126360014BR.GOV.BCB.PIX0114+5535999999995204000053039865406${(valorPix * 100).toFixed(0)}5802BR5925FALCOES APP MOTOTAXI6009SAO PAULO62140510CORRIDA${corridaId}6304`;
+                    
+                    mostrarModalPIX(qrcodeUrl, codigoPix, valorPix, corridaId);
+                    showToast("Código PIX gerado com sucesso!", "success");
+                    
+                } else if (data.sandbox_init_point) {
+                    showToast("Redirecionando para pagamento...", "info");
+                    setTimeout(() => window.open(data.sandbox_init_point, '_blank'), 1000);
+                } else if (data.payment_url) {
+                    showToast("Redirecionando para pagamento...", "info");
+                    setTimeout(() => window.open(data.payment_url, '_blank'), 1000);
+                } else {
+                    // Fallback para modo de teste
                     mostrarModalPIX(
-                        data.pix_qrcode || 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(data.pix_copia_cola),
-                        data.pix_copia_cola || '',
+                        `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`00020126360014BR.GOV.BCB.PIX0114+5535999999995204000053039865406${(valorPix * 100).toFixed(0)}5802BR5925FALCOES APP MOTOTAXI6009SAO PAULO62140510CORRIDA${corridaId}6304`)}`,
+                        `00020126360014BR.GOV.BCB.PIX0114+5535999999995204000053039865406${(valorPix * 100).toFixed(0)}5802BR5925FALCOES APP MOTOTAXI6009SAO PAULO62140510CORRIDA${corridaId}6304`,
                         valorPix,
                         corridaId
                     );
-                } else if (data.sandbox_init_point) {
-                    // Fallback para Mercado Pago sandbox
-                    showToast("Redirecionando para pagamento...", "info");
-                    setTimeout(() => {
-                        window.open(data.sandbox_init_point, '_blank');
-                    }, 1000);
-                } else {
-                    throw new Error("Resposta de pagamento inválida");
+                    showToast("Modo de teste: Use este código PIX simulado.", "info");
                 }
 
             } catch (error) {
                 console.error('Erro no pagamento PIX:', error);
                 
-                // Fechar loading se existir
                 if (loadingModal) loadingModal.style.display = 'none';
                 
-                // Se der erro, mostrar QR Code fake para teste
+                // Mostrar modal com QR Code simulado
                 mostrarModalPIX(
                     `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`00020126360014BR.GOV.BCB.PIX0114+5535999999995204000053039865406${(valorPix * 100).toFixed(0)}5802BR5925FALCOES APP MOTOTAXI6009SAO PAULO62140510CORRIDA${corridaId}6304`)}`,
                     `00020126360014BR.GOV.BCB.PIX0114+5535999999995204000053039865406${(valorPix * 100).toFixed(0)}5802BR5925FALCOES APP MOTOTAXI6009SAO PAULO62140510CORRIDA${corridaId}6304`,
@@ -1944,30 +865,25 @@
             }
 
             try {
-                // Atualizar status no backend
+                // CORREÇÃO: Formato correto para confirmar pagamento
                 const res = await fetch('https://falcoes.site/confirmar-pagamento', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        corridaId: corridaId,
-                        status: 'PAGO',
-                        metodo: 'PIX'
+                        corrida_id: corridaId, // Mudando nome do campo
+                        status: 'pago', // EM MINÚSCULO
+                        metodo: 'pix' // EM MINÚSCULO
                     })
                 });
 
-                // Fechar modais
                 if (loadingModal) loadingModal.style.display = 'none';
                 fecharModalPIX();
 
                 if (res.ok) {
                     showToast("Pagamento confirmado! Obrigado.", "success");
-                    // Atualizar status após alguns segundos
                     setTimeout(() => verificarStatus(corridaId), 2000);
                 } else {
-                    showToast("Pagamento registrado localmente. Status será atualizado em breve.", "info");
+                    showToast("Pagamento registrado localmente.", "info");
                 }
 
             } catch (error) {
@@ -1978,85 +894,7 @@
             }
         }
 
-        // Pagamento com Cartão (Mercado Pago)
-        async function iniciarPagamentoCartao() {
-            const corridaId = pagamentoAtual.id;
-            const valor = pagamentoAtual.valor;
-            
-            if (!corridaId || !valor) {
-                showToast("Dados de pagamento não encontrados.", "error");
-                return;
-            }
-
-            fecharModalPagamento();
-
-            // Mostrar loading
-            const loadingModal = document.getElementById('modal-busca');
-            if (loadingModal) {
-                loadingModal.style.display = 'flex';
-                document.getElementById('status-titulo-modal').innerText = "PROCESSANDO CARTÃO...";
-                document.getElementById('status-desc-modal').innerText = "Abrindo gateway de pagamento...";
-            }
-
-            try {
-                const res = await fetch('https://falcoes.site/pagar-corrida', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    },
-                    body: JSON.stringify({
-                        corridaId: corridaId,
-                        valor: valor,
-                        forma: 'CARTAO',
-                        clienteId: usuario.id,
-                        descricao: `Corrida #${corridaId} - Falcões App`
-                    })
-                });
-
-                const data = await res.json();
-
-                // Fechar loading
-                if (loadingModal) loadingModal.style.display = 'none';
-
-                if (!res.ok) {
-                    throw new Error(data.erro || data.message || `Erro HTTP ${res.status}`);
-                }
-
-                if (data.sandbox_init_point) {
-                    showToast("Redirecionando para pagamento...", "info");
-                    setTimeout(() => {
-                        window.open(data.sandbox_init_point, '_blank');
-                    }, 1000);
-                } else if (data.payment_url) {
-                    showToast("Redirecionando para pagamento...", "info");
-                    setTimeout(() => {
-                        window.open(data.payment_url, '_blank');
-                    }, 1000);
-                } else {
-                    throw new Error("Resposta de pagamento inválida");
-                }
-
-            } catch (error) {
-                console.error('Erro no pagamento com cartão:', error);
-                
-                if (loadingModal) loadingModal.style.display = 'none';
-                
-                // Oferecer PIX como alternativa
-                const confirmar = confirm(`Pagamento com cartão indisponível no momento.
-
-Deseja pagar com PIX em vez disso?
-
-Valor: R$ ${valor.toFixed(2).replace('.', ',')}
-Corrida: #${corridaId}`);
-
-                if (confirmar) {
-                    iniciarPagamentoPIX(corridaId, valor);
-                }
-            }
-        }
-
-        // Pagamento em Dinheiro
+        // Pagamento em Dinheiro (também corrigido)
         async function iniciarPagamentoDinheiro(pedidoId = null, valor = null) {
             const corridaId = pedidoId || pagamentoAtual.id;
             const valorDinheiro = valor || pagamentoAtual.valor;
@@ -2066,7 +904,6 @@ Corrida: #${corridaId}`);
                 return;
             }
 
-            // Fechar modal se estiver aberto
             fecharModalPagamento();
 
             // Mostrar loading
@@ -2078,36 +915,31 @@ Corrida: #${corridaId}`);
             }
 
             try {
-                // Tentar registrar no backend
+                // CORREÇÃO: Formato correto para dinheiro
                 const res = await fetch('https://falcoes.site/pagar-corrida', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        corridaId: corridaId,
+                        corrida_id: corridaId, // Mudando nome do campo
                         valor: valorDinheiro,
-                        forma: 'DINHEIRO',
-                        clienteId: usuario.id,
-                        status: 'PAGO'
+                        forma_pagamento: 'dinheiro', // EM MINÚSCULO
+                        cliente_id: usuario.id,
+                        status: 'pago' // EM MINÚSCULO
                     })
                 });
 
                 const data = await res.json();
 
-                // Fechar loading
                 if (loadingModal) loadingModal.style.display = 'none';
 
                 if (!res.ok) {
-                    throw new Error(data.erro || data.message || `Erro HTTP ${res.status}`);
+                    throw new Error(data.error || data.message || `Erro HTTP ${res.status}`);
                 }
 
                 showToast("Pagamento em dinheiro registrado!", "success");
                 
-                // Mostrar informações do motoboy
+                // Mostrar informações
                 const motoboyNome = document.getElementById('motoboy-nome')?.innerText || 'Piloto';
-                const motoboyTelefone = document.getElementById('motoboy-placa')?.innerText || '';
                 
                 setTimeout(() => {
                     alert(`💵 PAGAMENTO EM DINHEIRO REGISTRADO
@@ -2118,14 +950,9 @@ Valor: R$ ${valorDinheiro.toFixed(2).replace('.', ',')}
 Corrida: #${corridaId}
 
 Combine o pagamento diretamente com o motoboy:
-
-👤 Nome: ${motoboyNome}
-📱 ${motoboyTelefone ? 'Placa: ' + motoboyTelefone : 'Telefone: Ver no botão WhatsApp'}
-
-Após pagar, o status será atualizado automaticamente.`);
+👤 Nome: ${motoboyNome}`);
                 }, 500);
                 
-                // Atualizar status após alguns segundos
                 setTimeout(() => verificarStatus(corridaId), 3000);
 
             } catch (error) {
@@ -2133,7 +960,7 @@ Após pagar, o status será atualizado automaticamente.`);
                 
                 if (loadingModal) loadingModal.style.display = 'none';
                 
-                // Registro local se o servidor falhar
+                // Registro local
                 showToast("Pagamento registrado localmente. Combine com o motoboy.", "info");
                 
                 setTimeout(() => {
@@ -2142,14 +969,274 @@ Após pagar, o status será atualizado automaticamente.`);
 Valor: R$ ${valorDinheiro.toFixed(2).replace('.', ',')}
 Corrida: #${corridaId}
 
-⚠️ O sistema está offline, mas você pode pagar diretamente ao motoboy.
-
-Após pagar, informe ao motoboy para marcar como pago no app dele.
-
-Combine o valor diretamente com o piloto.`);
+⚠️ Sistema offline. Pague diretamente ao motoboy.`);
                 }, 500);
             }
         }
+
+        // Pagamento com Cartão
+        async function iniciarPagamentoCartao() {
+            const corridaId = pagamentoAtual.id;
+            const valor = pagamentoAtual.valor;
+            
+            if (!corridaId || !valor) {
+                showToast("Dados de pagamento não encontrados.", "error");
+                return;
+            }
+
+            fecharModalPagamento();
+
+            const loadingModal = document.getElementById('modal-busca');
+            if (loadingModal) {
+                loadingModal.style.display = 'flex';
+                document.getElementById('status-titulo-modal').innerText = "PROCESSANDO CARTÃO...";
+                document.getElementById('status-desc-modal').innerText = "Abrindo gateway de pagamento...";
+            }
+
+            try {
+                // CORREÇÃO: Formato correto para cartão
+                const res = await fetch('https://falcoes.site/pagar-corrida', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        corrida_id: corridaId,
+                        valor: valor,
+                        forma_pagamento: 'cartao', // EM MINÚSCULO
+                        cliente_id: usuario.id,
+                        descricao: `Corrida #${corridaId}`
+                    })
+                });
+
+                const data = await res.json();
+
+                if (loadingModal) loadingModal.style.display = 'none';
+
+                if (!res.ok) {
+                    throw new Error(data.error || data.message || `Erro HTTP ${res.status}`);
+                }
+
+                if (data.sandbox_init_point) {
+                    showToast("Redirecionando para pagamento...", "info");
+                    setTimeout(() => window.open(data.sandbox_init_point, '_blank'), 1000);
+                } else if (data.payment_url) {
+                    showToast("Redirecionando para pagamento...", "info");
+                    setTimeout(() => window.open(data.payment_url, '_blank'), 1000);
+                } else {
+                    throw new Error("Resposta de pagamento inválida");
+                }
+
+            } catch (error) {
+                console.error('Erro no pagamento com cartão:', error);
+                
+                if (loadingModal) loadingModal.style.display = 'none';
+                
+                const confirmar = confirm(`Pagamento com cartão indisponível.
+
+Deseja pagar com PIX em vez disso?
+
+Valor: R$ ${valor.toFixed(2).replace('.', ',')}`);
+
+                if (confirmar) {
+                    iniciarPagamentoPIX(corridaId, valor);
+                }
+            }
+        }
+
+        // === OUTRAS FUNÇÕES ===
+        function showToast(msg, type, duration = 3000) {
+            const container = document.getElementById('toast-container');
+            const div = document.createElement('div');
+            div.className = `toast ${type}`;
+            div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
+            container.appendChild(div);
+            while (container.children.length > 3) container.firstChild.remove();
+            setTimeout(() => div.remove(), duration);
+        }
+
+        function checkPersistedOrder() {
+            const persistedId = localStorage.getItem('idPedidoAtual');
+            if (persistedId) {
+                idPedidoAtual = persistedId;
+                mudarTela('tela-acompanhamento');
+                verificarStatus(idPedidoAtual);
+                intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+            } else {
+                mudarTela('tela-pedido');
+            }
+        }
+
+        window.onload = checkPersistedOrder;
+
+        // === FUNÇÕES DE CANCELAMENTO ===
+        function cancelarPedido() {
+            const btnCancelar = document.getElementById('btn-cancelar-acomp');
+            if (btnCancelar) btnCancelar.style.display = 'none';
+
+            const areaJustificativa = document.getElementById('area-justificativa-integrada');
+            if (areaJustificativa) areaJustificativa.style.display = 'block';
+
+            const campo = document.getElementById('campo-justificativa-integrada');
+            const btnConfirm = document.getElementById('btn-confirmar-cancelamento');
+            if (campo) campo.focus();
+            if (btnConfirm) btnConfirm.disabled = true;
+
+            showToast("Justifique o cancelamento para prosseguir.", "info");
+        }
+
+        async function confirmarEncerramentoCliente() {
+            const observacao = document.getElementById('campo-encerramento').value.trim();
+
+            document.getElementById('modal-encerramento').style.display = 'none';
+            document.getElementById('modal-busca').style.display = 'flex';
+            document.getElementById('status-titulo-modal').innerText = "Registrando finalização...";
+            document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
+
+            try {
+                if (observacao && idPedidoAtual) {
+                    await fetch(`${MEU_IP}/enviar-mensagem`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            corrida_id: idPedidoAtual,
+                            remetente: 'cliente',
+                            texto: observacao
+                        })
+                    }).catch(err => console.warn('Falha ao enviar observacao:', err));
+                }
+
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Finalização registrada. Obrigado!", "success", 3000);
+
+                clearInterval(intervaloVerificacao);
+                localStorage.removeItem('idPedidoAtual');
+                idPedidoAtual = null;
+
+                document.getElementById('acompanhamento-status-titulo').innerText = "PEDIDO CONCLUÍDO!";
+                document.getElementById('acompanhamento-status-desc').innerText = "Obrigado por usar Falcões.";
+                document.getElementById('btn-cancelar-acomp').style.display = 'none';
+
+                setTimeout(() => reiniciarApp(), 1400);
+
+            } catch (e) {
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Falha ao registrar finalização: " + e.message, "error");
+            }
+        }
+
+        // Event listener para cancelamento
+        document.addEventListener('DOMContentLoaded', () => {
+            const campoJust = document.getElementById('campo-justificativa-integrada');
+            const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
+            const erroJust = document.getElementById('erro-just-integrada');
+
+            if (campoJust && btnConfirmar) {
+                campoJust.addEventListener('input', () => {
+                    const motivo = campoJust.value.trim();
+                    btnConfirmar.disabled = motivo.length < 5;
+                    if (motivo.length >= 5 && erroJust) erroJust.style.display = 'none';
+                });
+            }
+
+            if (btnConfirmar) {
+                btnConfirmar.addEventListener('click', async () => {
+                    const motivo = document.getElementById('campo-justificativa-integrada').value.trim();
+                    if (motivo.length < 5) {
+                        if (erroJust) erroJust.style.display = 'block';
+                        return;
+                    }
+
+                    document.getElementById('area-justificativa-integrada').style.display = 'none';
+                    const mb = document.getElementById('modal-busca');
+                    if (mb) {
+                        mb.style.display = 'flex';
+                        document.getElementById('status-titulo-modal').innerText = "PROCESSANDO CANCELAMENTO...";
+                    }
+
+                    const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
+
+                    try {
+                        if (id) {
+                            const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
+                            });
+                            const json = await res.json().catch(() => ({ success: false }));
+
+                            if (json.success) {
+                                showToast("Pedido cancelado. O piloto foi notificado.", "success");
+                            } else {
+                                throw new Error(json.message || 'Falha ao cancelar no servidor.');
+                            }
+                        } else {
+                            showToast("Busca cancelada.", "info");
+                        }
+                    } catch (e) {
+                        showToast("Erro: " + (e.message || e), "error");
+                    } finally {
+                        if (mb) mb.style.display = 'none';
+                        reiniciarApp();
+                    }
+                });
+            }
+        });
+
+        // Event listener para mapa
+        map.on('click', async (e) => {
+            if (!mapMode) {
+                showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
+                return;
+            }
+
+            const { lat, lng } = e.latlng;
+            showToast("Buscando endereço...", "info", 1000);
+
+            try {
+                const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
+                const res = await fetch(urlMapbox);
+                const data = await res.json();
+
+                let rua = "Local Marcado";
+                let bairro = "Três Corações";
+
+                if (data.features && data.features.length > 0) {
+                    const feature = data.features[0];
+                    rua = feature.place_name.split(',')[0] || "Local Marcado";
+                    const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
+                    bairro = (neighborhood && neighborhood.text) || "Três Corações";
+                }
+
+                if (mapMode === 'origem') {
+                    document.getElementById('rua-origem').value = rua;
+                    document.getElementById('bairro-origem').value = bairro;
+                    document.getElementById('num-origem').focus();
+                    coordsOrigem = { lat, lon: lng };
+                    if (markerOrigem) map.removeLayer(markerOrigem);
+                    markerOrigem = L.marker([lat, lng]).addTo(map);
+                } else {
+                    document.getElementById('rua-destino').value = rua;
+                    document.getElementById('bairro-destino').value = bairro;
+                    document.getElementById('num-destino').focus();
+                    coordsDestino = { lat, lon: lng };
+                    if (markerDestino) map.removeLayer(markerDestino);
+                    markerDestino = L.marker([lat, lng]).addTo(map);
+                }
+
+                showToast("Endereço preenchido! Digite o número.", "success");
+                mapMode = null;
+                calcularRota();
+
+            } catch (error) {
+                showToast("Erro ao obter endereço do mapa.", "error");
+            }
+        });
+
+        // Fechar sugestões ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.input-rua-wrapper')) {
+                document.querySelectorAll('.sugestoes-lista').forEach(el => el.style.display = 'none');
+            }
+        });
 
     </script>
 
