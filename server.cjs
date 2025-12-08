@@ -1021,80 +1021,86 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// ===============================================
-// ROTAS DE PAGAMENTO MERCADO PAGO
-// ===============================================
-
-// PAGAMENTO DE CORRIDA (ONLINE ou DINHEIRO)
-// PAGAMENTO ONLINE - MERCADO PAGO (TESTE)
+// PAGAMENTO ONLINE - MERCADO PAGO (SDK NOVO)
 app.post('/pagar-corrida', async (req, res) => {
-    console.log('[/pagar-corrida] body recebido:', req.body);
+  console.log('[/pagar-corrida] body recebido:', req.body);
 
-    try {
-        const { corridaId, valor, forma } = req.body;
+  try {
+    const { corridaId, valor, forma } = req.body;
 
-        if (!corridaId || !valor) {
-            return res.status(400).json({
-                erro: 'corridaId e valor são obrigatórios.'
-            });
-        }
-
-        if (!process.env.MP_ACCESS_TOKEN) {
-            console.error('MP_ACCESS_TOKEN não configurado no .env');
-            return res.status(500).json({
-                erro: 'Configuração de pagamento ausente (MP_ACCESS_TOKEN).'
-            });
-        }
-
-        // ----- MERCADO PAGO -----
-        
-
-        const preference = {
-            items: [
-                {
-                    title: `Corrida #${corridaId}`,
-                    quantity: 1,
-                    unit_price: Number(valor),
-                    currency_id: 'BRL',
-                },
-            ],
-            back_urls: {
-                success: 'https://falcoes.site/pagamento-sucesso.html',
-                failure: 'https://falcoes.site/pagamento-falhou.html',
-                pending: 'https://falcoes.site/pagamento-pendente.html',
-            },
-            auto_return: 'approved',
-        };
-
-        const mpRes = await mercadopago.preferences.create(preference);
-
-        console.log('[/pagar-corrida] preference criada:', mpRes.body.id);
-
-        const link_pagamento =
-            mpRes.body.init_point || mpRes.body.sandbox_init_point;
-
-        // Atualiza o pedido no banco
-        await pool.query(
-            `UPDATE pedidos
-             SET status = $1,
-                 forma_pagamento = $2,
-                 mp_preference_id = $3
-             WHERE id = $4`,
-            ['AGUARDANDO_PAGAMENTO', forma || 'ONLINE', mpRes.body.id, corridaId]
-        );
-
-        return res.json({
-            sucesso: true,
-            link_pagamento,
-        });
-    } catch (err) {
-        console.error('Erro em /pagar-corrida:', err);
-        return res.status(500).json({
-            erro: 'Erro ao iniciar pagamento.',
-            detalhe: err.message,
-        });
+    if (!corridaId || !valor) {
+      return res.status(400).json({
+        erro: 'corridaId e valor são obrigatórios.'
+      });
     }
+
+    if (!mpAccessToken) {
+      return res.status(500).json({
+        erro: 'Access token Mercado Pago não configurado.'
+      });
+    }
+
+    const preferenceData = {
+      items: [
+        {
+          title: `Corrida #${corridaId}`,
+          quantity: 1,
+          unit_price: Number(valor),
+          currency_id: 'BRL'
+        }
+      ],
+      back_urls: {
+        success: `${FRONT_URL}/cliente.html?pagamento=sucesso`,
+        failure: `${FRONT_URL}/cliente.html?pagamento=falhou`,
+        pending: `${FRONT_URL}/cliente.html?pagamento=pendente`
+      },
+      auto_return: 'approved',
+      metadata: {
+        corridaId
+      }
+    };
+
+    // ✅ SDK NOVO (ESSENCIAL)
+    const mpRes = await preferenceClient.create({
+      body: preferenceData
+    });
+
+    console.log('✅ Preference criada:', mpRes.id);
+
+    const link_pagamento =
+      mpRes.init_point || mpRes.sandbox_init_point;
+
+    if (!link_pagamento) {
+      return res.status(500).json({
+        erro: 'Preference criada, mas sem link de pagamento.'
+      });
+    }
+
+    // ✅ CORREÇÃO DO NOME DA TABELA (VOCÊ USA "corridas")
+    await pool.query(
+      `
+      UPDATE corridas
+      SET status = $1,
+          mp_preference_id = $2
+      WHERE id = $3
+      `,
+      ['AGUARDANDO_PAGAMENTO', mpRes.id, corridaId]
+    );
+
+    return res.json({
+      sucesso: true,
+      link_pagamento
+    });
+
+  } catch (err) {
+    console.error('❌ Erro em /pagar-corrida:', err);
+    return res.status(500).json({
+      erro: 'Erro ao iniciar pagamento.',
+      detalhe: err.message
+    });
+  }
 });
+
 
 // WEBHOOK DO MERCADO PAGO
 app.post('/mp-webhook', async (req, res) => {
