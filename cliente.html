@@ -1572,36 +1572,58 @@ function renderizarOpcoesPagamentoCliente(pedido) {
   const area = document.getElementById('area-pagamento-cliente');
   if (!area) return;
 
-  // só pra você ver o que está chegando
   console.log('[DEBUG] renderizarOpcoesPagamentoCliente -> pedido:', pedido);
 
   // limpa qualquer coisa anterior
   area.innerHTML = '';
 
-  // ⚠️ Se não tiver pedido ou o status não for AGUARDANDO_PAGAMENTO,
-  // não mostra NADA de pagamento
+  // só mostra botões se estiver aguardando pagamento
   if (!pedido || pedido.status !== 'AGUARDANDO_PAGAMENTO') {
     return;
   }
 
-  // POR ENQUANTO vamos continuar usando 999 e 10,
-  // porque já sabemos que funciona. Depois eu troco pro valor real.
+  // Tenta descobrir o ID do pedido com vários nomes possíveis
+  const pedidoId =
+    pedido.id ||
+    pedido.corrida_id ||
+    pedido.id_corrida ||
+    pedido.pedido_id;
+
+  // Tenta descobrir o valor do pedido com vários nomes possíveis
+  const valorBruto =
+    pedido.valor_total ||
+    pedido.valor ||
+    pedido.preco ||
+    pedido.total ||
+    pedido.total_estimado;
+
+  const valor = Number(valorBruto || 0);
+
+  console.log('[DEBUG] pagamento -> pedidoId:', pedidoId, 'valor:', valor);
+
+  // Se não achou ID ou valor, não mostra nada pra não dar erro
+  if (!pedidoId || !valor) {
+    console.warn('[WARN] Não foi possível determinar ID ou valor do pedido para pagamento.');
+    return;
+  }
+
   area.innerHTML = `
     <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
       <button
         style="width:100%;padding:12px;font-size:16px;background:#00c853;color:#000;border:none;border-radius:8px;font-weight:bold;"
-        onclick="pagarCorridaOnline(999, 10)">
+        onclick="pagarCorridaOnline(${pedidoId}, ${valor})">
         PAGAR ONLINE (PIX / CARTÃO)
       </button>
 
       <button
         style="width:100%;padding:12px;font-size:16px;background:#ffca28;color:#000;border:none;border-radius:8px;font-weight:bold;"
-        onclick="pagarCorridaDinheiro(999, 10)">
+        onclick="pagarCorridaDinheiro(${pedidoId}, ${valor})">
         PAGAR EM DINHEIRO
       </button>
     </div>
   `;
 }
+
 
 </script>
 
