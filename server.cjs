@@ -1026,103 +1026,74 @@ app.get('/health', async (req, res) => {
 // ===============================================
 
 // PAGAMENTO DE CORRIDA (ONLINE ou DINHEIRO)
+// PAGAMENTO ONLINE - MERCADO PAGO (TESTE)
 app.post('/pagar-corrida', async (req, res) => {
-  try {
-    const { corridaId, valor, forma } = req.body;
+    console.log('[/pagar-corrida] body recebido:', req.body);
 
-    if (!corridaId || !valor || !forma) {
-      return res.status(400).json({ erro: 'corridaId, valor e forma são obrigatórios' });
-    }
+    try {
+        const { corridaId, valor, forma } = req.body;
 
-    // Verifica se a corrida existe e está em status válido
-    const corridaResult = await pool.query(
-      "SELECT id, status FROM corridas WHERE id = $1",
-      [corridaId]
-    );
-
-    if (corridaResult.rows.length === 0) {
-      return res.status(404).json({ erro: 'Corrida não encontrada' });
-    }
-
-    const corrida = corridaResult.rows[0];
-    if (corrida.status === 'PAGO_ONLINE' || corrida.status === 'PAGO_DINHEIRO') {
-      return res.status(400).json({ erro: 'Corrida já foi paga' });
-    }
-
-    console.log('Pagamento solicitado:', { corridaId, valor, forma });
-
-    if (forma === 'ONLINE') {
-      // Atualiza status da corrida para AGUARDANDO_PAGAMENTO
-      await pool.query(
-        "UPDATE corridas SET status = 'AGUARDANDO_PAGAMENTO' WHERE id = $1",
-        [corridaId]
-      );
-
-      const response = await preferenceClient.create({
-        body: {
-          items: [
-            {
-              title: `Corrida #${corridaId}`,
-              description: `Pagamento da corrida ${corridaId}`,
-              quantity: 1,
-              currency_id: 'BRL',
-              unit_price: Number(valor)
-            }
-          ],
-          external_reference: String(corridaId),
-          notification_url: `${PUBLIC_BASE_URL}/mp-webhook`,
-          
-          back_urls: {
-            success: `${PUBLIC_BASE_URL}/mp-retorno?status=success`,
-            failure: `${PUBLIC_BASE_URL}/mp-retorno?status=failure`,
-            pending: `${PUBLIC_BASE_URL}/mp-retorno?status=pending`
-          },
-          
-          auto_return: 'approved',
-          expires: true,
-          expiration_date_from: new Date(),
-          expiration_date_to: new Date(Date.now() + 30 * 60 * 1000),
-          metadata: {
-            corrida_id: corridaId,
-            valor: valor
-          }
+        if (!corridaId || !valor) {
+            return res.status(400).json({
+                erro: 'corridaId e valor são obrigatórios.'
+            });
         }
-      });
 
-      // Salva o preference_id no banco para referência futura
-      await pool.query(
-        "UPDATE corridas SET mp_preference_id = $1 WHERE id = $2",
-        [response.id, corridaId]
-      );
+        if (!process.env.MP_ACCESS_TOKEN) {
+            console.error('MP_ACCESS_TOKEN não configurado no .env');
+            return res.status(500).json({
+                erro: 'Configuração de pagamento ausente (MP_ACCESS_TOKEN).'
+            });
+        }
 
-      return res.json({
-        ok: true,
-        tipo: 'ONLINE',
-        init_point: response.init_point,
-        sandbox_init_point: response.sandbox_init_point,
-        preference_id: response.id
-      });
+        // ----- MERCADO PAGO -----
+        
+
+        const preference = {
+            items: [
+                {
+                    title: `Corrida #${corridaId}`,
+                    quantity: 1,
+                    unit_price: Number(valor),
+                    currency_id: 'BRL',
+                },
+            ],
+            back_urls: {
+                success: 'https://falcoes.site/pagamento-sucesso.html',
+                failure: 'https://falcoes.site/pagamento-falhou.html',
+                pending: 'https://falcoes.site/pagamento-pendente.html',
+            },
+            auto_return: 'approved',
+        };
+
+        const mpRes = await mercadopago.preferences.create(preference);
+
+        console.log('[/pagar-corrida] preference criada:', mpRes.body.id);
+
+        const link_pagamento =
+            mpRes.body.init_point || mpRes.body.sandbox_init_point;
+
+        // Atualiza o pedido no banco
+        await pool.query(
+            `UPDATE pedidos
+             SET status = $1,
+                 forma_pagamento = $2,
+                 mp_preference_id = $3
+             WHERE id = $4`,
+            ['AGUARDANDO_PAGAMENTO', forma || 'ONLINE', mpRes.body.id, corridaId]
+        );
+
+        return res.json({
+            sucesso: true,
+            link_pagamento,
+        });
+    } catch (err) {
+        console.error('Erro em /pagar-corrida:', err);
+        return res.status(500).json({
+            erro: 'Erro ao iniciar pagamento.',
+            detalhe: err.message,
+        });
     }
-
-    if (forma === 'DINHEIRO') {
-      await pool.query(
-        "UPDATE corridas SET status = 'PAGO_DINHEIRO' WHERE id = $1",
-        [corridaId]
-      );
-
-      return res.json({
-        ok: true,
-        tipo: 'DINHEIRO',
-        mensagem: 'Pagamento em dinheiro registrado. Pague ao motoboy.'
-      });
-    }
-
-    return res.status(400).json({ erro: 'Forma de pagamento inválida' });
-
-  } catch (err) {
-    console.error('ERRO PAGAR-CORRIDA:', err);
-    return res.status(500).json({ erro: 'Erro ao iniciar pagamento.' });
-  }
 });
 
 // WEBHOOK DO MERCADO PAGO
