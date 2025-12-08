@@ -1003,11 +1003,9 @@ app.post('/pagar-corrida', async (req, res) => {
       return res.status(400).json({ erro: 'corridaId, valor e forma são obrigatórios' });
     }
 
-    // Por enquanto só mostramos no log o que foi pedido
     console.log('Pagamento solicitado:', { corridaId, valor, forma });
 
     if (forma === 'ONLINE') {
-      // Cria preferência no Mercado Pago (modo TESTE)
       const response = await preferenceClient.create({
         body: {
           items: [
@@ -1022,7 +1020,6 @@ app.post('/pagar-corrida', async (req, res) => {
         }
       });
 
-      // Retorna link de pagamento (SANDBOX por enquanto)
       return res.json({
         ok: true,
         tipo: 'ONLINE',
@@ -1031,16 +1028,6 @@ app.post('/pagar-corrida', async (req, res) => {
     }
 
     if (forma === 'DINHEIRO') {
-      // FUTURO: aqui vamos atualizar no banco:
-      // - forma_pagamento = 'DINHEIRO'
-      // - status_pagamento = 'PAGAMENTO_PENDENTE_DINHEIRO'
-      //
-      // Exemplo (NÃO DESCOMENTE AGORA):
-      // await pool.query(
-      //   'UPDATE corridas SET forma_pagamento = $1, status_pagamento = $2 WHERE id = $3',
-      //   ['DINHEIRO', 'PAGAMENTO_PENDENTE_DINHEIRO', corridaId]
-      // );
-
       return res.json({
         ok: true,
         tipo: 'DINHEIRO',
@@ -1048,7 +1035,7 @@ app.post('/pagar-corrida', async (req, res) => {
       });
     }
 
-    return res.status(400).json({ erro: 'Forma de pagamento inválida (use ONLINE ou DINHEIRO).' });
+    return res.status(400).json({ erro: 'Forma de pagamento inválida' });
 
   } catch (err) {
     console.error('ERRO PAGAR-CORRIDA:', err);
@@ -1057,16 +1044,9 @@ app.post('/pagar-corrida', async (req, res) => {
 });
 
 
-app.listen(port, () => {
-  console.log(`Servidor rodando na porta ${port}`);
-});
-// --- INICIALIZAÇÃO DO MONITORAMENTO ---
-
-// Inicia o monitoramento de expirações a cada 5 segundos
-// Isso garante que corridas expiradas para todos sejam redistribuídas.
-setInterval(monitorarExpiracoes, 5000);
-
-
+// ===============================================
+// ROTA DE TESTE MERCADO PAGO (mantém)
+// ===============================================
 app.get('/pagar-teste', async (req, res) => {
   try {
     const response = await preferenceClient.create({
@@ -1090,4 +1070,18 @@ app.get('/pagar-teste', async (req, res) => {
     console.error('ERRO MP:', err);
     res.status(500).json({ erro: err.message });
   }
+});
+
+
+// ===============================================
+// MONITOR (fica antes do listen)
+// ===============================================
+setInterval(monitorarExpiracoes, 5000);
+
+
+// ===============================================
+// SOMENTE O LISTEN NO FINAL
+// ===============================================
+app.listen(port, () => {
+  console.log(`Servidor rodando na porta ${port}`);
 });
