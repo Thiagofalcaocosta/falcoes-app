@@ -8,7 +8,6 @@ const { Pool } = require('pg');
 const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
-require('dotenv').config();
 
 const PUBLIC_BASE_URL = 'https://falcoes-app.onrender.com';
 const FRONT_URL = 'https://falcoes.site';
@@ -27,23 +26,27 @@ const port = process.env.PORT || 3000;
 // 2. CONFIGURAÇÃO MERCADO PAGO
 // ===============================================
 
-// Verifica se o token está configurado
-if (!process.env.MP_ACCESS_TOKEN) {
-  console.warn('⚠️  MP_ACCESS_TOKEN não encontrado nas variáveis de ambiente');
-  console.warn('Usando modo de teste...');
+// tenta usar primeiro o token de TESTE, depois um de produção (se existir)
+const mpAccessToken = process.env.MP_ACCESS_TOKEN_TEST || process.env.MP_ACCESS_TOKEN;
+
+if (!mpAccessToken) {
+  console.error('❌ Nenhum access token do Mercado Pago encontrado.');
+  console.error('Configure MP_ACCESS_TOKEN_TEST nas variáveis de ambiente do Render.');
 }
 
 const client = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN || 'TEST-ACCESS-TOKEN-DEMO',
+  accessToken: mpAccessToken,
   options: { 
     timeout: 5000,
-    idempotencyKey: 'falcoes-app' 
+    idempotencyKey: 'falcoes-app'
   }
 });
 
 const preferenceClient = new Preference(client);
-const paymentClient = new Payment(client);
-const merchantOrderClient = new MerchantOrder(client);
+// por enquanto você nem está usando paymentClient nem merchantOrderClient;
+// pode comentar se quiser:
+// const paymentClient = new Payment(client);
+// const merchantOrderClient = new MerchantOrder(client);
 
 // ===============================================
 // 4. MIDDLEWARES
