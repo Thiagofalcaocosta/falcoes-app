@@ -13,6 +13,12 @@ const PUBLIC_BASE_URL = 'https://falcoes-app.onrender.com';
 const FRONT_URL = 'https://falcoes.site';
 
 const { MercadoPagoConfig, Preference } = require('mercadopago');
+// ===============================================
+// 3. DECLARAR O APP EXPRESS
+// ===============================================
+const app = express();
+const port = process.env.PORT || 3000;
+
 
 // 2. CONFIGURAÇÃO MERCADO PAGO
 
