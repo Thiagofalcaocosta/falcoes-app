@@ -1508,36 +1508,37 @@
     </script>
     <script>
   // PAGAMENTO ONLINE (Mercado Pago - modo TESTE)
-  async function pagarCorridaOnline(corridaId, valor) {
+  // PAGAMENTO ONLINE (Mercado Pago - modo TESTE)
+async function pagarCorridaOnline(corridaId, valor) {
     try {
-      const res = await fetch('/pagar-corrida', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          corridaId: corridaId,
-          valor: valor,
-          forma: 'ONLINE'
-        })
-      });
+        const API = 'https://falcoes-app.onrender.com';
 
-      const data = await res.json();
+        const res = await fetch(`${API}/pagar-corrida`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                corridaId: corridaId,
+                valor: valor,
+                forma: 'ONLINE'
+            })
+        });
 
-      if (!res.ok) {
-        alert(data.erro || 'Erro ao iniciar pagamento online.');
-        return;
-      }
+        const data = await res.json();
+        console.log('Resposta pagamento:', data);
 
-      if (data.sandbox_init_point) {
-        // Modo de teste: redireciona para o link do Mercado Pago (sandbox)
-        window.location.href = data.sandbox_init_point;
-      } else {
-        alert('Resposta sem link de pagamento.');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('Falha na comunicação com o servidor.');
+        if (!res.ok) {
+            alert(data.erro || 'Erro ao gerar pagamento');
+            return;
+        }
+
+        if (data.link_pagamento) {
+            window.open(data.link_pagamento, '_blank');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Falha ao iniciar pagamento online');
     }
-  }
+}
 
   // PAGAMENTO EM DINHEIRO
   async function pagarCorridaDinheiro(corridaId, valor) {
