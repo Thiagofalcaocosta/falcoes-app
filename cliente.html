@@ -1499,6 +1499,68 @@
             }
         });
     </script>
+    <script>
+  // PAGAMENTO ONLINE (Mercado Pago - modo TESTE)
+  async function pagarCorridaOnline(corridaId, valor) {
+    try {
+      const res = await fetch('/pagar-corrida', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          corridaId: corridaId,
+          valor: valor,
+          forma: 'ONLINE'
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.erro || 'Erro ao iniciar pagamento online.');
+        return;
+      }
+
+      if (data.sandbox_init_point) {
+        // Modo de teste: redireciona para o link do Mercado Pago (sandbox)
+        window.location.href = data.sandbox_init_point;
+      } else {
+        alert('Resposta sem link de pagamento.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Falha na comunicação com o servidor.');
+    }
+  }
+
+  // PAGAMENTO EM DINHEIRO
+  async function pagarCorridaDinheiro(corridaId, valor) {
+    try {
+      const res = await fetch('/pagar-corrida', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          corridaId: corridaId,
+          valor: valor,
+          forma: 'DINHEIRO'
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.erro || 'Erro ao registrar pagamento em dinheiro.');
+        return;
+      }
+
+      alert(data.mensagem || 'Pagamento em dinheiro registrado. Combine com o motoboy.');
+      // FUTURO: aqui podemos atualizar a tela, status, etc.
+    } catch (e) {
+      console.error(e);
+      alert('Falha na comunicação com o servidor.');
+    }
+  }
+</script>
+
 
 </body>
 

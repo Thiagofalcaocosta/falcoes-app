@@ -985,6 +985,70 @@ app.get('/health', async (req, res) => {
     res.status(500).json({ ok: false, dbError: String(err.message || err) });
   }
 });
+// ===============================================
+// PAGAMENTO DE CORRIDA (ONLINE ou DINHEIRO)
+// ===============================================
+app.post('/pagar-corrida', async (req, res) => {
+  try {
+    const { corridaId, valor, forma } = req.body;
+
+    if (!corridaId || !valor || !forma) {
+      return res.status(400).json({ erro: 'corridaId, valor e forma são obrigatórios' });
+    }
+
+    // Por enquanto só mostramos no log o que foi pedido
+    console.log('Pagamento solicitado:', { corridaId, valor, forma });
+
+    if (forma === 'ONLINE') {
+      // Cria preferência no Mercado Pago (modo TESTE)
+      const response = await preferenceClient.create({
+        body: {
+          items: [
+            {
+              title: `Corrida #${corridaId}`,
+              quantity: 1,
+              currency_id: 'BRL',
+              unit_price: Number(valor)
+            }
+          ],
+          external_reference: String(corridaId)
+        }
+      });
+
+      // Retorna link de pagamento (SANDBOX por enquanto)
+      return res.json({
+        ok: true,
+        tipo: 'ONLINE',
+        sandbox_init_point: response.sandbox_init_point
+      });
+    }
+
+    if (forma === 'DINHEIRO') {
+      // FUTURO: aqui vamos atualizar no banco:
+      // - forma_pagamento = 'DINHEIRO'
+      // - status_pagamento = 'PAGAMENTO_PENDENTE_DINHEIRO'
+      //
+      // Exemplo (NÃO DESCOMENTE AGORA):
+      // await pool.query(
+      //   'UPDATE corridas SET forma_pagamento = $1, status_pagamento = $2 WHERE id = $3',
+      //   ['DINHEIRO', 'PAGAMENTO_PENDENTE_DINHEIRO', corridaId]
+      // );
+
+      return res.json({
+        ok: true,
+        tipo: 'DINHEIRO',
+        mensagem: 'Pagamento em dinheiro registrado. Pague ao motoboy.'
+      });
+    }
+
+    return res.status(400).json({ erro: 'Forma de pagamento inválida (use ONLINE ou DINHEIRO).' });
+
+  } catch (err) {
+    console.error('ERRO PAGAR-CORRIDA:', err);
+    return res.status(500).json({ erro: 'Erro ao iniciar pagamento.' });
+  }
+});
+
 
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
