@@ -19,6 +19,11 @@ const client = new MercadoPagoConfig({
 
 const preferenceClient = new Preference(client);
 
+// URL pública do servidor (Render)
+const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://falcoes-app.onrender.com';
+
+// URL do frontend (domínio que o cliente usa)
+const FRONT_URL = process.env.FRONT_URL || 'https://falcoes.site';
 
 
 // suporte a fetch no Node: usa global fetch (Node >=18) ou node-fetch (Node <18)
@@ -1010,26 +1015,36 @@ app.post('/pagar-corrida', async (req, res) => {
     console.log('Pagamento solicitado:', { corridaId, valor, forma });
 
     if (forma === 'ONLINE') {
-      const response = await preferenceClient.create({
-        body: {
-          items: [
-            {
-              title: `Corrida #${corridaId}`,
-              quantity: 1,
-              currency_id: 'BRL',
-              unit_price: Number(valor)
-            }
-          ],
-          external_reference: String(corridaId)
+  const response = await preferenceClient.create({
+    body: {
+      items: [
+        {
+          title: `Corrida #${corridaId}`,
+          quantity: 1,
+          currency_id: 'BRL',
+          unit_price: Number(valor)
         }
-      });
+      ],
+      external_reference: String(corridaId),
 
-      return res.json({
-        ok: true,
-        tipo: 'ONLINE',
-        sandbox_init_point: response.sandbox_init_point
-      });
+      // 👇 Depois de pagar, o Mercado Pago redireciona pra essa URL
+      back_urls: {
+        success: `${PUBLIC_BASE_URL}/mp-retorno`,
+        failure: `${PUBLIC_BASE_URL}/mp-retorno`,
+        pending: `${PUBLIC_BASE_URL}/mp-retorno`
+      },
+
+      auto_return: 'approved' // se aprovado, volta automaticamente
     }
+  });
+
+  return res.json({
+    ok: true,
+    tipo: 'ONLINE',
+    sandbox_init_point: response.sandbox_init_point
+  });
+}
+
 
     if (forma === 'DINHEIRO') {
       return res.json({
@@ -1081,6 +1096,43 @@ app.get('/pagar-teste', async (req, res) => {
 // MONITOR (fica antes do listen)
 // ===============================================
 setInterval(monitorarExpiracoes, 5000);
+
+// ===============================================
+// RETORNO DO MERCADO PAGO (após o pagamento)
+// ===============================================
+app.get('/mp-retorno', async (req, res) => {
+  try {
+    console.log('Retorno Mercado Pago:', req.query);
+
+    const { external_reference, status, collection_status } = req.query;
+
+    // MP pode mandar em status ou collection_status, vamos usar o que vier
+    const finalStatus = collection_status || status;
+
+    // external_reference é o corridaId que mandamos lá no /pagar-corrida
+    const corridaId = external_reference;
+
+    if (finalStatus === 'approved' && corridaId) {
+      // ⚠️ aqui você marca que a corrida foi paga online
+      await pool.query(
+        "UPDATE corridas SET status = 'PAGO_ONLINE' WHERE id = $1",
+        [corridaId]
+      );
+
+      console.log(`✅ Corrida ${corridaId} marcada como PAGO_ONLINE`);
+    } else {
+      console.log('Pagamento não aprovado ou sem corridaId:', req.query);
+    }
+
+    // Depois de processar, manda o cliente de volta pro app
+    return res.redirect(`${FRONT_URL}/cliente.html`);
+
+  } catch (err) {
+    console.error('Erro em /mp-retorno:', err);
+    // mesmo com erro, manda o usuário voltar pro app
+    return res.redirect(`${FRONT_URL}/cliente.html`);
+  }
+});
 
 
 // ===============================================
