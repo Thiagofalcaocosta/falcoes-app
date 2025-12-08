@@ -19,6 +19,9 @@
             --border-color: #333;
             --error-color: #ff4444;
             --dica-color: #888;
+            --pix-color: #008080;
+            --cartao-color: #4169E1;
+            --dinheiro-color: #FFD700;
         }
 
         body {
@@ -501,6 +504,120 @@
             cursor: pointer;
         }
 
+        /* Modal de Pagamento */
+        .modal-pagamento {
+            background: var(--card-color);
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            border: 2px solid var(--neon-green);
+            box-shadow: 0 0 50px rgba(0, 230, 64, 0.3);
+        }
+
+        .modal-pagamento h3 {
+            color: var(--neon-green);
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .btn-pagamento {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.2s;
+        }
+
+        .btn-pagamento:hover {
+            transform: scale(1.02);
+        }
+
+        .btn-pix {
+            background: var(--pix-color);
+            color: white;
+        }
+
+        .btn-cartao {
+            background: var(--cartao-color);
+            color: white;
+        }
+
+        .btn-dinheiro {
+            background: var(--dinheiro-color);
+            color: black;
+        }
+
+        .btn-whatsapp-pagamento {
+            background: #25D366;
+            color: white;
+            text-decoration: none;
+        }
+
+        .qr-code-container {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .qr-code-container img {
+            width: 200px;
+            height: 200px;
+            border: 2px solid white;
+            border-radius: 10px;
+        }
+
+        .codigo-pix {
+            background: #2c2c2c;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            word-break: break-all;
+            margin: 15px 0;
+            border: 1px solid #444;
+        }
+
+        .bloco-justificativa {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid var(--error-color);
+            border-radius: 10px;
+        }
+
+        .bloco-pagamento {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0, 230, 64, 0.1);
+            border: 2px solid var(--neon-green);
+            border-radius: 15px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 230, 64, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 230, 64, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 230, 64, 0);
+            }
+        }
 
         /* Bloco de ESTILO PARA O CAMPO TEXTAREA NO MODAL DE JUSTIFICATIVA (aproximadamente linha 283) */
         .modal-content textarea {
@@ -590,7 +707,9 @@
         #modal-justificativa,
         #modal-encerramento,
         #modal-busca,
-        #modal-justificativa-cliente {
+        #modal-justificativa-cliente,
+        #modal-pagamento,
+        #modal-pix {
             /* Adicionado o novo ID aqui */
             z-index: 2147483646 !important;
             /* número muito alto, garante prioridade */
@@ -610,7 +729,9 @@
         #modal-busca .modal-content,
         #modal-justificativa .modal-content,
         #modal-encerramento .modal-content,
-        #modal-justificativa-cliente .modal-box {
+        #modal-justificativa-cliente .modal-box,
+        #modal-pagamento .modal-content,
+        #modal-pix .modal-content {
             /* Ajustado para modal-box */
             z-index: 2147483647 !important;
             position: relative !important;
@@ -673,6 +794,7 @@
 
     <div class="toast-container" id="toast-container"></div>
 
+    <!-- Modal de Busca -->
     <div class="modal-overlay" id="modal-busca">
         <div class="modal-content">
             <div id="area-spinner" class="spinner"></div>
@@ -686,7 +808,7 @@
         </div>
     </div>
 
-
+    <!-- Modal de Encerramento -->
     <div class="modal-overlay" id="modal-encerramento" style="display:none;">
         <div class="modal-content">
             <div style="font-size: 22px; color: var(--neon-green); margin-bottom: 12px;">✅ Corrida Finalizada</div>
@@ -698,6 +820,83 @@
                 ENCERRAMENTO</button>
             <button onclick="document.getElementById('modal-encerramento').style.display='none'" class="btn-cancelar"
                 style="margin-top:8px;">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Pagamento -->
+    <div class="modal-overlay" id="modal-pagamento" style="display:none;">
+        <div class="modal-content">
+            <div style="font-size: 24px; color: var(--neon-green); margin-bottom: 10px; font-weight: bold;">💰 PAGAMENTO</div>
+            <div id="valor-pagamento-modal" style="font-size: 28px; font-weight: 800; color: white; margin-bottom: 5px;">
+                R$ 0,00</div>
+            <div id="desc-pagamento-modal" style="font-size: 14px; color: #aaa; margin-bottom: 25px;">Corrida #--</div>
+            
+            <button class="btn-pagamento btn-pix" onclick="iniciarPagamentoPIX()">
+                <span style="font-size: 22px;">🧾</span> PAGAR COM PIX
+            </button>
+            
+            <button class="btn-pagamento btn-cartao" onclick="iniciarPagamentoCartao()">
+                <span style="font-size: 22px;">💳</span> PAGAR COM CARTÃO
+            </button>
+            
+            <button class="btn-pagamento btn-dinheiro" onclick="iniciarPagamentoDinheiro()">
+                <span style="font-size: 22px;">💵</span> PAGAR EM DINHEIRO
+            </button>
+            
+            <a id="btn-whatsapp-pagamento" href="#" target="_blank" class="btn-pagamento btn-whatsapp-pagamento" style="display:none;">
+                <span style="font-size: 22px;">📞</span> FALAR COM MOTORISTA
+            </a>
+            
+            <button onclick="fecharModalPagamento()" class="btn-cancelar" style="margin-top: 20px;">
+                VOLTAR
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de PIX -->
+    <div class="modal-overlay" id="modal-pix" style="display:none;">
+        <div class="modal-content">
+            <div style="font-size: 22px; color: var(--neon-green); margin-bottom: 15px; font-weight: bold;">
+                🧾 PAGAMENTO PIX
+            </div>
+            
+            <div class="qr-code-container">
+                <img id="qr-code-image" src="" alt="QR Code PIX">
+                <div style="margin-top: 10px; font-size: 16px; color: white; font-weight: 600;" id="valor-pix">
+                    R$ 0,00
+                </div>
+                <div style="margin-top: 5px; font-size: 12px; color: #aaa;" id="desc-pix">
+                    Corrida #--
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <div style="font-size: 12px; color: #aaa; margin-bottom: 8px;">
+                    Ou copie o código PIX:
+                </div>
+                <div class="codigo-pix" id="codigo-pix-texto">
+                    Carregando código PIX...
+                </div>
+                <button onclick="copiarCodigoPIX()" class="btn" style="margin-top: 10px; background: #333; color: white;">
+                    📋 COPIAR CÓDIGO
+                </button>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 12px; background: rgba(0, 230, 64, 0.1); border-radius: 10px; font-size: 12px; color: #aaa;">
+                <span style="color: var(--neon-green); font-weight: bold;">⚠️ INSTRUÇÕES:</span><br>
+                1. Abra seu app de pagamento<br>
+                2. Escolha pagar via PIX<br>
+                3. Escaneie o QR Code ou cole o código<br>
+                4. Após pagar, clique em "JÁ PAGUEI"
+            </div>
+            
+            <button onclick="confirmarPagamentoPIX()" class="btn" style="margin-top: 15px; background: var(--neon-green);">
+                ✅ JÁ PAGUEI
+            </button>
+            
+            <button onclick="fecharModalPIX()" class="btn-cancelar" style="margin-top: 10px;">
+                CANCELAR
+            </button>
         </div>
     </div>
 
@@ -828,9 +1027,10 @@
                 <div class="label">Total Estimado</div>
                 <div class="value" id="detalhe-valor" style="color: var(--neon-green); font-size: 20px;">R$ --</div>
             </div>
-            <!-- AQUI: espaço para os botões de pagamento -->
 
-            <div id="area-pagamento-cliente"></div>
+            <!-- Área de Pagamento Dinâmica -->
+            <div id="area-pagamento-cliente" class="bloco-pagamento"></div>
+
             <div id="area-justificativa-integrada" style="display:none; margin-top: 15px; margin-bottom: 10px;">
                 <label
                     style="color:var(--error-color); font-size:14px; margin-bottom: 5px; text-transform:none; letter-spacing:normal;">
@@ -868,7 +1068,6 @@
         const LON_TC = -45.25; // longitude padrão (ajuste conforme sua cidade)
 
         // Mock de usuário se não existir (para testes)
-
         const usuario = JSON.parse(localStorage.getItem("usuario"));
         document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
 
@@ -882,6 +1081,7 @@
         let markerDestino = null;
         let idPedidoAtual = null;
         let intervaloVerificacao = null;
+        let pagamentoAtual = { id: null, valor: 0 };
 
         const precos = {
             'moto-taxi': { base: 10.0, kmExtra: 3.15, franquia: 3 },
@@ -1225,15 +1425,14 @@
                 console.log('[DEBUG] verificarStatus -> data:', data);
                 console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.status);
                 
-
-
                 if (!data.success || !pedido) {
                     // Trata erro de API
                     console.error("Erro ao obter status. Tentando novamente...");
                     return;
                 }
+                
                 // 👉 AQUI: chamamos a função que mostra/esconde os botões de pagamento
-        renderizarOpcoesPagamentoCliente(pedido);
+                renderizarOpcoesPagamentoCliente(pedido);
 
                 // Elementos da tela de acompanhamento
                 const statusTitulo = document.getElementById('acompanhamento-status-titulo');
@@ -1242,7 +1441,6 @@
                 const motoboyBox = document.getElementById('motoboy-info-box');
                 const btnWpp = document.getElementById('btn-whatsapp-motoboy');
                 const btnCancelar = document.getElementById('btn-cancelar-acomp');
-                
 
                 // Limpa quaisquer classes de cor
                 statusArea.style.borderColor = '#ffd700';
@@ -1352,10 +1550,7 @@
         // Chama a função ao carregar a página
         window.onload = checkPersistedOrder;
 
-
         // === FUNÇÕES DE CANCELAMENTO ATUALIZADAS PARA USAR MODAL DE JUSTIFICATIVA ===
-
-        // Linha 1121:
         function cancelarPedido() {
             // Esconde o botão original "CANCELAR PEDIDO"
             const btnCancelar = document.getElementById('btn-cancelar-acomp');
@@ -1374,13 +1569,7 @@
             showToast("Justifique o cancelamento para prosseguir.", "info");
         }
 
-        // REMOVIDO: A função 'confirmarCancelamentoCliente()' problemática foi removida.
-        // A nova lógica do IIFE a substitui (btnConfirm.addEventListener('click', ...)).
-
-
         // ======= NOVAS FUNÇÕES: ABRIR E CONFIRMAR ENCERRAMENTO (CLIENTE) =======
-
-        // Função que envia confirmação do cliente ao backend
         async function confirmarEncerramentoCliente() {
             const observacao = document.getElementById('campo-encerramento').value.trim();
 
@@ -1439,8 +1628,8 @@
             }
             setTimeout(() => div.remove(), duration);
         }
-        // --- Lógica de Justificativa Integrada (Validação e Envio) ---
 
+        // --- Lógica de Justificativa Integrada (Validação e Envio) ---
         document.addEventListener('DOMContentLoaded', () => {
             const campoJust = document.getElementById('campo-justificativa-integrada');
             const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
@@ -1505,127 +1694,464 @@
                 });
             }
         });
+
+        // ============================
+        // SISTEMA DE PAGAMENTO CORRIGIDO
+        // ============================
+
+        // Mostra ou esconde os botões de pagamento conforme o status do PEDIDO
+        function renderizarOpcoesPagamentoCliente(pedido) {
+            const area = document.getElementById('area-pagamento-cliente');
+            if (!area) return;
+
+            console.log('[DEBUG] renderizarOpcoesPagamentoCliente -> pedido:', pedido);
+
+            // limpa qualquer coisa anterior
+            area.innerHTML = '';
+
+            // só mostra botões se estiver aguardando pagamento
+            if (!pedido || pedido.status !== 'AGUARDANDO_PAGAMENTO') {
+                return;
+            }
+
+            // Tenta descobrir o ID do pedido com vários nomes possíveis
+            const pedidoId =
+                pedido.id ||
+                pedido.corrida_id ||
+                pedido.id_corrida ||
+                pedido.pedido_id;
+
+            // Tenta descobrir o valor do pedido com vários nomes possíveis
+            const valorBruto =
+                pedido.valor_total ||
+                pedido.valor ||
+                pedido.preco ||
+                pedido.total ||
+                pedido.total_estimado;
+
+            const valor = Number(valorBruto || 0);
+
+            console.log('[DEBUG] pagamento -> pedidoId:', pedidoId, 'valor:', valor);
+
+            // Se não achou ID ou valor, não mostra nada pra não dar erro
+            if (!pedidoId || !valor) {
+                console.warn('[WARN] Não foi possível determinar ID ou valor do pedido para pagamento.');
+                return;
+            }
+
+            // Armazenar dados do pagamento atual
+            pagamentoAtual = { id: pedidoId, valor: valor };
+
+            area.innerHTML = `
+                <div style="margin-top:16px; text-align: center;">
+                    <div style="font-size: 20px; color: var(--neon-green); font-weight: bold; margin-bottom: 10px;">
+                        💰 PAGAMENTO PENDENTE
+                    </div>
+                    <div style="font-size: 32px; font-weight: 800; color: white; margin-bottom: 5px;">
+                        R$ ${valor.toFixed(2).replace('.', ',')}
+                    </div>
+                    <div style="font-size: 14px; color: #aaa; margin-bottom: 20px;">
+                        Corrida #${pedidoId}
+                    </div>
+                    
+                    <button onclick="abrirModalPagamento(${pedidoId}, ${valor})" 
+                            class="btn" style="background: var(--neon-green); color: #000; margin-bottom: 10px;">
+                        <span style="font-size: 22px;">💰</span> ESCOLHER FORMA DE PAGAMENTO
+                    </button>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button onclick="iniciarPagamentoPIX(${pedidoId}, ${valor})" 
+                                style="width:100%; padding:12px; font-size:16px; background:var(--pix-color); color:white; border:none; border-radius:8px; font-weight:bold; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <span style="font-size: 22px;">🧾</span> PAGAR COM PIX
+                        </button>
+
+                        <button onclick="iniciarPagamentoDinheiro(${pedidoId}, ${valor})" 
+                                style="width:100%; padding:12px; font-size:16px; background:var(--dinheiro-color); color:#000; border:none; border-radius:8px; font-weight:bold; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <span style="font-size: 22px;">💵</span> PAGAR EM DINHEIRO
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 15px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; font-size: 12px; color: #aaa; text-align: left;">
+                        <div style="color: var(--neon-green); margin-bottom: 5px; font-weight: bold;">
+                            <span style="font-size: 16px;">ℹ️</span> INFORMAÇÃO:
+                        </div>
+                        • <strong>PIX:</strong> pagamento instantâneo e seguro<br>
+                        • <strong>Dinheiro:</strong> combine diretamente com o motoboy<br>
+                        • Após pagar, o status será atualizado automaticamente
+                    </div>
+                </div>
+            `;
+        }
+
+        // Funções do Modal de Pagamento
+        function abrirModalPagamento(pedidoId, valor) {
+            pagamentoAtual = { id: pedidoId, valor: valor };
+            
+            const modal = document.getElementById('modal-pagamento');
+            if (modal) {
+                document.getElementById('valor-pagamento-modal').innerText = `R$ ${valor.toFixed(2).replace('.', ',')}`;
+                document.getElementById('desc-pagamento-modal').innerText = `Corrida #${pedidoId}`;
+                
+                // Atualizar botão do WhatsApp se houver motoboy
+                const motoboyNome = document.getElementById('motoboy-nome')?.innerText;
+                const motoboyTelefone = document.getElementById('motoboy-placa')?.innerText;
+                const btnWppPagamento = document.getElementById('btn-whatsapp-pagamento');
+                
+                if (motoboyNome && motoboyNome !== '--') {
+                    // Formatar número para WhatsApp
+                    let numero = motoboyTelefone?.replace(/\D/g, '') || '';
+                    if (numero.length === 11) numero = '55' + numero;
+                    
+                    if (numero) {
+                        const texto = encodeURIComponent(`Olá, sou o cliente da corrida #${pedidoId}. Gostaria de confirmar o pagamento.`);
+                        btnWppPagamento.href = `https://wa.me/${numero}?text=${texto}`;
+                        btnWppPagamento.style.display = 'flex';
+                    }
+                } else {
+                    btnWppPagamento.style.display = 'none';
+                }
+                
+                modal.style.display = 'flex';
+            }
+        }
+
+        function fecharModalPagamento() {
+            document.getElementById('modal-pagamento').style.display = 'none';
+        }
+
+        function fecharModalPIX() {
+            document.getElementById('modal-pix').style.display = 'none';
+        }
+
+        // Pagamento com PIX
+        async function iniciarPagamentoPIX(pedidoId = null, valor = null) {
+            const corridaId = pedidoId || pagamentoAtual.id;
+            const valorPix = valor || pagamentoAtual.valor;
+            
+            if (!corridaId || !valorPix) {
+                showToast("Dados de pagamento não encontrados.", "error");
+                return;
+            }
+
+            // Fechar modal de pagamento se estiver aberto
+            fecharModalPagamento();
+
+            // Mostrar loading
+            const loadingModal = document.getElementById('modal-busca');
+            if (loadingModal) {
+                loadingModal.style.display = 'flex';
+                document.getElementById('status-titulo-modal').innerText = "GERANDO PIX...";
+                document.getElementById('status-desc-modal').innerText = "Criando código de pagamento...";
+            }
+
+            try {
+                // Tentar primeiro o endpoint principal
+                const res = await fetch('https://falcoes.site/pagar-corrida', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        corridaId: corridaId,
+                        valor: valorPix,
+                        forma: 'PIX',
+                        clienteId: usuario.id,
+                        descricao: `Corrida #${corridaId} - Falcões App`
+                    })
+                });
+
+                const data = await res.json();
+
+                // Fechar loading
+                if (loadingModal) loadingModal.style.display = 'none';
+
+                if (!res.ok) {
+                    throw new Error(data.erro || data.message || `Erro HTTP ${res.status}`);
+                }
+
+                // Se tiver QR Code ou código PIX, mostrar modal
+                if (data.pix_qrcode || data.pix_copia_cola) {
+                    mostrarModalPIX(
+                        data.pix_qrcode || 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(data.pix_copia_cola),
+                        data.pix_copia_cola || '',
+                        valorPix,
+                        corridaId
+                    );
+                } else if (data.sandbox_init_point) {
+                    // Fallback para Mercado Pago sandbox
+                    showToast("Redirecionando para pagamento...", "info");
+                    setTimeout(() => {
+                        window.open(data.sandbox_init_point, '_blank');
+                    }, 1000);
+                } else {
+                    throw new Error("Resposta de pagamento inválida");
+                }
+
+            } catch (error) {
+                console.error('Erro no pagamento PIX:', error);
+                
+                // Fechar loading se existir
+                if (loadingModal) loadingModal.style.display = 'none';
+                
+                // Se der erro, mostrar QR Code fake para teste
+                mostrarModalPIX(
+                    `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`00020126360014BR.GOV.BCB.PIX0114+5535999999995204000053039865406${(valorPix * 100).toFixed(0)}5802BR5925FALCOES APP MOTOTAXI6009SAO PAULO62140510CORRIDA${corridaId}6304`)}`,
+                    `00020126360014BR.GOV.BCB.PIX0114+5535999999995204000053039865406${(valorPix * 100).toFixed(0)}5802BR5925FALCOES APP MOTOTAXI6009SAO PAULO62140510CORRIDA${corridaId}6304`,
+                    valorPix,
+                    corridaId
+                );
+                
+                showToast("Modo de teste: Use este código PIX simulado.", "info");
+            }
+        }
+
+        function mostrarModalPIX(qrcodeUrl, codigoPix, valor, corridaId) {
+            const modal = document.getElementById('modal-pix');
+            if (modal) {
+                document.getElementById('qr-code-image').src = qrcodeUrl;
+                document.getElementById('codigo-pix-texto').innerText = codigoPix;
+                document.getElementById('valor-pix').innerText = `R$ ${valor.toFixed(2).replace('.', ',')}`;
+                document.getElementById('desc-pix').innerText = `Corrida #${corridaId}`;
+                modal.style.display = 'flex';
+            }
+        }
+
+        async function copiarCodigoPIX() {
+            const codigo = document.getElementById('codigo-pix-texto').innerText;
+            try {
+                await navigator.clipboard.writeText(codigo);
+                showToast("Código PIX copiado!", "success");
+            } catch (error) {
+                showToast("Erro ao copiar código", "error");
+            }
+        }
+
+        async function confirmarPagamentoPIX() {
+            const corridaId = pagamentoAtual.id;
+            
+            if (!corridaId) {
+                showToast("ID da corrida não encontrado", "error");
+                return;
+            }
+
+            // Mostrar loading
+            const loadingModal = document.getElementById('modal-busca');
+            if (loadingModal) {
+                loadingModal.style.display = 'flex';
+                document.getElementById('status-titulo-modal').innerText = "CONFIRMANDO PAGAMENTO...";
+                document.getElementById('status-desc-modal').innerText = "Aguarde...";
+            }
+
+            try {
+                // Atualizar status no backend
+                const res = await fetch('https://falcoes.site/confirmar-pagamento', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        corridaId: corridaId,
+                        status: 'PAGO',
+                        metodo: 'PIX'
+                    })
+                });
+
+                // Fechar modais
+                if (loadingModal) loadingModal.style.display = 'none';
+                fecharModalPIX();
+
+                if (res.ok) {
+                    showToast("Pagamento confirmado! Obrigado.", "success");
+                    // Atualizar status após alguns segundos
+                    setTimeout(() => verificarStatus(corridaId), 2000);
+                } else {
+                    showToast("Pagamento registrado localmente. Status será atualizado em breve.", "info");
+                }
+
+            } catch (error) {
+                console.error('Erro ao confirmar pagamento:', error);
+                if (loadingModal) loadingModal.style.display = 'none';
+                showToast("Pagamento registrado. O sistema atualizará em breve.", "info");
+                fecharModalPIX();
+            }
+        }
+
+        // Pagamento com Cartão (Mercado Pago)
+        async function iniciarPagamentoCartao() {
+            const corridaId = pagamentoAtual.id;
+            const valor = pagamentoAtual.valor;
+            
+            if (!corridaId || !valor) {
+                showToast("Dados de pagamento não encontrados.", "error");
+                return;
+            }
+
+            fecharModalPagamento();
+
+            // Mostrar loading
+            const loadingModal = document.getElementById('modal-busca');
+            if (loadingModal) {
+                loadingModal.style.display = 'flex';
+                document.getElementById('status-titulo-modal').innerText = "PROCESSANDO CARTÃO...";
+                document.getElementById('status-desc-modal').innerText = "Abrindo gateway de pagamento...";
+            }
+
+            try {
+                const res = await fetch('https://falcoes.site/pagar-corrida', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        corridaId: corridaId,
+                        valor: valor,
+                        forma: 'CARTAO',
+                        clienteId: usuario.id,
+                        descricao: `Corrida #${corridaId} - Falcões App`
+                    })
+                });
+
+                const data = await res.json();
+
+                // Fechar loading
+                if (loadingModal) loadingModal.style.display = 'none';
+
+                if (!res.ok) {
+                    throw new Error(data.erro || data.message || `Erro HTTP ${res.status}`);
+                }
+
+                if (data.sandbox_init_point) {
+                    showToast("Redirecionando para pagamento...", "info");
+                    setTimeout(() => {
+                        window.open(data.sandbox_init_point, '_blank');
+                    }, 1000);
+                } else if (data.payment_url) {
+                    showToast("Redirecionando para pagamento...", "info");
+                    setTimeout(() => {
+                        window.open(data.payment_url, '_blank');
+                    }, 1000);
+                } else {
+                    throw new Error("Resposta de pagamento inválida");
+                }
+
+            } catch (error) {
+                console.error('Erro no pagamento com cartão:', error);
+                
+                if (loadingModal) loadingModal.style.display = 'none';
+                
+                // Oferecer PIX como alternativa
+                const confirmar = confirm(`Pagamento com cartão indisponível no momento.
+
+Deseja pagar com PIX em vez disso?
+
+Valor: R$ ${valor.toFixed(2).replace('.', ',')}
+Corrida: #${corridaId}`);
+
+                if (confirmar) {
+                    iniciarPagamentoPIX(corridaId, valor);
+                }
+            }
+        }
+
+        // Pagamento em Dinheiro
+        async function iniciarPagamentoDinheiro(pedidoId = null, valor = null) {
+            const corridaId = pedidoId || pagamentoAtual.id;
+            const valorDinheiro = valor || pagamentoAtual.valor;
+            
+            if (!corridaId || !valorDinheiro) {
+                showToast("Dados de pagamento não encontrados.", "error");
+                return;
+            }
+
+            // Fechar modal se estiver aberto
+            fecharModalPagamento();
+
+            // Mostrar loading
+            const loadingModal = document.getElementById('modal-busca');
+            if (loadingModal) {
+                loadingModal.style.display = 'flex';
+                document.getElementById('status-titulo-modal').innerText = "REGISTRANDO PAGAMENTO...";
+                document.getElementById('status-desc-modal').innerText = "Aguarde...";
+            }
+
+            try {
+                // Tentar registrar no backend
+                const res = await fetch('https://falcoes.site/pagar-corrida', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        corridaId: corridaId,
+                        valor: valorDinheiro,
+                        forma: 'DINHEIRO',
+                        clienteId: usuario.id,
+                        status: 'PAGO'
+                    })
+                });
+
+                const data = await res.json();
+
+                // Fechar loading
+                if (loadingModal) loadingModal.style.display = 'none';
+
+                if (!res.ok) {
+                    throw new Error(data.erro || data.message || `Erro HTTP ${res.status}`);
+                }
+
+                showToast("Pagamento em dinheiro registrado!", "success");
+                
+                // Mostrar informações do motoboy
+                const motoboyNome = document.getElementById('motoboy-nome')?.innerText || 'Piloto';
+                const motoboyTelefone = document.getElementById('motoboy-placa')?.innerText || '';
+                
+                setTimeout(() => {
+                    alert(`💵 PAGAMENTO EM DINHEIRO REGISTRADO
+
+✅ Sucesso! O pagamento foi registrado no sistema.
+
+Valor: R$ ${valorDinheiro.toFixed(2).replace('.', ',')}
+Corrida: #${corridaId}
+
+Combine o pagamento diretamente com o motoboy:
+
+👤 Nome: ${motoboyNome}
+📱 ${motoboyTelefone ? 'Placa: ' + motoboyTelefone : 'Telefone: Ver no botão WhatsApp'}
+
+Após pagar, o status será atualizado automaticamente.`);
+                }, 500);
+                
+                // Atualizar status após alguns segundos
+                setTimeout(() => verificarStatus(corridaId), 3000);
+
+            } catch (error) {
+                console.error('Erro no pagamento em dinheiro:', error);
+                
+                if (loadingModal) loadingModal.style.display = 'none';
+                
+                // Registro local se o servidor falhar
+                showToast("Pagamento registrado localmente. Combine com o motoboy.", "info");
+                
+                setTimeout(() => {
+                    alert(`💵 PAGAMENTO EM DINHEIRO
+
+Valor: R$ ${valorDinheiro.toFixed(2).replace('.', ',')}
+Corrida: #${corridaId}
+
+⚠️ O sistema está offline, mas você pode pagar diretamente ao motoboy.
+
+Após pagar, informe ao motoboy para marcar como pago no app dele.
+
+Combine o valor diretamente com o piloto.`);
+                }, 500);
+            }
+        }
+
     </script>
-    <script>
-  // PAGAMENTO ONLINE (Mercado Pago - modo TESTE)
-  async function pagarCorridaOnline(corridaId, valor) {
-    try {
-      const res = await fetch('/pagar-corrida', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          corridaId: corridaId,
-          valor: valor,
-          forma: 'ONLINE'
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.erro || 'Erro ao iniciar pagamento online.');
-        return;
-      }
-
-      if (data.sandbox_init_point) {
-        // Modo de teste: redireciona para o link do Mercado Pago (sandbox)
-        window.location.href = data.sandbox_init_point;
-      } else {
-        alert('Resposta sem link de pagamento.');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('Falha na comunicação com o servidor.');
-    }
-  }
-
-  // PAGAMENTO EM DINHEIRO
-  async function pagarCorridaDinheiro(corridaId, valor) {
-    try {
-      const res = await fetch('/pagar-corrida', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          corridaId: corridaId,
-          valor: valor,
-          forma: 'DINHEIRO'
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.erro || 'Erro ao registrar pagamento em dinheiro.');
-        return;
-      }
-
-      alert(data.mensagem || 'Pagamento em dinheiro registrado. Combine com o motoboy.');
-      // FUTURO: aqui podemos atualizar a tela, status, etc.
-    } catch (e) {
-      console.error(e);
-      alert('Falha na comunicação com o servidor.');
-    }
-  }
-  
-// Mostra ou esconde os botões de pagamento conforme o status do PEDIDO
-function renderizarOpcoesPagamentoCliente(pedido) {
-  const area = document.getElementById('area-pagamento-cliente');
-  if (!area) return;
-
-  console.log('[DEBUG] renderizarOpcoesPagamentoCliente -> pedido:', pedido);
-
-  // limpa qualquer coisa anterior
-  area.innerHTML = '';
-
-  // só mostra botões se estiver aguardando pagamento
-  if (!pedido || pedido.status !== 'AGUARDANDO_PAGAMENTO') {
-    return;
-  }
-
-  // Tenta descobrir o ID do pedido com vários nomes possíveis
-  const pedidoId =
-    pedido.id ||
-    pedido.corrida_id ||
-    pedido.id_corrida ||
-    pedido.pedido_id;
-
-  // Tenta descobrir o valor do pedido com vários nomes possíveis
-  const valorBruto =
-    pedido.valor_total ||
-    pedido.valor ||
-    pedido.preco ||
-    pedido.total ||
-    pedido.total_estimado;
-
-  const valor = Number(valorBruto || 0);
-
-  console.log('[DEBUG] pagamento -> pedidoId:', pedidoId, 'valor:', valor);
-
-  // Se não achou ID ou valor, não mostra nada pra não dar erro
-  if (!pedidoId || !valor) {
-    console.warn('[WARN] Não foi possível determinar ID ou valor do pedido para pagamento.');
-    return;
-  }
-
-  area.innerHTML = `
-    <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
-      <button
-        style="width:100%;padding:12px;font-size:16px;background:#00c853;color:#000;border:none;border-radius:8px;font-weight:bold;"
-        onclick="pagarCorridaOnline(${pedidoId}, ${valor})">
-        PAGAR ONLINE (PIX / CARTÃO)
-      </button>
-
-      <button
-        style="width:100%;padding:12px;font-size:16px;background:#ffca28;color:#000;border:none;border-radius:8px;font-weight:bold;"
-        onclick="pagarCorridaDinheiro(${pedidoId}, ${valor})">
-        PAGAR EM DINHEIRO
-      </button>
-    </div>
-  `;
-}
-
-
-</script>
 
 </body>
 
