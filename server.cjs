@@ -1,22 +1,66 @@
 /* server.fixed.js
-   Versão com melhorias de diagnóstico, validação de entradas e handlers globais.
-   Substitua seu server.js por este arquivo e reinicie a aplicação no Render.
+   Versão completa com Mercado Pago e correção de ordem
 */
 
+const express = require('express');
+const bodyParser = require('body-parser');
+const { Pool } = require('pg');
+const path = require('path');
+const cors = require('cors');
+require('dotenv').config();
 
+const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('mercadopago');
+
+// ===============================================
+// 1. DECLARAR O APP EXPRESS PRIMEIRO
+// ===============================================
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+// ===============================================
+// 2. CONFIGURAÇÃO MERCADO PAGO
+// ===============================================
+
+// Verifica se o token está configurado
+if (!process.env.MP_ACCESS_TOKEN) {
+  console.warn('⚠️  MP_ACCESS_TOKEN não encontrado nas variáveis de ambiente');
+  console.warn('Usando modo de teste...');
+}
+
+const client = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN || 'TEST-ACCESS-TOKEN-DEMO',
+  options: { 
+    timeout: 5000,
+    idempotencyKey: 'falcoes-app' 
+  }
+});
+
+const preferenceClient = new Preference(client);
+const paymentClient = new Payment(client);
+const merchantOrderClient = new MerchantOrder(client);
+
+// ===============================================
+// 3. CONFIGURAÇÃO DE URLS
+// ===============================================
+
+// URL pública do servidor (Render)
+const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://falcoes-app.onrender.com';
+
+// URL do frontend (domínio que o cliente usa)
+const FRONT_URL = process.env.FRONT_URL || 'https://falcoes.site';
+
+// ===============================================
+// 4. MIDDLEWARES
+// ===============================================
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
 
 // 1. SERVIR ARQUIVOS ESTÁTICOS (CSS, IMAGENS, JS)
 app.use(express.static(path.join(__dirname)));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
-
-// ROTA curta /app redireciona para /install.html
-app.get('/app', (req, res) => {
-  res.sendFile(path.join(__dirname, 'app.html'));
-});
-
-app.get('/install', (req, res) => {
-  res.sendFile(path.join(__dirname, 'install.html'));
-});
 
 // 2. LOG DE PEDIDOS
 app.use((req, res, next) => {
@@ -24,12 +68,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// 3. ROTA DA PÁGINA INICIAL
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+// ===============================================
+// 5. CONFIGURAÇÃO DO BANCO DE DADOS
+// ===============================================
 
-// --- BANCO DE DADOS ---
+// suporte a fetch no Node: usa global fetch (Node >=18) ou node-fetch (Node <18)
+let fetchFn = globalThis.fetch;
+if (!fetchFn) {
+  try {
+    fetchFn = require('node-fetch');
+  } catch (e) {
+    console.warn('node-fetch não instalado — instale com: npm install node-fetch@2');
+  }
+}
+
 const connectionString =
   process.env.DATABASE_URL || 'postgresql://postgres:123456@localhost:5432/falcoes_app';
 
@@ -67,7 +119,10 @@ async function checkDBConnection() {
 }
 checkDBConnection();
 
-// --- CRIAÇÃO DAS TABELAS ---
+// ===============================================
+// 6. CRIAÇÃO DAS TABELAS
+// ===============================================
+
 const initDB = async () => {
   try {
     await pool.query(`
@@ -89,7 +144,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   longitude DECIMAL(11,8),
   foto_cnh VARCHAR(255),
   foto_moto VARCHAR(255),
-  foto_rosto VARCHAR(255)
+  foto_rosto VARCHAR(255),
+  mp_preference_id VARCHAR(255)
 );
 `);
 
@@ -105,6 +161,7 @@ CREATE TABLE IF NOT EXISTS corridas (
   status VARCHAR(50) DEFAULT 'pendente',
   tipo_servico VARCHAR(50),
   motivo_cancelamento TEXT,
+  mp_preference_id VARCHAR(255),
   data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 `);
@@ -119,8 +176,6 @@ CREATE TABLE IF NOT EXISTS mensagens (
 );
 `);
 
-    // IMPORTANTE: a tabela real no Render já tem status_exposicao/ciclo com PK (corrida_id, motoboy_id).
-    // Aqui apenas garantimos existência, sem mexer na estrutura já criada.
     await pool.query(`
 CREATE TABLE IF NOT EXISTS exposicao_corrida (
   id SERIAL PRIMARY KEY,
@@ -138,6 +193,10 @@ CREATE TABLE IF NOT EXISTS exposicao_corrida (
   }
 };
 initDB();
+
+// ===============================================
+// 7. FUNÇÕES AUXILIARES
+// ===============================================
 
 async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
   try {
@@ -210,9 +269,9 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
     );
   }
 }
+
 async function monitorarExpiracoes() {
   try {
-
     // 🛡️ GUARDA-COSTAS: mata corridas zumbis
     await pool.query(`
       UPDATE corridas
@@ -239,7 +298,6 @@ async function monitorarExpiracoes() {
       const corridaId = corrida.id;
       const tipoServico = corrida.tipo_servico;
 
-
       // 2. Procurar uma exposição expirada (tempo esgotou)
       const exposicaoExpirada = await pool.query(
         "SELECT corrida_id, motoboy_id " +
@@ -263,10 +321,6 @@ async function monitorarExpiracoes() {
           "DELETE FROM exposicao_corrida WHERE corrida_id = $1 AND motoboy_id = $2",
           [corridaId, motoboyExpiradoId]
         );
-
-        // 🔁 FORÇA IR PARA O PRÓXIMO
-        await distribuirCorridaParaMotoboys(corridaId, tipoServico);
-
 
         console.log(
           `[MONITOR] Exposição removida para motoboy ${motoboyExpiradoId}.`
@@ -299,8 +353,31 @@ async function monitorarExpiracoes() {
   }
 }
 
+// ===============================================
+// 8. ROTAS DE PÁGINAS ESTÁTICAS
+// ===============================================
 
-// --- ROTAS DO APP ---
+// 3. ROTA DA PÁGINA INICIAL
+app.get('/', (req, res) => {
+  res.json({ 
+    app: 'Falcões API', 
+    status: 'online', 
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
+app.get('/app', (req, res) => {
+  res.sendFile(path.join(__dirname, 'app.html'));
+});
+
+app.get('/install', (req, res) => {
+  res.sendFile(path.join(__dirname, 'install.html'));
+});
+
+// ===============================================
+// 9. ROTAS DO APP
+// ===============================================
 
 app.post('/cadastro', async (req, res) => {
   const { nome, email, senha, tipo, telefone, placa, modelo_moto, cor_moto, categoria } = req.body;
@@ -406,7 +483,6 @@ app.post('/cancelar-pedido', async (req, res) => {
   }
 });
 
-
 app.post('/corridas-pendentes', async (req, res) => {
   const { motoboy_id } = req.body;
   const TEMPO_LIMITE_SEGUNDOS = 60;
@@ -430,15 +506,14 @@ app.post('/corridas-pendentes', async (req, res) => {
     // Bloqueado
     if (motoboy.bloqueado_ate && new Date(motoboy.bloqueado_ate) > new Date()) {
       const minutos = Math.ceil(
-  (new Date(motoboy.bloqueado_ate) - new Date()) / 60000
-);
+        (new Date(motoboy.bloqueado_ate) - new Date()) / 60000
+      );
 
-return res.json({
-  success: false,
-  bloqueado: true,
-  tempo: minutos,
-});
-
+      return res.json({
+        success: false,
+        bloqueado: true,
+        tempo: minutos,
+      });
     }
 
     // Offline
@@ -497,10 +572,6 @@ return res.json({
   }
 });
 
-
-
-// --- /expirar-corrida ---
-
 app.post('/expirar-corrida', async (req, res) => {
   const { corrida_id, motoboy_id } = req.body;
 
@@ -509,19 +580,17 @@ app.post('/expirar-corrida', async (req, res) => {
   }
 
   try {
-    
     // ✅ Marca que já expirou para esse motoboy,
-//    sem apagar o registro (pra não voltar pra ele)
-await pool.query(
-  `
-  UPDATE exposicao_corrida
-  SET data_exposicao = NOW() - interval '120 seconds'
-  WHERE corrida_id = $1
-    AND motoboy_id = $2
-  `,
-  [corrida_id, motoboy_id]
-);
-
+    //    sem apagar o registro (pra não voltar pra ele)
+    await pool.query(
+      `
+      UPDATE exposicao_corrida
+      SET data_exposicao = NOW() - interval '120 seconds'
+      WHERE corrida_id = $1
+        AND motoboy_id = $2
+      `,
+      [corrida_id, motoboy_id]
+    );
 
     console.log(`⏭️ Corrida ${corrida_id} expirou para motoboy ${motoboy_id}`);
 
@@ -531,7 +600,6 @@ await pool.query(
     res.status(500).json({ success: false });
   }
 });
-
 
 app.post('/finalizar-corrida', async (req, res) => {
   try {
@@ -564,7 +632,6 @@ app.get('/minha-corrida-atual/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro' });
   }
 });
-
 
 app.get('/status-pedido/:id', async (req, res) => {
   try {
@@ -599,7 +666,6 @@ app.get('/status-pedido/:id', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
 
 app.post('/enviar-mensagem', async (req, res) => {
   const { corrida_id, remetente, texto } = req.body;
@@ -702,7 +768,6 @@ app.post('/motoboy/status-online', async (req, res) => {
   }
 });
 
-
 // --- ROTAS ADMIN ---
 
 app.get('/admin/dashboard', async (req, res) => {
@@ -738,7 +803,7 @@ app.get('/admin/dashboard', async (req, res) => {
     console.error('Erro em /admin/dashboard:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Erro' });
   }
-}); 
+});
 
 app.post('/aceitar-corrida', async (req, res) => {
   const { corrida_id, motoboy_id } = req.body;
@@ -782,6 +847,7 @@ app.post('/aceitar-corrida', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
 app.post('/motoboy-cancelar-corrida', async (req, res) => {
   const { corrida_id, motoboy_id, motivo } = req.body;
 
@@ -822,7 +888,6 @@ app.post('/motoboy-cancelar-corrida', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
 
 app.get('/admin/pendentes', async (req, res) => {
   try {
@@ -873,6 +938,8 @@ app.get('/admin/motoboys', async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar motoboys' });
   }
 });
+
+// ... CONTINUAÇÃO DO CÓDIGO ANTERIOR ...
 
 app.get('/admin/clientes', async (req, res) => {
   try {
@@ -963,9 +1030,12 @@ app.get('/health', async (req, res) => {
     res.status(500).json({ ok: false, dbError: String(err.message || err) });
   }
 });
+
 // ===============================================
-// PAGAMENTO DE CORRIDA (ONLINE ou DINHEIRO) - MELHORADO
+// ROTAS DE PAGAMENTO MERCADO PAGO
 // ===============================================
+
+// PAGAMENTO DE CORRIDA (ONLINE ou DINHEIRO)
 app.post('/pagar-corrida', async (req, res) => {
   try {
     const { corridaId, valor, forma } = req.body;
@@ -1010,7 +1080,7 @@ app.post('/pagar-corrida', async (req, res) => {
             }
           ],
           external_reference: String(corridaId),
-          notification_url: `${PUBLIC_BASE_URL}/mp-webhook`, // WEBHOOK IMPORTANTE
+          notification_url: `${PUBLIC_BASE_URL}/mp-webhook`,
           
           back_urls: {
             success: `${PUBLIC_BASE_URL}/mp-retorno?status=success`,
@@ -1021,7 +1091,7 @@ app.post('/pagar-corrida', async (req, res) => {
           auto_return: 'approved',
           expires: true,
           expiration_date_from: new Date(),
-          expiration_date_to: new Date(Date.now() + 30 * 60 * 1000), // 30 minutos para pagar
+          expiration_date_to: new Date(Date.now() + 30 * 60 * 1000),
           metadata: {
             corrida_id: corridaId,
             valor: valor
@@ -1065,9 +1135,7 @@ app.post('/pagar-corrida', async (req, res) => {
   }
 });
 
-// ===============================================
-// WEBHOOK DO MERCADO PAGO (CRÍTICO)
-// ===============================================
+// WEBHOOK DO MERCADO PAGO
 app.post('/mp-webhook', async (req, res) => {
   try {
     console.log('Webhook Mercado Pago recebido:', req.query);
@@ -1117,9 +1185,7 @@ app.post('/mp-webhook', async (req, res) => {
   }
 });
 
-// ===============================================
-// RETORNO DO MERCADO PAGO (MELHORADO)
-// ===============================================
+// RETORNO DO MERCADO PAGO
 app.get('/mp-retorno', async (req, res) => {
   try {
     console.log('Retorno Mercado Pago:', req.query);
@@ -1155,9 +1221,7 @@ app.get('/mp-retorno', async (req, res) => {
   }
 });
 
-// ===============================================
 // ROTA PARA VERIFICAR STATUS DO PAGAMENTO
-// ===============================================
 app.get('/verificar-pagamento/:corridaId', async (req, res) => {
   try {
     const { corridaId } = req.params;
@@ -1198,4 +1262,54 @@ app.get('/verificar-pagamento/:corridaId', async (req, res) => {
     console.error('Erro ao verificar pagamento:', err);
     res.status(500).json({ erro: 'Erro ao verificar pagamento' });
   }
+});
+
+// ===============================================
+// MONITOR (fica antes do listen)
+// ===============================================
+setInterval(monitorarExpiracoes, 5000);
+
+// ===============================================
+// ROTA 404 (sempre última)
+// ===============================================
+app.use('*', (req, res) => {
+  res.status(404).json({ 
+    error: 'Rota não encontrada',
+    available_routes: [
+      '/',
+      '/health',
+      '/app',
+      '/install',
+      '/cadastro',
+      '/login',
+      '/pedir-corrida',
+      '/pagar-corrida',
+      '/mp-retorno',
+      '/verificar-pagamento/:corridaId',
+      '/admin/dashboard'
+    ]
+  });
+});
+
+// ===============================================
+// INICIAR SERVIDOR
+// ===============================================
+
+// Testar conexão com banco antes de iniciar
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('❌ Erro ao conectar ao banco:', err.message);
+  } else {
+    console.log('✅ Conectado ao banco de dados PostgreSQL');
+    release();
+  }
+});
+
+app.listen(port, () => {
+  console.log('='.repeat(50));
+  console.log(`🚀 Servidor Falcões rodando na porta ${port}`);
+  console.log(`🔗 Backend URL: ${PUBLIC_BASE_URL}`);
+  console.log(`🌐 Frontend URL: ${FRONT_URL}`);
+  console.log(`💰 Mercado Pago: ${process.env.MP_ACCESS_TOKEN ? 'Configurado' : 'Modo TESTE'}`);
+  console.log('='.repeat(50));
 });
