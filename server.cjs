@@ -1065,7 +1065,8 @@ app.post('/pagar-corrida', async (req, res) => {
       auto_return: 'approved',
       metadata: {
         corridaId
-      }
+      },
+      external_reference: String(corridaId)   // 🔴 ADICIONE ESTA LINHA
     };
 
     // ✅ SDK NOVO (ESSENCIAL)
@@ -1238,6 +1239,33 @@ app.get('/verificar-pagamento/:corridaId', async (req, res) => {
     res.status(500).json({ erro: 'Erro ao verificar pagamento' });
   }
 });
+
+// CONFIRMAR PAGAMENTO MANUALMENTE (quando voltar do Mercado Pago)
+app.post('/confirmar-pagamento', async (req, res) => {
+  try {
+    const { corridaId } = req.body;
+
+    if (!corridaId) {
+      return res.status(400).json({ erro: 'corridaId é obrigatório' });
+    }
+
+    await pool.query(
+      `
+      UPDATE corridas
+      SET status = 'PAGO_ONLINE'
+      WHERE id = $1
+        AND status = 'AGUARDANDO_PAGAMENTO'
+      `,
+      [corridaId]
+    );
+
+    return res.json({ sucesso: true });
+  } catch (err) {
+    console.error('Erro em /confirmar-pagamento:', err);
+    res.status(500).json({ erro: 'Erro ao confirmar pagamento' });
+  }
+});
+
 
 // ===============================================
 // MONITOR (fica antes do listen)

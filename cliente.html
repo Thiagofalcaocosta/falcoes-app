@@ -1252,7 +1252,7 @@
                 motoboyBox.style.display = 'none';
                 btnWpp.style.display = 'none';
 
-                if (pedido.status === 'aceita') {
+                if (pedido.status === 'PAGO_ONLINE') {
                     // Pedido Aceito!
                     statusArea.style.borderColor = 'var(--neon-green)';
                     statusArea.style.background = 'rgba(0, 230, 64, 0.1)';
@@ -1263,6 +1263,24 @@
                     document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
                     document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
                     motoboyBox.style.display = 'block';
+
+                    if (pedido.status === 'AGUARDANDO_PAGAMENTO') {
+    statusArea.style.borderColor = '#f1c40f';
+    statusTitulo.innerText = "AGUARDANDO PAGAMENTO";
+    statusDesc.innerText = "Finalize o pagamento para confirmar sua corrida.";
+
+    botoesPagamento.style.display = 'block'; // PAGAR ONLINE / DINHEIRO
+    motoboyBox.style.display = 'none';
+}
+if (pedido.status === 'PAGO_ONLINE') {
+    statusArea.style.borderColor = 'var(--neon-green)';
+    statusTitulo.innerText = "PAGAMENTO CONFIRMADO ✅";
+    statusDesc.innerText = "Seu pagamento foi aprovado. O piloto está a caminho.";
+
+    botoesPagamento.style.display = 'none'; // 🔴 some o botão
+    motoboyBox.style.display = 'block';     // mantém motoboy visível
+}
+
 
                     // Lógica do botão WHATSAPP
                     if (pedido.telefone_motoboy) {
@@ -1445,6 +1463,31 @@
             const campoJust = document.getElementById('campo-justificativa-integrada');
             const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
             const erroJust = document.getElementById('erro-just-integrada');
+
+            const params = new URLSearchParams(window.location.search);
+  const collectionStatus = params.get('collection_status');
+  const externalRef = params.get('external_reference');
+
+  if (collectionStatus === 'approved' && externalRef) {
+    console.log('[PAGAMENTO] Aprovado no MP para corrida', externalRef);
+
+    fetch('https://falcoes-app.onrender.com/confirmar-pagamento', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ corridaId: externalRef })
+    })
+      .then(r => r.json())
+      .then(d => {
+        console.log('[PAGAMENTO] confirmacao backend:', d);
+        // Opcional: mostrar mensagem
+        alert('Pagamento confirmado! Obrigado.');
+        // Limpar parâmetros da URL pra não repetir
+        window.history.replaceState({}, document.title, 'cliente.html');
+      })
+      .catch(err => {
+        console.error('Erro ao confirmar pagamento:', err);
+      });
+  }
 
             // Habilita o botão se a justificativa tiver >= 5 caracteres
             if (campoJust && btnConfirmar) {
