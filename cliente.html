@@ -828,6 +828,9 @@
                 <div class="label">Total Estimado</div>
                 <div class="value" id="detalhe-valor" style="color: var(--neon-green); font-size: 20px;">R$ --</div>
             </div>
+            <!-- AQUI: espaço para os botões de pagamento -->
+
+            <div id="area-pagamento-cliente"></div>
             <div id="area-justificativa-integrada" style="display:none; margin-top: 15px; margin-bottom: 10px;">
                 <label
                     style="color:var(--error-color); font-size:14px; margin-bottom: 5px; text-transform:none; letter-spacing:normal;">
@@ -1221,6 +1224,7 @@
                 const pedido = data.pedido;
                 console.log('[DEBUG] verificarStatus -> data:', data);
                 console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.status);
+                
 
 
                 if (!data.success || !pedido) {
@@ -1228,6 +1232,8 @@
                     console.error("Erro ao obter status. Tentando novamente...");
                     return;
                 }
+                // 👉 AQUI: chamamos a função que mostra/esconde os botões de pagamento
+        renderizarOpcoesPagamentoCliente(pedido);
 
                 // Elementos da tela de acompanhamento
                 const statusTitulo = document.getElementById('acompanhamento-status-titulo');
@@ -1236,6 +1242,7 @@
                 const motoboyBox = document.getElementById('motoboy-info-box');
                 const btnWpp = document.getElementById('btn-whatsapp-motoboy');
                 const btnCancelar = document.getElementById('btn-cancelar-acomp');
+                
 
                 // Limpa quaisquer classes de cor
                 statusArea.style.borderColor = '#ffd700';
@@ -1559,16 +1566,44 @@
       alert('Falha na comunicação com o servidor.');
     }
   }
+  
+// Mostra ou esconde os botões de pagamento conforme o status do PEDIDO
+function renderizarOpcoesPagamentoCliente(pedido) {
+  const area = document.getElementById('area-pagamento-cliente');
+  if (!area) return;
+
+  // só pra você ver o que está chegando
+  console.log('[DEBUG] renderizarOpcoesPagamentoCliente -> pedido:', pedido);
+
+  // limpa qualquer coisa anterior
+  area.innerHTML = '';
+
+  // ⚠️ Se não tiver pedido ou o status não for AGUARDANDO_PAGAMENTO,
+  // não mostra NADA de pagamento
+  if (!pedido || pedido.status !== 'AGUARDANDO_PAGAMENTO') {
+    return;
+  }
+
+  // POR ENQUANTO vamos continuar usando 999 e 10,
+  // porque já sabemos que funciona. Depois eu troco pro valor real.
+  area.innerHTML = `
+    <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
+      <button
+        style="width:100%;padding:12px;font-size:16px;background:#00c853;color:#000;border:none;border-radius:8px;font-weight:bold;"
+        onclick="pagarCorridaOnline(999, 10)">
+        PAGAR ONLINE (PIX / CARTÃO)
+      </button>
+
+      <button
+        style="width:100%;padding:12px;font-size:16px;background:#ffca28;color:#000;border:none;border-radius:8px;font-weight:bold;"
+        onclick="pagarCorridaDinheiro(999, 10)">
+        PAGAR EM DINHEIRO
+      </button>
+    </div>
+  `;
+}
+
 </script>
-<div style="padding:20px;">
-  <button
-    style="width:100%;padding:15px;font-size:18px;background:#00c853;color:#000;border:none;border-radius:8px;"
-    onclick="pagarCorridaOnline(999, 10)">
-    ✅ TESTE PAGAR ONLINE (R$10)
-  </button>
-</div>
-
-
 
 </body>
 
