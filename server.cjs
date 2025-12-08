@@ -11,11 +11,14 @@ const cors = require('cors');
 
 require('dotenv').config();
 
-const mercadopago = require('mercadopago');
+const { MercadoPagoConfig, Preference } = require('mercadopago');
 
-mercadopago.configure({
-  access_token: process.env.MP_ACCESS_TOKEN_TEST
+const client = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN_TEST
 });
+
+const preferenceClient = new Preference(client);
+
 
 
 // suporte a fetch no Node: usa global fetch (Node >=18) ou node-fetch (Node <18)
@@ -992,21 +995,24 @@ app.listen(port, () => {
 // Isso garante que corridas expiradas para todos sejam redistribuídas.
 setInterval(monitorarExpiracoes, 5000);
 
+
 app.get('/pagar-teste', async (req, res) => {
   try {
-    const preference = {
-      items: [{
-        title: 'Teste Mercado Pago PIX',
-        quantity: 1,
-        currency_id: 'BRL',
-        unit_price: 10
-      }]
-    };
-
-    const response = await mercadopago.preferences.create(preference);
+    const response = await preferenceClient.create({
+      body: {
+        items: [
+          {
+            title: 'Teste Mercado Pago PIX',
+            quantity: 1,
+            currency_id: 'BRL',
+            unit_price: 10
+          }
+        ]
+      }
+    });
 
     res.json({
-      sandbox_init_point: response.body.sandbox_init_point
+      sandbox_init_point: response.sandbox_init_point
     });
 
   } catch (err) {
