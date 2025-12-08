@@ -156,6 +156,13 @@ CREATE TABLE IF NOT EXISTS corridas (
 );
 `);
 
+    // ✅ GARANTE COLUNA mp_preference_id EM BANCOS ANTIGOS
+    await pool.query(`
+      ALTER TABLE corridas
+      ADD COLUMN IF NOT EXISTS mp_preference_id VARCHAR(255);
+    `);
+
+
     await pool.query(`
 CREATE TABLE IF NOT EXISTS mensagens (
   id SERIAL PRIMARY KEY,
