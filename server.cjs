@@ -602,26 +602,33 @@ app.get('/status-pedido/:id', async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT c.status,
-             u.nome AS nome_motoboy,
-             u.telefone AS telefone_motoboy,
-             u.modelo_moto,
-             u.placa,
-             u.cor_moto
+      SELECT
+        c.id,                        -- ID da corrida
+        c.status,                    -- status da corrida
+        c.valor_total,               -- VALOR da corrida (ajuste o nome se for diferente)
+        u.nome       AS nome_motoboy,
+        u.telefone   AS telefone_motoboy,
+        u.modelo_moto,
+        u.placa,
+        u.cor_moto
       FROM corridas c
       LEFT JOIN usuarios u ON c.motoboy_id = u.id
       WHERE c.id = $1
-    `,
+      `,
       [req.params.id]
     );
-    if (result.rows.length > 0)
+
+    if (result.rows.length > 0) {
       res.json({ success: true, pedido: result.rows[0] });
-    else res.json({ success: false });
+    } else {
+      res.json({ success: false });
+    }
   } catch (err) {
     console.error('Erro em /status-pedido:', err && err.stack ? err.stack : err);
     res.status(500).json({ success: false });
   }
 });
+
 
 app.post('/enviar-mensagem', async (req, res) => {
   const { corrida_id, remetente, texto } = req.body;
