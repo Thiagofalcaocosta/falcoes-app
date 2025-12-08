@@ -12,21 +12,10 @@ require('dotenv').config();
 const PUBLIC_BASE_URL = 'https://falcoes-app.onrender.com';
 const FRONT_URL = 'https://falcoes.site';
 
+const { MercadoPagoConfig, Preference } = require('mercadopago');
 
-const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('mercadopago');
-
-// ===============================================
-// 1. DECLARAR O APP EXPRESS PRIMEIRO
-// ===============================================
-
-const app = express();
-const port = process.env.PORT || 3000;
-
-// ===============================================
 // 2. CONFIGURAÇÃO MERCADO PAGO
-// ===============================================
 
-// tenta usar primeiro o token de TESTE, depois um de produção (se existir)
 const mpAccessToken = process.env.MP_ACCESS_TOKEN_TEST || process.env.MP_ACCESS_TOKEN;
 
 if (!mpAccessToken) {
@@ -43,10 +32,7 @@ const client = new MercadoPagoConfig({
 });
 
 const preferenceClient = new Preference(client);
-// por enquanto você nem está usando paymentClient nem merchantOrderClient;
-// pode comentar se quiser:
-// const paymentClient = new Payment(client);
-// const merchantOrderClient = new MerchantOrder(client);
+
 
 // ===============================================
 // 4. MIDDLEWARES
