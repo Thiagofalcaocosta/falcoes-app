@@ -8,6 +8,11 @@ const { Pool } = require('pg');
 const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
+require('dotenv').config();
+
+const PUBLIC_BASE_URL = 'https://falcoes-app.onrender.com';
+const FRONT_URL = 'https://falcoes.site';
+
 
 const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('mercadopago');
 
@@ -39,16 +44,6 @@ const client = new MercadoPagoConfig({
 const preferenceClient = new Preference(client);
 const paymentClient = new Payment(client);
 const merchantOrderClient = new MerchantOrder(client);
-
-// ===============================================
-// 3. CONFIGURAÇÃO DE URLS
-// ===============================================
-
-// URL pública do servidor (Render)
-const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://falcoes-app.onrender.com';
-
-// URL do frontend (domínio que o cliente usa)
-const FRONT_URL = process.env.FRONT_URL || 'https://falcoes.site';
 
 // ===============================================
 // 4. MIDDLEWARES
