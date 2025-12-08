@@ -9,6 +9,15 @@ const { Pool } = require('pg');
 const path = require('path');
 const cors = require('cors');
 
+require('dotenv').config();
+
+const mercadopago = require('mercadopago');
+
+mercadopago.configure({
+  access_token: process.env.MP_ACCESS_TOKEN_TEST
+});
+
+
 // suporte a fetch no Node: usa global fetch (Node >=18) ou node-fetch (Node <18)
 let fetchFn = globalThis.fetch;
 if (!fetchFn) {
@@ -982,3 +991,26 @@ app.listen(port, () => {
 // Inicia o monitoramento de expirações a cada 5 segundos
 // Isso garante que corridas expiradas para todos sejam redistribuídas.
 setInterval(monitorarExpiracoes, 5000);
+
+app.get('/pagar-teste', async (req, res) => {
+  try {
+    const preference = {
+      items: [{
+        title: 'Teste Mercado Pago PIX',
+        quantity: 1,
+        currency_id: 'BRL',
+        unit_price: 10
+      }]
+    };
+
+    const response = await mercadopago.preferences.create(preference);
+
+    res.json({
+      sandbox_init_point: response.body.sandbox_init_point
+    });
+
+  } catch (err) {
+    console.error('ERRO MP:', err);
+    res.status(500).json({ erro: err.message });
+  }
+});
