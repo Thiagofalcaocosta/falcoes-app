@@ -3,45 +3,7 @@
    Substitua seu server.js por este arquivo e reinicie a aplicação no Render.
 */
 
-const express = require('express');
-const bodyParser = require('body-parser');
-const { Pool } = require('pg');
-const path = require('path');
-const cors = require('cors');
 
-require('dotenv').config();
-
-const { MercadoPagoConfig, Preference } = require('mercadopago');
-
-const client = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN_TEST
-});
-
-const preferenceClient = new Preference(client);
-
-// URL pública do servidor (Render)
-const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://falcoes-app.onrender.com';
-
-// URL do frontend (domínio que o cliente usa)
-const FRONT_URL = process.env.FRONT_URL || 'https://falcoes.site';
-
-
-// suporte a fetch no Node: usa global fetch (Node >=18) ou node-fetch (Node <18)
-let fetchFn = globalThis.fetch;
-if (!fetchFn) {
-  try {
-    fetchFn = require('node-fetch');
-  } catch (e) {
-    console.warn('node-fetch não instalado — instale com: npm install node-fetch@2');
-  }
-}
-
-const app = express();
-const port = process.env.PORT || 3000;
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
 
 // 1. SERVIR ARQUIVOS ESTÁTICOS (CSS, IMAGENS, JS)
 app.use(express.static(path.join(__dirname)));
@@ -1002,7 +964,7 @@ app.get('/health', async (req, res) => {
   }
 });
 // ===============================================
-// PAGAMENTO DE CORRIDA (ONLINE ou DINHEIRO)
+// PAGAMENTO DE CORRIDA (ONLINE ou DINHEIRO) - MELHORADO
 // ===============================================
 app.post('/pagar-corrida', async (req, res) => {
   try {
@@ -1012,41 +974,82 @@ app.post('/pagar-corrida', async (req, res) => {
       return res.status(400).json({ erro: 'corridaId, valor e forma são obrigatórios' });
     }
 
+    // Verifica se a corrida existe e está em status válido
+    const corridaResult = await pool.query(
+      "SELECT id, status FROM corridas WHERE id = $1",
+      [corridaId]
+    );
+
+    if (corridaResult.rows.length === 0) {
+      return res.status(404).json({ erro: 'Corrida não encontrada' });
+    }
+
+    const corrida = corridaResult.rows[0];
+    if (corrida.status === 'PAGO_ONLINE' || corrida.status === 'PAGO_DINHEIRO') {
+      return res.status(400).json({ erro: 'Corrida já foi paga' });
+    }
+
     console.log('Pagamento solicitado:', { corridaId, valor, forma });
 
     if (forma === 'ONLINE') {
-  const response = await preferenceClient.create({
-    body: {
-      items: [
-        {
-          title: `Corrida #${corridaId}`,
-          quantity: 1,
-          currency_id: 'BRL',
-          unit_price: Number(valor)
+      // Atualiza status da corrida para AGUARDANDO_PAGAMENTO
+      await pool.query(
+        "UPDATE corridas SET status = 'AGUARDANDO_PAGAMENTO' WHERE id = $1",
+        [corridaId]
+      );
+
+      const response = await preferenceClient.create({
+        body: {
+          items: [
+            {
+              title: `Corrida #${corridaId}`,
+              description: `Pagamento da corrida ${corridaId}`,
+              quantity: 1,
+              currency_id: 'BRL',
+              unit_price: Number(valor)
+            }
+          ],
+          external_reference: String(corridaId),
+          notification_url: `${PUBLIC_BASE_URL}/mp-webhook`, // WEBHOOK IMPORTANTE
+          
+          back_urls: {
+            success: `${PUBLIC_BASE_URL}/mp-retorno?status=success`,
+            failure: `${PUBLIC_BASE_URL}/mp-retorno?status=failure`,
+            pending: `${PUBLIC_BASE_URL}/mp-retorno?status=pending`
+          },
+          
+          auto_return: 'approved',
+          expires: true,
+          expiration_date_from: new Date(),
+          expiration_date_to: new Date(Date.now() + 30 * 60 * 1000), // 30 minutos para pagar
+          metadata: {
+            corrida_id: corridaId,
+            valor: valor
+          }
         }
-      ],
-      external_reference: String(corridaId),
+      });
 
-      // 👇 Depois de pagar, o Mercado Pago redireciona pra essa URL
-      back_urls: {
-        success: `${PUBLIC_BASE_URL}/mp-retorno`,
-        failure: `${PUBLIC_BASE_URL}/mp-retorno`,
-        pending: `${PUBLIC_BASE_URL}/mp-retorno`
-      },
+      // Salva o preference_id no banco para referência futura
+      await pool.query(
+        "UPDATE corridas SET mp_preference_id = $1 WHERE id = $2",
+        [response.id, corridaId]
+      );
 
-      auto_return: 'approved' // se aprovado, volta automaticamente
+      return res.json({
+        ok: true,
+        tipo: 'ONLINE',
+        init_point: response.init_point,
+        sandbox_init_point: response.sandbox_init_point,
+        preference_id: response.id
+      });
     }
-  });
-
-  return res.json({
-    ok: true,
-    tipo: 'ONLINE',
-    sandbox_init_point: response.sandbox_init_point
-  });
-}
-
 
     if (forma === 'DINHEIRO') {
+      await pool.query(
+        "UPDATE corridas SET status = 'PAGO_DINHEIRO' WHERE id = $1",
+        [corridaId]
+      );
+
       return res.json({
         ok: true,
         tipo: 'DINHEIRO',
@@ -1062,82 +1065,137 @@ app.post('/pagar-corrida', async (req, res) => {
   }
 });
 
-
 // ===============================================
-// ROTA DE TESTE MERCADO PAGO (mantém)
+// WEBHOOK DO MERCADO PAGO (CRÍTICO)
 // ===============================================
-app.get('/pagar-teste', async (req, res) => {
+app.post('/mp-webhook', async (req, res) => {
   try {
-    const response = await preferenceClient.create({
-      body: {
-        items: [
-          {
-            title: 'Teste Mercado Pago PIX',
-            quantity: 1,
-            currency_id: 'BRL',
-            unit_price: 10
-          }
-        ]
+    console.log('Webhook Mercado Pago recebido:', req.query);
+    
+    const { id, topic } = req.query;
+    
+    if (topic === 'merchant_order' || topic === 'payment') {
+      // Buscar informações atualizadas do Mercado Pago
+      let data;
+      if (topic === 'merchant_order') {
+        data = await merchantOrderClient.get({ merchantOrderId: id });
+      } else {
+        data = await paymentClient.get({ id });
       }
-    });
-
-    res.json({
-      sandbox_init_point: response.sandbox_init_point
-    });
-
+      
+      // Extrair external_reference (corridaId) do resultado
+      const externalReference = data.external_reference || 
+                              (data.metadata && data.metadata.corrida_id) ||
+                              (data.items && data.items[0] && data.items[0].title && 
+                               data.items[0].title.match(/#(\d+)/)?.[1]);
+      
+      if (!externalReference) {
+        return res.status(400).send('External reference não encontrada');
+      }
+      
+      const corridaId = externalReference;
+      const status = data.status || data.collection_status;
+      
+      if (status === 'approved') {
+        await pool.query(
+          "UPDATE corridas SET status = 'PAGO_ONLINE' WHERE id = $1",
+          [corridaId]
+        );
+        console.log(`✅ Webhook: Corrida ${corridaId} marcada como PAGO_ONLINE`);
+      } else if (status === 'cancelled' || status === 'rejected') {
+        await pool.query(
+          "UPDATE corridas SET status = 'CANCELADO' WHERE id = $1",
+          [corridaId]
+        );
+      }
+    }
+    
+    res.status(200).send('OK');
   } catch (err) {
-    console.error('ERRO MP:', err);
-    res.status(500).json({ erro: err.message });
+    console.error('Erro no webhook:', err);
+    res.status(500).send('Erro interno');
   }
 });
 
-
 // ===============================================
-// MONITOR (fica antes do listen)
-// ===============================================
-setInterval(monitorarExpiracoes, 5000);
-
-// ===============================================
-// RETORNO DO MERCADO PAGO (após o pagamento)
+// RETORNO DO MERCADO PAGO (MELHORADO)
 // ===============================================
 app.get('/mp-retorno', async (req, res) => {
   try {
     console.log('Retorno Mercado Pago:', req.query);
-
-    const { external_reference, status, collection_status } = req.query;
-
-    // MP pode mandar em status ou collection_status, vamos usar o que vier
-    const finalStatus = collection_status || status;
-
-    // external_reference é o corridaId que mandamos lá no /pagar-corrida
-    const corridaId = external_reference;
-
-    if (finalStatus === 'approved' && corridaId) {
-      // ⚠️ aqui você marca que a corrida foi paga online
-      await pool.query(
-        "UPDATE corridas SET status = 'PAGO_ONLINE' WHERE id = $1",
-        [corridaId]
-      );
-
-      console.log(`✅ Corrida ${corridaId} marcada como PAGO_ONLINE`);
-    } else {
-      console.log('Pagamento não aprovado ou sem corridaId:', req.query);
+    
+    const { external_reference, status, collection_status, payment_id } = req.query;
+    
+    // Verificar o pagamento no MP para garantir segurança
+    if (payment_id) {
+      try {
+        const payment = await paymentClient.get({ id: payment_id });
+        const finalStatus = payment.status || collection_status || status;
+        const corridaId = payment.external_reference || external_reference;
+        
+        if (finalStatus === 'approved' && corridaId) {
+          await pool.query(
+            "UPDATE corridas SET status = 'PAGO_ONLINE' WHERE id = $1",
+            [corridaId]
+          );
+          console.log(`✅ Retorno: Corrida ${corridaId} marcada como PAGO_ONLINE`);
+        }
+      } catch (mpErr) {
+        console.error('Erro ao verificar pagamento no MP:', mpErr);
+      }
     }
-
-    // Depois de processar, manda o cliente de volta pro app
-    return res.redirect(`${FRONT_URL}/cliente.html`);
+    
+    // Redireciona com parâmetros para o frontend mostrar feedback
+    const queryParams = new URLSearchParams(req.query).toString();
+    return res.redirect(`${FRONT_URL}/cliente.html?${queryParams}`);
 
   } catch (err) {
     console.error('Erro em /mp-retorno:', err);
-    // mesmo com erro, manda o usuário voltar pro app
-    return res.redirect(`${FRONT_URL}/cliente.html`);
+    return res.redirect(`${FRONT_URL}/cliente.html?mp_error=1`);
   }
 });
 
-
 // ===============================================
-// SOMENTE O LISTEN NO FINAL
+// ROTA PARA VERIFICAR STATUS DO PAGAMENTO
 // ===============================================
-app.listen(port, () => {
-  console.log(`Servidor rodando na porta ${port}`);
+app.get('/verificar-pagamento/:corridaId', async (req, res) => {
+  try {
+    const { corridaId } = req.params;
+    
+    const corridaResult = await pool.query(
+      "SELECT id, status, mp_preference_id FROM corridas WHERE id = $1",
+      [corridaId]
+    );
+    
+    if (corridaResult.rows.length === 0) {
+      return res.status(404).json({ erro: 'Corrida não encontrada' });
+    }
+    
+    const corrida = corridaResult.rows[0];
+    
+    // Se tiver preference_id, buscar status atual no MP
+    if (corrida.mp_preference_id) {
+      try {
+        const preference = await preferenceClient.get({
+          id: corrida.mp_preference_id
+        });
+        
+        return res.json({
+          status: corrida.status,
+          mercado_pago_status: preference.status,
+          init_point: preference.init_point
+        });
+      } catch (mpErr) {
+        console.error('Erro ao buscar preference:', mpErr);
+      }
+    }
+    
+    return res.json({
+      status: corrida.status
+    });
+    
+  } catch (err) {
+    console.error('Erro ao verificar pagamento:', err);
+    res.status(500).json({ erro: 'Erro ao verificar pagamento' });
+  }
 });
