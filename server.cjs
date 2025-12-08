@@ -1316,3 +1316,29 @@ app.listen(port, () => {
   console.log(`💰 Mercado Pago: ${process.env.MP_ACCESS_TOKEN ? 'Configurado' : 'Modo TESTE'}`);
   console.log('='.repeat(50));
 });
+
+// ⚠️ ROTA DE TESTE - SÓ PARA DESENVOLVIMENTO
+// Marca uma corrida como PAGO_ONLINE sem passar pelo Mercado Pago
+app.post('/debug/marcar-pago', async (req, res) => {
+  try {
+    const { corridaId } = req.body;
+
+    if (!corridaId) {
+      return res.status(400).json({ erro: 'corridaId é obrigatório' });
+    }
+
+    await pool.query(
+      `
+      UPDATE corridas
+      SET status = 'PAGO_ONLINE'
+      WHERE id = $1
+      `,
+      [corridaId]
+    );
+
+    return res.json({ sucesso: true });
+  } catch (err) {
+    console.error('Erro em /debug/marcar-pago:', err);
+    res.status(500).json({ erro: 'Erro ao marcar pago (debug)' });
+  }
+});
