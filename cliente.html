@@ -1216,138 +1216,159 @@
             }
         }
 
-        // === VERIFICAÇÃO DE STATUS (Mantida) ===
-        async function verificarStatus(id) {
-            try {
-                const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
-                const data = await res.json();
-                const pedido = data.pedido;
-                console.log('[DEBUG] verificarStatus -> data:', data);
-                console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.status);
-                
+        // === VERIFICAÇÃO DE STATUS (Corrigida) ===
+async function verificarStatus(id) {
+    try {
+        const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+        const data = await res.json();
+        const pedido = data.pedido;
 
+        console.log('[DEBUG] verificarStatus -> data:', data);
+        console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.status);
 
-                if (!data.success || !pedido) {
-                    // Trata erro de API
-                    console.error("Erro ao obter status. Tentando novamente...");
-                    return;
-                }
-                // 👉 AQUI: chamamos a função que mostra/esconde os botões de pagamento
+        if (!data.success || !pedido) {
+            console.error("Erro ao obter status. Tentando novamente...");
+            return;
+        }
+
+        // 👉 Atualiza botões / opções de pagamento de acordo com o pedido
         renderizarOpcoesPagamentoCliente(pedido);
 
-                // Elementos da tela de acompanhamento
-                const statusTitulo = document.getElementById('acompanhamento-status-titulo');
-                const statusDesc = document.getElementById('acompanhamento-status-desc');
-                const statusArea = document.getElementById('acompanhamento-status-area');
-                const motoboyBox = document.getElementById('motoboy-info-box');
-                const btnWpp = document.getElementById('btn-whatsapp-motoboy');
-                const btnCancelar = document.getElementById('btn-cancelar-acomp');
-                
+        // Elementos da tela de acompanhamento
+        const statusTitulo = document.getElementById('acompanhamento-status-titulo');
+        const statusDesc   = document.getElementById('acompanhamento-status-desc');
+        const statusArea   = document.getElementById('acompanhamento-status-area');
+        const motoboyBox   = document.getElementById('motoboy-info-box');
+        const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
+        const btnCancelar  = document.getElementById('btn-cancelar-acomp');
 
-                // Limpa quaisquer classes de cor
-                statusArea.style.borderColor = '#ffd700';
-                statusArea.style.background = 'rgba(255, 215, 0, 0.1)';
-                statusTitulo.style.color = '#ffd700';
+        // ⚠️ ATENÇÃO: ajuste o ID abaixo para o container dos botões de pagamento
+        // exemplo: <div id="botoes-pagamento"> ... </div>
+        const botoesPagamento = document.getElementById('botoes-pagamento');
 
-                motoboyBox.style.display = 'none';
-                btnWpp.style.display = 'none';
+        // Estado base (limpa)
+        statusArea.style.borderColor  = '#ffd700';
+        statusArea.style.background   = 'rgba(255, 215, 0, 0.1)';
+        statusTitulo.style.color      = '#ffd700';
 
-                if (pedido.status === 'PAGO_ONLINE') {
-                    // Pedido Aceito!
-                    statusArea.style.borderColor = 'var(--neon-green)';
-                    statusArea.style.background = 'rgba(0, 230, 64, 0.1)';
-                    statusTitulo.style.color = 'var(--neon-green)';
-                    statusTitulo.innerText = "FALCÃO A CAMINHO!";
-                    statusDesc.innerText = "Seu piloto está indo até você.";
+        motoboyBox.style.display = 'none';
+        btnWpp.style.display     = 'none';
+        if (botoesPagamento) botoesPagamento.style.display = 'none';
 
-                    document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
-                    document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
-                    motoboyBox.style.display = 'block';
+        // =========================
+        // 1) PENDENTE (buscando motoboy)
+        // =========================
+        if (pedido.status === 'pendente') {
+            statusTitulo.innerText = "BUSCANDO FALCÃO...";
+            statusDesc.innerText   = "Estamos procurando um piloto disponível para você.";
+        }
 
-                    if (pedido.status === 'AGUARDANDO_PAGAMENTO') {
-    statusArea.style.borderColor = '#f1c40f';
-    statusTitulo.innerText = "AGUARDANDO PAGAMENTO";
-    statusDesc.innerText = "Finalize o pagamento para confirmar sua corrida.";
+        // =========================
+        // 2) AGUARDANDO_PAGAMENTO
+        // =========================
+        else if (pedido.status === 'AGUARDANDO_PAGAMENTO') {
+            statusArea.style.borderColor  = '#f1c40f';
+            statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
+            statusTitulo.style.color      = '#f1c40f';
+            statusTitulo.innerText        = "AGUARDANDO PAGAMENTO";
+            statusDesc.innerText          = "Finalize o pagamento para confirmar sua corrida.";
 
-    botoesPagamento.style.display = 'block'; // PAGAR ONLINE / DINHEIRO
-    motoboyBox.style.display = 'none';
-}
-if (pedido.status === 'PAGO_ONLINE') {
-    statusArea.style.borderColor = 'var(--neon-green)';
-    statusTitulo.innerText = "PAGAMENTO CONFIRMADO ✅";
-    statusDesc.innerText = "Seu pagamento foi aprovado. O piloto está a caminho.";
+            if (botoesPagamento) botoesPagamento.style.display = 'block';
+            motoboyBox.style.display = 'none';
+        }
 
-    botoesPagamento.style.display = 'none'; // 🔴 some o botão
-    motoboyBox.style.display = 'block';     // mantém motoboy visível
-}
+        // =========================
+        // 3) PAGO_ONLINE  ✅
+        // =========================
+        else if (pedido.status === 'PAGO_ONLINE') {
+            statusArea.style.borderColor  = 'var(--neon-green)';
+            statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
+            statusTitulo.style.color      = 'var(--neon-green)';
+            statusTitulo.innerText        = "PAGAMENTO CONFIRMADO ✅";
+            statusDesc.innerText          = "Seu pagamento foi aprovado. O piloto está a caminho.";
 
+            if (botoesPagamento) botoesPagamento.style.display = 'none';
+            motoboyBox.style.display = 'block';
 
-                    // Lógica do botão WHATSAPP
-                    if (pedido.telefone_motoboy) {
-                        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
-                        const numeroInternacional = foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
+            document.getElementById('motoboy-nome').innerText  =
+                pedido.nome_motoboy || "Piloto Falcões";
+            document.getElementById('motoboy-placa').innerText =
+                pedido.placa_motoboy || "Moto Indisponível";
 
-                        const textoWpp = encodeURIComponent(`Olá, sou o cliente do pedido #${id} no app Falcões. Gostaria de confirmar a sua chegada.`);
-                        const linkWpp = `https://wa.me/${numeroInternacional}?text=${textoWpp}`;
+            // Botão WhatsApp (se houver telefone)
+            if (pedido.telefone_motoboy) {
+                const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
+                const numeroInternacional =
+                    foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
 
-                        btnWpp.href = linkWpp;
-                        btnWpp.style.display = 'flex';
-                    }
+                const textoWpp = encodeURIComponent(
+                    `Olá, sou o cliente do pedido #${id} no app Falcões. Gostaria de confirmar a sua chegada.`
+                );
+                const linkWpp = `https://wa.me/${numeroInternacional}?text=${textoWpp}`;
 
-                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                btnWpp.href = linkWpp;
+                btnWpp.style.display = 'flex';
+            }
 
-                } else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
-                    // Pedido finalizado pelo motoboy / sistema: pedir confirmação do cliente
-                    statusArea.style.borderColor = 'blue';
-                    statusArea.style.background = 'rgba(0, 0, 255, 0.05)';
-                    statusTitulo.style.color = 'blue';
-                    statusTitulo.innerText = "CORRIDA FINALIZADA (A CONFIRMAR)";
-                    statusDesc.innerText = `Valor estimado: R$ ${(pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',')}`;
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        }
 
-                    // Remove botão de cancelar para evitar conflitos
-                    btnCancelar.style.display = 'none';
+        // =========================
+        // 4) CONCLUÍDA / FINALIZADA
+        // =========================
+        else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
+            statusArea.style.borderColor  = 'blue';
+            statusArea.style.background   = 'rgba(0, 0, 255, 0.05)';
+            statusTitulo.style.color      = 'blue';
+            statusTitulo.innerText        = "CORRIDA FINALIZADA (A CONFIRMAR)";
+            statusDesc.innerText          =
+                `Valor estimado: R$ ${(pedido.valor || window.valorCalculado || 0)
+                    .toFixed(2).replace('.', ',')}`;
 
-                    // Abre o modal de confirmação (se não estiver já aberto)
-                    const modalEnc = document.getElementById('modal-encerramento');
-                    try {
-                        const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
-                        if (modalEnc && modalDisplay === 'none') {
-                            console.log('[DEBUG] abrirModalEncerramento() chamado — status finalizado recebido.');
-                            // CORRIGIDO: O código original tentava chamar uma função inexistente.
-                            // Vou chamar diretamente a exibição do modal e o foco.
-                            modalEnc.style.display = 'flex';
-                            const campoEnc = document.getElementById('campo-encerramento');
-                            setTimeout(() => { try { campoEnc.focus(); } catch (e) { } }, 220);
-                        } else {
-                            console.log('[DEBUG] modal-encerramento já visível ou ausente (display=' + modalDisplay + ')');
-                        }
-                    } catch (err) {
-                        console.warn('[DEBUG] erro ao avaliar modal-encerramento:', err);
-                        // Fallback para abrir se der erro na verificação do estilo
-                        if (modalEnc) {
-                            modalEnc.style.display = 'flex';
-                            const campoEnc = document.getElementById('campo-encerramento');
-                            setTimeout(() => { try { campoEnc.focus(); } catch (e) { } }, 220);
-                        }
-                    }
+            btnCancelar.style.display = 'none';
 
-                } else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
-                    // Pedido cancelado/expirado
-                    clearInterval(intervaloVerificacao);
-                    statusTitulo.innerText = "PEDIDO CANCELADO!";
-                    statusDesc.innerText = `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado!O motoboy teve um imprevisto.    Pedimos desculpas!Por favor,   faça um novo pedido. Obrigado!"}`;
-                    statusArea.style.borderColor = 'var(--error-color)';
-                    statusArea.style.background = 'rgba(255, 0, 0, 0.1)';
-                    statusTitulo.style.color = 'var(--error-color)';
-                    btnCancelar.style.display = 'none';
-                    localStorage.removeItem('idPedidoAtual');
-                    showToast("Pedido cancelado. Use o botão 'FECHAR' abaixo para voltar.", "error", 5000);
+            const modalEnc = document.getElementById('modal-encerramento');
+            try {
+                const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
+                if (modalEnc && modalDisplay === 'none') {
+                    console.log('[DEBUG] abrirModalEncerramento() chamado — status finalizado recebido.');
+                    modalEnc.style.display = 'flex';
+                    const campoEnc = document.getElementById('campo-encerramento');
+                    setTimeout(() => { try { campoEnc.focus(); } catch (e) {} }, 220);
+                } else {
+                    console.log('[DEBUG] modal-encerramento já visível ou ausente (display=' + modalDisplay + ')');
                 }
-
-            } catch (e) {
-                console.error("Erro na verificação de status:", e);
+            } catch (err) {
+                console.warn('[DEBUG] erro ao avaliar modal-encerramento:', err);
+                if (modalEnc) {
+                    modalEnc.style.display = 'flex';
+                    const campoEnc = document.getElementById('campo-encerramento');
+                    setTimeout(() => { try { campoEnc.focus(); } catch (e) {} }, 220);
+                }
             }
         }
+
+        // =========================
+        // 5) CANCELADA / EXPIRADA
+        // =========================
+        else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
+            clearInterval(intervaloVerificacao);
+            statusTitulo.innerText = "PEDIDO CANCELADO!";
+            statusDesc.innerText   =
+                `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado!O motoboy teve um imprevisto.    Pedimos desculpas!Por favor,   faça um novo pedido. Obrigado!"}`;
+            statusArea.style.borderColor = 'var(--error-color)';
+            statusArea.style.background  = 'rgba(255, 0, 0, 0.1)';
+            statusTitulo.style.color     = 'var(--error-color)';
+            btnCancelar.style.display    = 'none';
+            localStorage.removeItem('idPedidoAtual');
+            showToast("Pedido cancelado. Use o botão 'FECHAR' abaixo para voltar.", "error", 5000);
+        }
+
+    } catch (e) {
+        console.error("Erro na verificação de status:", e);
+    }
+}
+
 
         // Função para continuar acompanhando o pedido se o usuário recarregar a página
         function checkPersistedOrder() {
