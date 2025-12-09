@@ -1275,6 +1275,28 @@ setInterval(monitorarExpiracoes, 5000);
 // ===============================================
 // ROTA 404 (sempre última)
 // ===============================================
+// ⚠️ ROTA DE DEBUG – marcar corrida como paga (SEM Mercado Pago)
+app.post('/debug/marcar-pago', async (req, res) => {
+  try {
+    const { corridaId } = req.body;
+
+    if (!corridaId) {
+      return res.status(400).json({ erro: 'corridaId obrigatório' });
+    }
+
+    await pool.query(
+      "UPDATE corridas SET status = 'PAGO_ONLINE' WHERE id = $1",
+      [corridaId]
+    );
+
+    res.json({ sucesso: true, corridaId });
+  } catch (err) {
+    console.error('debug/marcar-pago erro:', err && err.stack ? err.stack : err);
+    res.status(500).json({ erro: 'Erro ao marcar pago (DEBUG)' });
+  }
+});
+
+
 app.use('*', (req, res) => {
   res.status(404).json({ 
     error: 'Rota não encontrada',
