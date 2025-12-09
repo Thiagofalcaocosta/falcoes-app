@@ -12,25 +12,9 @@ require('dotenv').config();
 const PUBLIC_BASE_URL = 'https://falcoes-app.onrender.com';
 const FRONT_URL = 'https://falcoes.site';
 
-const { MercadoPagoConfig, Preference } = require('mercadopago');
-// ===============================================
-// 3. DECLARAR O APP EXPRESS
-// ===============================================
-const app = express();
-const port = process.env.PORT || 3000;
+const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('mercadopago');
 
-
-// 2. CONFIGURAÇÃO MERCADO PAGO
-
-const mpAccessToken = process.env.MP_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN_TEST;
-
-
-if (!mpAccessToken) {
-  console.error('❌ Nenhum access token do Mercado Pago encontrado.');
-  console.error('Configure MP_ACCESS_TOKEN_TEST nas variáveis de ambiente do Render.');
-}
-
-const client = new MercadoPagoConfig({
+const mpClient = new MercadoPagoConfig({
   accessToken: mpAccessToken,
   options: { 
     timeout: 5000,
@@ -38,7 +22,10 @@ const client = new MercadoPagoConfig({
   }
 });
 
-const preferenceClient = new Preference(client);
+const preferenceClient     = new Preference(mpClient);
+const paymentClient        = new Payment(mpClient);
+const merchantOrderClient  = new MerchantOrder(mpClient);
+
 
 
 // ===============================================
@@ -1058,26 +1045,30 @@ app.post('/pagar-corrida', async (req, res) => {
         }
       ],
       back_urls: {
-        success: `${FRONT_URL}/cliente.html?pagamento=sucesso`,
-        failure: `${FRONT_URL}/cliente.html?pagamento=falhou`,
-        pending: `${FRONT_URL}/cliente.html?pagamento=pendente`
+        success: `${FRONT_URL}/cliente.html`,
+        failure: `${FRONT_URL}/cliente.html`,
+        pending: `${FRONT_URL}/cliente.html`
       },
       auto_return: 'approved',
+
+      // vamos usar isso no webhook para saber qual corrida é
+      external_reference: String(corridaId),
       metadata: {
-        corridaId
+        corridaId: String(corridaId)
       },
-      external_reference: String(corridaId)   // 🔴 ADICIONE ESTA LINHA
+
+      // URL que o Mercado Pago chama sozinho para notificar pagamento
+      notification_url: `${PUBLIC_BASE_URL}/mp-webhook`
     };
 
-    // ✅ SDK NOVO (ESSENCIAL)
+    // cria a preference no Mercado Pago
     const mpRes = await preferenceClient.create({
       body: preferenceData
     });
 
     console.log('✅ Preference criada:', mpRes.id);
 
-    const link_pagamento =
-      mpRes.init_point || mpRes.sandbox_init_point;
+    const link_pagamento = mpRes.init_point || mpRes.sandbox_init_point;
 
     if (!link_pagamento) {
       return res.status(500).json({
@@ -1085,7 +1076,7 @@ app.post('/pagar-corrida', async (req, res) => {
       });
     }
 
-    // ✅ CORREÇÃO DO NOME DA TABELA (VOCÊ USA "corridas")
+    // Atualiza a corrida no banco
     await pool.query(
       `
       UPDATE corridas
@@ -1102,7 +1093,7 @@ app.post('/pagar-corrida', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('❌ Erro em /pagar-corrida:', err);
+    console.error('❌ Erro em /pagar-corrida:', err && err.stack ? err.stack : err);
     return res.status(500).json({
       erro: 'Erro ao iniciar pagamento.',
       detalhe: err.message
@@ -1112,54 +1103,78 @@ app.post('/pagar-corrida', async (req, res) => {
 
 
 // WEBHOOK DO MERCADO PAGO
+// WEBHOOK DO MERCADO PAGO – confirma pagamento automático
 app.post('/mp-webhook', async (req, res) => {
   try {
-    console.log('Webhook Mercado Pago recebido:', req.query);
-    
-    const { id, topic } = req.query;
-    
-    if (topic === 'merchant_order' || topic === 'payment') {
-      // Buscar informações atualizadas do Mercado Pago
-      let data;
-      if (topic === 'merchant_order') {
-        data = await merchantOrderClient.get({ merchantOrderId: id });
-      } else {
-        data = await paymentClient.get({ id });
-      }
-      
-      // Extrair external_reference (corridaId) do resultado
-      const externalReference = data.external_reference || 
-                              (data.metadata && data.metadata.corrida_id) ||
-                              (data.items && data.items[0] && data.items[0].title && 
-                               data.items[0].title.match(/#(\d+)/)?.[1]);
-      
-      if (!externalReference) {
-        return res.status(400).send('External reference não encontrada');
-      }
-      
-      const corridaId = externalReference;
-      const status = data.status || data.collection_status;
-      
-      if (status === 'approved') {
-        await pool.query(
-          "UPDATE corridas SET status = 'PAGO_ONLINE' WHERE id = $1",
-          [corridaId]
-        );
-        console.log(`✅ Webhook: Corrida ${corridaId} marcada como PAGO_ONLINE`);
-      } else if (status === 'cancelled' || status === 'rejected') {
-        await pool.query(
-          "UPDATE corridas SET status = 'CANCELADO' WHERE id = $1",
-          [corridaId]
-        );
-      }
+    console.log('🔔 Webhook Mercado Pago recebido: query=', req.query, 'body=', req.body);
+
+    // Dois formatos possíveis: topic/id (antigo) ou type/data.id (novo)
+    const topic   = req.query.topic || req.query.type;
+    const id      = req.query.id || (req.query['data.id'] ?? req.query['data.id'.replace('.', '_')]);
+
+    if (!topic || !id) {
+      console.warn('Webhook sem topic/id válido:', req.query);
+      return res.status(400).send('missing topic/id');
     }
-    
-    res.status(200).send('OK');
+
+    let paymentData = null;
+
+    if (topic === 'payment') {
+      // pagamento direto
+      paymentData = await paymentClient.get({ id });
+    } else if (topic === 'merchant_order') {
+      const order = await merchantOrderClient.get({ merchantOrderId: id });
+      // pega primeiro pagamento da ordem
+      if (order.payments && order.payments.length > 0) {
+        const payId = order.payments[0].id;
+        paymentData = await paymentClient.get({ id: payId });
+      }
+    } else {
+      console.log('Topic não tratado:', topic);
+      return res.status(200).send('ignored');
+    }
+
+    if (!paymentData) {
+      console.warn('Nenhum paymentData encontrado no webhook.');
+      return res.status(200).send('no payment');
+    }
+
+    console.log('🔎 paymentData.status =', paymentData.status);
+    console.log('🔎 paymentData.external_reference =', paymentData.external_reference);
+    console.log('🔎 paymentData.metadata =', paymentData.metadata);
+
+    const corridaId =
+      paymentData.external_reference ||
+      (paymentData.metadata && (paymentData.metadata.corridaId || paymentData.metadata.corrida_id));
+
+    if (!corridaId) {
+      console.warn('Webhook sem corridaId identificável.');
+      return res.status(200).send('no corridaId');
+    }
+
+    let novoStatus = null;
+
+    if (paymentData.status === 'approved') {
+      novoStatus = 'PAGO_ONLINE';
+    } else if (paymentData.status === 'rejected' || paymentData.status === 'cancelled') {
+      novoStatus = 'cancelada';
+    }
+
+    if (novoStatus) {
+      await pool.query(
+        "UPDATE corridas SET status = $1 WHERE id = $2",
+        [novoStatus, corridaId]
+      );
+      console.log(`✅ Webhook: Corrida ${corridaId} atualizada para ${novoStatus}`);
+    }
+
+    return res.status(200).send('OK');
   } catch (err) {
-    console.error('Erro no webhook:', err);
-    res.status(500).send('Erro interno');
+    console.error('Erro no webhook Mercado Pago:', err && err.stack ? err.stack : err);
+    return res.status(500).send('Erro interno');
   }
 });
+
 
 // RETORNO DO MERCADO PAGO
 app.get('/mp-retorno', async (req, res) => {
