@@ -1254,7 +1254,7 @@ async function verificarStatus(id) {
 
         motoboyBox.style.display = 'none';
         btnWpp.style.display     = 'none';
-        if (botoesPagamento) botoesPagamento.style.display = 'none';
+        
 
         // =========================
         // 1) PENDENTE (buscando motoboy)
@@ -1274,7 +1274,7 @@ async function verificarStatus(id) {
             statusTitulo.innerText        = "AGUARDANDO PAGAMENTO";
             statusDesc.innerText          = "Finalize o pagamento para confirmar sua corrida.";
 
-            if (botoesPagamento) botoesPagamento.style.display = 'block';
+            
             motoboyBox.style.display = 'none';
         }
 
@@ -1288,7 +1288,7 @@ async function verificarStatus(id) {
             statusTitulo.innerText        = "PAGAMENTO CONFIRMADO ✅";
             statusDesc.innerText          = "Seu pagamento foi aprovado. O piloto está a caminho.";
 
-            if (botoesPagamento) botoesPagamento.style.display = 'none';
+           
             motoboyBox.style.display = 'block';
 
             document.getElementById('motoboy-nome').innerText  =
