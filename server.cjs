@@ -27,7 +27,7 @@ if (!mpAccessToken) {
   console.error('❌ Nenhum access token do Mercado Pago encontrado.');
   console.error('Configure MP_ACCESS_TOKEN_TEST nas variáveis de ambiente do Render.');
 }
-
+// === CLIENTES MP ===
 const mpClient = new MercadoPagoConfig({
   accessToken: mpAccessToken,
   options: { 
@@ -1301,47 +1301,39 @@ app.post('/confirmar-pagamento', async (req, res) => {
 // ===============================================
 setInterval(monitorarExpiracoes, 5000);
 
-// ===============================================
-// ROTA 404 (sempre última)
-// ===============================================
-// ⚠️ ROTA DE DEBUG – marcar corrida como paga (SEM Mercado Pago)
+
+
+// ⚠️ ROTA DE TESTE - SÓ PARA DESENVOLVIMENTO
+// Marca uma corrida como PAGO_ONLINE sem passar pelo Mercado Pago
 app.post('/debug/marcar-pago', async (req, res) => {
   try {
     const { corridaId } = req.body;
 
     if (!corridaId) {
-      return res.status(400).json({ erro: 'corridaId obrigatório' });
+      return res.status(400).json({ erro: 'corridaId é obrigatório' });
     }
 
     await pool.query(
-      "UPDATE corridas SET status = 'PAGO_ONLINE' WHERE id = $1",
+      `
+      UPDATE corridas
+      SET status = 'PAGO_ONLINE'
+      WHERE id = $1
+      `,
       [corridaId]
     );
 
-    res.json({ sucesso: true, corridaId });
+    return res.json({ sucesso: true });
   } catch (err) {
-    console.error('debug/marcar-pago erro:', err && err.stack ? err.stack : err);
-    res.status(500).json({ erro: 'Erro ao marcar pago (DEBUG)' });
+    console.error('Erro em /debug/marcar-pago:', err);
+    res.status(500).json({ erro: 'Erro ao marcar pago (debug)' });
   }
-});
-
-// ===============================================
-// MONITOR (fica antes do listen)
-// ===============================================
-setInterval(monitorarExpiracoes, 5000);
-
-// ⚠️ ROTA DE TESTE - SÓ PARA DESENVOLVIMENTO
-// Marca uma corrida como PAGO_ONLINE sem passar pelo Mercado Pago
-app.post('/debug/marcar-pago', async (req, res) => {
-  // ... (código acima)
 });
 
 // ===============================================
 // ROTA 404 (sempre última)
 // ===============================================
-
 app.use('*', (req, res) => {
-  res.status(404).json({ 
+  res.status(404).json({
     error: 'Rota não encontrada',
     available_routes: [
       '/',
@@ -1381,5 +1373,3 @@ app.listen(port, () => {
   console.log(`💰 Mercado Pago: ${process.env.MP_ACCESS_TOKEN ? 'Configurado' : 'Modo TESTE'}`);
   console.log('='.repeat(50));
 });
-
-

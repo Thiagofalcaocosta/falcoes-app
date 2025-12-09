@@ -1244,7 +1244,8 @@ async function verificarStatus(id) {
 
         // ⚠️ ATENÇÃO: ajuste o ID abaixo para o container dos botões de pagamento
         // exemplo: <div id="botoes-pagamento"> ... </div>
-        const botoesPagamento = document.getElementById('botoes-pagamento');
+        const areaPagamento = document.getElementById('area-pagamento-cliente');
+
 
         // Estado base (limpa)
         statusArea.style.borderColor  = '#ffd700';
@@ -1485,30 +1486,55 @@ async function verificarStatus(id) {
             const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
             const erroJust = document.getElementById('erro-just-integrada');
 
-            const params = new URLSearchParams(window.location.search);
-  const collectionStatus = params.get('collection_status');
-  const externalRef = params.get('external_reference');
+                // 🔁 TENTAR CONFIRMAR PAGAMENTO AUTOMÁTICO AO VOLTAR DO MERCADO PAGO
+    try {
+        const params = new URLSearchParams(window.location.search);
 
-  if (collectionStatus === 'approved' && externalRef) {
-    console.log('[PAGAMENTO] Aprovado no MP para corrida', externalRef);
+        // Mercado Pago pode mandar "collection_status" ou "status"
+        const collectionStatus = params.get('collection_status') || params.get('status');
+        const externalRef      = params.get('external_reference');
+        const paymentId        = params.get('payment_id');
 
-    fetch('https://falcoes-app.onrender.com/confirmar-pagamento', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ corridaId: externalRef })
-    })
-      .then(r => r.json())
-      .then(d => {
-        console.log('[PAGAMENTO] confirmacao backend:', d);
-        // Opcional: mostrar mensagem
-        alert('Pagamento confirmado! Obrigado.');
-        // Limpar parâmetros da URL pra não repetir
-        window.history.replaceState({}, document.title, 'cliente.html');
-      })
-      .catch(err => {
-        console.error('Erro ao confirmar pagamento:', err);
-      });
-  }
+        // Só segue se o pagamento foi aprovado
+        if (collectionStatus && collectionStatus.toLowerCase() === 'approved') {
+            // Id da corrida: preferimos o external_reference,
+            // mas se não vier, usamos o que está salvo no localStorage
+            const corridaId = externalRef || localStorage.getItem('idPedidoAtual');
+            if (!corridaId) {
+                console.warn('[PAGAMENTO] approved mas sem corridaId.');
+            } else {
+                console.log('[PAGAMENTO] Aprovado no MP para corrida', corridaId, 'payment_id:', paymentId);
+
+                const API = (typeof MEU_IP !== 'undefined') ? MEU_IP : 'https://falcoes-app.onrender.com';
+
+                fetch(`${API}/confirmar-pagamento`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ corridaId })
+                })
+                    .then(r => r.json())
+                    .then(d => {
+                        console.log('[PAGAMENTO] confirmação backend:', d);
+                        showToast('Pagamento confirmado! Obrigado.', 'success', 3000);
+                        // Atualiza status na tela logo depois
+                        if (corridaId) {
+                            verificarStatus(corridaId);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erro ao confirmar pagamento:', err);
+                        showToast('Não consegui confirmar o pagamento automaticamente.', 'error');
+                    })
+                    .finally(() => {
+                        // Remove parâmetros da URL para não repetir o processo
+                        window.history.replaceState({}, document.title, 'cliente.html');
+                    });
+            }
+        }
+    } catch (e) {
+        console.error('Erro ao processar retorno do Mercado Pago:', e);
+    }
+
 
             // Habilita o botão se a justificativa tiver >= 5 caracteres
             if (campoJust && btnConfirmar) {
