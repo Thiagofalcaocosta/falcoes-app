@@ -453,11 +453,11 @@
         const usuario = JSON.parse(localStorage.getItem('usuario'));
         
         // DEBUG
-        console.log('Usuário logado:', usuario);
         if (!usuario || !usuario.id) {
-            console.error('Usuário não tem ID definido');
-            window.location.href = 'index.html';
-        }
+    console.error('Usuário não tem ID definido');
+    window.location.href = 'index.html';
+    return; // Adicione return para parar execução
+}
 
         // VERIFICAÇÃO SIMPLES E CORRETA
         if (!usuario || usuario.tipo !== 'motoboy') {
@@ -789,6 +789,7 @@
          ***********************/
         function criarCardCorrida(corrida) {
             const container = document.getElementById('lista-corridas');
+            
 
             const div = document.createElement('div');
             div.className = 'card-corrida';
@@ -875,42 +876,63 @@
          *  ACEITAR CORRIDA
          ***********************/
         function abrirModalAceitar(id) {
-            console.log('Abrir modal para corrida ID:', id);
-            idCorridaSelecionada = id;
-            document.getElementById('modal-confirmacao').style.display = 'flex';
-        }
+    console.log('Abrir modal para corrida ID:', id);
+    idCorridaSelecionada = id;
+    
+    // ⚠️ VERIFICAÇÃO DE SEGURANÇA
+    const modal = document.getElementById('modal-confirmacao');
+    if (!modal) {
+        console.error('Modal de confirmação não encontrado!');
+        return;
+    }
+    
+    modal.style.display = 'flex';
+}
         
         async function aceitarCorrida(id) { 
-            try {
-                console.log('Aceitar corrida ID:', id);
-                
-                await enviarStatusOnline(true);
-                
-                const cardElement = document.getElementById(`card-${id}`);
-                if (!cardElement) {
-                    mostrarErro("Corrida não disponível mais.");
-                    return;
-                }
-                
-                const disponivel = await verificarDisponibilidadeCorrida(id);
-                if (!disponivel) {
-                    mostrarErro("Esta corrida já foi aceita por outro piloto.");
-                    limparMonitoramento();
-                    setTimeout(verificarEstado, 2000);
-                    return;
-                }
-                
-                idCorridaSelecionada = id;
-                limparMonitoramento();
-                abrirModalAceitar(id);
-            } catch (err) {
-                console.error("Erro ao aceitar corrida:", err);
-                mostrarErro("Erro ao processar. Tente novamente.");
+    try {
+        console.log('Aceitar corrida ID:', id);
+        
+        await enviarStatusOnline(true);
+        
+        // ⚠️ CORREÇÃO: Verifica se o elemento existe de forma segura
+        const cardElement = document.getElementById(`card-${id}`);
+        if (!cardElement) {
+            mostrarErro("Corrida não disponível mais.");
+            return;
+        }
+        
+        const disponivel = await verificarDisponibilidadeCorrida(id);
+        if (!disponivel) {
+            mostrarErro("Esta corrida já foi aceita por outro piloto.");
+            limparMonitoramento();
+            setTimeout(() => verificarEstado(), 2000);
+            return;
+        }
+        
+        idCorridaSelecionada = id;
+        limparMonitoramento();
+        
+        // ⚠️ CORREÇÃO: Verifica se a função existe antes de chamar
+        if (typeof abrirModalAceitar === 'function') {
+            abrirModalAceitar(id);
+        } else {
+            // Fallback: abre o modal diretamente
+            console.log('Abrir modal para corrida ID:', id);
+            idCorridaSelecionada = id;
+            const modal = document.getElementById('modal-confirmacao');
+            if (modal) {
+                modal.style.display = 'flex';
             }
         }
+    } catch (err) {
+        console.error("Erro ao aceitar corrida:", err);
+        mostrarErro("Erro ao processar. Tente novamente.");
+    }
+}
 
         async function confirmarAceitarCorrida() {
-            if (!idCorridaSelecionada) {
+    if (!idCorridaSelecionada) {
         alert('Nenhuma corrida selecionada.');
         return;
     }
@@ -929,6 +951,11 @@
             }),
         });
 
+        // ⚠️ VERIFICA SE A RESPOSTA É VÁLIDA
+        if (!res.ok) {
+            throw new Error(`Erro HTTP: ${res.status}`);
+        }
+
         const data = await res.json();
 
         if (!data.success) {
@@ -936,54 +963,36 @@
             return;
         }
 
-        // ⚠️ ADICIONE ESTA PARTE ANTES DE TUDO
         idCorridaAtual = idCorridaSelecionada;
         temCorridaAtiva = true;
         
-        // ⚠️ LIMPA TUDO IMEDIATAMENTE
         limparContadores();
         limparMonitoramento();
         pararVerificacaoEstado();
         
         console.log('Corrida aceita:', idCorridaAtual);
 
-        // Fecha o modal
-        document.getElementById('modal-confirmacao').style.display = 'none';
+        // ⚠️ FECHA O MODAL COM SEGURANÇA
+        const modalConfirmacao = document.getElementById('modal-confirmacao');
+        if (modalConfirmacao) {
+            modalConfirmacao.style.display = 'none';
+        }
         
-        // ⚠️ REMOVA o setTimeout e mostre direto
-        document.getElementById('modal-sucesso').style.display = 'flex';
+        const modalSucesso = document.getElementById('modal-sucesso');
+        if (modalSucesso) {
+            modalSucesso.style.display = 'flex';
+        }
         
-        // ⚠️ ADICIONE ESTE CÓDIGO NO LUGAR
-document.addEventListener('DOMContentLoaded', function() {
-    // Primeiro verifica se já tem corrida ativa
-    setTimeout(() => {
-        // Verifica corrida ativa primeiro
-        fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.tem_corrida) {
-                    // Tem corrida ativa - mostra direto
-                    temCorridaAtiva = true;
-                    idCorridaAtual = data.corrida.corrida_id || data.corrida.id;
-                    mostrarTela('ativa');
-                    preencherDadosAtiva(data.corrida);
-                } else {
-                    // Não tem corrida - inicia verificação normal
-                    verificarEstado();
-                    iniciarVerificacaoEstado();
-                }
-            })
-            .catch(err => {
-                console.error('Erro ao verificar corrida ativa inicial:', err);
-                verificarEstado();
-                iniciarVerificacaoEstado();
-            });
-    }, 500);
-});
+        setTimeout(() => {
+            if (modalSucesso) {
+                modalSucesso.style.display = 'none';
+            }
+            mostrarCorridaEmAndamento();
+        }, 1000);
 
     } catch (err) {
         console.error('Erro ao confirmar aceite da corrida:', err);
-        mostrarErro('Erro ao aceitar corrida.');
+        mostrarErro('Erro ao aceitar corrida: ' + err.message);
     }
 }
 
