@@ -1259,10 +1259,17 @@ async function verificarStatus(id) {
         // =========================
         // 1) PENDENTE (buscando motoboy)
         // =========================
-        if (pedido.status === 'pendente') {
-            statusTitulo.innerText = "BUSCANDO FALCÃO...";
-            statusDesc.innerText   = "Estamos procurando um piloto disponível para você.";
-        }
+        if (pedido.status === 'pendente' || pedido.status === 'aceita') {
+    statusTitulo.innerText = "FALCÃO ENCONTRADO! 🎉";
+    statusDesc.innerText   = "Um piloto aceitou sua corrida!";
+    
+    // ⚠️ ADICIONE para mostrar info do motoboy mesmo se status for 'aceita'
+    if (pedido.nome_motoboy) {
+        motoboyBox.style.display = 'block';
+        document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
+        document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
+    }
+}
 
         // =========================
         // 2) AGUARDANDO_PAGAMENTO
@@ -1281,6 +1288,17 @@ async function verificarStatus(id) {
         // =========================
         // 3) PAGO_ONLINE  ✅
         // =========================
+        else if (pedido.status === 'aceita') {
+    statusArea.style.borderColor  = 'var(--neon-green)';
+    statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
+    statusTitulo.style.color      = 'var(--neon-green)';
+    statusTitulo.innerText        = "PILOTO ENCONTRADO! ✅";
+    statusDesc.innerText          = "Seu piloto está a caminho.";
+    
+    motoboyBox.style.display = 'block';
+    document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
+    document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
+}
         else if (pedido.status === 'PAGO_ONLINE') {
             statusArea.style.borderColor  = 'var(--neon-green)';
             statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
