@@ -621,7 +621,7 @@
                 const res = await fetch(`${MEU_IP}/status-corrida/${corridaId}`);
                 const data = await res.json();
                 
-                if (!data.success || data.status !== 'pendente') {
+                if (!data.success || (data.status !== 'pendente' && data.status !== 'AGUARDANDO_PAGAMENTO')) {
                     console.log(`Corrida ${corridaId} não está mais disponível. Status: ${data.status}`);
                     return false;
                 }
@@ -1118,6 +1118,60 @@
             pararVerificacaoEstado();
             enviarStatusOnline(false);
         });
+        // Adicione esta função
+function verificarCorridaAtivaPeriodicamente() {
+    if (!idCorridaAtual || !temCorridaAtiva) return;
+    
+    fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.tem_corrida) {
+                console.log('✅ Corrida ainda ativa');
+            } else {
+                console.log('❌ Corrida não existe mais');
+                temCorridaAtiva = false;
+                idCorridaAtual = null;
+                mostrarTela('lista');
+                iniciarVerificacaoEstado();
+            }
+        })
+        .catch(err => {
+            console.error('Erro ao verificar corrida ativa:', err);
+        });
+}
+
+// E mude o final do código para:
+document.addEventListener('DOMContentLoaded', function() {
+    enviarStatusOnline(true);
+    onlineInterval = setInterval(() => {
+        enviarStatusOnline(true);
+    }, 5000);
+    
+    // Verifica corrida ativa imediatamente
+    setTimeout(() => {
+        fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.tem_corrida) {
+                    temCorridaAtiva = true;
+                    idCorridaAtual = data.corrida.corrida_id || data.corrida.id;
+                    mostrarTela('ativa');
+                    preencherDadosAtiva(data.corrida);
+                    
+                    // Verifica a cada 3 segundos
+                    setInterval(verificarCorridaAtivaPeriodicamente, 3000);
+                } else {
+                    verificarEstado();
+                    iniciarVerificacaoEstado();
+                }
+            })
+            .catch(err => {
+                console.error('Erro inicial:', err);
+                verificarEstado();
+                iniciarVerificacaoEstado();
+            });
+    }, 500);
+});
 
     </script>
 </body>
