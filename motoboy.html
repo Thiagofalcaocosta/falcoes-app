@@ -641,28 +641,31 @@
             corridaAtualMonitorada = corridaId;
             
             intervaloMonitoramento = setInterval(async () => {
-                if (!temCorridaAtiva) {
-                    const disponivel = await verificarDisponibilidadeCorrida(corridaId);
-                    
-                    if (!disponivel && corridaSendoExibida && corridaSendoExibida.corrida_id === corridaId) {
-                        console.log(`Corrida ${corridaId} foi aceita por outro motoboy. Limpando...`);
-                        
-                        const container = document.getElementById('lista-corridas');
-                        container.innerHTML = '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ Esta corrida já foi aceita por outro piloto</div>';
-                        
-                        limparContadores();
-                        limparMonitoramento();
-                        notificacaoAtiva = false;
-                        corridaSendoExibida = null;
-                        
-                        tocarAlerta();
-                        
-                        setTimeout(verificarEstado, 3000);
-                    }
-                }
-            }, 2000);
+                
+                // ⚠️ ADICIONE ESTA VERIFICAÇÃO
+        if (temCorridaAtiva) {
+            return; // Para monitoramento se tem corrida ativa
         }
-
+        
+        const disponivel = await verificarDisponibilidadeCorrida(corridaId);
+        
+        if (!disponivel && corridaSendoExibida && corridaSendoExibida.corrida_id === corridaId) {
+            console.log(`Corrida ${corridaId} foi aceita por outro motoboy. Limpando...`);
+            
+            const container = document.getElementById('lista-corridas');
+            container.innerHTML = '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ Esta corrida já foi aceita por outro piloto</div>';
+            
+            limparContadores();
+            limparMonitoramento();
+            notificacaoAtiva = false;
+            corridaSendoExibida = null;
+            
+            tocarAlerta();
+            
+            setTimeout(verificarEstado, 3000);
+        }
+    }, 2000);
+}
         /***********************
          *  CONTROLE DE VERIFICAÇÃO
          ***********************/
@@ -696,6 +699,11 @@
          ***********************/
         async function verificarEstado() {
             try {
+                // ⚠️ ADICIONE ESTA VERIFICAÇÃO NO INÍCIO
+        if (temCorridaAtiva) {
+            console.log('Tem corrida ativa, não verifica estado');
+            return; // Sai da função imediatamente
+        }
                 // Se já tem corrida ativa, não verifica novas
                 if (temCorridaAtiva) {
                     return;
@@ -903,71 +911,109 @@
 
         async function confirmarAceitarCorrida() {
             if (!idCorridaSelecionada) {
-                alert('Nenhuma corrida selecionada.');
-                return;
-            }
+        alert('Nenhuma corrida selecionada.');
+        return;
+    }
 
-            try {
-                console.log('Confirmando aceite da corrida:', idCorridaSelecionada);
+    try {
+        console.log('Confirmando aceite da corrida:', idCorridaSelecionada);
 
-                const res = await fetch(`${MEU_IP}/aceitar-corrida`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        corrida_id: idCorridaSelecionada,
-                        motoboy_id: usuario.id
-                    }),
-                });
+        const res = await fetch(`${MEU_IP}/aceitar-corrida`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                corrida_id: idCorridaSelecionada,
+                motoboy_id: usuario.id
+            }),
+        });
 
-                const data = await res.json();
+        const data = await res.json();
 
-                if (!data.success) {
-                    alert(data.message || 'Não foi possível aceitar a corrida.');
-                    return;
-                }
-
-                idCorridaAtual = idCorridaSelecionada;
-                temCorridaAtiva = true;
-                console.log('Corrida aceita:', idCorridaAtual);
-
-                document.getElementById('modal-confirmacao').style.display = 'none';
-                document.getElementById('modal-sucesso').style.display = 'flex';
-                
-                setTimeout(() => {
-                    document.getElementById('modal-sucesso').style.display = 'none';
-                    mostrarCorridaEmAndamento();
-                    pararVerificacaoEstado();
-                }, 2000);
-
-            } catch (err) {
-                console.error('Erro ao confirmar aceite da corrida:', err);
-                mostrarErro('Erro ao aceitar corrida.');
-            }
+        if (!data.success) {
+            alert(data.message || 'Não foi possível aceitar a corrida.');
+            return;
         }
+
+        // ⚠️ ADICIONE ESTA PARTE ANTES DE TUDO
+        idCorridaAtual = idCorridaSelecionada;
+        temCorridaAtiva = true;
+        
+        // ⚠️ LIMPA TUDO IMEDIATAMENTE
+        limparContadores();
+        limparMonitoramento();
+        pararVerificacaoEstado();
+        
+        console.log('Corrida aceita:', idCorridaAtual);
+
+        // Fecha o modal
+        document.getElementById('modal-confirmacao').style.display = 'none';
+        
+        // ⚠️ REMOVA o setTimeout e mostre direto
+        document.getElementById('modal-sucesso').style.display = 'flex';
+        
+        // ⚠️ ADICIONE ESTE CÓDIGO NO LUGAR
+document.addEventListener('DOMContentLoaded', function() {
+    // Primeiro verifica se já tem corrida ativa
+    setTimeout(() => {
+        // Verifica corrida ativa primeiro
+        fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.tem_corrida) {
+                    // Tem corrida ativa - mostra direto
+                    temCorridaAtiva = true;
+                    idCorridaAtual = data.corrida.corrida_id || data.corrida.id;
+                    mostrarTela('ativa');
+                    preencherDadosAtiva(data.corrida);
+                } else {
+                    // Não tem corrida - inicia verificação normal
+                    verificarEstado();
+                    iniciarVerificacaoEstado();
+                }
+            })
+            .catch(err => {
+                console.error('Erro ao verificar corrida ativa inicial:', err);
+                verificarEstado();
+                iniciarVerificacaoEstado();
+            });
+    }, 500);
+});
+
+    } catch (err) {
+        console.error('Erro ao confirmar aceite da corrida:', err);
+        mostrarErro('Erro ao aceitar corrida.');
+    }
+}
 
         function mostrarCorridaEmAndamento() {
-            mostrarTela('ativa');
-            
-            fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.tem_corrida) {
-                        preencherDadosAtiva(data.corrida);
-                    } else {
-                        temCorridaAtiva = false;
-                        mostrarTela('lista');
-                        iniciarVerificacaoEstado();
-                    }
-                })
-                .catch(err => {
-                    console.error('Erro ao buscar corrida ativa:', err);
-                    temCorridaAtiva = false;
-                    mostrarTela('lista');
-                    iniciarVerificacaoEstado();
-                });
-        }
+    // ⚠️ FORÇA mostrar a tela ativa primeiro
+    mostrarTela('ativa');
+    
+    fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.tem_corrida) {
+                preencherDadosAtiva(data.corrida);
+                // ⚠️ ATUALIZA O ID CORRIDA ATUAL
+                idCorridaAtual = data.corrida.corrida_id || data.corrida.id;
+                temCorridaAtiva = true;
+            } else {
+                // ⚠️ Só volta para lista se realmente não tiver corrida
+                console.log('Não encontrou corrida ativa, voltando para lista');
+                temCorridaAtiva = false;
+                idCorridaAtual = null;
+                mostrarTela('lista');
+                iniciarVerificacaoEstado();
+            }
+        })
+        .catch(err => {
+            console.error('Erro ao buscar corrida ativa:', err);
+            // ⚠️ Em caso de erro, mantém na tela ativa
+            // Não volta para lista automaticamente
+        });
+}
 
         /***********************
          *  CANCELAMENTO E FINALIZAÇÃO
