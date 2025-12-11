@@ -1256,6 +1256,30 @@ app.get('/verificar-pagamento/:corridaId', async (req, res) => {
   }
 });
 
+// Adicione esta rota no seu server.js (backend)
+app.get('/status-corrida/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(
+            "SELECT status FROM corridas WHERE id = $1",
+            [id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.json({ success: false, status: 'not_found' });
+        }
+        
+        res.json({ 
+            success: true, 
+            status: result.rows[0].status 
+        });
+    } catch (err) {
+        console.error('Erro em /status-corrida:', err);
+        res.status(500).json({ success: false });
+    }
+});
+
 // CONFIRMAR PAGAMENTO MANUALMENTE (quando voltar do Mercado Pago)
 app.post('/confirmar-pagamento', async (req, res) => {
   try {
