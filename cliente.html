@@ -1248,13 +1248,10 @@ async function verificarStatus(id) {
             // Esconde info do motoboy até pagamento ser escolhido
             document.getElementById('motoboy-info-box').style.display = 'none';
             
-            // Renderiza os botões de pagamento (já deve estar funcionando)
-            renderizarOpcoesPagamentoCliente(pedido);
-            return;
+            
         }
 
-        // 👉 Atualiza botões / opções de pagamento de acordo com o pedido
-        renderizarOpcoesPagamentoCliente(pedido);
+        
 
         // Elementos da tela de acompanhamento
         const statusTitulo = document.getElementById('acompanhamento-status-titulo');
@@ -1292,21 +1289,8 @@ async function verificarStatus(id) {
             motoboyBox.style.display = 'none';
         }
 
-        // =========================
-        // 3) PAGO_ONLINE  ✅
-        // =========================
-        else if (pedido.status ==='aguardando_pagamento' ) {
-    statusArea.style.borderColor  = 'var(--neon-green)';
-    statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
-    statusTitulo.style.color      = 'var(--neon-green)';
-    statusTitulo.innerText        = "PILOTO ENCONTRADO! ✅";
-    statusDesc.innerText          = "Seu piloto está a caminho.";
-    
-    motoboyBox.style.display = 'block';
-    document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
-    document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
-}
-        else if (pedido.status === 'PAGO_ONLINE') {
+        
+        else if (pedido.status === 'pago_online') {
             statusArea.style.borderColor  = 'var(--neon-green)';
             statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
             statusTitulo.style.color      = 'var(--neon-green)';
