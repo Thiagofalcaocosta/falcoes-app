@@ -1230,6 +1230,26 @@ async function verificarStatus(id) {
             console.error("Erro ao obter status. Tentando novamente...");
             return;
         }
+        // Se status é 'aceita', mostra TELA DE ESCOLHA DE PAGAMENTO
+        if (pedido.status === 'aceita') {
+            // Mostra mensagem clara de escolha de pagamento
+            const statusArea = document.getElementById('acompanhamento-status-area');
+            const statusTitulo = document.getElementById('acompanhamento-status-titulo');
+            const statusDesc = document.getElementById('acompanhamento-status-desc');
+            
+            statusArea.style.borderColor = '#ffca28';
+            statusArea.style.background = 'rgba(255, 202, 40, 0.1)';
+            statusTitulo.style.color = '#ffca28';
+            statusTitulo.innerText = "🎯 ESCOLHA COMO PAGAR";
+            statusDesc.innerText = "Um piloto aceitou! Escolha sua forma de pagamento abaixo.";
+            
+            // Esconde info do motoboy até pagamento ser escolhido
+            document.getElementById('motoboy-info-box').style.display = 'none';
+            
+            // Renderiza os botões de pagamento (já deve estar funcionando)
+            renderizarOpcoesPagamentoCliente(pedido);
+            return;
+        }
 
         // 👉 Atualiza botões / opções de pagamento de acordo com o pedido
         renderizarOpcoesPagamentoCliente(pedido);
