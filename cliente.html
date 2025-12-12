@@ -1191,6 +1191,8 @@
                 if (json.success) {
                     idPedidoAtual = json.id;
                     localStorage.setItem('idPedidoAtual', idPedidoAtual);
+                    setCorridaAtual(idPedidoAtual);
+
 
                     // 2. Preencher a nova tela com os dados iniciais
                     document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
@@ -1231,7 +1233,7 @@ async function verificarStatus(id) {
             return;
         }
         // Se status é 'aceita', mostra TELA DE ESCOLHA DE PAGAMENTO
-        if (pedido.status === 'aceita') {
+        if (pedido.status === 'aguardando_pagamento') {
             // Mostra mensagem clara de escolha de pagamento
             const statusArea = document.getElementById('acompanhamento-status-area');
             const statusTitulo = document.getElementById('acompanhamento-status-titulo');
@@ -1279,7 +1281,7 @@ async function verificarStatus(id) {
         // =========================
         // 1) PENDENTE (buscando motoboy)
         // =========================
-        if (pedido.status === 'pendente' || pedido.status === 'aceita') {
+        if (pedido.status === 'pendente' || pedido.status ==='aguardando_pagamento' ) {
     statusTitulo.innerText = "FALCÃO ENCONTRADO! 🎉";
     statusDesc.innerText   = "Um piloto aceitou sua corrida!";
     
@@ -1294,7 +1296,8 @@ async function verificarStatus(id) {
         // =========================
         // 2) AGUARDANDO_PAGAMENTO
         // =========================
-        else if (pedido.status === 'AGUARDANDO_PAGAMENTO') {
+        else if (pedido.status === 'aguardando_pagamento') {
+
             statusArea.style.borderColor  = '#f1c40f';
             statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
             statusTitulo.style.color      = '#f1c40f';
@@ -1308,7 +1311,7 @@ async function verificarStatus(id) {
         // =========================
         // 3) PAGO_ONLINE  ✅
         // =========================
-        else if (pedido.status === 'aceita') {
+        else if (pedido.status ==='aguardando_pagamento' ) {
     statusArea.style.borderColor  = 'var(--neon-green)';
     statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
     statusTitulo.style.color      = 'var(--neon-green)';
@@ -1635,117 +1638,101 @@ async function verificarStatus(id) {
         });
     </script>
     <script>
-  // PAGAMENTO ONLINE (Mercado Pago - modo TESTE)
-  // PAGAMENTO ONLINE (Mercado Pago - modo TESTE)
-async function pagarCorridaOnline(corridaId, valor) {
-    try {
-        const API = 'https://falcoes-app.onrender.com';
 
-        const res = await fetch(`${API}/pagar-corrida`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                corridaId: corridaId,
-                valor: valor,
-                forma: 'ONLINE'
-            })
-        });
 
-        const data = await res.json();
-        console.log('Resposta pagamento:', data);
+let corridaAtualId = null;
 
-        if (!res.ok) {
-            alert(data.erro || 'Erro ao gerar pagamento');
-            return;
-        }
-
-        if (data.link_pagamento) {
-            window.open(data.link_pagamento, '_blank');
-        }
-    } catch (err) {
-        console.error(err);
-        alert('Falha ao iniciar pagamento online');
-    }
+// essa função deve ser chamada quando o cliente cria a corrida
+function setCorridaAtual(id) {
+  corridaAtualId = id;
 }
 
-  // PAGAMENTO EM DINHEIRO
-  async function pagarCorridaDinheiro(corridaId, valor) {
-    try {
-      const res = await fetch('/pagar-corrida', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          corridaId: corridaId,
-          valor: valor,
-          forma: 'DINHEIRO'
-        })
-      });
+// verifica o status da corrida a cada 3 segundos
+setInterval(async () => {
+  if (!corridaAtualId) return;
 
-      const data = await res.json();
+  try {
+    const res = await fetch(`/status-corrida/${corridaAtualId}`);
+    const data = await res.json();
 
-      if (!res.ok) {
-        alert(data.erro || 'Erro ao registrar pagamento em dinheiro.');
-        return;
-      }
-
-      alert(data.mensagem || 'Pagamento em dinheiro registrado. Combine com o motoboy.');
-      // FUTURO: aqui podemos atualizar a tela, status, etc.
-    } catch (e) {
-      console.error(e);
-      alert('Falha na comunicação com o servidor.');
+    if (data.success && data.status === 'aguardando_pagamento') {
+      document.getElementById('modal-pagamento').style.display = 'flex';
     }
+  } catch (e) {
+    console.error('Erro ao verificar status', e);
   }
-  
-// Mostra ou esconde os botões de pagamento conforme o status do PEDIDO
-function renderizarOpcoesPagamentoCliente(pedido) {
-  const area = document.getElementById('area-pagamento-cliente');
-  if (!area) return;
+}, 3000);
 
-  // limpa qualquer coisa anterior
-  area.innerHTML = '';
+// pagamento em dinheiro
+async function pagarDinheiro() {
+  if (!corridaAtualId) return;
 
-  // ⚠️ VERIFICAÇÃO CORRIGIDA
-  if (!pedido) return;
+  await fetch('/pagar-corrida', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      corridaId: corridaAtualId,
+      forma: 'DINHEIRO'
+    })
+  });
 
-  // MOSTRA BOTÕES APENAS SE STATUS FOR 'aceita'
-  if (pedido.status !== 'aceita') {
-    return;
+  document.getElementById('modal-pagamento').style.display = 'none';
+}
+
+// pagamento pix
+async function pagarPix() {
+  if (!corridaAtualId) return;
+
+  const res = await fetch('/pagar-corrida', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      corridaId: corridaAtualId,
+      forma: 'PIX'
+    })
+  });
+
+  const data = await res.json();
+
+  if (data.init_point) {
+    window.location.href = data.init_point;
   }
-
-  const pedidoId = pedido.id || pedido.corrida_id;
-  const valorBruto = pedido.valor_total || pedido.valor;
-  const valor = Number(valorBruto || 0);
-
-  if (!pedidoId || !valor) return;
-
-  area.innerHTML = `
-    <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
-      <h3 style="color:var(--neon-green); text-align:center;">ESCOLHA SEU PAGAMENTO</h3>
-      <p style="text-align:center; color:#ccc; font-size:14px;">
-        O motoboy já aceitou! Escolha como pagar:
-      </p>
-      
-      <button
-        style="width:100%;padding:12px;font-size:16px;background:#00c853;color:#000;border:none;border-radius:8px;font-weight:bold;"
-        onclick="pagarCorridaOnline(${pedidoId}, ${valor})">
-        💳 PAGAR AGORA ONLINE
-      </button>
-
-      <button
-        style="width:100%;padding:12px;font-size:16px;background:#ffca28;color:#000;border:none;border-radius:8px;font-weight:bold;"
-        onclick="pagarCorridaDinheiro(${pedidoId}, ${valor})">
-        💰 PAGAR EM DINHEIRO (ao motoboy)
-      </button>
-      
-      <p style="font-size:12px; color:#888; text-align:center; margin-top:10px;">
-        Online: pagamento seguro via Mercado Pago<br>
-        Dinheiro: você paga diretamente ao motoboy
-      </p>
-    </div>
-  `;
 }
 
 </script>
+
+<!-- MODAL PAGAMENTO OBRIGATÓRIO -->
+<div id="modal-pagamento" style="
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.9);
+  z-index:2147483647;
+  align-items:center;
+  justify-content:center;
+">
+  <div style="
+    background:#1e1e1e;
+    color:#fff;
+    padding:30px;
+    border-radius:12px;
+    max-width:400px;
+    width:90%;
+    text-align:center;
+  ">
+    <h2>🚨 Para continuar</h2>
+    <p>Escolha a forma de pagamento</p>
+
+    <button onclick="pagarDinheiro()" class="btn">
+      💰 Pagar em Dinheiro
+    </button>
+
+    <button onclick="pagarPix()" class="btn" style="background:#2196f3;color:#fff;">
+      🔁 Pagar com PIX
+    </button>
+  </div>
+</div>
 
 </body>
 
