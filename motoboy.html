@@ -734,13 +734,50 @@
                 const dadosAtiva = await resAtiva.json();
 
                 if (dadosAtiva.tem_corrida) {
-                    temCorridaAtiva = true;
-                    limparContadores();
-                    limparMonitoramento();
-                    mostrarTela('ativa');
-                    preencherDadosAtiva(dadosAtiva.corrida);
-                    return;
-                }
+    // ⚠️ VERIFICA SE PODE INICIAR A CORRIDA
+    const statusCorrida = dadosAtiva.corrida.status;
+    
+    // Motoboy só pode iniciar se:
+    // 1. Pagamento online foi confirmado (PAGO_ONLINE)
+    // 2. OU se status é 'aceita' (pagamento em dinheiro combinado)
+    const podeIniciar = statusCorrida === 'PAGO_ONLINE' || statusCorrida === 'aceita';
+    
+    if (podeIniciar) {
+        temCorridaAtiva = true;
+        limparContadores();
+        limparMonitoramento();
+        mostrarTela('ativa');
+        preencherDadosAtiva(dadosAtiva.corrida);
+        return;
+    } else {
+        // ⚠️ SE NÃO PODE INICIAR (ex: AGUARDANDO_PAGAMENTO)
+        // Mostra mensagem e volta para lista
+        console.log('Corrida não pode ser iniciada ainda. Status:', statusCorrida);
+        mostrarTela('lista');
+        
+        // ⚠️ ADICIONE: Limpa a flag temCorridaAtiva
+        temCorridaAtiva = false;
+        idCorridaAtual = null;
+        
+        // Mostra mensagem para o motoboy
+        const container = document.getElementById('lista-corridas');
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:30px;">
+                    <div style="color:#ffca28; font-size:24px; margin-bottom:10px;">⏳</div>
+                    <div style="color:#ffca28; font-weight:bold; margin-bottom:10px;">
+                        CORRIDA AGUARDANDO PAGAMENTO
+                    </div>
+                    <div style="color:#ccc; font-size:14px;">
+                        O cliente ainda não escolheu como pagar.<br>
+                        Você verá esta corrida quando o pagamento for confirmado.
+                    </div>
+                </div>
+            `;
+        }
+        return;
+    }
+}
 
                 const resLista = await fetch(`${MEU_IP}/corridas-pendentes`, {
                     method: 'POST',
@@ -792,16 +829,59 @@
         }
 
         function preencherDadosAtiva(c) {
-            idCorridaAtual = c.corrida_id || c.id;
-            console.log('Corrida ativa ID:', idCorridaAtual);
-            
-            document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
-            document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
-            document.getElementById('ativa-cliente').innerText = c.nome_cliente;
-            document.getElementById('ativa-fone').innerText = c.telefone_cliente;
-            document.getElementById('ativa-origem').innerText = c.origem;
-            document.getElementById('ativa-destino').innerText = c.destino;
+    idCorridaAtual = c.corrida_id || c.id;
+    
+    document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
+    document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
+    document.getElementById('ativa-cliente').innerText = c.nome_cliente;
+    document.getElementById('ativa-fone').innerText = c.telefone_cliente;
+    document.getElementById('ativa-origem').innerText = c.origem;
+    document.getElementById('ativa-destino').innerText = c.destino;
+    
+    // ⚠️ ADICIONE ESTE CÓDIGO AQUI (AVISO)
+    // Primeiro, remove qualquer aviso anterior
+    const card = document.querySelector('#tela-corrida-ativa .card-corrida');
+    if (card) {
+        const avisoAnterior = card.querySelector('.aviso-pagamento');
+        if (avisoAnterior) avisoAnterior.remove();
+    }
+    
+    // Se status for 'aceita' (pagamento em dinheiro), mostra aviso
+    if (c.status === 'aceita') {
+        const aviso = document.createElement('div');
+        aviso.className = 'aviso-pagamento';
+        aviso.style.background = 'rgba(255, 200, 40, 0.2)';
+        aviso.style.color = '#ffca28';
+        aviso.style.padding = '10px';
+        aviso.style.borderRadius = '8px';
+        aviso.style.marginTop = '15px';
+        aviso.style.textAlign = 'center';
+        aviso.style.fontSize = '14px';
+        aviso.innerHTML = '💰 PAGAMENTO EM DINHEIRO - Combine com o cliente';
+        
+        if (card) {
+            card.appendChild(aviso);
         }
+    }
+    
+    // Se status for 'PAGO_ONLINE', mostra aviso de pago
+    if (c.status === 'PAGO_ONLINE') {
+        const aviso = document.createElement('div');
+        aviso.className = 'aviso-pagamento';
+        aviso.style.background = 'rgba(0, 230, 64, 0.2)';
+        aviso.style.color = 'var(--neon-green)';
+        aviso.style.padding = '10px';
+        aviso.style.borderRadius = '8px';
+        aviso.style.marginTop = '15px';
+        aviso.style.textAlign = 'center';
+        aviso.style.fontSize = '14px';
+        aviso.innerHTML = '✅ PAGAMENTO ONLINE CONFIRMADO - Pode iniciar a corrida!';
+        
+        if (card) {
+            card.appendChild(aviso);
+        }
+    }
+}
 
         /***********************
          *  CRIAÇÃO E RENDERIZAÇÃO
