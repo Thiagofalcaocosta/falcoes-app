@@ -1036,7 +1036,9 @@ app.post('/pagar-corrida', async (req, res) => {
       await pool.query(
         `
         UPDATE corridas
-        SET status = 'aceita'
+        SET status = 'liberada',
+    forma_pagamento = 'DINHEIRO'
+
         WHERE id = $1
         `,
         [corridaId]
