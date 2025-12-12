@@ -803,7 +803,8 @@ app.post('/aceitar-corrida', async (req, res) => {
     const result = await pool.query(
       `
       UPDATE corridas
-      SET status = 'aceita',
+      SET status = 'aguardando_pagamento',
+
           motoboy_id = $2
       WHERE id = $1
         AND status = 'pendente'
