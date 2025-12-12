@@ -1276,27 +1276,11 @@ async function verificarStatus(id) {
 
         motoboyBox.style.display = 'none';
         btnWpp.style.display     = 'none';
-        
-
-        // =========================
-        // 1) PENDENTE (buscando motoboy)
-        // =========================
-        if (pedido.status === 'pendente' || pedido.status ==='aguardando_pagamento' ) {
-    statusTitulo.innerText = "FALCÃO ENCONTRADO! 🎉";
-    statusDesc.innerText   = "Um piloto aceitou sua corrida!";
     
-    // ⚠️ ADICIONE para mostrar info do motoboy mesmo se status for 'aceita'
-    if (pedido.nome_motoboy) {
-        motoboyBox.style.display = 'block';
-        document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
-        document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
-    }
-}
-
         // =========================
         // 2) AGUARDANDO_PAGAMENTO
         // =========================
-        else if (pedido.status === 'aguardando_pagamento') {
+        if (pedido.status === 'aguardando_pagamento') {
 
             statusArea.style.borderColor  = '#f1c40f';
             statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
