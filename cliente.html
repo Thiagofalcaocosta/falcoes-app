@@ -1687,9 +1687,16 @@ function renderizarOpcoesPagamentoCliente(pedido) {
   area.innerHTML = '';
 
   // só mostra botões se estiver aguardando pagamento
-  if (!pedido || pedido.status !== 'AGUARDANDO_PAGAMENTO') {
+  if (!pedido) {
     return;
-  }
+}
+
+// ⚠️ MOSTRA BOTÕES DE PAGAMENTO QUANDO STATUS É 'aceita'
+if (pedido.status === 'aceita') {
+    // Continua para mostrar botões
+} else if (pedido.status !== 'AGUARDANDO_PAGAMENTO') {
+    return;
+}
 
   // Tenta descobrir o ID do pedido com vários nomes possíveis
   const pedidoId =
