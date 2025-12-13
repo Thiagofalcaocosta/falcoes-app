@@ -1667,39 +1667,73 @@ setInterval(async () => {
 
 // pagamento em dinheiro
 async function pagarDinheiro() {
-  if (!corridaAtualId) return;
+  if (!corridaAtualId) {
+    showToast('Corrida inválida.', 'error');
+    return;
+  }
 
-  await fetch('/pagar-corrida', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      corridaId: corridaAtualId,
-      forma: 'DINHEIRO'
-    })
-  });
+  try {
+    const res = await fetch('/pagar-corrida', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: corridaAtualId,
+        forma_pagamento: 'DINHEIRO'
+      })
+    });
 
-  document.getElementById('modal-pagamento').style.display = 'none';
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.message || 'Falha ao registrar pagamento');
+    }
+
+    showToast('Pagamento em dinheiro registrado.', 'success');
+
+    // fecha modal e deixa o backend liberar a corrida
+    document.getElementById('modal-pagamento').style.display = 'none';
+
+    // força atualização imediata
+    verificarStatus(corridaAtualId);
+
+  } catch (err) {
+    console.error(err);
+    showToast('Erro ao confirmar pagamento.', 'error');
+  }
 }
+
 
 // pagamento pix
 async function pagarPix() {
-  if (!corridaAtualId) return;
+  if (!corridaAtualId) {
+    showToast('Corrida inválida.', 'error');
+    return;
+  }
 
-  const res = await fetch('/pagar-corrida', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      corridaId: corridaAtualId,
-      forma: 'PIX'
-    })
-  });
+  try {
+    const res = await fetch('/pagar-corrida', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: corridaAtualId,
+        forma_pagamento: 'PIX'
+      })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.init_point) {
-    window.location.href = data.init_point;
+    if (data.init_point) {
+      window.location.href = data.init_point;
+    } else {
+      throw new Error('PIX não iniciado');
+    }
+
+  } catch (err) {
+    console.error(err);
+    showToast('Erro ao iniciar pagamento PIX.', 'error');
   }
 }
+
 
 </script>
 
