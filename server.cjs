@@ -640,7 +640,7 @@ app.get('/minha-corrida-atual/:id', async (req, res) => {
       FROM corridas c
       JOIN usuarios u ON c.cliente_id = u.id
       WHERE c.motoboy_id = $1
-  AND c.status IN ('aguardando_pagamento', 'liberada', 'em_andamento')
+  AND c.status IN ( 'liberada', 'em_andamento')
 
     `,
       [req.params.id]
