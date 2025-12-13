@@ -405,6 +405,31 @@ app.post('/cadastro', async (req, res) => {
   }
 });
 
+app.post('/escolher-pagamento', async (req, res) => {
+  const { id, forma_pagamento } = req.body;
+
+  if (!id || !forma_pagamento) {
+    return res.status(400).json({ success: false });
+  }
+
+  if (forma_pagamento === 'DINHEIRO') {
+    await pool.query(`
+      UPDATE corridas
+      SET forma_pagamento = 'DINHEIRO',
+          status = 'liberada'
+      WHERE id = $1
+    `, [id]);
+
+    return res.json({ success: true });
+  }
+
+  if (forma_pagamento === 'PIX') {
+    // cria pagamento MP
+    // status = aguardando_pagamento
+  }
+});
+
+
 app.post('/login', async (req, res) => {
   const { email, senha } = req.body;
   try {

@@ -1642,12 +1642,7 @@ async function verificarStatus(id) {
     <script>
 
 
-let corridaAtualId = null;
 
-// essa função deve ser chamada quando o cliente cria a corrida
-function setCorridaAtual(id) {
-  corridaAtualId = id;
-}
 
 // verifica o status da corrida a cada 3 segundos
 setInterval(async () => {
@@ -1667,72 +1662,57 @@ setInterval(async () => {
 
 // pagamento em dinheiro
 async function pagarDinheiro() {
-  if (!corridaAtualId) {
-    showToast('Corrida inválida.', 'error');
+  if (!idPedidoAtual) {
+    alert('Pedido inválido');
     return;
   }
 
-  try {
-    const res = await fetch('/pagar-corrida', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: corridaAtualId,
-        forma_pagamento: 'DINHEIRO'
-      })
-    });
+  const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: idPedidoAtual,
+      forma_pagamento: 'DINHEIRO'
+    })
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if (!data.success) {
-      throw new Error(data.message || 'Falha ao registrar pagamento');
-    }
-
-    showToast('Pagamento em dinheiro registrado.', 'success');
-
-    // fecha modal e deixa o backend liberar a corrida
+  if (data.success) {
     document.getElementById('modal-pagamento').style.display = 'none';
-
-    // força atualização imediata
-    verificarStatus(corridaAtualId);
-
-  } catch (err) {
-    console.error(err);
-    showToast('Erro ao confirmar pagamento.', 'error');
+    showToast('Pagamento em dinheiro selecionado', 'success');
+  } else {
+    alert(data.message || 'Erro ao confirmar pagamento');
   }
 }
+
 
 
 // pagamento pix
 async function pagarPix() {
-  if (!corridaAtualId) {
-    showToast('Corrida inválida.', 'error');
+  if (!idPedidoAtual) {
+    alert('Pedido inválido');
     return;
   }
 
-  try {
-    const res = await fetch('/pagar-corrida', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: corridaAtualId,
-        forma_pagamento: 'PIX'
-      })
-    });
+  const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: idPedidoAtual,
+      forma_pagamento: 'PIX'
+    })
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if (data.init_point) {
-      window.location.href = data.init_point;
-    } else {
-      throw new Error('PIX não iniciado');
-    }
-
-  } catch (err) {
-    console.error(err);
-    showToast('Erro ao iniciar pagamento PIX.', 'error');
+  if (data.init_point) {
+    window.location.href = data.init_point; // Mercado Pago
+  } else {
+    alert('Erro ao gerar pagamento PIX');
   }
 }
+
 
 
 </script>
