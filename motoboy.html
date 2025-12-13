@@ -772,6 +772,11 @@
                 if (temCorridaAtiva) {
                     console.log('Tem corrida ativa, não verifica estado');
                     return;
+                    if (corrida.status === 'aguardando_pagamento') {
+  mostrarOverlayPagamento();
+  return;
+}
+
                 }
 
                 const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
@@ -1360,6 +1365,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500);
 });
 
+function mostrarOverlayPagamento() {
+  document.getElementById('overlay-pagamento').style.display = 'flex';
+}
+
+function esconderOverlayPagamento() {
+  document.getElementById('overlay-pagamento').style.display = 'none';
+}
+
+
+
     </script>
+    <!-- OVERLAY AGUARDANDO PAGAMENTO -->
+<div id="overlay-pagamento" style="
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100vw;
+  height:100vh;
+  background:rgba(0,0,0,0.9);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+">
+
+  <div style="max-width:320px;">
+    <div style="font-size:60px;">⏳</div>
+    <h2 style="color:#00e640; margin-top:20px;">
+      Aguardando pagamento
+    </h2>
+    <p style="color:#fff; font-size:18px; margin-top:10px;">
+      O cliente precisa concluir o pagamento<br>
+      para que você possa iniciar a corrida.
+    </p>
+  </div>
+
+</div>
+
 </body>
 </html>
