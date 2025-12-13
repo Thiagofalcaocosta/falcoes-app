@@ -157,6 +157,12 @@ CREATE TABLE IF NOT EXISTS corridas (
   data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 `);
+    // ✅ GARANTE COLUNA forma_pagamento
+    await pool.query(`
+      ALTER TABLE corridas
+      ADD COLUMN IF NOT EXISTS forma_pagamento VARCHAR(20);
+    `);
+
 
     // ✅ GARANTE COLUNA mp_preference_id EM BANCOS ANTIGOS
     await pool.query(`
@@ -606,7 +612,9 @@ app.get('/minha-corrida-atual/:id', async (req, res) => {
       SELECT c.*, u.nome AS nome_cliente, u.telefone AS telefone_cliente
       FROM corridas c
       JOIN usuarios u ON c.cliente_id = u.id
-      WHERE c.motoboy_id = $1 AND c.status = 'aceita'
+      WHERE c.motoboy_id = $1
+  AND c.status IN ('aguardando_pagamento', 'liberada', 'em_andamento')
+
     `,
       [req.params.id]
     );
@@ -834,6 +842,64 @@ app.post('/aceitar-corrida', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
+// 🔒 INICIAR CORRIDA (BLOQUEADO ATÉ PAGAMENTO)
+app.post('/iniciar-corrida', async (req, res) => {
+  const { corrida_id, motoboy_id } = req.body;
+
+  if (!corrida_id || !motoboy_id) {
+    return res.status(400).json({
+      success: false,
+      message: 'corrida_id e motoboy_id são obrigatórios'
+    });
+  }
+
+  try {
+    // 1️⃣ Busca status atual
+    const result = await pool.query(
+      `SELECT status FROM corridas WHERE id = $1 AND motoboy_id = $2`,
+      [corrida_id, motoboy_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Corrida não encontrada para este motoboy'
+      });
+    }
+
+    const statusAtual = result.rows[0].status;
+
+    // 2️⃣ BLOQUEIO FORTE
+    if (statusAtual !== 'liberada') {
+      return res.status(403).json({
+        success: false,
+        message: '⏳ Aguardando pagamento do cliente'
+      });
+    }
+
+    // 3️⃣ Libera início
+    await pool.query(
+      `UPDATE corridas SET status = 'em_andamento' WHERE id = $1`,
+      [corrida_id]
+    );
+
+    console.log(`▶️ Corrida ${corrida_id} iniciada pelo motoboy ${motoboy_id}`);
+
+    return res.json({
+      success: true,
+      message: 'Corrida iniciada com sucesso'
+    });
+
+  } catch (err) {
+    console.error('Erro em /iniciar-corrida:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Erro ao iniciar corrida'
+    });
+  }
+});
+
 
 app.post('/motoboy-cancelar-corrida', async (req, res) => {
   const { corrida_id, motoboy_id, motivo } = req.body;
@@ -1115,7 +1181,7 @@ app.post('/mp-webhook', async (req, res) => {
     let novoStatus = null;
 
     if (paymentData.status === 'approved') {
-      novoStatus = 'PAGO_ONLINE';
+      novoStatus = 'liberada';
     } else if (paymentData.status === 'rejected' || paymentData.status === 'cancelled') {
       novoStatus = 'cancelada';
     }

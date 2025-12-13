@@ -430,7 +430,15 @@
                         <span class="destaque-endereco" id="ativa-destino">--</span>
                     </div>
                 </div>
-                <button class="btn-acao btn-verde" onclick="finalizarCorrida()">✅ FINALIZAR CORRIDA</button>
+                <button 
+  id="btn-iniciar-corrida"
+  class="btn-acao btn-verde"
+  onclick="iniciarCorrida()">
+  ▶️ INICIAR CORRIDA
+</button>
+
+<button class="btn-acao btn-verde" onclick="finalizarCorrida()">✅ FINALIZAR CORRIDA</button>
+
                 <button class="btn-acao btn-vermelho" onclick="cancelarCorridaMotoboy()">❌ CANCELAR CORRIDA</button>
             </div>
         </div>
@@ -522,6 +530,41 @@
                 console.error("Erro ao enviar status online:", err);
             }
         }
+
+        async function iniciarCorrida() {
+    if (!idCorridaAtual) {
+        alert('Nenhuma corrida para iniciar.');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${MEU_IP}/iniciar-corrida`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                corrida_id: idCorridaAtual,
+                motoboy_id: usuario.id
+            })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+            alert(data.message || '⏳ Aguardando pagamento do cliente.');
+            return;
+        }
+
+        alert('🚀 Corrida iniciada com sucesso!');
+        
+        // Atualiza visual
+        verificarEstado();
+
+    } catch (err) {
+        console.error('Erro ao iniciar corrida:', err);
+        alert('Erro ao iniciar corrida.');
+    }
+}
+
 
         // Função para deslogar
         function deslogar() {
@@ -863,6 +906,21 @@
             card.appendChild(aviso);
         }
     }
+
+    const btnIniciar = document.getElementById('btn-iniciar-corrida');
+
+if (btnIniciar) {
+    if (c.status === 'liberada') {
+        btnIniciar.disabled = false;
+        btnIniciar.innerText = '▶️ INICIAR CORRIDA';
+        btnIniciar.style.opacity = '1';
+    } else {
+        btnIniciar.disabled = true;
+        btnIniciar.innerText = '⏳ AGUARDANDO PAGAMENTO';
+        btnIniciar.style.opacity = '0.6';
+    }
+}
+
     
     // Se status for 'PAGO_ONLINE', mostra aviso de pago
     if (c.status === 'PAGO_ONLINE') {
