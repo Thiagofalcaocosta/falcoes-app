@@ -1462,7 +1462,7 @@ else if (pedido.status === 'liberada') {
                 `Valor estimado: R$ ${(pedido.valor || window.valorCalculado || 0)
                     .toFixed(2).replace('.', ',')}`;
 
-            btnCancelar.style.display = 'none';
+            
 
             const modalEnc = document.getElementById('modal-encerramento');
             try {
@@ -1522,6 +1522,26 @@ else if (pedido.status === 'liberada') {
             } else {
                 // Se não houver pedido, garante que a tela inicial esteja ativa
                 mudarTela('tela-pedido');
+
+                // =========================
+// CONTROLE DE CANCELAMENTO (CLIENTE)
+// =========================
+const btnCancelar = document.getElementById('btn-cancelar-acomp');
+
+if (btnCancelar) {
+
+    // cliente pode cancelar ANTES da corrida iniciar
+    if (
+        pedido.status === 'aguardando_pagamento' ||
+        pedido.status === 'liberada'
+    ) {
+        btnCancelar.style.display = 'block';
+    } else {
+        // corrida em andamento ou finalizada
+        btnCancelar.style.display = 'none';
+    }
+}
+
             }
         }
 
