@@ -690,8 +690,9 @@
             
             intervaloMonitoramento = setInterval(async () => {
                 if (temCorridaAtiva) {
-                    return;
-                }
+    await verificarEstado(); // continua acompanhando status
+    return;
+}
                 
                 const disponivel = await verificarDisponibilidadeCorrida(corridaId);
                 
