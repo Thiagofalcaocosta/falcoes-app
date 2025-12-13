@@ -1290,24 +1290,57 @@ async function verificarStatus(id) {
         // =========================
         // 2) AGUARDANDO_PAGAMENTO
         // =========================
-        if (pedido.status === 'aguardando_pagamento') {
+        // =========================
+// 2️⃣ DINHEIRO (libera corrida)
+// =========================
+if (
+    pedido.status === 'aceita' &&
+    pedido.forma_pagamento === 'DINHEIRO'
+) {
+    const modal = document.getElementById('modal-pagamento');
+    if (modal) modal.style.display = 'none';
 
-            statusArea.style.borderColor  = '#f1c40f';
-            statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
-            statusTitulo.style.color      = '#f1c40f';
-            statusTitulo.innerText        = "AGUARDANDO PAGAMENTO";
-            statusDesc.innerText          = "Finalize o pagamento para confirmar sua corrida.";
+    statusArea.style.borderColor  = 'var(--neon-green)';
+    statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
+    statusTitulo.style.color      = 'var(--neon-green)';
+    statusTitulo.innerText        = "PAGAMENTO EM DINHEIRO 💵";
+    statusDesc.innerText          = "Pagamento será feito ao piloto. Ele já está a caminho.";
 
-            
-            motoboyBox.style.display = 'none';
+    motoboyBox.style.display = 'block';
 
-            // 🔥 ABRE O MODAL DE PAGAMENTO
+    document.getElementById('motoboy-nome').innerText =
+        pedido.nome_motoboy || "Piloto Falcões";
 
+    document.getElementById('motoboy-placa').innerText =
+        pedido.placa_motoboy || "Moto Indisponível";
 
+    if (pedido.telefone_motoboy) {
+        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
+        const numeroInternacional =
+            foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
+
+        btnWpp.href = `https://wa.me/${numeroInternacional}`;
+        btnWpp.style.display = 'flex';
+    }
+}
+
+// =========================
+// 3️⃣ PIX (aguardando pagamento)
+// =========================
+else if (pedido.status === 'aguardando_pagamento') {
+
+    statusArea.style.borderColor  = '#f1c40f';
+    statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
+    statusTitulo.style.color      = '#f1c40f';
+    statusTitulo.innerText        = "AGUARDANDO PAGAMENTO";
+    statusDesc.innerText          = "Finalize o pagamento para confirmar sua corrida.";
+
+    motoboyBox.style.display = 'none';
 
     const modal = document.getElementById('modal-pagamento');
     if (modal) modal.style.display = 'flex';
-        }
+}
+
 
         
         else if (pedido.status === 'pago_online') {
@@ -1342,6 +1375,40 @@ async function verificarStatus(id) {
 
             if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         }
+        else if (
+    pedido.status === 'aceita' &&
+    pedido.forma_pagamento === 'DINHEIRO'
+) {
+    // Fecha modal de pagamento se estiver aberto
+    const modal = document.getElementById('modal-pagamento');
+    if (modal) modal.style.display = 'none';
+
+    statusArea.style.borderColor  = 'var(--neon-green)';
+    statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
+    statusTitulo.style.color      = 'var(--neon-green)';
+    statusTitulo.innerText        = "PAGAMENTO EM DINHEIRO 💵";
+    statusDesc.innerText          = "Pagamento será feito ao piloto. Ele já está a caminho.";
+
+    // Mostra motoboy
+    motoboyBox.style.display = 'block';
+
+    document.getElementById('motoboy-nome').innerText =
+        pedido.nome_motoboy || "Piloto Falcões";
+
+    document.getElementById('motoboy-placa').innerText =
+        pedido.placa_motoboy || "Moto Indisponível";
+
+    // WhatsApp
+    if (pedido.telefone_motoboy) {
+        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
+        const numeroInternacional =
+            foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
+
+        btnWpp.href = `https://wa.me/${numeroInternacional}`;
+        btnWpp.style.display = 'flex';
+    }
+}
+
 
         // =========================
         // 4) CONCLUÍDA / FINALIZADA
