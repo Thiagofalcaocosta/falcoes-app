@@ -1644,21 +1644,7 @@ async function verificarStatus(id) {
 
 
 
-// verifica o status da corrida a cada 3 segundos
-setInterval(async () => {
-  if (!corridaAtualId) return;
 
-  try {
-    const res = await fetch(`/status-corrida/${corridaAtualId}`);
-    const data = await res.json();
-
-    if (data.success && data.status === 'aguardando_pagamento') {
-      document.getElementById('modal-pagamento').style.display = 'flex';
-    }
-  } catch (e) {
-    console.error('Erro ao verificar status', e);
-  }
-}, 3000);
 
 // pagamento em dinheiro
 async function pagarDinheiro() {
