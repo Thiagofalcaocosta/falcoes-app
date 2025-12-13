@@ -1375,6 +1375,41 @@ else if (pedido.status === 'aguardando_pagamento') {
 
             if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         }
+        // =========================
+// 3️⃣ LIBERADA (corrida iniciada)
+// =========================
+else if (pedido.status === 'liberada') {
+
+    // fecha modal de pagamento se ainda estiver aberto
+    const modal = document.getElementById('modal-pagamento');
+    if (modal) modal.style.display = 'none';
+
+    statusArea.style.borderColor  = 'var(--neon-green)';
+    statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
+    statusTitulo.style.color      = 'var(--neon-green)';
+    statusTitulo.innerText        = "🚀 CORRIDA INICIADA";
+    statusDesc.innerText          = "O piloto está a caminho do local de origem.";
+
+    // mostra motoboy
+    motoboyBox.style.display = 'block';
+
+    document.getElementById('motoboy-nome').innerText =
+        pedido.nome_motoboy || "Piloto Falcões";
+
+    document.getElementById('motoboy-placa').innerText =
+        pedido.placa_motoboy || "Moto Indisponível";
+
+    // WhatsApp
+    if (pedido.telefone_motoboy) {
+        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
+        const numeroInternacional =
+            foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
+
+        btnWpp.href = `https://wa.me/${numeroInternacional}`;
+        btnWpp.style.display = 'flex';
+    }
+}
+
         else if (
     pedido.status === 'aceita' &&
     pedido.forma_pagamento === 'DINHEIRO'
