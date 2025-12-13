@@ -664,7 +664,8 @@
                 const res = await fetch(`${MEU_IP}/status-corrida/${corridaId}`);
                 const data = await res.json();
                 
-                if (!data.success || (data.status !== 'pendente' && data.status !== 'AGUARDANDO_PAGAMENTO')) {
+                if (!data.success || data.status !== 'pendente') {
+
                     console.log(`Corrida ${corridaId} não está mais disponível. Status: ${data.status}`);
                     return false;
                 }
@@ -769,15 +770,7 @@
 
         async function verificarEstado() {
             try {
-                if (temCorridaAtiva) {
-                    console.log('Tem corrida ativa, não verifica estado');
-                    return;
-                    if (corrida.status === 'aguardando_pagamento') {
-  mostrarOverlayPagamento();
-  return;
-}
-
-                }
+                
 
                 const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
                 const dadosAtiva = await resAtiva.json();
@@ -896,23 +889,7 @@
         if (avisoAnterior) avisoAnterior.remove();
     }
     
-    // Se status for 'aceita' (pagamento em dinheiro), mostra aviso
-    if (c.status === 'aceita') {
-        const aviso = document.createElement('div');
-        aviso.className = 'aviso-pagamento';
-        aviso.style.background = 'rgba(255, 200, 40, 0.2)';
-        aviso.style.color = '#ffca28';
-        aviso.style.padding = '10px';
-        aviso.style.borderRadius = '8px';
-        aviso.style.marginTop = '15px';
-        aviso.style.textAlign = 'center';
-        aviso.style.fontSize = '14px';
-        aviso.innerHTML = '💰 PAGAMENTO EM DINHEIRO - Combine com o cliente';
-        
-        if (card) {
-            card.appendChild(aviso);
-        }
-    }
+    
 
     const btnIniciar = document.getElementById('btn-iniciar-corrida');
     const btnFinalizar = document.querySelector("button[onclick='finalizarCorrida()']");
@@ -955,23 +932,7 @@ if (btnIniciar) {
 }
 
     
-    // Se status for 'PAGO_ONLINE', mostra aviso de pago
-    if (c.status === 'PAGO_ONLINE') {
-        const aviso = document.createElement('div');
-        aviso.className = 'aviso-pagamento';
-        aviso.style.background = 'rgba(0, 230, 64, 0.2)';
-        aviso.style.color = 'var(--neon-green)';
-        aviso.style.padding = '10px';
-        aviso.style.borderRadius = '8px';
-        aviso.style.marginTop = '15px';
-        aviso.style.textAlign = 'center';
-        aviso.style.fontSize = '14px';
-        aviso.innerHTML = '✅ PAGAMENTO ONLINE CONFIRMADO - Pode iniciar a corrida!';
-        
-        if (card) {
-            card.appendChild(aviso);
-        }
-    }
+    
 }
 
         /***********************
@@ -1307,21 +1268,7 @@ function verificarCorridaAtivaPeriodicamente() {
 
             const corrida = data.corrida;
 
-            // 🔥 CLIENTE ESCOLHEU PAGAMENTO → LIBERAR AUTOMATICAMENTE
-            if (
-                corrida.status === 'liberada' ||
-                corrida.status === 'aceita' ||
-                corrida.status === 'PAGO_ONLINE'
-            ) {
-                console.log('🚀 Corrida liberada automaticamente');
-
-                temCorridaAtiva = true;
-                idCorridaAtual = corrida.corrida_id || corrida.id;
-
-                mostrarTela('ativa');
-                preencherDadosAtiva(corrida);
-                return;
-            }
+            
 
             // ⏳ ainda aguardando pagamento
             console.log('⏳ Aguardando pagamento...');
