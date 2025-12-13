@@ -851,7 +851,7 @@
                 </button>
             </div>
 
-            <button onclick="cancelarPedido()" id="btn-cancelar-acomp" class="btn-cancelar">CANCELAR PEDIDO</button>
+            
             <button onclick="reiniciarApp()" class="btn"
                 style="background-color: #333; color: #ccc; margin-top: 10px;">FECHAR (apenas se finalizado)</button>
         </div>
@@ -1192,6 +1192,19 @@
                     idPedidoAtual = json.id;
                     localStorage.setItem('idPedidoAtual', idPedidoAtual);
                     setCorridaAtual(idPedidoAtual);
+
+                    localStorage.setItem('pedidoAtual', JSON.stringify({
+  origem: strOrigem,
+  destino: strDestino,
+  valor: window.valorCalculado
+}));
+const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
+if (pedidoSalvo) {
+  document.getElementById('detalhe-origem').innerText = pedidoSalvo.origem;
+  document.getElementById('detalhe-destino').innerText = pedidoSalvo.destino;
+  document.getElementById('detalhe-valor').innerText = `R$ ${pedidoSalvo.valor.toFixed(2)}`;
+}
+
 
 
                     // 2. Preencher a nova tela com os dados iniciais
