@@ -783,7 +783,8 @@
     // Motoboy só pode iniciar se:
     // 1. Pagamento online foi confirmado (PAGO_ONLINE)
     // 2. OU se status é 'aceita' (pagamento em dinheiro combinado)
-    const podeIniciar = statusCorrida === 'PAGO_ONLINE' || statusCorrida === 'aceita';
+    const podeIniciar = statusCorrida === 'liberada' || statusCorrida === 'em_andamento';
+
     
     if (podeIniciar) {
         temCorridaAtiva = true;
@@ -911,17 +912,22 @@
     const btnFinalizar = document.querySelector("button[onclick='finalizarCorrida()']");
 const btnCancelar  = document.querySelector("button[onclick='cancelarCorridaMotoboy()']");
 
-// 🚫 Enquanto aguarda pagamento
-if (c.status === 'aguardando_pagamento') {
-    if (btnIniciar) {
-        btnIniciar.disabled = true;
-        btnIniciar.innerText = '⏳ AGUARDANDO PAGAMENTO';
-        btnIniciar.style.opacity = '0.6';
-    }
+if (!btnIniciar) return;
 
-    if (btnFinalizar) btnFinalizar.style.display = 'none';
-    if (btnCancelar)  btnCancelar.style.display = 'none';
+// ⏳ aguardando pagamento
+if (c.status === 'aguardando_pagamento') {
+    btnIniciar.disabled = true;
+    btnIniciar.innerText = '⏳ AGUARDANDO PAGAMENTO';
+    btnIniciar.style.opacity = '0.6';
 }
+
+// ✅ liberada → pode iniciar
+else if (c.status === 'liberada') {
+    btnIniciar.disabled = false;
+    btnIniciar.innerText = '▶️ INICIAR CORRIDA';
+    btnIniciar.style.opacity = '1';
+}
+
 
 // ✅ Quando liberada ou em andamento
 else {

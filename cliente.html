@@ -1339,6 +1339,11 @@ else if (pedido.status === 'aguardando_pagamento') {
 
     const modal = document.getElementById('modal-pagamento');
     if (modal) modal.style.display = 'flex';
+
+    const btnCancelar = document.getElementById('btn-cancelar-acomp');
+if (btnCancelar) {
+  btnCancelar.style.display = 'block';
+}
 }
 
 
