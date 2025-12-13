@@ -456,6 +456,8 @@ app.post('/cancelar-pedido', async (req, res) => {
           motivo_cancelamento = $1,
           motoboy_id = NULL
       WHERE id = $2
+  AND status IN ('pendente', 'aguardando_pagamento', 'aceita')
+
       `,
       [motivo, id]
     );

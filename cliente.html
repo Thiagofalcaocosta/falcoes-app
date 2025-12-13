@@ -1289,6 +1289,21 @@ async function verificarStatus(id) {
             motoboyBox.style.display = 'none';
 
             // 🔥 ABRE O MODAL DE PAGAMENTO
+<button 
+  onclick="cancelarPedidoCliente()" 
+  style="
+    margin-top:15px;
+    background:#333;
+    color:#fff;
+    padding:12px;
+    border-radius:8px;
+    width:100%;
+    font-weight:bold;
+  ">
+  ❌ Cancelar pedido
+</button>
+
+
     const modal = document.getElementById('modal-pagamento');
     if (modal) modal.style.display = 'flex';
         }
@@ -1426,6 +1441,33 @@ async function verificarStatus(id) {
 
             showToast("Justifique o cancelamento para prosseguir.", "info");
         }
+        async function cancelarPedidoCliente() {
+    if (!confirm('Tem certeza que deseja cancelar o pedido?')) return;
+
+    try {
+        const res = await fetch('/cancelar-pedido', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: pedidoId,
+                motivo: 'Cancelado pelo cliente antes do pagamento'
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert('Pedido cancelado com sucesso.');
+            window.location.reload();
+        } else {
+            alert('Não foi possível cancelar.');
+        }
+
+    } catch (err) {
+        alert('Erro ao cancelar pedido.');
+    }
+}
+
 
         // REMOVIDO: A função 'confirmarCancelamentoCliente()' problemática foi removida.
         // A nova lógica do IIFE a substitui (btnConfirm.addEventListener('click', ...)).
