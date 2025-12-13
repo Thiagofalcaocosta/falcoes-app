@@ -1279,25 +1279,46 @@ if (btnIniciar) {
         });
         // Adicione esta função
 function verificarCorridaAtivaPeriodicamente() {
-    if (!idCorridaAtual || !temCorridaAtiva) return;
-    
     fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
         .then(res => res.json())
         .then(data => {
-            if (data.tem_corrida) {
-                console.log('✅ Corrida ainda ativa');
-            } else {
+
+            // ❌ corrida não existe mais
+            if (!data.tem_corrida) {
                 console.log('❌ Corrida não existe mais');
                 temCorridaAtiva = false;
                 idCorridaAtual = null;
                 mostrarTela('lista');
                 iniciarVerificacaoEstado();
+                return;
             }
+
+            const corrida = data.corrida;
+
+            // 🔥 CLIENTE ESCOLHEU PAGAMENTO → LIBERAR AUTOMATICAMENTE
+            if (
+                corrida.status === 'liberada' ||
+                corrida.status === 'aceita' ||
+                corrida.status === 'PAGO_ONLINE'
+            ) {
+                console.log('🚀 Corrida liberada automaticamente');
+
+                temCorridaAtiva = true;
+                idCorridaAtual = corrida.corrida_id || corrida.id;
+
+                mostrarTela('ativa');
+                preencherDadosAtiva(corrida);
+                return;
+            }
+
+            // ⏳ ainda aguardando pagamento
+            console.log('⏳ Aguardando pagamento...');
         })
         .catch(err => {
             console.error('Erro ao verificar corrida ativa:', err);
         });
 }
+
 
 // E mude o final do código para:
 document.addEventListener('DOMContentLoaded', function() {
