@@ -406,28 +406,60 @@ app.post('/cadastro', async (req, res) => {
 });
 
 app.post('/escolher-pagamento', async (req, res) => {
-  const { id, forma_pagamento } = req.body;
+  try {
+    const { id, forma_pagamento } = req.body;
 
-  if (!id || !forma_pagamento) {
-    return res.status(400).json({ success: false });
-  }
+    if (!id || !forma_pagamento) {
+      return res.status(400).json({ success: false, message: 'Dados inválidos' });
+    }
 
-  if (forma_pagamento === 'DINHEIRO') {
-    await pool.query(`
-      UPDATE corridas
-      SET forma_pagamento = 'DINHEIRO',
-          status = 'liberada'
-      WHERE id = $1
-    `, [id]);
+    // 💰 PAGAMENTO EM DINHEIRO
+    if (forma_pagamento === 'DINHEIRO') {
+      const result = await pool.query(
+        `
+        UPDATE corridas
+        SET forma_pagamento = 'DINHEIRO',
+            status = 'liberada'
+        WHERE id = $1
+          AND status = 'aguardando_pagamento'
+        `,
+        [id]
+      );
 
-    return res.json({ success: true });
-  }
+      if (result.rowCount === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Corrida não está aguardando pagamento'
+        });
+      }
 
-  if (forma_pagamento === 'PIX') {
-    // cria pagamento MP
-    // status = aguardando_pagamento
+      return res.json({ success: true });
+    }
+
+    // 🔁 PIX (mantém aguardando pagamento)
+    if (forma_pagamento === 'PIX') {
+      await pool.query(
+        `
+        UPDATE corridas
+        SET forma_pagamento = 'PIX'
+        WHERE id = $1
+          AND status = 'aguardando_pagamento'
+        `,
+        [id]
+      );
+
+      // aqui entra Mercado Pago (já existente)
+      return res.json({ success: true });
+    }
+
+    return res.status(400).json({ success: false, message: 'Forma de pagamento inválida' });
+
+  } catch (err) {
+    console.error('Erro em /escolher-pagamento:', err);
+    res.status(500).json({ success: false });
   }
 });
+
 
 
 app.post('/login', async (req, res) => {
