@@ -1275,13 +1275,20 @@ app.get('/mp-retorno', async (req, res) => {
         const finalStatus = payment.status || collection_status || status;
         const corridaId = payment.external_reference || external_reference;
         
-        if (finalStatus === 'approved' && corridaId) {
-          await pool.query(
-            "UPDATE corridas SET status = 'PAGO_ONLINE' WHERE id = $1",
-            [corridaId]
-          );
-          console.log(`✅ Retorno: Corrida ${corridaId} marcada como PAGO_ONLINE`);
-        }
+        if (novoStatus === 'liberada') {
+  await pool.query(
+    `
+    UPDATE corridas
+    SET status = 'liberada',
+        forma_pagamento = 'ONLINE'
+    WHERE id = $1
+    `,
+    [corridaId]
+  );
+
+  console.log(`✅ Corrida ${corridaId} liberada após pagamento online`);
+}
+
       } catch (mpErr) {
         console.error('Erro ao verificar pagamento no MP:', mpErr);
       }
@@ -1365,30 +1372,6 @@ app.get('/status-corrida/:id', async (req, res) => {
 });
 
 // CONFIRMAR PAGAMENTO MANUALMENTE (quando voltar do Mercado Pago)
-app.post('/confirmar-pagamento', async (req, res) => {
-  try {
-    const { corridaId } = req.body;
-
-    if (!corridaId) {
-      return res.status(400).json({ erro: 'corridaId é obrigatório' });
-    }
-
-    await pool.query(
-      `
-      UPDATE corridas
-      SET status = 'PAGO_ONLINE'
-      WHERE id = $1
-        AND status = 'AGUARDANDO_PAGAMENTO'
-      `,
-      [corridaId]
-    );
-
-    return res.json({ sucesso: true });
-  } catch (err) {
-    console.error('Erro em /confirmar-pagamento:', err);
-    res.status(500).json({ erro: 'Erro ao confirmar pagamento' });
-  }
-});
 
 
 // ===============================================
@@ -1400,7 +1383,8 @@ setInterval(monitorarExpiracoes, 5000);
 
 // ⚠️ ROTA DE TESTE - SÓ PARA DESENVOLVIMENTO
 // Marca uma corrida como PAGO_ONLINE sem passar pelo Mercado Pago
-app.post('/debug/marcar-pago', async (req, res) => {
+// ⚠️ ROTA DE TESTE – SIMULA PAGAMENTO ONLINE (LIBERA A CORRIDA)
+app.post('/debug/liberar-corrida', async (req, res) => {
   try {
     const { corridaId } = req.body;
 
@@ -1411,18 +1395,21 @@ app.post('/debug/marcar-pago', async (req, res) => {
     await pool.query(
       `
       UPDATE corridas
-      SET status = 'PAGO_ONLINE'
+      SET status = 'liberada',
+          forma_pagamento = 'ONLINE'
       WHERE id = $1
+        AND status = 'aguardando_pagamento'
       `,
       [corridaId]
     );
 
     return res.json({ sucesso: true });
   } catch (err) {
-    console.error('Erro em /debug/marcar-pago:', err);
-    res.status(500).json({ erro: 'Erro ao marcar pago (debug)' });
+    console.error('Erro em /debug/liberar-corrida:', err);
+    res.status(500).json({ erro: 'Erro ao liberar corrida (debug)' });
   }
 });
+
 
 // ===============================================
 // ROTA 404 (sempre última)
