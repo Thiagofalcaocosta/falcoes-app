@@ -959,27 +959,40 @@
     }
     
     // === FUNÇÃO PRINCIPAL DE PERSISTÊNCIA (Ao recarregar a página) ===
-    function checkPersistedOrder() {
-        const persistedId = localStorage.getItem('idPedidoAtual');
-        if (persistedId) {
-            idPedidoAtual = persistedId;
-            
-            // 1. Preenche os detalhes (chama a função auxiliar)
-            preencherDetalhesAcompanhamento();
-            
-            // 2. MUDAR PARA A TELA DE ACOMPANHAMENTO (Isto resolve a sobreposição!)
-            mudarTela('tela-acompanhamento');
+    async function checkPersistedOrder() {
+    const persistedId = localStorage.getItem('idPedidoAtual');
 
-            // 3. Iniciar a verificação de status (Polling)
-            verificarStatus(idPedidoAtual);
-            
-            if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
-            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-        } else {
-            // Se não houver pedido, garante que a tela inicial esteja ativa
-            mudarTela('tela-pedido');
-        }
+    if (!persistedId) {
+        mostrarTela('tela-pedido');
+        return;
     }
+
+    try {
+        const res = await fetch(`${MEU_IP}/status-pedido/${persistedId}`);
+        const data = await res.json();
+
+        if (!data.success || !data.pedido) {
+            localStorage.removeItem('idPedidoAtual');
+            mostrarTela('tela-pedido');
+            return;
+        }
+
+        idPedidoAtual = persistedId;
+        preencherDetalhesAcompanhamento();
+        mostrarTela('tela-acompanhamento');
+
+        verificarStatus(idPedidoAtual);
+        intervaloVerificacao = setInterval(
+            () => verificarStatus(idPedidoAtual),
+            3000
+        );
+
+    } catch (e) {
+        console.error('Erro ao restaurar pedido:', e);
+        mostrarTela('tela-pedido');
+    }
+}
+
 
 
     // === FUNÇÕES MAPA E CÁLCULO ===
@@ -1490,6 +1503,23 @@
             showToast("Falha ao registrar finalização: " + e.message, "error");
         }
     }
+
+    function esconderTodasTelas() {
+    document.querySelectorAll('.tela').forEach(t => {
+        t.style.display = 'none';
+        t.classList.remove('ativa');
+    });
+}
+
+function mostrarTela(id) {
+    esconderTodasTelas();
+    const tela = document.getElementById(id);
+    if (tela) {
+        tela.style.display = 'block';
+        tela.classList.add('ativa');
+    }
+}
+
     
 
     // === INICIALIZAÇÃO DE LISTENERS ===
