@@ -586,28 +586,7 @@
             font-size: 18px;
         }
 
-        /* FORÇA o modal a ficar SEMPRE acima de TUDO, inclusive do mapa */
-        #modal-justificativa,
-        #modal-encerramento,
-        #modal-busca,
-        #modal-justificativa-cliente, 
-        #modal-pagamento {
-        
-            /* Adicionado o novo ID aqui */
-            z-index: 2147483646 !important;
-            /* número muito alto, garante prioridade */
-            position: fixed !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            display: none;
-            /* o JS abre com display:flex quando necessário */
-            align-items: center !important;
-            justify-content: center !important;
-            background: rgba(0, 0, 0, 0.85) !important;
-            /* leve escurecimento por cima do app */
-        }
+       
 
         #modal-busca .modal-content,
         #modal-justificativa .modal-content,
