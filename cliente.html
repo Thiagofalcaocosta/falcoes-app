@@ -794,11 +794,31 @@
             <h2>ACOMPANHANDO PEDIDO <span id="acompanhamento-id">#--</span></h2>
 
             <div id="acompanhamento-status-area" class="motoboy-box"
-                style="border-color: #ffd700; background: rgba(255, 215, 0, 0.1);">
-                <div style="font-size: 36px; margin-bottom: 5px;">⏳</div>
-                <div class="nome" id="acompanhamento-status-titulo" style="color: #ffd700;">BUSCANDO PILOTO...</div>
-                <div class="placa" id="acompanhamento-status-desc" style="font-size: 16px;">Notificando parceiros
-                    próximos.</div>
+    style="border-color: #ffd700; background: rgba(255, 215, 0, 0.1);">
+    
+    <div id="tempo-restante-busca" style="font-size: 40px; font-weight: 800; color: #ffca28; margin-bottom: 10px;">
+        ⏳ --s
+    </div>
+    
+    <div class="nome" id="acompanhamento-status-titulo" style="color: #ffd700;">BUSCANDO PILOTO...</div>
+    <div class="placa" id="acompanhamento-status-desc" style="font-size: 16px;">Notificando parceiros próximos.</div>
+
+    <button id="btn-cancelar-busca" onclick="cancelarBuscaMotoboy()" 
+        style="
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            display: none; /* Inicia oculto e é mostrado pelo JS */
+        ">
+        ❌ CANCELAR BUSCA
+    </button>
+</div>
             </div>
 
             <div id="motoboy-info-box" style="display:none; margin-top: 20px;">
@@ -882,6 +902,8 @@
         let markerDestino = null;
         let idPedidoAtual = null;
         let intervaloVerificacao = null;
+        let buscaMotoboyInterval = null; // NOVO: para controlar o tempo limite da busca
+        let tempoBuscaRestante = 0; // NOVO: armazena o tempo atual
 
         const precos = {
             'moto-taxi': { base: 10.0, kmExtra: 3.15, franquia: 3 },
@@ -1008,6 +1030,112 @@
         function removerErro(input) {
             input.classList.remove('erro');
         }
+
+        // === NOVAS FUNÇÕES DE BUSCA/TIMEOUT ===
+
+function iniciarContadorBusca(corridaId, tempoLimite) {
+    tempoBuscaRestante = tempoLimite;
+    const elementoTempo = document.getElementById('tempo-restante-busca');
+    const btnCancel = document.getElementById('btn-cancelar-busca');
+
+    if (!elementoTempo || !btnCancel) return;
+
+    if (buscaMotoboyInterval) {
+        clearInterval(buscaMotoboyInterval);
+    }
+    
+    btnCancel.style.display = 'block'; // Mostra botão de cancelamento
+    elementoTempo.style.display = 'block'; // Mostra contador
+
+    const decremento = () => {
+        if (tempoBuscaRestante <= 0) {
+            clearInterval(buscaMotoboyInterval);
+            buscaMotoboyInterval = null;
+            elementoTempo.innerText = '⏰ ENCERRADO';
+            btnCancel.style.display = 'none';
+            
+            // Ação de timeout (cancela a busca no backend e notifica o cliente)
+            encerrarBuscaPorTimeout(corridaId); 
+            return;
+        }
+
+        elementoTempo.innerText = `⏳ ${tempoBuscaRestante}s`;
+        tempoBuscaRestante--;
+    };
+
+    decremento();
+    buscaMotoboyInterval = setInterval(decremento, 1000);
+}
+
+// ⚠️ NOVA FUNÇÃO: Cancelamento Manual pelo Cliente
+async function cancelarBuscaMotoboy() {
+    const id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
+
+    if (!id) {
+        showToast('Nenhum pedido ativo para cancelar.', 'error');
+        return;
+    }
+
+    if (!confirm("Tem certeza que deseja cancelar a busca por um motoboy?")) return;
+
+    // Mostra loading
+    document.getElementById('modal-busca').style.display = 'flex';
+
+    if (buscaMotoboyInterval) {
+        clearInterval(buscaMotoboyInterval);
+        buscaMotoboyInterval = null;
+    }
+
+    try {
+        const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                id: id, 
+                motivo: 'Cancelado pelo cliente durante a busca.' 
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            showToast('Busca cancelada com sucesso!', 'success');
+            // Volta para a tela inicial
+            reiniciarApp(); 
+        } else {
+            showToast('Erro ao cancelar busca: ' + (data.message || 'Erro desconhecido.'), 'error');
+        }
+
+    } catch (err) {
+        console.error('Erro ao cancelar busca:', err);
+        showToast('Erro de conexão. Tente novamente.', 'error');
+    } finally {
+        document.getElementById('modal-busca').style.display = 'none';
+    }
+}
+
+// ⚠️ NOVA FUNÇÃO: Timeout de Busca (Cancelamento Automático)
+async function encerrarBuscaPorTimeout(corridaId) {
+     try {
+        // Encerra a busca no backend (altera o status para 'cancelada')
+        await fetch(`${MEU_IP}/cancelar-pedido`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                id: corridaId, 
+                motivo: 'Cancelado automaticamente por timeout.' 
+            })
+        });
+        
+        // Notifica e volta à tela inicial
+        showToast('Tempo limite de busca esgotado. Tente novamente.', 'error');
+        reiniciarApp();
+
+    } catch (err) {
+        console.error('Erro ao encerrar busca por timeout:', err);
+        reiniciarApp();
+    }
+}
 
         // Fechar sugestões ao clicar fora
         document.addEventListener('click', (e) => {
@@ -1141,363 +1269,246 @@
 
         // === ENVIO DE PEDIDO (Alterada para usar a nova tela) ===
         async function pedir() {
-            // ... (Validação e montagem de dados idêntica à anterior) ...
-            if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
-            const ruaOrigem = document.getElementById('rua-origem').value;
-            const numOrigem = document.getElementById('num-origem').value;
-            const bairroOrigem = document.getElementById('bairro-origem').value;
-            const ruaDestino = document.getElementById('rua-destino').value;
-            const numDestino = document.getElementById('num-destino').value;
-            const bairroDestino = document.getElementById('bairro-destino').value;
-            const detalhes = document.getElementById('detalhes-entrega').value;
+    // ... (Validação e montagem de dados - Mantenha o código de validação que você tem aqui)
+    if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
+    const ruaOrigem = document.getElementById('rua-origem').value;
+    const numOrigem = document.getElementById('num-origem').value;
+    const bairroOrigem = document.getElementById('bairro-origem').value;
+    const ruaDestino = document.getElementById('rua-destino').value;
+    const numDestino = document.getElementById('num-destino').value;
+    const bairroDestino = document.getElementById('bairro-destino').value;
+    const detalhes = document.getElementById('detalhes-entrega').value;
 
-            let erro = false;
-            if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
-            if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
-            if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
-            if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
-            if (servicoSelecionado === 'entrega' && !detalhes.trim()) { document.getElementById('detalhes-entrega').classList.add('erro'); showToast("Descreva o que vamos entregar!", "error"); return; }
-            if (erro) { showToast("⚠️ Preencha o NÚMERO dos endereços!", "error"); return; }
+    let erro = false;
+    if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
+    if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
+    if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
+    if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
+    if (servicoSelecionado === 'entrega' && !detalhes.trim()) { document.getElementById('detalhes-entrega').classList.add('erro'); showToast("Descreva o que vamos entregar!", "error"); return; }
+    if (erro) { showToast("⚠️ Preencha o NÚMERO dos endereços!", "error"); return; }
 
-            const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
-            const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
-            const strDestinoFinal = servicoSelecionado === 'entrega'
-                ? `${strDestino} (ITEM: ${detalhes})`
-                : strDestino;
-            // ... (Fim da validação) ...
+    const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
+    const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
+    const strDestinoFinal = servicoSelecionado === 'entrega'
+        ? `${strDestino} (ITEM: ${detalhes})`
+        : strDestino;
+    // ... (Fim da validação) ...
 
-            // 1. Mostrar o modal de carregamento
-            document.getElementById('modal-busca').style.display = 'flex';
-            document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
-            document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
+    // 1. Mostrar o modal de carregamento
+    document.getElementById('modal-busca').style.display = 'flex';
+    document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
+    document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
 
-            try {
-                const body = {
-                    cliente_id: usuario.id,
-                    origem: strOrigem,
-                    destino: strDestinoFinal,
-                    valor: window.valorCalculado || 10.0,
-                    tipo_servico: servicoSelecionado
-                };
+    try {
+        const body = {
+            cliente_id: usuario.id,
+            origem: strOrigem,
+            destino: strDestinoFinal,
+            valor: window.valorCalculado || 10.0,
+            tipo_servico: servicoSelecionado
+        };
 
-                const res = await fetch(`${MEU_IP}/pedir-corrida`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
+        const res = await fetch(`${MEU_IP}/pedir-corrida`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
 
-                const json = await res.json();
+        const json = await res.json();
 
-                if (json.success) {
-                    idPedidoAtual = json.id;
-                    localStorage.setItem('idPedidoAtual', idPedidoAtual);
-                    
+        if (json.success) {
+            idPedidoAtual = json.id;
+            localStorage.setItem('idPedidoAtual', idPedidoAtual);
+            
 
-                    localStorage.setItem('pedidoAtual', JSON.stringify({
-  origem: strOrigem,
-  destino: strDestino,
-  valor: window.valorCalculado
-}));
-const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
-if (pedidoSalvo) {
-  document.getElementById('detalhe-origem').innerText = pedidoSalvo.origem;
-  document.getElementById('detalhe-destino').innerText = pedidoSalvo.destino;
-  document.getElementById('detalhe-valor').innerText = `R$ ${pedidoSalvo.valor.toFixed(2)}`;
-}
-
-
-
-                    // 2. Preencher a nova tela com os dados iniciais
-                    document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
-                    document.getElementById('detalhe-origem').innerText = strOrigem;
-                    document.getElementById('detalhe-destino').innerText = strDestino;
-                    document.getElementById('detalhe-valor').innerText = `R$ ${window.valorCalculado.toFixed(2).replace('.', ',')}`;
-
-                    // 3. Trocar para a tela de Acompanhamento e fechar o modal
-                    mudarTela('tela-acompanhamento');
-                    document.getElementById('modal-busca').style.display = 'none';
-
-                    // 4. Iniciar verificação de status
-                    intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-                    showToast("Solicitação enviada. Buscando piloto...", "info");
-
-                } else {
-                    throw new Error(json.message);
-                }
-
-            } catch (e) {
-                document.getElementById('modal-busca').style.display = 'none';
-                showToast("Erro ao enviar pedido: " + e.message, "error");
+            localStorage.setItem('pedidoAtual', JSON.stringify({
+                origem: strOrigem,
+                destino: strDestino,
+                valor: window.valorCalculado
+            }));
+            const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
+            if (pedidoSalvo) {
+                document.getElementById('detalhe-origem').innerText = pedidoSalvo.origem;
+                document.getElementById('detalhe-destino').innerText = pedidoSalvo.destino;
+                document.getElementById('detalhe-valor').innerText = `R$ ${pedidoSalvo.valor.toFixed(2)}`;
             }
+
+
+            // 2. Preencher a nova tela com os dados iniciais
+            document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
+            document.getElementById('detalhe-origem').innerText = strOrigem;
+            document.getElementById('detalhe-destino').innerText = strDestino;
+            document.getElementById('detalhe-valor').innerText = `R$ ${window.valorCalculado.toFixed(2).replace('.', ',')}`;
+
+            // 3. Trocar para a tela de Acompanhamento e fechar o modal
+            mudarTela('tela-acompanhamento');
+            document.getElementById('modal-busca').style.display = 'none';
+
+            // 4. INICIAR CONTADOR DE BUSCA E VERIFICAÇÃO DE STATUS
+            iniciarContadorBusca(idPedidoAtual, 90); // 90 segundos de limite
+            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+            showToast("Solicitação enviada. Buscando piloto...", "info");
+
+        } else {
+            throw new Error(json.message);
         }
 
+    } catch (e) {
+        document.getElementById('modal-busca').style.display = 'none';
+        showToast("Erro ao enviar pedido: " + e.message, "error");
+    }
+}
+
         // === VERIFICAÇÃO DE STATUS (Corrigida) ===
-async function verificarStatus(id) {
+ async function verificarStatus(id) {
     try {
         const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
         const data = await res.json();
         const pedido = data.pedido;
 
-        console.log('[DEBUG] verificarStatus -> data:', data);
         console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.status);
 
         if (!data.success || !pedido) {
             console.error("Erro ao obter status. Tentando novamente...");
             return;
         }
-        // Se status é 'aceita', mostra TELA DE ESCOLHA DE PAGAMENTO
-        if (pedido.status === 'aguardando_pagamento') {
-            // Mostra mensagem clara de escolha de pagamento
-            const statusArea = document.getElementById('acompanhamento-status-area');
-            const statusTitulo = document.getElementById('acompanhamento-status-titulo');
-            const statusDesc = document.getElementById('acompanhamento-status-desc');
-            
-            statusArea.style.borderColor = '#ffca28';
-            statusArea.style.background = 'rgba(255, 202, 40, 0.1)';
-            statusTitulo.style.color = '#ffca28';
-            statusTitulo.innerText = "🎯 ESCOLHA COMO PAGAR";
-            statusDesc.innerText = "Um piloto aceitou! Escolha sua forma de pagamento abaixo.";
-            
-            // Esconde info do motoboy até pagamento ser escolhido
-            document.getElementById('motoboy-info-box').style.display = 'none';
-            
+
+        // --- Variáveis de UI ---
+        const statusTitulo = document.getElementById('acompanhamento-status-titulo');
+        const statusDesc   = document.getElementById('acompanhamento-status-desc');
+        const statusArea   = document.getElementById('acompanhamento-status-area');
+        const motoboyBox   = document.getElementById('motoboy-info-box');
+        const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
+        const areaJustificativa = document.getElementById('area-justificativa-integrada');
+        
+        // Estado Padrão (Limpeza)
+        motoboyBox.style.display = 'none';
+        btnWpp.style.display     = 'none';
+        if (areaJustificativa) areaJustificativa.style.display = 'none';
+        
+        // --- LÓGICA DE TRANSIÇÃO: Piloto Aceitou/Encontrado? ---
+        if (pedido.status !== 'pendente') {
+            if (buscaMotoboyInterval) {
+                clearInterval(buscaMotoboyInterval);
+                buscaMotoboyInterval = null;
+                // Esconde elementos do contador
+                const elementoTempo = document.getElementById('tempo-restante-busca');
+                const btnCancel = document.getElementById('btn-cancelar-busca');
+                if(elementoTempo) elementoTempo.style.display = 'none';
+                if(btnCancel) btnCancel.style.display = 'none';
+                
+                // Mude o visual para aceito/confirmado antes de verificar pagamento
+                statusArea.style.borderColor = 'var(--neon-green)';
+                statusArea.style.background = 'rgba(0, 230, 64, 0.1)';
+            }
+        }
+        
+        // --- 1) PENDENTE (Em Busca) ---
+        if (pedido.status === 'pendente') {
+            statusArea.style.borderColor  = '#ffd700';
+            statusArea.style.background   = 'rgba(255, 215, 0, 0.1)';
+            statusTitulo.style.color      = '#ffd700';
+            statusTitulo.innerText        = "BUSCANDO PILOTO...";
+            statusDesc.innerText          = "Notificando parceiros próximos.";
+        }
+        
+        // --- 2) AGUARDANDO_PAGAMENTO / ACEITA ---
+        else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
+            // Abre o modal de pagamento e a área de cancelamento com justificativa
+            const modal = document.getElementById('modal-pagamento');
+            if (modal) modal.style.display = 'flex';
+
+            statusArea.style.borderColor  = '#f1c40f';
+            statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
+            statusTitulo.style.color      = '#f1c40f';
+            statusTitulo.innerText        = "🎯 ESCOLHA COMO PAGAR";
+            statusDesc.innerText          = "Um piloto aceitou! Escolha sua forma de pagamento.";
+
+            if (areaJustificativa) areaJustificativa.style.display = 'block';
             
         }
 
-        
+        // --- 3) LIBERADA ou EM_ANDAMENTO (Corrida Ativa) ---
+        else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
+            // Fecha modal de pagamento
+            const modal = document.getElementById('modal-pagamento');
+            if (modal) modal.style.display = 'none';
+            
+            statusArea.style.borderColor  = 'var(--neon-green)';
+            statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
+            statusTitulo.style.color      = 'var(--neon-green)';
+            
+            if (pedido.status === 'liberada') {
+                statusTitulo.innerText = "PAGAMENTO CONFIRMADO ✅";
+                statusDesc.innerText = "Piloto a caminho do local de origem.";
+            } else {
+                 statusTitulo.innerText = "EM CORRIDA 🚀";
+                statusDesc.innerText = "Sua viagem está em andamento.";
+            }
 
-        // Elementos da tela de acompanhamento
-        const statusTitulo = document.getElementById('acompanhamento-status-titulo');
-        const statusDesc   = document.getElementById('acompanhamento-status-desc');
-        const statusArea   = document.getElementById('acompanhamento-status-area');
-        const motoboyBox   = document.getElementById('motoboy-info-box');
-        const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
-        const btnCancelar  = document.getElementById('btn-cancelar-acomp');
-
-        // ⚠️ ATENÇÃO: ajuste o ID abaixo para o container dos botões de pagamento
-        // exemplo: <div id="botoes-pagamento"> ... </div>
-        const areaPagamento = document.getElementById('area-pagamento-cliente');
-
-
-        // Estado base (limpa)
-        statusArea.style.borderColor  = '#ffd700';
-        statusArea.style.background   = 'rgba(255, 215, 0, 0.1)';
-        statusTitulo.style.color      = '#ffd700';
-
-        motoboyBox.style.display = 'none';
-        btnWpp.style.display     = 'none';
-    
-        // =========================
-        // 2) AGUARDANDO_PAGAMENTO
-        // =========================
-        // =========================
-// 2️⃣ DINHEIRO (libera corrida)
-// =========================
-if (
-    pedido.status === 'aceita' &&
-    pedido.forma_pagamento === 'DINHEIRO'
-) {
-    const modal = document.getElementById('modal-pagamento');
-    if (modal) modal.style.display = 'none';
-
-    statusArea.style.borderColor  = 'var(--neon-green)';
-    statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
-    statusTitulo.style.color      = 'var(--neon-green)';
-    statusTitulo.innerText        = "PAGAMENTO EM DINHEIRO 💵";
-    statusDesc.innerText          = "Pagamento será feito ao piloto. Ele já está a caminho.";
-
-    motoboyBox.style.display = 'block';
-
-    document.getElementById('motoboy-nome').innerText =
-        pedido.nome_motoboy || "Piloto Falcões";
-
-    document.getElementById('motoboy-placa').innerText =
-        pedido.placa_motoboy || "Moto Indisponível";
-
-    if (pedido.telefone_motoboy) {
-        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
-        const numeroInternacional =
-            foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
-
-        btnWpp.href = `https://wa.me/${numeroInternacional}`;
-        btnWpp.style.display = 'flex';
-    }
-}
-
-// =========================
-// 3️⃣ PIX (aguardando pagamento)
-// =========================
-else if (pedido.status === 'aguardando_pagamento') {
-
-    statusArea.style.borderColor  = '#f1c40f';
-    statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
-    statusTitulo.style.color      = '#f1c40f';
-    statusTitulo.innerText        = "AGUARDANDO PAGAMENTO";
-    statusDesc.innerText          = "Finalize o pagamento para confirmar sua corrida.";
-
-    motoboyBox.style.display = 'none';
-
-    const modal = document.getElementById('modal-pagamento');
-    if (modal) modal.style.display = 'flex';
-
-    const btnCancelar = document.getElementById('btn-cancelar-acomp');
-if (btnCancelar) {
-  btnCancelar.style.display = 'block';
-}
-}
-
-
-        
-        else if (pedido.status === 'pago_online') {
-            statusArea.style.borderColor  = 'var(--neon-green)';
-            statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
-            statusTitulo.style.color      = 'var(--neon-green)';
-            statusTitulo.innerText        = "PAGAMENTO CONFIRMADO ✅";
-            statusDesc.innerText          = "Seu pagamento foi aprovado. O piloto está a caminho.";
-
-           
+            // Mostra informações do motoboy e permite cancelamento com justificativa
             motoboyBox.style.display = 'block';
+            if (areaJustificativa) areaJustificativa.style.display = 'block'; // Permite cancelamento com justificativa
 
-            document.getElementById('motoboy-nome').innerText  =
-                pedido.nome_motoboy || "Piloto Falcões";
-            document.getElementById('motoboy-placa').innerText =
-                pedido.placa_motoboy || "Moto Indisponível";
+            document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
+            document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
 
-            // Botão WhatsApp (se houver telefone)
+            // Botão WhatsApp
             if (pedido.telefone_motoboy) {
                 const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
                 const numeroInternacional =
                     foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
 
-                const textoWpp = encodeURIComponent(
-                    `Olá, sou o cliente do pedido #${id} no app Falcões. Gostaria de confirmar a sua chegada.`
-                );
-                const linkWpp = `https://wa.me/${numeroInternacional}?text=${textoWpp}`;
-
-                btnWpp.href = linkWpp;
+                btnWpp.href = `https://wa.me/${numeroInternacional}`;
                 btnWpp.style.display = 'flex';
             }
-
-            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         }
-        // =========================
-// 3️⃣ LIBERADA (corrida iniciada)
-// =========================
-else if (pedido.status === 'liberada') {
-
-    // fecha modal de pagamento se ainda estiver aberto
-    const modal = document.getElementById('modal-pagamento');
-    if (modal) modal.style.display = 'none';
-
-    statusArea.style.borderColor  = 'var(--neon-green)';
-    statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
-    statusTitulo.style.color      = 'var(--neon-green)';
-    statusTitulo.innerText        = "🚀 CORRIDA INICIADA";
-    statusDesc.innerText          = "O piloto está a caminho do local de origem.";
-
-    // mostra motoboy
-    motoboyBox.style.display = 'block';
-
-    document.getElementById('motoboy-nome').innerText =
-        pedido.nome_motoboy || "Piloto Falcões";
-
-    document.getElementById('motoboy-placa').innerText =
-        pedido.placa_motoboy || "Moto Indisponível";
-
-    // WhatsApp
-    if (pedido.telefone_motoboy) {
-        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
-        const numeroInternacional =
-            foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
-
-        btnWpp.href = `https://wa.me/${numeroInternacional}`;
-        btnWpp.style.display = 'flex';
-    }
-}
-
-        else if (
-    pedido.status === 'aceita' &&
-    pedido.forma_pagamento === 'DINHEIRO'
-) {
-    // Fecha modal de pagamento se estiver aberto
-    const modal = document.getElementById('modal-pagamento');
-    if (modal) modal.style.display = 'none';
-
-    statusArea.style.borderColor  = 'var(--neon-green)';
-    statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
-    statusTitulo.style.color      = 'var(--neon-green)';
-    statusTitulo.innerText        = "PAGAMENTO EM DINHEIRO 💵";
-    statusDesc.innerText          = "Pagamento será feito ao piloto. Ele já está a caminho.";
-
-    // Mostra motoboy
-    motoboyBox.style.display = 'block';
-
-    document.getElementById('motoboy-nome').innerText =
-        pedido.nome_motoboy || "Piloto Falcões";
-
-    document.getElementById('motoboy-placa').innerText =
-        pedido.placa_motoboy || "Moto Indisponível";
-
-    // WhatsApp
-    if (pedido.telefone_motoboy) {
-        const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
-        const numeroInternacional =
-            foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
-
-        btnWpp.href = `https://wa.me/${numeroInternacional}`;
-        btnWpp.style.display = 'flex';
-    }
-}
-
-
-        // =========================
-        // 4) CONCLUÍDA / FINALIZADA
-        // =========================
+        
+        // --- 4) CONCLUÍDA / FINALIZADA ---
         else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
-            statusArea.style.borderColor  = 'blue';
-            statusArea.style.background   = 'rgba(0, 0, 255, 0.05)';
-            statusTitulo.style.color      = 'blue';
-            statusTitulo.innerText        = "CORRIDA FINALIZADA (A CONFIRMAR)";
-            statusDesc.innerText          =
-                `Valor estimado: R$ ${(pedido.valor || window.valorCalculado || 0)
-                    .toFixed(2).replace('.', ',')}`;
-
+            const modalPag = document.getElementById('modal-pagamento');
+            if (modalPag) modalPag.style.display = 'none';
             
-
+            clearInterval(intervaloVerificacao); 
+            
             const modalEnc = document.getElementById('modal-encerramento');
-            try {
-                const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
-                if (modalEnc && modalDisplay === 'none') {
-                    console.log('[DEBUG] abrirModalEncerramento() chamado — status finalizado recebido.');
-                    modalEnc.style.display = 'flex';
-                    const campoEnc = document.getElementById('campo-encerramento');
-                    setTimeout(() => { try { campoEnc.focus(); } catch (e) {} }, 220);
-                } else {
-                    console.log('[DEBUG] modal-encerramento já visível ou ausente (display=' + modalDisplay + ')');
-                }
-            } catch (err) {
-                console.warn('[DEBUG] erro ao avaliar modal-encerramento:', err);
-                if (modalEnc) {
-                    modalEnc.style.display = 'flex';
-                    const campoEnc = document.getElementById('campo-encerramento');
-                    setTimeout(() => { try { campoEnc.focus(); } catch (e) {} }, 220);
-                }
+            const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
+            if (modalEnc && modalDisplay === 'none') {
+                modalEnc.style.display = 'flex';
             }
+
+            statusArea.style.borderColor  = 'blue';
+            statusArea.style.background   = 'rgba(0, 0, 255, 0.05)';
+            statusTitulo.style.color      = 'blue';
+            statusTitulo.innerText        = "CORRIDA FINALIZADA (A CONFIRMAR)";
+            motoboyBox.style.display = 'block'; 
+            if (areaJustificativa) areaJustificativa.style.display = 'none';
+
+            statusDesc.innerText = `Valor estimado: R$ ${(pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',')}`;
         }
 
-        // =========================
-        // 5) CANCELADA / EXPIRADA
-        // =========================
+        // --- 5) CANCELADA / EXPIRADA ---
         else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
             clearInterval(intervaloVerificacao);
+            
+            const modalPag = document.getElementById('modal-pagamento');
+            if (modalPag) modalPag.style.display = 'none';
+            
             statusTitulo.innerText = "PEDIDO CANCELADO!";
-            statusDesc.innerText   =
-                `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado!O motoboy teve um imprevisto.    Pedimos desculpas!Por favor,   faça um novo pedido. Obrigado!"}`;
-            statusArea.style.borderColor = 'var(--error-color)';
-            statusArea.style.background  = 'rgba(255, 0, 0, 0.1)';
-            statusTitulo.style.color     = 'var(--error-color)';
-            btnCancelar.style.display    = 'none';
+            statusDesc.innerText   =
+                `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado! O motoboy teve um imprevisto. Pedimos desculpas! Por favor, faça um novo pedido. Obrigado!"}`;
+            statusArea.style.borderColor = 'var(--danger-color)';
+            statusArea.style.background  = 'rgba(255, 68, 68, 0.1)';
+            statusTitulo.style.color     = 'var(--danger-color)';
+
+            if (areaJustificativa) areaJustificativa.style.display = 'none';
+            
             localStorage.removeItem('idPedidoAtual');
+            
+            // O botão FECHAR deve aparecer (o que tem onclick="reiniciarApp()")
+            const btnFechar = document.querySelector('button[onclick="reiniciarApp()"]');
+            if (btnFechar) btnFechar.style.display = 'block';
+            
             showToast("Pedido cancelado. Use o botão 'FECHAR' abaixo para voltar.", "error", 5000);
         }
 
