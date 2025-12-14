@@ -711,7 +711,7 @@
             <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
         </div>
 
-        <div id="tela-pedido" class="tela ativa">
+        <div id="tela-pedido" class="tela">
 
             <h2>NOVA SOLICITAÇÃO</h2>
 
@@ -900,7 +900,7 @@
     let mapMode = null;
     let markerOrigem = null;
     let markerDestino = null;
-    let idPedidoAtual = null;
+    let idPedidoAtual = localStorage.getItem('idPedidoAtual');
     let intervaloVerificacao = null;
     let buscaMotoboyInterval = null; // Para controlar o tempo limite da busca
     let tempoBuscaRestante = 0; 
