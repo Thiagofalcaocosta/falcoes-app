@@ -647,6 +647,23 @@
             margin-bottom: 10px;
             font-weight: 600;
         }
+        /* ===== CORREÇÃO FINAL MODAL PAGAMENTO ===== */
+#modal-pagamento {
+    display: none;              /* começa fechado */
+    position: fixed;
+    inset: 0;                   /* top, right, bottom, left = 0 */
+    z-index: 2147483646;
+    background: rgba(0,0,0,0.85);
+
+    /* ESSENCIAL */
+    align-items: center;
+    justify-content: center;
+}
+
+#modal-pagamento.show {
+    display: flex;
+}
+
     </style>
     <script type="importmap">
 {
@@ -1356,7 +1373,7 @@
             // --- 2) AGUARDANDO_PAGAMENTO / ACEITA ---
             else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
                 const modal = document.getElementById('modal-pagamento');
-                if (modal) modal.style.display = 'flex';
+                if (modal) modal.classList.add('show');
 
                 statusArea.style.borderColor  = '#f1c40f';
                 statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
@@ -1371,7 +1388,7 @@
             // --- 3) LIBERADA ou EM_ANDAMENTO (Corrida Ativa) ---
             else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
                 const modal = document.getElementById('modal-pagamento');
-                if (modal) modal.style.display = 'none';
+                if (modal) modal.classList.remove('show');
                 
                 statusArea.style.borderColor  = 'var(--neon-green)';
                 statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
