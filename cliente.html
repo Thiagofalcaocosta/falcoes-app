@@ -678,55 +678,40 @@
             <div id="area-spinner" class="spinner"></div>
 
             <div id="status-titulo-modal"
-                style="font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px;">
-                BUSCANDO PILOTO...
-            </div>
-            <div id="status-desc-modal" style="font-size: 14px; color: #aaa;">
-                Notificando parceiros próximos.
-            </div>
+                style="font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px;">BUSCANDO PILOTO...</div>
+            <div id="status-desc-modal" style="font-size: 14px; color: #aaa;">Notificando parceiros próximos.</div>
 
             <button class="btn-cancelar" onclick="abrirJustificativaCliente()">CANCELAR PEDIDO</button>
+
         </div>
     </div>
 
+
     <div class="modal-overlay" id="modal-encerramento" style="display:none;">
         <div class="modal-content">
-            <div style="font-size: 22px; color: var(--neon-green); margin-bottom: 12px;">
-                ✅ Corrida Finalizada
-            </div>
+            <div style="font-size: 22px; color: var(--neon-green); margin-bottom: 12px;">✅ Corrida Finalizada</div>
             <div id="encerramento-titulo" style="font-size:16px; color:#fff; margin-bottom:8px;">
                 A corrida foi finalizada. Confirme e, se desejar, deixe uma observação (opcional)
             </div>
             <textarea id="campo-encerramento" placeholder="Ex: Tudo ok, atraso, avaria..."></textarea>
-            <button onclick="confirmarEncerramentoCliente()" class="btn" style="margin-top:12px;">
-                CONFIRMAR ENCERRAMENTO
-            </button>
-            <button onclick="document.getElementById('modal-encerramento').style.display='none'"
-                class="btn-cancelar" style="margin-top:8px;">
-                Fechar
-            </button>
+            <button onclick="confirmarEncerramentoCliente()" class="btn" style="margin-top:12px;">CONFIRMAR
+                ENCERRAMENTO</button>
+            <button onclick="document.getElementById('modal-encerramento').style.display='none'" class="btn-cancelar"
+                style="margin-top:8px;">Fechar</button>
         </div>
     </div>
 
     <div class="container">
-
-        <div class="logo-area">
-            <img src="assets/logo.png" alt="Logo"
-                onerror="this.style.display='none';
-                document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
+        <div class="logo-area"><img src="assets/logo.png" alt="Logo"
+                onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
         </div>
 
         <div class="header-top">
-            <div class="user-info">
-                <span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span>
-            </div>
+            <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
             <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
         </div>
 
-        <!-- ===================== -->
-        <!-- TELA PEDIDO -->
-        <!-- ===================== -->
-        <div id="tela-pedido" class="tela">
+        <div id="tela-pedido" class="tela ativa">
 
             <h2>NOVA SOLICITAÇÃO</h2>
 
@@ -736,7 +721,6 @@
                     <div class="card-title">MOTO TÁXI</div>
                     <div class="preco">R$ 10,00 + Km</div>
                 </div>
-
                 <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
                     <span class="icon">📦</span>
                     <div class="card-title">ENTREGA</div>
@@ -754,9 +738,8 @@
                                 oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
                             <div id="lista-origem" class="sugestoes-lista"></div>
                         </div>
-                        <button class="btn-map-icon" onclick="ativarMapa('origem')">🗺️</button>
+                        <button class="btn-map-icon" onclick="ativarMapa('origem')" title="Marcar no mapa">🗺️</button>
                     </div>
-
                     <div class="row-details">
                         <div class="input-num-wrapper">
                             <input type="text" id="num-origem" placeholder="Nº" oninput="removerErro(this)">
@@ -776,9 +759,8 @@
                                 oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
                             <div id="lista-destino" class="sugestoes-lista"></div>
                         </div>
-                        <button class="btn-map-icon" onclick="ativarMapa('destino')">🗺️</button>
+                        <button class="btn-map-icon" onclick="ativarMapa('destino')" title="Marcar no mapa">🗺️</button>
                     </div>
-
                     <div class="row-details">
                         <div class="input-num-wrapper">
                             <input type="text" id="num-destino" placeholder="Nº" oninput="removerErro(this)">
@@ -792,39 +774,109 @@
 
                 <div id="detalhes-entrega-container">
                     <label>📦 O que vamos levar?</label>
-                    <input type="text" id="detalhes-entrega"
-                        placeholder="Ex: Chaves, Marmita, Documento..." oninput="removerErro(this)">
-                    <span class="erro-msg">Descreva o item</span>
+                    <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..."
+                        oninput="removerErro(this)">
+                    <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
                 </div>
 
             </div>
 
             <div id="map"></div>
-
-            <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">
-                Toque no botão 🗺️ para marcar no mapa
-            </p>
+            <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no
+                mapa</p>
 
             <div class="resumo-final" id="resumo"></div>
 
-            <button onclick="pedir()" id="btn-pedir" class="btn" disabled>
-                SELECIONE O SERVIÇO
-            </button>
+            <button onclick="pedir()" id="btn-pedir" class="btn" disabled>SELECIONE O SERVIÇO</button>
+        </div>
 
-        </div><!-- 👈 FECHAMENTO CORRETO DA TELA PEDIDO -->
-
-        <!-- ===================== -->
-        <!-- TELA ACOMPANHAMENTO -->
-        <!-- ===================== -->
         <div id="tela-acompanhamento" class="tela">
-            <!-- (tudo igual ao seu código, sem alterações) -->
+            <h2>ACOMPANHANDO PEDIDO <span id="acompanhamento-id">#--</span></h2>
+
+            <div id="acompanhamento-status-area" class="motoboy-box"
+    style="border-color: #ffd700; background: rgba(255, 215, 0, 0.1);">
+    
+    <div id="tempo-restante-busca" style="font-size: 40px; font-weight: 800; color: #ffca28; margin-bottom: 10px;">
+        ⏳ --s
+    </div>
+    
+    <div class="nome" id="acompanhamento-status-titulo" style="color: #ffd700;">BUSCANDO PILOTO...</div>
+    <div class="placa" id="acompanhamento-status-desc" style="font-size: 16px;">Notificando parceiros próximos.</div>
+
+    <button id="btn-cancelar-busca" onclick="cancelarBuscaMotoboy()" 
+        style="
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            display: none; /* Inicia oculto e é mostrado pelo JS */
+        ">
+        ❌ CANCELAR BUSCA
+    </button>
+</div>
+            </div>
+
+            <div id="motoboy-info-box" style="display:none; margin-top: 20px;">
+                <div class="motoboy-box">
+                    <div style="font-size: 32px; margin-bottom: 5px;">🏍️</div>
+                    <div style="font-size: 12px; color: #aaa; text-transform:uppercase;">Seu Piloto</div>
+                    <div class="nome" id="motoboy-nome">--</div>
+                    <div class="placa" id="motoboy-placa">--</div>
+                </div>
+
+                <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp" style="display: none;">
+                    <span style="font-size: 20px;">📞</span>
+                    CHAMAR NO WHATSAPP
+                </a>
+            </div>
+
+            <h3>Detalhes da Viagem</h3>
+            <div id="viagem-origem" class="info-card">
+                <div class="label">📍 Origem</div>
+                <div class="value" id="detalhe-origem">Aguardando...</div>
+            </div>
+            <div id="viagem-destino" class="info-card">
+                <div class="label">🏁 Destino</div>
+                <div class="value" id="detalhe-destino">Aguardando...</div>
+            </div>
+            <div id="viagem-valor" class="info-card" style="text-align:center; border: 1px solid var(--neon-green);">
+                <div class="label">Total Estimado</div>
+                <div class="value" id="detalhe-valor" style="color: var(--neon-green); font-size: 20px;">R$ --</div>
+            </div>
+            <!-- AQUI: espaço para os botões de pagamento -->
+
+            <div id="area-pagamento-cliente"></div>
+            <div id="area-justificativa-integrada" style="display:none; margin-top: 15px; margin-bottom: 10px;">
+                <label
+                    style="color:var(--error-color); font-size:14px; margin-bottom: 5px; text-transform:none; letter-spacing:normal;">
+                    Diga por que deseja cancelar (mínimo 5 caracteres)
+                </label>
+                <textarea id="campo-justificativa-integrada"
+                    placeholder="Ex: Não preciso mais, endereço errado, demora..."
+                    style="width:100%; height:80px; padding:10px; border-radius:8px; background:var(--input-bg); border:1px solid var(--border-color); color:#fff; resize:none; font-family:inherit;"></textarea>
+
+                <div id="erro-just-integrada"
+                    style="color:var(--error-color); font-size:12px; margin-top:5px; display:none">
+                    Escreva uma justificativa válida.
+                </div>
+
+                <button id="btn-confirmar-cancelamento" class="btn"
+                    style="margin-top:10px; background:var(--error-color); color:#fff; font-weight:800;" disabled>
+                    CONFIRMAR CANCELAMENTO
+                </button>
+            </div>
+
+            
+            <button onclick="reiniciarApp()" class="btn"
+                style="background-color: #333; color: #ccc; margin-top: 10px;">FECHAR (apenas se finalizado)</button>
         </div>
 
     </div>
-
-</body>
-
-
 
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
     <script>
@@ -905,40 +957,27 @@
     }
     
     // === FUNÇÃO PRINCIPAL DE PERSISTÊNCIA (Ao recarregar a página) ===
-    async function checkPersistedOrder() {
-    const persistedId = localStorage.getItem('idPedidoAtual');
+    function checkPersistedOrder() {
+        const persistedId = localStorage.getItem('idPedidoAtual');
+        if (persistedId) {
+            idPedidoAtual = persistedId;
+            
+            // 1. Preenche os detalhes (chama a função auxiliar)
+            preencherDetalhesAcompanhamento();
+            
+            // 2. MUDAR PARA A TELA DE ACOMPANHAMENTO (Isto resolve a sobreposição!)
+            mudarTela('tela-acompanhamento');
 
-    if (!persistedId) {
-        mostrarTela('tela-pedido');
-        return;
-    }
-
-    try {
-        const res = await fetch(`${MEU_IP}/status-pedido/${persistedId}`);
-        const data = await res.json();
-
-        if (!data.success || !data.pedido) {
-            localStorage.removeItem('idPedidoAtual');
-            mostrarTela('tela-pedido');
-            return;
+            // 3. Iniciar a verificação de status (Polling)
+            verificarStatus(idPedidoAtual);
+            
+            if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
+            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+        } else {
+            // Se não houver pedido, garante que a tela inicial esteja ativa
+            mudarTela('tela-pedido');
         }
-
-        idPedidoAtual = persistedId;
-        preencherDetalhesAcompanhamento();
-        mostrarTela('tela-acompanhamento');
-
-        verificarStatus(idPedidoAtual);
-        intervaloVerificacao = setInterval(
-            () => verificarStatus(idPedidoAtual),
-            3000
-        );
-
-    } catch (e) {
-        console.error('Erro ao restaurar pedido:', e);
-        mostrarTela('tela-pedido');
     }
-}
-
 
 
     // === FUNÇÕES MAPA E CÁLCULO ===
@@ -1120,7 +1159,6 @@
         if (!confirm("Tem certeza que deseja cancelar a busca por um motoboy?")) return;
 
         document.getElementById('modal-busca').style.display = 'flex';
-        mudarTela('tela-acompanhamento');
         if (buscaMotoboyInterval) {
             clearInterval(buscaMotoboyInterval);
             buscaMotoboyInterval = null;
@@ -1450,30 +1488,6 @@
             showToast("Falha ao registrar finalização: " + e.message, "error");
         }
     }
-
-    function esconderTodasTelas() {
-    document.querySelectorAll('.tela').forEach(t => {
-        t.style.display = 'none';
-        t.classList.remove('ativa');
-    });
-}
-
-function mostrarTela(id) {
-    esconderTodasTelas();
-    const tela = document.getElementById(id);
-    if (tela) {
-        tela.style.display = 'block';
-        tela.classList.add('ativa');
-    }
-}
-// ✅ CORREÇÃO DO MAPA (NADA MAIS)
-    if (id === 'tela-pedido' && typeof map !== 'undefined') {
-        setTimeout(() => {
-            map.invalidateSize();
-        }, 200);
-    }
-
-
     
 
     // === INICIALIZAÇÃO DE LISTENERS ===
