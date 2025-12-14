@@ -1576,12 +1576,6 @@ if (btnCancelar) {
     }
 }
 
-            
-    
-
-        // Chama a função ao carregar a página
-        window.onload = checkPersistedOrder;
-
 
         // === FUNÇÕES DE CANCELAMENTO ATUALIZADAS PARA USAR MODAL DE JUSTIFICATIVA ===
 
@@ -1699,7 +1693,6 @@ if (btnCancelar) {
         // --- Lógica de Justificativa Integrada (Validação e Envio) ---
 
         document.addEventListener('DOMContentLoaded', () => {
-            checkPersistedOrder();
             const campoJust = document.getElementById('campo-justificativa-integrada');
             const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
             const erroJust = document.getElementById('erro-just-integrada');
