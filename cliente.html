@@ -711,7 +711,7 @@
             <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
         </div>
 
-        <div id="tela-pedido" class="tela">
+        <div id="tela-pedido" class="tela ativa">
 
             <h2>NOVA SOLICITAÇÃO</h2>
 
@@ -1493,7 +1493,7 @@
     // === INICIALIZAÇÃO DE LISTENERS ===
     document.addEventListener('DOMContentLoaded', () => {
         // CORREÇÃO: Chama a verificação e mudança de tela imediatamente.
-        checkPersistedOrder(); 
+        //checkPersistedOrder(); 
 
         const campoJust = document.getElementById('campo-justificativa-integrada');
         const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
