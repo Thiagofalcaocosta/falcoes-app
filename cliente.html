@@ -881,1030 +881,764 @@
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
     <script>
 
-        // === CONFIGURAÇÃO E DADOS (AGORA COM O TOKEN DO MAPBOX) ===
-        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtaW5sYnRtdDB1ZGIzZnB1OXhid2p4ZXQifQ.uAw7CNaemwsun4RGsyOOIQ'; // SEU TOKEN AQUI!
-        const MEU_IP = 'https://falcoes-app.onrender.com';
-        const LAT_TC = -21.6975;
-        const LON_TC = -45.25; // longitude padrão (ajuste conforme sua cidade)
 
-        // Mock de usuário se não existir (para testes)
+    // === CONFIGURAÇÃO E DADOS ===
+    const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtaW5sYnRtdDB1ZGIzZnB1OXhid2p4ZXQifQ.uAw7CNaemwsun4RGsyOOIQ'; // SEU TOKEN AQUI!
+    const MEU_IP = 'https://falcoes-app.onrender.com';
+    const LAT_TC = -21.6975;
+    const LON_TC = -45.25; 
 
-        const usuario = JSON.parse(localStorage.getItem("usuario"));
-        document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
+    // Mock de usuário
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+    document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
 
-        // Variáveis de Estado
-        let servicoSelecionado = null;
-        let coordsOrigem = null;
-        let coordsDestino = null;
-        let timeoutBusca = null;
-        let mapMode = null;
-        let markerOrigem = null;
-        let markerDestino = null;
-        let idPedidoAtual = null;
-        let intervaloVerificacao = null;
-        let buscaMotoboyInterval = null; // NOVO: para controlar o tempo limite da busca
-        let tempoBuscaRestante = 0; // NOVO: armazena o tempo atual
+    // Variáveis de Estado
+    let servicoSelecionado = null;
+    let coordsOrigem = null;
+    let coordsDestino = null;
+    let timeoutBusca = null;
+    let mapMode = null;
+    let markerOrigem = null;
+    let markerDestino = null;
+    let idPedidoAtual = null;
+    let intervaloVerificacao = null;
+    let buscaMotoboyInterval = null; // Para controlar o tempo limite da busca
+    let tempoBuscaRestante = 0; 
 
-        const precos = {
-            'moto-taxi': { base: 10.0, kmExtra: 3.15, franquia: 3 },
-            'entrega': { base: 8.50, kmExtra: 2.0, franquia: 3 }
-        };
-
-        // === FUNÇÕES DE GERENCIAMENTO DE TELA ===
-        function mudarTela(novaTelaId) {
-            document.querySelectorAll('.tela').forEach(tela => {
-                tela.classList.remove('ativa');
-            });
-            document.getElementById(novaTelaId).classList.add('ativa');
-        }
-
-        function reiniciarApp() {
-            // Limpa o estado e recarrega para voltar à tela de pedido limpa
-            localStorage.removeItem('idPedidoAtual');
-            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
-            window.location.reload();
-        }
-
-        // === INICIALIZAÇÃO DO MAPA (AGORA COM MAPBOX) ===
-        const map = L.map('map').setView([LAT_TC, LON_TC], 14);
-        // ** USANDO A CAMADA DE MAPA DO MAPBOX (REQUER O TOKEN) **
-        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-            attribution: 'Mapa &copy; <a href="https://www.mapbox.com/">Mapbox</a> | Dados &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-            maxZoom: 19,
-            id: 'mapbox/streets-v11', // Estilo do Mapa (pode ser trocado)
-            tileSize: 512,
-            zoomOffset: -1,
-            accessToken: MAPBOX_ACCESS_TOKEN
-        }).addTo(map);
-
-        map.on('click', async (e) => {
-            if (!mapMode) {
-                showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
-                return;
-            }
-
-            const { lat, lng } = e.latlng;
-            showToast("Buscando endereço com Mapbox...", "info", 1000);
-
-            // ** Reverse Geocoding via Mapbox (LON,LAT) **
-            try {
-                const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
-
-                const res = await fetch(urlMapbox);
-                const data = await res.json();
-
-                let rua, bairro;
-
-                if (data.features && data.features.length > 0) {
-                    const feature = data.features[0];
-                    // Mapbox retorna o endereço completo no place_name. Pegamos o que está antes da primeira vírgula como rua.
-                    rua = feature.place_name.split(',')[0] || "Local Marcado";
-
-                    // Tentamos obter o bairro do contexto
-                    const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
-                    bairro = (neighborhood && neighborhood.text) || "Três Corações";
-                } else {
-                    rua = "Local Marcado";
-                    bairro = "Três Corações";
-                }
-                if (mapMode === 'origem') {
-                    document.getElementById('rua-origem').value = rua;
-                    document.getElementById('bairro-origem').value = bairro;
-                    document.getElementById('num-origem').focus();
-                    coordsOrigem = { lat, lon: lng };
-                    if (markerOrigem) map.removeLayer(markerOrigem);
-                    markerOrigem = L.marker([lat, lng]).addTo(map);
-                } else {
-                    document.getElementById('rua-destino').value = rua;
-                    document.getElementById('bairro-destino').value = bairro;
-                    document.getElementById('num-destino').focus();
-                    coordsDestino = { lat, lon: lng };
-                    if (markerDestino) map.removeLayer(markerDestino);
-                    markerDestino = L.marker([lat, lng]).addTo(map);
-                }
-
-                showToast("Endereço preenchido! Digite o número.", "success");
-                mapMode = null; // Reset modo
-                calcularRota();
-
-            } catch (error) {
-                showToast("Erro ao obter endereço do mapa.", "error");
-            }
-        });
-
-        // === FUNÇÕES DE UI (Permanece) ===
-        function ativarMapa(modo) {
-            mapMode = modo;
-            showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
-            // Rola até o mapa
-            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function selecionarServico(tipo, valorBase) {
-            servicoSelecionado = tipo;
-
-            // Visual Cards
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('selecionado'));
-            if (tipo === 'moto-taxi') document.getElementById('card-moto').classList.add('selecionado');
-            else document.getElementById('card-entrega').classList.add('selecionado');
-
-            // Campo Detalhes da Entrega
-            const detailsDiv = document.getElementById('detalhes-entrega-container');
-            if (tipo === 'entrega') {
-                detailsDiv.style.display = 'block';
-            } else {
-                detailsDiv.style.display = 'none';
-            }
-
-            document.getElementById('btn-pedir').disabled = false;
-            document.getElementById('btn-pedir').innerText = tipo === 'entrega' ? "SOLICITAR ENTREGA" : "CHAMAR MOTO TÁXI";
-
-            calcularRota();
-        }
-
-        function logout() {
-            localStorage.clear();
-            window.location.reload();
-        }
-
-        function removerErro(input) {
-            input.classList.remove('erro');
-        }
-
-        // === NOVAS FUNÇÕES DE BUSCA/TIMEOUT ===
-
-function iniciarContadorBusca(corridaId, tempoLimite) {
-    tempoBuscaRestante = tempoLimite;
-    const elementoTempo = document.getElementById('tempo-restante-busca');
-    const btnCancel = document.getElementById('btn-cancelar-busca');
-
-    if (!elementoTempo || !btnCancel) return;
-
-    if (buscaMotoboyInterval) {
-        clearInterval(buscaMotoboyInterval);
-    }
-    
-    btnCancel.style.display = 'block'; // Mostra botão de cancelamento
-    elementoTempo.style.display = 'block'; // Mostra contador
-
-    const decremento = () => {
-        if (tempoBuscaRestante <= 0) {
-            clearInterval(buscaMotoboyInterval);
-            buscaMotoboyInterval = null;
-            elementoTempo.innerText = '⏰ ENCERRADO';
-            btnCancel.style.display = 'none';
-            
-            // Ação de timeout (cancela a busca no backend e notifica o cliente)
-            encerrarBuscaPorTimeout(corridaId); 
-            return;
-        }
-
-        elementoTempo.innerText = `⏳ ${tempoBuscaRestante}s`;
-        tempoBuscaRestante--;
+    const precos = {
+        'moto-taxi': { base: 10.0, kmExtra: 3.15, franquia: 3 },
+        'entrega': { base: 8.50, kmExtra: 2.0, franquia: 3 }
     };
 
-    decremento();
-    buscaMotoboyInterval = setInterval(decremento, 1000);
-}
-
-// ⚠️ NOVA FUNÇÃO: Cancelamento Manual pelo Cliente
-async function cancelarBuscaMotoboy() {
-    const id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
-
-    if (!id) {
-        showToast('Nenhum pedido ativo para cancelar.', 'error');
-        return;
-    }
-
-    if (!confirm("Tem certeza que deseja cancelar a busca por um motoboy?")) return;
-
-    // Mostra loading
-    document.getElementById('modal-busca').style.display = 'flex';
-
-    if (buscaMotoboyInterval) {
-        clearInterval(buscaMotoboyInterval);
-        buscaMotoboyInterval = null;
-    }
-
-    try {
-        const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                id: id, 
-                motivo: 'Cancelado pelo cliente durante a busca.' 
-            })
+    // === FUNÇÕES DE GERENCIAMENTO DE TELA E UTILIDADES ===
+    function mudarTela(novaTelaId) {
+        document.querySelectorAll('.tela').forEach(tela => {
+            tela.classList.remove('ativa');
         });
+        document.getElementById(novaTelaId).classList.add('ativa');
+    }
 
-        const data = await res.json();
+    function reiniciarApp() {
+        localStorage.removeItem('idPedidoAtual');
+        localStorage.removeItem('pedidoAtual');
+        if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+        if (buscaMotoboyInterval) clearInterval(buscaMotoboyInterval);
+        window.location.reload();
+    }
+    
+    function removerErro(input) {
+        input.classList.remove('erro');
+    }
 
-        if (data.success) {
-            showToast('Busca cancelada com sucesso!', 'success');
-            // Volta para a tela inicial
-            reiniciarApp(); 
+    // Toast Helper
+    function showToast(msg, type, duration = 3000) {
+        const container = document.getElementById('toast-container');
+        const div = document.createElement('div');
+        div.className = `toast ${type}`;
+        div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
+        container.appendChild(div);
+        while (container.children.length > 3) {
+            container.firstChild.remove();
+        }
+        setTimeout(() => div.remove(), duration);
+    }
+    
+    // === FUNÇÕES AUXILIARES DE PERSISTÊNCIA ===
+    function preencherDetalhesAcompanhamento() {
+        const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
+        if (pedidoSalvo) {
+            document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
+            document.getElementById('detalhe-origem').innerText = pedidoSalvo.origem;
+            document.getElementById('detalhe-destino').innerText = pedidoSalvo.destino;
+            document.getElementById('detalhe-valor').innerText = `R$ ${pedidoSalvo.valor.toFixed(2).replace('.', ',')}`;
+            return true;
+        }
+        return false;
+    }
+    
+    // === FUNÇÃO PRINCIPAL DE PERSISTÊNCIA (Ao recarregar a página) ===
+    function checkPersistedOrder() {
+        const persistedId = localStorage.getItem('idPedidoAtual');
+        if (persistedId) {
+            idPedidoAtual = persistedId;
+            
+            // 1. Preenche os detalhes (chama a função auxiliar)
+            preencherDetalhesAcompanhamento();
+            
+            // 2. MUDAR PARA A TELA DE ACOMPANHAMENTO (Isto resolve a sobreposição!)
+            mudarTela('tela-acompanhamento');
+
+            // 3. Iniciar a verificação de status (Polling)
+            verificarStatus(idPedidoAtual);
+            
+            if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
+            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
         } else {
-            showToast('Erro ao cancelar busca: ' + (data.message || 'Erro desconhecido.'), 'error');
+            // Se não houver pedido, garante que a tela inicial esteja ativa
+            mudarTela('tela-pedido');
+        }
+    }
+
+
+    // === FUNÇÕES MAPA E CÁLCULO ===
+    const map = L.map('map').setView([LAT_TC, LON_TC], 14);
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+        attribution: 'Mapa &copy; <a href="https://www.mapbox.com/">Mapbox</a> | Dados &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+        maxZoom: 19,
+        id: 'mapbox/streets-v11',
+        tileSize: 512,
+        zoomOffset: -1,
+        accessToken: MAPBOX_ACCESS_TOKEN
+    }).addTo(map);
+
+    map.on('click', async (e) => {
+        if (!mapMode) {
+            showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
+            return;
+        }
+        const { lat, lng } = e.latlng;
+        showToast("Buscando endereço com Mapbox...", "info", 1000);
+        try {
+            const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
+            const res = await fetch(urlMapbox);
+            const data = await res.json();
+            let rua, bairro;
+
+            if (data.features && data.features.length > 0) {
+                const feature = data.features[0];
+                rua = feature.place_name.split(',')[0] || "Local Marcado";
+                const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
+                bairro = (neighborhood && neighborhood.text) || "Três Corações";
+            } else {
+                rua = "Local Marcado";
+                bairro = "Três Corações";
+            }
+            if (mapMode === 'origem') {
+                document.getElementById('rua-origem').value = rua;
+                document.getElementById('bairro-origem').value = bairro;
+                document.getElementById('num-origem').focus();
+                coordsOrigem = { lat, lon: lng };
+                if (markerOrigem) map.removeLayer(markerOrigem);
+                markerOrigem = L.marker([lat, lng]).addTo(map);
+            } else {
+                document.getElementById('rua-destino').value = rua;
+                document.getElementById('bairro-destino').value = bairro;
+                document.getElementById('num-destino').focus();
+                coordsDestino = { lat, lon: lng };
+                if (markerDestino) map.removeLayer(markerDestino);
+                markerDestino = L.marker([lat, lng]).addTo(map);
+            }
+
+            showToast("Endereço preenchido! Digite o número.", "success");
+            mapMode = null; 
+            calcularRota();
+        } catch (error) {
+            showToast("Erro ao obter endereço do mapa.", "error");
+        }
+    });
+
+    function ativarMapa(modo) {
+        mapMode = modo;
+        showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
+        document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function selecionarServico(tipo, valorBase) {
+        servicoSelecionado = tipo;
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('selecionado'));
+        if (tipo === 'moto-taxi') document.getElementById('card-moto').classList.add('selecionado');
+        else document.getElementById('card-entrega').classList.add('selecionado');
+
+        const detailsDiv = document.getElementById('detalhes-entrega-container');
+        if (tipo === 'entrega') {
+            detailsDiv.style.display = 'block';
+        } else {
+            detailsDiv.style.display = 'none';
         }
 
-    } catch (err) {
-        console.error('Erro ao cancelar busca:', err);
-        showToast('Erro de conexão. Tente novamente.', 'error');
-    } finally {
-        document.getElementById('modal-busca').style.display = 'none';
+        document.getElementById('btn-pedir').disabled = false;
+        document.getElementById('btn-pedir').innerText = tipo === 'entrega' ? "SOLICITAR ENTREGA" : "CHAMAR MOTO TÁXI";
+        calcularRota();
     }
-}
 
-// ⚠️ NOVA FUNÇÃO: Timeout de Busca (Cancelamento Automático)
-async function encerrarBuscaPorTimeout(corridaId) {
-     try {
-        // Encerra a busca no backend (altera o status para 'cancelada')
-        await fetch(`${MEU_IP}/cancelar-pedido`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                id: corridaId, 
-                motivo: 'Cancelado automaticamente por timeout.' 
-            })
-        });
-        
-        // Notifica e volta à tela inicial
-        showToast('Tempo limite de busca esgotado. Tente novamente.', 'error');
-        reiniciarApp();
-
-    } catch (err) {
-        console.error('Erro ao encerrar busca por timeout:', err);
-        reiniciarApp();
+    function logout() {
+        localStorage.clear();
+        window.location.reload();
     }
-}
 
-        // Fechar sugestões ao clicar fora
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.input-rua-wrapper')) {
-                document.querySelectorAll('.sugestoes-lista').forEach(el => el.style.display = 'none');
+    function calcDistanciaReta(c1, c2) {
+        const R = 6371;
+        const dLat = (c2.lat - c1.lat) * Math.PI / 180;
+        const dLon = (c2.lon - c1.lon) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    async function calcularRota() {
+        if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
+        const resumo = document.getElementById('resumo');
+        resumo.style.display = 'block';
+        resumo.innerText = "Calculando rota com Mapbox...";
+
+        try {
+            const coordenadas = `${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}`;
+            const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordenadas}?geometries=geojson&steps=false&access_token=${MAPBOX_ACCESS_TOKEN}`;
+            const res = await fetch(url);
+            const json = await res.json();
+
+            let distanciaKm = 0;
+            let tempoSegundos = 0;
+
+            if (json.routes && json.routes.length > 0) {
+                distanciaKm = json.routes[0].distance / 1000;
+                tempoSegundos = json.routes[0].duration;
+            } else {
+                distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
+                tempoSegundos = (distanciaKm / 0.3) * 60; 
             }
-        });
 
-        // LÓGICA DE ENDEREÇO e CÁLCULO DE ROTA (AGORA COM MAPBOX)
-        function buscarEndereco(query, listId, type) {
-            const list = document.getElementById(listId);
-            if (query.length < 3) {
-                list.style.display = 'none';
+            const regra = precos[servicoSelecionado];
+            const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
+            const total = regra.base + (kmCobrado * regra.kmExtra);
+            const tempoMinutos = Math.ceil(tempoSegundos / 60);
+
+            resumo.innerHTML = `
+                <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km &nbsp; | &nbsp; Tempo: ${tempoMinutos} min</div>
+                <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
+            `;
+            window.valorCalculado = total;
+        } catch (e) {
+            console.error("Erro rota Mapbox", e);
+            resumo.innerText = "Erro ao calcular rota.";
+        }
+    }
+
+
+    // === FUNÇÕES DE BUSCA/TIMEOUT ===
+    function iniciarContadorBusca(corridaId, tempoLimite) {
+        tempoBuscaRestante = tempoLimite;
+        const elementoTempo = document.getElementById('tempo-restante-busca');
+        const btnCancel = document.getElementById('btn-cancelar-busca');
+
+        if (!elementoTempo || !btnCancel) return;
+        if (buscaMotoboyInterval) {
+            clearInterval(buscaMotoboyInterval);
+        }
+        
+        btnCancel.style.display = 'block'; 
+        elementoTempo.style.display = 'block'; 
+
+        const decremento = () => {
+            if (tempoBuscaRestante <= 0) {
+                clearInterval(buscaMotoboyInterval);
+                buscaMotoboyInterval = null;
+                elementoTempo.innerText = '⏰ ENCERRADO';
+                btnCancel.style.display = 'none';
+                
+                encerrarBuscaPorTimeout(corridaId); 
                 return;
             }
 
-            clearTimeout(timeoutBusca);
-            timeoutBusca = setTimeout(async () => {
-                try {
-                    // ** USANDO A API DE PESQUISA (Search) DO MAPBOX **
-                    // Usa bbox para limitar a busca à área de Três Corações (ajusta a área conforme necessário)
-                    const bounds = '-45.30,-21.75,-45.20,-21.65'; // [minLon, minLat, maxLon, maxLat]
-                    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?country=BR&bbox=${bounds}&limit=5&access_token=${MAPBOX_ACCESS_TOKEN}`;
-
-                    const res = await fetch(url);
-                    const data = await res.json();
-
-                    list.innerHTML = '';
-
-                    if (data.features && data.features.length > 0) {
-                        data.features.forEach(item => {
-                            const rua = item.place_name.split(',')[0];
-                            const context = item.context || [];
-                            const neighborhood = context.find(c => c.id.startsWith('neighborhood'));
-                            const bairro = (neighborhood && neighborhood.text) || "Três Corações";
-
-                            const div = document.createElement('div');
-                            div.className = 'sugestao-item';
-                            div.innerHTML = `<span class="rua-texto">${rua}</span><span class="bairro-texto">${bairro}</span>`;
-
-                            div.onclick = () => {
-                                document.getElementById(`rua-${type}`).value = rua;
-                                document.getElementById(`bairro-${type}`).value = bairro;
-
-                                // Mapbox usa [lon, lat], convertemos para {lat, lon}
-                                const coords = { lat: item.center[1], lon: item.center[0] };
-                                if (type === 'origem') coordsOrigem = coords;
-                                else coordsDestino = coords;
-
-                                list.style.display = 'none';
-
-                                const numInput = document.getElementById(`num-${type}`);
-                                numInput.focus();
-                                numInput.classList.add('erro');
-                                setTimeout(() => numInput.classList.remove('erro'), 500);
-
-                                calcularRota();
-                            };
-                            list.appendChild(div);
-                        });
-                        list.style.display = 'block';
-                    } else {
-                        list.style.display = 'none';
-                    }
-                } catch (e) {
-                    console.error("Erro busca Mapbox", e);
-                }
-            }, 500);
-        }
-
-        // === FUNÇÃO DE CÁLCULO DE ROTA (AGORA COM MAPBOX DIRECTIONS API) ===
-        async function calcularRota() {
-            if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
-
-            const resumo = document.getElementById('resumo');
-            resumo.style.display = 'block';
-            resumo.innerText = "Calculando rota com Mapbox...";
-
-            try {
-                // Directions API Mapbox: coordenadas no formato LON,LAT;LON,LAT
-                const coordenadas = `${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}`;
-
-                // Mapbox Directions API
-                const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordenadas}?geometries=geojson&steps=false&access_token=${MAPBOX_ACCESS_TOKEN}`;
-
-                const res = await fetch(url);
-                const json = await res.json();
-
-                let distanciaKm = 0;
-                let tempoSegundos = 0;
-
-                if (json.routes && json.routes.length > 0) {
-                    // Distância em metros e Duração em segundos
-                    distanciaKm = json.routes[0].distance / 1000;
-                    tempoSegundos = json.routes[0].duration;
-                } else {
-                    // Fallback: Distância em linha reta se a rota falhar
-                    distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
-                    tempoSegundos = (distanciaKm / 0.3) * 60; // Estima tempo a 18km/h
-                }
-
-                const regra = precos[servicoSelecionado];
-                const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
-                const total = regra.base + (kmCobrado * regra.kmExtra);
-
-                const tempoMinutos = Math.ceil(tempoSegundos / 60);
-
-                resumo.innerHTML = `
-            <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km &nbsp; | &nbsp; Tempo: ${tempoMinutos} min</div>
-            <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
-        `;
-
-                window.valorCalculado = total;
-
-            } catch (e) {
-                console.error("Erro rota Mapbox", e);
-                resumo.innerText = "Erro ao calcular rota.";
-            }
-        }
-
-        function calcDistanciaReta(c1, c2) {
-            const R = 6371;
-            const dLat = (c2.lat - c1.lat) * Math.PI / 180;
-            const dLon = (c2.lon - c1.lon) * Math.PI / 180;
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
-
-        // === ENVIO DE PEDIDO (Alterada para usar a nova tela) ===
-        async function pedir() {
-    // ... (Validação e montagem de dados - Mantenha o código de validação que você tem aqui)
-    if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
-    const ruaOrigem = document.getElementById('rua-origem').value;
-    const numOrigem = document.getElementById('num-origem').value;
-    const bairroOrigem = document.getElementById('bairro-origem').value;
-    const ruaDestino = document.getElementById('rua-destino').value;
-    const numDestino = document.getElementById('num-destino').value;
-    const bairroDestino = document.getElementById('bairro-destino').value;
-    const detalhes = document.getElementById('detalhes-entrega').value;
-
-    let erro = false;
-    if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
-    if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
-    if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
-    if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
-    if (servicoSelecionado === 'entrega' && !detalhes.trim()) { document.getElementById('detalhes-entrega').classList.add('erro'); showToast("Descreva o que vamos entregar!", "error"); return; }
-    if (erro) { showToast("⚠️ Preencha o NÚMERO dos endereços!", "error"); return; }
-
-    const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
-    const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
-    const strDestinoFinal = servicoSelecionado === 'entrega'
-        ? `${strDestino} (ITEM: ${detalhes})`
-        : strDestino;
-    // ... (Fim da validação) ...
-
-    // 1. Mostrar o modal de carregamento
-    document.getElementById('modal-busca').style.display = 'flex';
-    document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
-    document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
-
-    try {
-        const body = {
-            cliente_id: usuario.id,
-            origem: strOrigem,
-            destino: strDestinoFinal,
-            valor: window.valorCalculado || 10.0,
-            tipo_servico: servicoSelecionado
+            elementoTempo.innerText = `⏳ ${tempoBuscaRestante}s`;
+            tempoBuscaRestante--;
         };
 
-        const res = await fetch(`${MEU_IP}/pedir-corrida`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-
-        const json = await res.json();
-
-        if (json.success) {
-            idPedidoAtual = json.id;
-            localStorage.setItem('idPedidoAtual', idPedidoAtual);
-            
-
-            localStorage.setItem('pedidoAtual', JSON.stringify({
-                origem: strOrigem,
-                destino: strDestino,
-                valor: window.valorCalculado
-            }));
-            const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
-            if (pedidoSalvo) {
-                document.getElementById('detalhe-origem').innerText = pedidoSalvo.origem;
-                document.getElementById('detalhe-destino').innerText = pedidoSalvo.destino;
-                document.getElementById('detalhe-valor').innerText = `R$ ${pedidoSalvo.valor.toFixed(2)}`;
-            }
-
-
-            // 2. Preencher a nova tela com os dados iniciais
-            document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
-            document.getElementById('detalhe-origem').innerText = strOrigem;
-            document.getElementById('detalhe-destino').innerText = strDestino;
-            document.getElementById('detalhe-valor').innerText = `R$ ${window.valorCalculado.toFixed(2).replace('.', ',')}`;
-
-            // 3. Trocar para a tela de Acompanhamento e fechar o modal
-            mudarTela('tela-acompanhamento');
-            document.getElementById('modal-busca').style.display = 'none';
-
-            // 4. INICIAR CONTADOR DE BUSCA E VERIFICAÇÃO DE STATUS
-            iniciarContadorBusca(idPedidoAtual, 90); // 90 segundos de limite
-            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-            showToast("Solicitação enviada. Buscando piloto...", "info");
-
-        } else {
-            throw new Error(json.message);
-        }
-
-    } catch (e) {
-        document.getElementById('modal-busca').style.display = 'none';
-        showToast("Erro ao enviar pedido: " + e.message, "error");
+        decremento();
+        buscaMotoboyInterval = setInterval(decremento, 1000);
     }
-}
 
-        // === VERIFICAÇÃO DE STATUS (Corrigida) ===
- async function verificarStatus(id) {
-    try {
-        const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
-        const data = await res.json();
-        const pedido = data.pedido;
-
-        console.log('[DEBUG] verificarStatus -> pedido.status =', pedido && pedido.status);
-
-        if (!data.success || !pedido) {
-            console.error("Erro ao obter status. Tentando novamente...");
+    async function cancelarBuscaMotoboy() {
+        const id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
+        if (!id) {
+            showToast('Nenhum pedido ativo para cancelar.', 'error');
             return;
         }
+        if (!confirm("Tem certeza que deseja cancelar a busca por um motoboy?")) return;
 
-        // --- Variáveis de UI ---
-        const statusTitulo = document.getElementById('acompanhamento-status-titulo');
-        const statusDesc   = document.getElementById('acompanhamento-status-desc');
-        const statusArea   = document.getElementById('acompanhamento-status-area');
-        const motoboyBox   = document.getElementById('motoboy-info-box');
-        const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
-        const areaJustificativa = document.getElementById('area-justificativa-integrada');
-        
-        // Estado Padrão (Limpeza)
-        motoboyBox.style.display = 'none';
-        btnWpp.style.display     = 'none';
-        if (areaJustificativa) areaJustificativa.style.display = 'none';
-        
-        // --- LÓGICA DE TRANSIÇÃO: Piloto Aceitou/Encontrado? ---
-        if (pedido.status !== 'pendente') {
-            if (buscaMotoboyInterval) {
-                clearInterval(buscaMotoboyInterval);
-                buscaMotoboyInterval = null;
-                // Esconde elementos do contador
-                const elementoTempo = document.getElementById('tempo-restante-busca');
-                const btnCancel = document.getElementById('btn-cancelar-busca');
-                if(elementoTempo) elementoTempo.style.display = 'none';
-                if(btnCancel) btnCancel.style.display = 'none';
-                
-                // Mude o visual para aceito/confirmado antes de verificar pagamento
-                statusArea.style.borderColor = 'var(--neon-green)';
-                statusArea.style.background = 'rgba(0, 230, 64, 0.1)';
-            }
-        }
-        
-        // --- 1) PENDENTE (Em Busca) ---
-        if (pedido.status === 'pendente') {
-            statusArea.style.borderColor  = '#ffd700';
-            statusArea.style.background   = 'rgba(255, 215, 0, 0.1)';
-            statusTitulo.style.color      = '#ffd700';
-            statusTitulo.innerText        = "BUSCANDO PILOTO...";
-            statusDesc.innerText          = "Notificando parceiros próximos.";
-        }
-        
-        // --- 2) AGUARDANDO_PAGAMENTO / ACEITA ---
-        else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
-            // Abre o modal de pagamento e a área de cancelamento com justificativa
-            const modal = document.getElementById('modal-pagamento');
-            if (modal) modal.style.display = 'flex';
-
-            statusArea.style.borderColor  = '#f1c40f';
-            statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
-            statusTitulo.style.color      = '#f1c40f';
-            statusTitulo.innerText        = "🎯 ESCOLHA COMO PAGAR";
-            statusDesc.innerText          = "Um piloto aceitou! Escolha sua forma de pagamento.";
-
-            if (areaJustificativa) areaJustificativa.style.display = 'block';
-            
+        document.getElementById('modal-busca').style.display = 'flex';
+        if (buscaMotoboyInterval) {
+            clearInterval(buscaMotoboyInterval);
+            buscaMotoboyInterval = null;
         }
 
-        // --- 3) LIBERADA ou EM_ANDAMENTO (Corrida Ativa) ---
-        else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
-            // Fecha modal de pagamento
-            const modal = document.getElementById('modal-pagamento');
-            if (modal) modal.style.display = 'none';
-            
-            statusArea.style.borderColor  = 'var(--neon-green)';
-            statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
-            statusTitulo.style.color      = 'var(--neon-green)';
-            
-            if (pedido.status === 'liberada') {
-                statusTitulo.innerText = "PAGAMENTO CONFIRMADO ✅";
-                statusDesc.innerText = "Piloto a caminho do local de origem.";
+        try {
+            const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, motivo: 'Cancelado pelo cliente durante a busca.' })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                showToast('Busca cancelada com sucesso!', 'success');
+                reiniciarApp(); 
             } else {
-                 statusTitulo.innerText = "EM CORRIDA 🚀";
-                statusDesc.innerText = "Sua viagem está em andamento.";
+                showToast('Erro ao cancelar busca: ' + (data.message || 'Erro desconhecido.'), 'error');
+            }
+        } catch (err) {
+            console.error('Erro ao cancelar busca:', err);
+            showToast('Erro de conexão. Tente novamente.', 'error');
+        } finally {
+            document.getElementById('modal-busca').style.display = 'none';
+        }
+    }
+
+    async function encerrarBuscaPorTimeout(corridaId) {
+        try {
+            await fetch(`${MEU_IP}/cancelar-pedido`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: corridaId, motivo: 'Cancelado automaticamente por timeout.' })
+            });
+            showToast('Tempo limite de busca esgotado. Tente novamente.', 'error');
+            reiniciarApp();
+        } catch (err) {
+            console.error('Erro ao encerrar busca por timeout:', err);
+            reiniciarApp();
+        }
+    }
+    
+    // === ENVIO DE PEDIDO ===
+    async function pedir() {
+        if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
+        const ruaOrigem = document.getElementById('rua-origem').value;
+        const numOrigem = document.getElementById('num-origem').value;
+        const bairroOrigem = document.getElementById('bairro-origem').value;
+        const ruaDestino = document.getElementById('rua-destino').value;
+        const numDestino = document.getElementById('num-destino').value;
+        const bairroDestino = document.getElementById('bairro-destino').value;
+        const detalhes = document.getElementById('detalhes-entrega').value;
+
+        let erro = false;
+        if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
+        if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
+        if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
+        if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
+        if (servicoSelecionado === 'entrega' && !detalhes.trim()) { document.getElementById('detalhes-entrega').classList.add('erro'); showToast("Descreva o que vamos entregar!", "error"); return; }
+        if (erro) { showToast("⚠️ Preencha o NÚMERO dos endereços!", "error"); return; }
+
+        const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
+        const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
+        const strDestinoFinal = servicoSelecionado === 'entrega'
+            ? `${strDestino} (ITEM: ${detalhes})`
+            : strDestino;
+        
+        document.getElementById('modal-busca').style.display = 'flex';
+        document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
+        document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
+
+        try {
+            const body = {
+                cliente_id: usuario.id,
+                origem: strOrigem,
+                destino: strDestinoFinal,
+                valor: window.valorCalculado || 10.0,
+                tipo_servico: servicoSelecionado
+            };
+
+            const res = await fetch(`${MEU_IP}/pedir-corrida`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const json = await res.json();
+
+            if (json.success) {
+                idPedidoAtual = json.id;
+                localStorage.setItem('idPedidoAtual', idPedidoAtual);
+                localStorage.setItem('pedidoAtual', JSON.stringify({
+                    origem: strOrigem,
+                    destino: strDestino,
+                    valor: window.valorCalculado
+                }));
+                
+                // 2. Preencher a nova tela com os dados iniciais
+                preencherDetalhesAcompanhamento(); // Chamar a função para preencher os IDs da tela de acompanhamento
+
+                // 3. Trocar para a tela de Acompanhamento e fechar o modal
+                mudarTela('tela-acompanhamento');
+                document.getElementById('modal-busca').style.display = 'none';
+
+                // 4. INICIAR CONTADOR DE BUSCA E VERIFICAÇÃO DE STATUS
+                iniciarContadorBusca(idPedidoAtual, 90); // 90 segundos de limite
+                intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+                showToast("Solicitação enviada. Buscando piloto...", "info");
+
+            } else {
+                throw new Error(json.message);
+            }
+        } catch (e) {
+            document.getElementById('modal-busca').style.display = 'none';
+            showToast("Erro ao enviar pedido: " + e.message, "error");
+        }
+    }
+
+    // === VERIFICAÇÃO DE STATUS ===
+    async function verificarStatus(id) {
+        try {
+            const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+            const data = await res.json();
+            const pedido = data.pedido;
+
+            if (!data.success || !pedido) {
+                console.error("Erro ao obter status. Tentando novamente...");
+                return;
             }
 
-            // Mostra informações do motoboy e permite cancelamento com justificativa
-            motoboyBox.style.display = 'block';
-            if (areaJustificativa) areaJustificativa.style.display = 'block'; // Permite cancelamento com justificativa
-
-            document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
-            document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
-
-            // Botão WhatsApp
-            if (pedido.telefone_motoboy) {
-                const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
-                const numeroInternacional =
-                    foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
-
-                btnWpp.href = `https://wa.me/${numeroInternacional}`;
-                btnWpp.style.display = 'flex';
-            }
-        }
-        
-        // --- 4) CONCLUÍDA / FINALIZADA ---
-        else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
-            const modalPag = document.getElementById('modal-pagamento');
-            if (modalPag) modalPag.style.display = 'none';
-            
-            clearInterval(intervaloVerificacao); 
-            
-            const modalEnc = document.getElementById('modal-encerramento');
-            const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
-            if (modalEnc && modalDisplay === 'none') {
-                modalEnc.style.display = 'flex';
-            }
-
-            statusArea.style.borderColor  = 'blue';
-            statusArea.style.background   = 'rgba(0, 0, 255, 0.05)';
-            statusTitulo.style.color      = 'blue';
-            statusTitulo.innerText        = "CORRIDA FINALIZADA (A CONFIRMAR)";
-            motoboyBox.style.display = 'block'; 
-            if (areaJustificativa) areaJustificativa.style.display = 'none';
-
-            statusDesc.innerText = `Valor estimado: R$ ${(pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',')}`;
-        }
-
-        // --- 5) CANCELADA / EXPIRADA ---
-        else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
-            clearInterval(intervaloVerificacao);
-            
-            const modalPag = document.getElementById('modal-pagamento');
-            if (modalPag) modalPag.style.display = 'none';
-            
-            statusTitulo.innerText = "PEDIDO CANCELADO!";
-            statusDesc.innerText   =
-                `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado! O motoboy teve um imprevisto. Pedimos desculpas! Por favor, faça um novo pedido. Obrigado!"}`;
-            statusArea.style.borderColor = 'var(--danger-color)';
-            statusArea.style.background  = 'rgba(255, 68, 68, 0.1)';
-            statusTitulo.style.color     = 'var(--danger-color)';
-
-            if (areaJustificativa) areaJustificativa.style.display = 'none';
-            
-            localStorage.removeItem('idPedidoAtual');
-            
-            // O botão FECHAR deve aparecer (o que tem onclick="reiniciarApp()")
-            const btnFechar = document.querySelector('button[onclick="reiniciarApp()"]');
-            if (btnFechar) btnFechar.style.display = 'block';
-            
-            showToast("Pedido cancelado. Use o botão 'FECHAR' abaixo para voltar.", "error", 5000);
-        }
-
-    } catch (e) {
-        console.error("Erro na verificação de status:", e);
-    }
-}
-// === FUNÇÃO AUXILIAR: Preenche os dados de Origem/Destino/Valor ===
-function preencherDetalhesAcompanhamento() {
-    const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
-    if (pedidoSalvo) {
-        // PREENCHE os elementos visíveis na tela de acompanhamento (viagem-origem, etc.)
-        document.getElementById('detalhe-origem').innerText = pedidoSalvo.origem;
-        document.getElementById('detalhe-destino').innerText = pedidoSalvo.destino;
-        // Formata o valor antes de exibir
-        document.getElementById('detalhe-valor').innerText = `R$ ${pedidoSalvo.valor.toFixed(2).replace('.', ',')}`;
-        return true;
-    }
-    return false;
-}
-
-
-        // Função para continuar acompanhando o pedido se o usuário recarregar a página
-        // === FUNÇÃO PRINCIPAL DE PERSISTÊNCIA (SUBSTITUIÇÃO) ===
- // === FUNÇÃO PRINCIPAL DE PERSISTÊNCIA (SUBSTITUIÇÃO) ===
-function checkPersistedOrder() {
-    const persistedId = localStorage.getItem('idPedidoAtual');
-    if (persistedId) {
-        idPedidoAtual = persistedId;
-
-        // 1. Preenche os detalhes (chama a função auxiliar)
-        preencherDetalhesAcompanhamento();
-        
-        // 2. MUDAR PARA A TELA DE ACOMPANHAMENTO (Isto resolve a sobreposição!)
-        mudarTela('tela-acompanhamento');
-
-        // 3. Iniciar a verificação de status (Polling)
-        verificarStatus(idPedidoAtual);
-        
-        // Limpa qualquer intervalo antigo para evitar duplicação de polling
-        if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
-        intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-    } else {
-        // Se não houver pedido, garante que a tela inicial esteja ativa
-        mudarTela('tela-pedido');
-    }
-}       
-
-                // =========================
-// CONTROLE DE CANCELAMENTO (CLIENTE)
-// =========================
-const btnCancelar = document.getElementById('btn-cancelar-acomp');
-
-if (btnCancelar) {
-
-    // cliente pode cancelar ANTES da corrida iniciar
-    if (
-        pedido.status === 'aguardando_pagamento' ||
-        pedido.status === 'liberada'
-    ) {
-        btnCancelar.style.display = 'block';
-    } else {
-        // corrida em andamento ou finalizada
-        btnCancelar.style.display = 'none';
-    }
-}
-
-
-        // === FUNÇÕES DE CANCELAMENTO ATUALIZADAS PARA USAR MODAL DE JUSTIFICATIVA ===
-
-        // Linha 1121:
-        function cancelarPedido() {
-            // Esconde o botão original "CANCELAR PEDIDO"
-            const btnCancelar = document.getElementById('btn-cancelar-acomp');
-            if (btnCancelar) btnCancelar.style.display = 'none';
-
-            // Mostra o campo de justificativa integrada
+            // --- Variáveis de UI ---
+            const statusTitulo = document.getElementById('acompanhamento-status-titulo');
+            const statusDesc   = document.getElementById('acompanhamento-status-desc');
+            const statusArea   = document.getElementById('acompanhamento-status-area');
+            const motoboyBox   = document.getElementById('motoboy-info-box');
+            const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
             const areaJustificativa = document.getElementById('area-justificativa-integrada');
-            if (areaJustificativa) areaJustificativa.style.display = 'block';
+            const btnFechar = document.querySelector('button[onclick="reiniciarApp()"]');
+            
+            // Estado Padrão (Limpeza)
+            motoboyBox.style.display = 'none';
+            btnWpp.style.display     = 'none';
+            if (areaJustificativa) areaJustificativa.style.display = 'none';
+            if (btnFechar) btnFechar.style.display = 'none'; // Esconde o FECHAR por padrão
+            
+            // --- LÓGICA DE TRANSIÇÃO: Piloto Aceitou/Encontrado? ---
+            if (pedido.status !== 'pendente') {
+                if (buscaMotoboyInterval) {
+                    clearInterval(buscaMotoboyInterval);
+                    buscaMotoboyInterval = null;
+                    // Esconde elementos do contador
+                    const elementoTempo = document.getElementById('tempo-restante-busca');
+                    const btnCancel = document.getElementById('btn-cancelar-busca');
+                    if(elementoTempo) elementoTempo.style.display = 'none';
+                    if(btnCancel) btnCancel.style.display = 'none';
+                    
+                    // Mude o visual para aceito/confirmado antes de verificar pagamento
+                    statusArea.style.borderColor = 'var(--neon-green)';
+                    statusArea.style.background = 'rgba(0, 230, 64, 0.1)';
+                }
+            }
+            
+            // --- 1) PENDENTE (Em Busca) ---
+            if (pedido.status === 'pendente') {
+                statusArea.style.borderColor  = '#ffd700';
+                statusArea.style.background   = 'rgba(255, 215, 0, 0.1)';
+                statusTitulo.style.color      = '#ffd700';
+                statusTitulo.innerText        = "BUSCANDO PILOTO...";
+                statusDesc.innerText          = "Notificando parceiros próximos.";
+            }
+            
+            // --- 2) AGUARDANDO_PAGAMENTO / ACEITA ---
+            else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
+                const modal = document.getElementById('modal-pagamento');
+                if (modal) modal.style.display = 'flex';
 
-            // Foca no campo de texto e ajusta o botão de confirmação
-            const campo = document.getElementById('campo-justificativa-integrada');
-            const btnConfirm = document.getElementById('btn-confirmar-cancelamento');
-            if (campo) campo.focus();
-            if (btnConfirm) btnConfirm.disabled = true;
+                statusArea.style.borderColor  = '#f1c40f';
+                statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
+                statusTitulo.style.color      = '#f1c40f';
+                statusTitulo.innerText        = "🎯 ESCOLHA COMO PAGAR";
+                statusDesc.innerText          = "Um piloto aceitou! Escolha sua forma de pagamento.";
 
-            showToast("Justifique o cancelamento para prosseguir.", "info");
-        }
-        async function cancelarPedidoCliente() {
-    if (!confirm('Tem certeza que deseja cancelar o pedido?')) return;
+                if (areaJustificativa) areaJustificativa.style.display = 'block';
+                
+            }
 
-    try {
-        const res = await fetch('/cancelar-pedido', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: pedidoId,
-                motivo: 'Cancelado pelo cliente antes do pagamento'
-            })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-            alert('Pedido cancelado com sucesso.');
-            window.location.reload();
-        } else {
-            alert('Não foi possível cancelar.');
-        }
-
-    } catch (err) {
-        alert('Erro ao cancelar pedido.');
-    }
-}
-
-
-        // REMOVIDO: A função 'confirmarCancelamentoCliente()' problemática foi removida.
-        // A nova lógica do IIFE a substitui (btnConfirm.addEventListener('click', ...)).
-
-
-        // ======= NOVAS FUNÇÕES: ABRIR E CONFIRMAR ENCERRAMENTO (CLIENTE) =======
-
-        // Função que envia confirmação do cliente ao backend
-        async function confirmarEncerramentoCliente() {
-            const observacao = document.getElementById('campo-encerramento').value.trim();
-
-            // Mostrar modal de carregamento (reaproveita modal-busca)
-            document.getElementById('modal-encerramento').style.display = 'none';
-            document.getElementById('modal-busca').style.display = 'flex';
-            document.getElementById('status-titulo-modal').innerText = "Registrando finalização...";
-            document.getElementById('status-desc-modal').innerText = "Enviando confirmação..."; // CORRIGIDO: remova .style
-
-            try {
-                // Se houver observação, envie como mensagem para o backend (rota já existente)
-                if (observacao && idPedidoAtual) {
-                    await fetch(`${MEU_IP}/enviar-mensagem`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            corrida_id: idPedidoAtual,
-                            remetente: 'cliente',
-                            texto: observacao
-                        })
-                    }).catch(err => console.warn('Falha ao enviar observacao:', err));
+            // --- 3) LIBERADA ou EM_ANDAMENTO (Corrida Ativa) ---
+            else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
+                const modal = document.getElementById('modal-pagamento');
+                if (modal) modal.style.display = 'none';
+                
+                statusArea.style.borderColor  = 'var(--neon-green)';
+                statusArea.style.background   = 'rgba(0, 230, 64, 0.1)';
+                statusTitulo.style.color      = 'var(--neon-green)';
+                
+                if (pedido.status === 'liberada') {
+                    statusTitulo.innerText = "PAGAMENTO CONFIRMADO ✅";
+                    statusDesc.innerText = "Piloto a caminho do local de origem.";
+                } else {
+                    statusTitulo.innerText = "EM CORRIDA 🚀";
+                    statusDesc.innerText = "Sua viagem está em andamento.";
                 }
 
-                // Limpeza local e atualização da UI
-                document.getElementById('modal-busca').style.display = 'none';
-                showToast("Finalização registrada. Obrigado!", "success", 3000);
+                motoboyBox.style.display = 'block';
+                if (areaJustificativa) areaJustificativa.style.display = 'block';
 
-                clearInterval(intervaloVerificacao);
-                localStorage.removeItem('idPedidoAtual');
-                idPedidoAtual = null;
+                document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
+                document.getElementById('motoboy-placa').innerText = pedido.placa_motoboy || "Moto Indisponível";
 
-                // Atualiza a tela de acompanhamento
-                document.getElementById('acompanhamento-status-titulo').innerText = "PEDIDO CONCLUÍDO!";
-                document.getElementById('acompanhamento-status-desc').innerText = "Obrigado por usar Falcões.";
-                document.getElementById('btn-cancelar-acomp').style.display = 'none';
+                if (pedido.telefone_motoboy) {
+                    const foneLimpo = pedido.telefone_motoboy.replace(/\D/g, '');
+                    const numeroInternacional =
+                        foneLimpo.length === 11 ? `55${foneLimpo}` : foneLimpo;
 
-                // volta à tela principal depois de curto delay
-                setTimeout(() => reiniciarApp(), 1400);
-
-            } catch (e) {
-                document.getElementById('modal-busca').style.display = 'none';
-                showToast("Falha ao registrar finalização: " + e.message, "error");
+                    btnWpp.href = `https://wa.me/${numeroInternacional}`;
+                    btnWpp.style.display = 'flex';
+                }
             }
-        }
-
-        // Toast Helper
-        function showToast(msg, type, duration = 3000) {
-            const container = document.getElementById('toast-container');
-            const div = document.createElement('div');
-            div.className = `toast ${type}`;
-            div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
-            container.appendChild(div);
-            // Remove toasts antigos para manter apenas 1 ou 2 visíveis
-            while (container.children.length > 3) {
-                container.firstChild.remove();
-            }
-            setTimeout(() => div.remove(), duration);
-        }
-        // --- Lógica de Justificativa Integrada (Validação e Envio) ---
-
-        document.addEventListener('DOMContentLoaded', () => {
             
-            const campoJust = document.getElementById('campo-justificativa-integrada');
-            const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
-            const erroJust = document.getElementById('erro-just-integrada');
+            // --- 4) CONCLUÍDA / FINALIZADA ---
+            else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
+                const modalPag = document.getElementById('modal-pagamento');
+                if (modalPag) modalPag.style.display = 'none';
+                
+                clearInterval(intervaloVerificacao); 
+                
+                const modalEnc = document.getElementById('modal-encerramento');
+                const modalDisplay = modalEnc ? window.getComputedStyle(modalEnc).display : 'none';
+                if (modalEnc && modalDisplay === 'none') {
+                    modalEnc.style.display = 'flex';
+                }
 
-                // 🔁 TENTAR CONFIRMAR PAGAMENTO AUTOMÁTICO AO VOLTAR DO MERCADO PAGO
-    try {
-        const params = new URLSearchParams(window.location.search);
+                statusArea.style.borderColor  = 'blue';
+                statusArea.style.background   = 'rgba(0, 0, 255, 0.05)';
+                statusTitulo.style.color      = 'blue';
+                statusTitulo.innerText        = "CORRIDA FINALIZADA (A CONFIRMAR)";
+                motoboyBox.style.display = 'block'; 
+                if (areaJustificativa) areaJustificativa.style.display = 'none';
+                if (btnFechar) btnFechar.style.display = 'block';
 
-        // Mercado Pago pode mandar "collection_status" ou "status"
-        const collectionStatus = params.get('collection_status') || params.get('status');
-        const externalRef      = params.get('external_reference');
-        const paymentId        = params.get('payment_id');
+                statusDesc.innerText = `Valor estimado: R$ ${(pedido.valor || window.valorCalculado || 0).toFixed(2).replace('.', ',')}`;
+            }
 
-        // Só segue se o pagamento foi aprovado
-        if (collectionStatus && collectionStatus.toLowerCase() === 'approved') {
-            // Id da corrida: preferimos o external_reference,
-            // mas se não vier, usamos o que está salvo no localStorage
-            const corridaId = externalRef || localStorage.getItem('idPedidoAtual');
-            if (!corridaId) {
-                console.warn('[PAGAMENTO] approved mas sem corridaId.');
-            } else {
-                console.log('[PAGAMENTO] Aprovado no MP para corrida', corridaId, 'payment_id:', paymentId);
+            // --- 5) CANCELADA / EXPIRADA ---
+            else if (pedido.status === 'cancelada' || pedido.status === 'expirada') {
+                clearInterval(intervaloVerificacao);
+                
+                const modalPag = document.getElementById('modal-pagamento');
+                if (modalPag) modalPag.style.display = 'none';
+                
+                statusTitulo.innerText = "PEDIDO CANCELADO!";
+                statusDesc.innerText   =
+                    `Motivo: ${pedido.motivo_cancelamento || "⚠️ Pedido Cancelado! O motoboy teve um imprevisto. Pedimos desculpas! Por favor, faça um novo pedido. Obrigado!"}`;
+                statusArea.style.borderColor = 'var(--danger-color)';
+                statusArea.style.background  = 'rgba(255, 68, 68, 0.1)';
+                statusTitulo.style.color     = 'var(--danger-color)';
 
-                const API = (typeof MEU_IP !== 'undefined') ? MEU_IP : 'https://falcoes-app.onrender.com';
+                if (areaJustificativa) areaJustificativa.style.display = 'none';
+                
+                localStorage.removeItem('idPedidoAtual');
+                
+                if (btnFechar) btnFechar.style.display = 'block';
+                
+                showToast("Pedido cancelado. Use o botão 'FECHAR' abaixo para voltar.", "error", 5000);
+            }
 
-                fetch(`${API}/confirmar-pagamento`, {
+        } catch (e) {
+            console.error("Erro na verificação de status:", e);
+        }
+    }
+    
+    // === FUNÇÕES DE CANCELAMENTO E PAGAMENTO ===
+    
+    // Lógica de Justificativa Integrada (Validação e Envio) - Mantida no DOMContentLoaded para listeners
+
+    function cancelarPedido() {
+        // Esconde o botão original "CANCELAR PEDIDO"
+        const btnCancelar = document.getElementById('btn-cancelar-acomp');
+        if (btnCancelar) btnCancelar.style.display = 'none';
+
+        // Mostra o campo de justificativa integrada
+        const areaJustificativa = document.getElementById('area-justificativa-integrada');
+        if (areaJustificativa) areaJustificativa.style.display = 'block';
+
+        const campo = document.getElementById('campo-justificativa-integrada');
+        const btnConfirm = document.getElementById('btn-confirmar-cancelamento');
+        if (campo) campo.focus();
+        if (btnConfirm) btnConfirm.disabled = true;
+
+        showToast("Justifique o cancelamento para prosseguir.", "info");
+    }
+    
+    async function confirmarEncerramentoCliente() {
+        const observacao = document.getElementById('campo-encerramento').value.trim();
+
+        document.getElementById('modal-encerramento').style.display = 'none';
+        document.getElementById('modal-busca').style.display = 'flex';
+        document.getElementById('status-titulo-modal').innerText = "Registrando finalização...";
+        document.getElementById('status-desc-modal').innerText = "Enviando confirmação..."; 
+
+        try {
+            if (observacao && idPedidoAtual) {
+                await fetch(`${MEU_IP}/enviar-mensagem`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ corridaId })
-                })
+                    body: JSON.stringify({
+                        corrida_id: idPedidoAtual,
+                        remetente: 'cliente',
+                        texto: observacao
+                    })
+                }).catch(err => console.warn('Falha ao enviar observacao:', err));
+            }
+
+            document.getElementById('modal-busca').style.display = 'none';
+            showToast("Finalização registrada. Obrigado!", "success", 3000);
+
+            clearInterval(intervaloVerificacao);
+            localStorage.removeItem('idPedidoAtual');
+            idPedidoAtual = null;
+
+            document.getElementById('acompanhamento-status-titulo').innerText = "PEDIDO CONCLUÍDO!";
+            document.getElementById('acompanhamento-status-desc').innerText = "Obrigado por usar Falcões.";
+            
+            setTimeout(() => reiniciarApp(), 1400);
+
+        } catch (e) {
+            document.getElementById('modal-busca').style.display = 'none';
+            showToast("Falha ao registrar finalização: " + e.message, "error");
+        }
+    }
+    
+
+    // === INICIALIZAÇÃO DE LISTENERS ===
+    document.addEventListener('DOMContentLoaded', () => {
+        // CORREÇÃO: Chama a verificação e mudança de tela imediatamente.
+        checkPersistedOrder(); 
+
+        const campoJust = document.getElementById('campo-justificativa-integrada');
+        const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
+        const erroJust = document.getElementById('erro-just-integrada');
+
+        // 🔁 LÓGICA DE RETORNO DO MERCADO PAGO (Não causa erro de DOM)
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const collectionStatus = params.get('collection_status') || params.get('status');
+            const externalRef = params.get('external_reference');
+            const paymentId = params.get('payment_id');
+
+            if (collectionStatus && collectionStatus.toLowerCase() === 'approved') {
+                const corridaId = externalRef || localStorage.getItem('idPedidoAtual');
+                if (corridaId) {
+                    const API = (typeof MEU_IP !== 'undefined') ? MEU_IP : 'https://falcoes-app.onrender.com';
+                    fetch(`${API}/confirmar-pagamento`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ corridaId })
+                    })
                     .then(r => r.json())
                     .then(d => {
-                        console.log('[PAGAMENTO] confirmação backend:', d);
                         showToast('Pagamento confirmado! Obrigado.', 'success', 3000);
-                        // Atualiza status na tela logo depois
                         if (corridaId) {
                             verificarStatus(corridaId);
                         }
                     })
                     .catch(err => {
-                        console.error('Erro ao confirmar pagamento:', err);
                         showToast('Não consegui confirmar o pagamento automaticamente.', 'error');
                     })
                     .finally(() => {
-                        // Remove parâmetros da URL para não repetir o processo
                         window.history.replaceState({}, document.title, 'cliente.html');
                     });
+                }
             }
+        } catch (e) {
+            console.error('Erro ao processar retorno do Mercado Pago:', e);
         }
-    } catch (e) {
-        console.error('Erro ao processar retorno do Mercado Pago:', e);
-    }
 
+        // Lógica de validação do campo de JUSTIFICATIVA
+        if (campoJust && btnConfirmar) {
+            campoJust.addEventListener('input', () => {
+                const motivo = campoJust.value.trim();
+                btnConfirmar.disabled = motivo.length < 5;
+                if (motivo.length >= 5 && erroJust) erroJust.style.display = 'none';
+            });
+        }
 
-            // Habilita o botão se a justificativa tiver >= 5 caracteres
-            if (campoJust && btnConfirmar) {
-                campoJust.addEventListener('input', () => {
-                    const motivo = campoJust.value.trim();
-                    btnConfirmar.disabled = motivo.length < 5;
-                    if (motivo.length >= 5 && erroJust) erroJust.style.display = 'none';
-                });
-            }
+        // Lógica de ENVIO DE CANCELAMENTO (BOTÃO CONFIRMAR)
+        if (btnConfirmar) {
+            btnConfirmar.addEventListener('click', async () => {
+                const motivo = campoJust.value.trim();
+                if (motivo.length < 5) {
+                    if (erroJust) erroJust.style.display = 'block';
+                    return;
+                }
+                document.getElementById('area-justificativa-integrada').style.display = 'none';
+                const mb = document.getElementById('modal-busca');
+                if (mb) {
+                    mb.style.display = 'flex';
+                    document.getElementById('status-titulo-modal').innerText = "PROCESSANDO CANCELAMENTO...";
+                }
 
-            // Lógica de ENVIO DE CANCELAMENTO (Chamada pelo novo botão)
-            if (btnConfirmar) {
-                btnConfirmar.addEventListener('click', async () => {
-                    const motivo = campoJust.value.trim();
-                    if (motivo.length < 5) {
-                        if (erroJust) erroJust.style.display = 'block';
-                        return;
-                    }
+                const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
 
-                    // Oculta a área de justificativa e mostra o loading
-                    document.getElementById('area-justificativa-integrada').style.display = 'none';
-                    const mb = document.getElementById('modal-busca');
-                    if (mb) {
-                        mb.style.display = 'flex';
-                        document.getElementById('status-titulo-modal').innerText = "PROCESSANDO CANCELAMENTO...";
-                    }
+                try {
+                    if (id) {
+                        const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : "https://falcoes-app.onrender.com";
 
-                    const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
+                        const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
+                        });
+                        const json = await res.json().catch(() => ({ success: false }));
 
-                    try {
-                        if (id) {
-                            // --- Cancelamento Remoto (Pedido Ativo) ---
-                            const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : window.MEU_IP || "https://falcoes-app.onrender.com";
-
-                            const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
-                            });
-                            const json = await res.json().catch(() => ({ success: false }));
-
-                            if (json.success) {
-                                showToast("Pedido cancelado. O piloto foi notificado.", "success");
-                            } else {
-                                throw new Error(json.message || 'Falha ao cancelar no servidor.');
-                            }
+                        if (json.success) {
+                            showToast("Pedido cancelado. O piloto foi notificado.", "success");
                         } else {
-                            // --- Cancelamento Local (Busca) ---
-                            showToast("Busca cancelada.", "info");
+                            throw new Error(json.message || 'Falha ao cancelar no servidor.');
                         }
-                    } catch (e) {
-                        showToast("Erro: " + (e.message || e), "error");
-                    } finally {
-                        // Limpeza e Reinício
-                        if (mb) mb.style.display = 'none';
-                        reiniciarApp();
+                    } else {
+                        showToast("Busca cancelada.", "info");
                     }
-                });
-            }
-        });
-    </script>
-    <script>
+                } catch (e) {
+                    showToast("Erro: " + (e.message || e), "error");
+                } finally {
+                    if (mb) mb.style.display = 'none';
+                    reiniciarApp();
+                }
+            });
+        }
+    });
 
-
-
-
-
-
+</script>
+<script>
 // pagamento em dinheiro
 async function pagarDinheiro() {
-  if (!idPedidoAtual) {
-    alert('Pedido inválido');
-    return;
-  }
+    if (!idPedidoAtual) {
+        alert('Pedido inválido');
+        return;
+    }
 
-  const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id: idPedidoAtual,
-      forma_pagamento: 'DINHEIRO'
-    })
-  });
+    const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            id: idPedidoAtual,
+            forma_pagamento: 'DINHEIRO'
+        })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.success) {
-    document.getElementById('modal-pagamento').style.display = 'none';
-    showToast('Pagamento em dinheiro selecionado', 'success');
-  } else {
-    alert(data.message || 'Erro ao confirmar pagamento');
-  }
+    if (data.success) {
+        document.getElementById('modal-pagamento').style.display = 'none';
+        showToast('Pagamento em dinheiro selecionado', 'success');
+    } else {
+        alert(data.message || 'Erro ao confirmar pagamento');
+    }
 }
-
-
 
 // pagamento pix
 async function pagarPix() {
-  if (!idPedidoAtual) {
-    alert('Pedido inválido');
-    return;
-  }
+    if (!idPedidoAtual) {
+        alert('Pedido inválido');
+        return;
+    }
 
-  const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id: idPedidoAtual,
-      forma_pagamento: 'PIX'
-    })
-  });
+    const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            id: idPedidoAtual,
+            forma_pagamento: 'PIX'
+        })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.init_point) {
-    window.location.href = data.init_point; // Mercado Pago
-  } else {
-    alert('Erro ao gerar pagamento PIX');
-  }
+    if (data.init_point) {
+        window.location.href = data.init_point; // Mercado Pago
+    } else {
+        alert('Erro ao gerar pagamento PIX');
+    }
 }
-
-
-
 </script>
-
-<!-- MODAL PAGAMENTO OBRIGATÓRIO -->
-<div id="modal-pagamento" style="
-  display:none;
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.9);
-  z-index:2147483647;
-  align-items:center;
-  justify-content:center;
-">
-  <div style="
-    background:#1e1e1e;
-    color:#fff;
-    padding:30px;
-    border-radius:12px;
-    max-width:400px;
-    width:90%;
-    text-align:center;
-  ">
-    <h2>🚨 Para continuar</h2>
-    <p>Escolha a forma de pagamento</p>
-
-    <button onclick="pagarDinheiro()" class="btn">
-      💰 Pagar em Dinheiro
-    </button>
-
-    <button onclick="pagarPix()" class="btn" style="background:#2196f3;color:#fff;">
-      🔁 Pagar com PIX
-    </button>
-  </div>
-</div>
-
-</body>
-
-</html>
