@@ -748,14 +748,47 @@
             <div id="form-endereco">
 
                 <label>📍 Onde vamos buscar? (Origem)</label>
-                <input id="rua-origem" placeholder="Rua">
-                <input id="num-origem" placeholder="Nº">
-                <input id="bairro-origem" placeholder="Bairro">
+<div class="address-container">
+    <div class="row-rua">
+        <div class="input-rua-wrapper">
+            <input type="text" id="rua-origem" placeholder="Busque a rua...">
+            <div id="lista-origem" class="sugestoes-lista"></div>
+        </div>
+        <button class="btn-map-icon" onclick="ativarMapa('origem')">🗺️</button>
+    </div>
+
+    <div class="row-details">
+        <div class="input-num-wrapper">
+            <input type="text" id="num-origem" placeholder="Nº">
+            <span class="erro-msg">Obrigatório</span>
+        </div>
+        <div class="input-bairro-wrapper">
+            <input type="text" id="bairro-origem" placeholder="Bairro">
+        </div>
+    </div>
+</div>
+
 
                 <label>🏁 Onde vamos levar? (Destino)</label>
-                <input id="rua-destino" placeholder="Rua">
-                <input id="num-destino" placeholder="Nº">
-                <input id="bairro-destino" placeholder="Bairro">
+<div class="address-container">
+    <div class="row-rua">
+        <div class="input-rua-wrapper">
+            <input type="text" id="rua-destino" placeholder="Busque a rua...">
+            <div id="lista-destino" class="sugestoes-lista"></div>
+        </div>
+        <button class="btn-map-icon" onclick="ativarMapa('destino')">🗺️</button>
+    </div>
+
+    <div class="row-details">
+        <div class="input-num-wrapper">
+            <input type="text" id="num-destino" placeholder="Nº">
+            <span class="erro-msg">Obrigatório</span>
+        </div>
+        <div class="input-bairro-wrapper">
+            <input type="text" id="bairro-destino" placeholder="Bairro">
+        </div>
+    </div>
+</div>
 
                 <div id="detalhes-entrega-container">
                     <label>📦 O que vamos levar?</label>
