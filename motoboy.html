@@ -311,21 +311,74 @@
                 opacity: 1;
             }
         }
-
         /* ESTILO PARA O CAMPO TEXTAREA NO MODAL DE CANCELAMENTO */
-        .modal-box textarea {
-            width: 100%;
-            height: 80px;
-            padding: 10px;
-            box-sizing: border-box;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background: var(--card-color);
-            color: white;
-            resize: none;
-            font-family: inherit;
-            margin-top: 10px;
-        }
+.modal-box textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--card-color);
+    color: white;
+    resize: none;
+    font-family: inherit;
+    margin-top: 10px;
+}
+
+/* --- NOVOS ESTILOS PARA TELA ATIVA (CORRIGIDO) --- */
+
+.resumo-valor {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.rota-ativa-mapa {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.ponto-rota {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.icone-rota {
+    font-size: 24px;
+    line-height: 1;
+    color: var(--neon-green);
+}
+
+.label-endereco {
+    color: #aaa;
+    font-size: 12px;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.destaque-endereco {
+    color: white;
+    font-weight: bold;
+    font-size: 15px;
+    display: block;
+}
+
+/* NOVO ESTILO PARA BOTOES DE AÇÃO */
+#botoes-acao-ativa {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+        
     </style>
     <script>
         if ("serviceWorker" in navigator) {
@@ -409,39 +462,42 @@
         </div>
 
         <div id="tela-corrida-ativa">
-            <div class="titulo-ativa">● CORRIDA EM ANDAMENTO</div>
-            <div class="card-corrida" style="border-color: var(--neon-green);">
-                <div class="card-top">
-                    <span class="tipo-servico" id="ativa-tipo">MOTO TÁXI</span>
-                    <span class="valor" id="ativa-valor">R$ 0,00</span>
-                </div>
-                <div class="info-cliente">
-                    <div style="color:#aaa; font-size:12px;">CLIENTE:</div>
-                    <div style="font-weight:bold; font-size:18px;" id="ativa-cliente">--</div>
-                    <div style="color:#fff; margin-top:5px;" id="ativa-fone">--</div>
-                </div>
-                <div class="rota">
-                    <div style="margin-bottom: 15px;">
-                        <span style="color:#aaa; font-size:12px;">BUSCAR EM:</span>
-                        <span class="destaque-endereco" id="ativa-origem">--</span>
-                    </div>
-                    <div>
-                        <span style="color:#aaa; font-size:12px;">LEVAR PARA:</span>
-                        <span class="destaque-endereco" id="ativa-destino">--</span>
-                    </div>
-                </div>
-                <button 
-  id="btn-iniciar-corrida"
-  class="btn-acao btn-verde"
-  onclick="iniciarCorrida()">
-  ▶️ INICIAR CORRIDA
-</button>
+    <div class="titulo-ativa">● CORRIDA EM ANDAMENTO</div>
+    <div class="card-corrida" id="ativa-card" style="border-color: var(--neon-green);">
+        
+        <div class="resumo-valor">
+            <span class="tipo-servico" id="ativa-tipo">MOTO TÁXI</span>
+            <span class="valor" id="ativa-valor">R$ 0,00</span>
+        </div>
 
-<button class="btn-acao btn-verde" onclick="finalizarCorrida()">✅ FINALIZAR CORRIDA</button>
-
-                <button class="btn-acao btn-vermelho" onclick="cancelarCorridaMotoboy()">❌ CANCELAR CORRIDA</button>
+        <div class="info-cliente">
+            <div style="color:#aaa; font-size:12px;">CLIENTE:</div>
+            <div style="font-weight:bold; font-size:18px;" id="ativa-cliente">--</div>
+            <div style="color:#fff; margin-top:5px;" id="ativa-fone">--</div>
+        </div>
+        
+        <div class="rota-ativa-mapa">
+            <div class="ponto-rota">
+                <span class="icone-rota">🔺</span>
+                <div class="endereco-wrapper">
+                    <span class="label-endereco">BUSCAR EM:</span>
+                    <span class="destaque-endereco" id="ativa-origem">--</span>
+                </div>
+            </div>
+            
+            <div class="ponto-rota">
+                <span class="icone-rota">🏁</span>
+                <div class="endereco-wrapper">
+                    <span class="label-endereco">LEVAR PARA:</span>
+                    <span class="destaque-endereco" id="ativa-destino">--</span>
+                </div>
             </div>
         </div>
+
+        <div id="botoes-acao-ativa">
+            </div>
+    </div>
+</div>
 
         <div id="tela-bloqueio">
             <div class="aviso-bloqueio">
@@ -594,44 +650,48 @@
         if (tela === 'bloqueio') document.getElementById('tela-bloqueio').style.display = 'block';
     }
 
-    function preencherDadosAtiva(c) {
-        idCorridaAtual = c.corrida_id || c.id;
+// NOVO: Adicione esta função para renderizar os botões dinamicamente
+function renderizarBotoesAtiva(status) {
+    const container = document.getElementById('botoes-acao-ativa');
+    if (!container) return;
+    
+    // Limpa botões anteriores
+    container.innerHTML = ''; 
 
-        document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
-        document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
-        document.getElementById('ativa-cliente').innerText = c.nome_cliente;
-        document.getElementById('ativa-fone').innerText = c.telefone_cliente;
-        document.getElementById('ativa-origem').innerText = c.origem;
-        document.getElementById('ativa-destino').innerText = c.destino;
+    // Botão de Cancelar
+    const btnCancelar = document.createElement('button');
+    btnCancelar.className = 'btn-acao btn-vermelho';
+    btnCancelar.innerText = '❌ CANCELAR CORRIDA';
+    btnCancelar.setAttribute('onclick', 'cancelarCorridaMotoboy()');
+    
+    // Botão Finalizar
+    const btnFinalizar = document.createElement('button');
+    btnFinalizar.className = 'btn-acao btn-verde';
+    btnFinalizar.innerText = '✅ FINALIZAR CORRIDA';
+    btnFinalizar.setAttribute('onclick', 'finalizarCorrida()');
 
-        const btnIniciar = document.getElementById('btn-iniciar-corrida');
-        const btnFinalizar = document.querySelector("button[onclick='finalizarCorrida()']");
-        const btnCancelar = document.querySelector("button[onclick='cancelarCorridaMotoboy()']");
-
-        if (!btnIniciar || !btnFinalizar || !btnCancelar) return;
-
-        // Esconde todos por padrão
-        btnIniciar.style.display = 'none';
-        btnFinalizar.style.display = 'none';
-        btnCancelar.style.display = 'block'; // Cancelar é sempre possível (antes de iniciar e durante)
-
-        // Lógica de exibição de botões
-        if (c.status === 'liberada') {
-            btnIniciar.style.display = 'block';
-            btnIniciar.disabled = false;
-            btnIniciar.innerText = '▶️ INICIAR CORRIDA';
-            btnIniciar.style.opacity = '1';
-
-        } else if (c.status === 'em_andamento') {
-            btnFinalizar.style.display = 'block';
-            
-        } else if (c.status === 'aguardando_pagamento') {
-             // Nunca deve chegar aqui se a lógica de 'verificarEstado' for respeitada. 
-             // Se chegar, não mostra nenhum botão de ação
-             btnCancelar.style.display = 'none';
-             console.warn("Estado ativo inesperado: aguardando_pagamento");
-        }
+    // Lógica de exibição:
+    // A corrida é considerada "iniciada" assim que está liberada.
+    if (status === 'liberada' || status === 'em_andamento') {
+        container.appendChild(btnFinalizar);
+        container.appendChild(btnCancelar); 
     }
+}
+
+
+function preencherDadosAtiva(c) {
+    idCorridaAtual = c.corrida_id || c.id;
+    
+    document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
+    document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
+    document.getElementById('ativa-cliente').innerText = c.nome_cliente;
+    document.getElementById('ativa-fone').innerText = c.telefone_cliente;
+    document.getElementById('ativa-origem').innerText = c.origem;
+    document.getElementById('ativa-destino').innerText = c.destino;
+    
+    // Renderiza os botões dinamicamente com base no status
+    renderizarBotoesAtiva(c.status); 
+}
 
     /***********************
      *  LÓGICA DO POLLING DE ESTADO
@@ -990,37 +1050,7 @@
         }
     }
     
-    async function iniciarCorrida() {
-        if (!idCorridaAtual) {
-            alert('Nenhuma corrida para iniciar.');
-            return;
-        }
-
-        try {
-            const res = await fetch(`${MEU_IP}/iniciar-corrida`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    corrida_id: idCorridaAtual,
-                    motoboy_id: usuario.id
-                })
-            });
-
-            const data = await res.json();
-
-            if (!data.success) {
-                alert(data.message || 'Erro ao iniciar corrida. Status não permitido.');
-                return;
-            }
-
-            alert('🚀 Corrida iniciada com sucesso!');
-            verificarEstado();
-            
-        } catch (err) {
-            console.error('Erro ao iniciar corrida:', err);
-            alert('Erro ao iniciar corrida.');
-        }
-    }
+    
     
     async function finalizarCorrida() {
         if (!idCorridaAtual) {
