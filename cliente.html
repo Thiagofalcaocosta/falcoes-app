@@ -1519,20 +1519,40 @@ async function encerrarBuscaPorTimeout(corridaId) {
 
 
         // Função para continuar acompanhando o pedido se o usuário recarregar a página
-        function checkPersistedOrder() {
-            const persistedId = localStorage.getItem('idPedidoAtual');
-            if (persistedId) {
-                idPedidoAtual = persistedId;
+        // === FUNÇÃO PRINCIPAL DE PERSISTÊNCIA (SUBSTITUIÇÃO) ===
+function checkPersistedOrder() {
+    const persistedId = localStorage.getItem('idPedidoAtual');
+    if (persistedId) {
+        idPedidoAtual = persistedId;
 
-                // Mudar para a tela de acompanhamento e iniciar a verificação
-                mudarTela('tela-acompanhamento');
+        // 1. Preenche os detalhes (origem/destino/valor) - NOVO!
+        preencherDetalhesAcompanhamento();
+        
+        // 2. MUDAR PARA A TELA DE ACOMPANHAMENTO
+        mudarTela('tela-acompanhamento');
 
-                // Tenta buscar o status imediatamente para preencher os dados
-                verificarStatus(idPedidoAtual);
-                intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-            } else {
-                // Se não houver pedido, garante que a tela inicial esteja ativa
-                mudarTela('tela-pedido');
+        // 3. Iniciar a verificação de status (Polling)
+        verificarStatus(idPedidoAtual);
+        
+        // Limpa qualquer intervalo antigo para evitar duplicação de polling
+        if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
+        intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+    } else {
+        // Se não houver pedido, garante que a tela inicial esteja ativa
+        mudarTela('tela-pedido');
+    }
+
+        // === FUNÇÃO AUXILIAR: Preenche os dados de Origem/Destino/Valor ===
+function preencherDetalhesAcompanhamento() {
+    const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
+    if (pedidoSalvo) {
+        document.getElementById('detalhe-origem').innerText = pedidoSalvo.origem;
+        document.getElementById('detalhe-destino').innerText = pedidoSalvo.destino;
+        document.getElementById('detalhe-valor').innerText = `R$ ${pedidoSalvo.valor.toFixed(2).replace('.', ',')}`;
+        return true;
+    }
+    return false;
+}        
 
                 // =========================
 // CONTROLE DE CANCELAMENTO (CLIENTE)
@@ -1554,7 +1574,7 @@ if (btnCancelar) {
 }
 
             }
-        }
+    
 
         // Chama a função ao carregar a página
         window.onload = checkPersistedOrder;
