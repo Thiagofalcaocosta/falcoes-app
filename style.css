@@ -616,14 +616,3 @@ input[type="date"] {
     font-size: 20px;
     font-weight: 800;
 }
-/* =============================== */
-/* CONTROLE DE TELAS DO APP        */
-/* =============================== */
-
-.tela {
-    display: none;
-}
-
-.tela.ativa {
-    display: block;
-}
