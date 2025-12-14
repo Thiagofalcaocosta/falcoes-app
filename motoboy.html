@@ -455,901 +455,684 @@
     </div>
 
     <script>
-        /***********************
-         *  VARIÁVEIS GLOBAIS
-         ***********************/
-        const usuario = JSON.parse(localStorage.getItem('usuario'));
-        
-        // DEBUG
-        console.log('Usuário logado:', usuario);
-        if (!usuario || !usuario.id) {
-            console.error('Usuário não tem ID definido');
-            window.location.href = 'index.html';
-        }
+    /***********************
+     *  VARIÁVEIS GLOBAIS
+     ***********************/
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
 
-        // VERIFICAÇÃO SIMPLES E CORRETA
-        if (!usuario || usuario.tipo !== 'motoboy') {
-            console.error('Usuário não autorizado');
-            window.location.href = 'index.html';
-        }
-
-        // AGORA SIM MOSTRA O NOME E CATEGORIA
-        document.getElementById('msg-ola').innerText = "OLÁ, " + usuario.nome.split(' ')[0].toUpperCase();
-        
-        // VERIFICA CATEGORIA CORRETAMENTE
-        const categoriaExibicao = usuario.categoria || "GERAL";
-        document.getElementById('label-categoria').innerText = `SUA CATEGORIA: ${categoriaExibicao.toUpperCase()}`;
-
-        const MEU_IP = 'https://falcoes-app.onrender.com';
-        let idCorridaSelecionada = null;
-        let idCorridaAtual = null;
-        let onlineInterval = null;
-        let estadoVerificacaoInterval = null;
-        let temCorridaAtiva = false;
-
-        // Armazena os IDs dos setIntervals para os contadores
-        let intervalosContadores = {};
-
-        // Controle da corrida sendo exibida
-        let corridaSendoExibida = null;
-        let notificacaoAtiva = false;
-        
-        // Variáveis para monitoramento de corrida
-        let corridaAtualMonitorada = null;
-        let intervaloMonitoramento = null;
-
-        /***********************
-         *  FUNÇÕES DE STATUS ONLINE
-         ***********************/
-        
-        async function enviarStatusOnline(online) {
-            try {
-                const response = await fetch(`${MEU_IP}/motoboy/status-online`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        motoboy_id: usuario.id,
-                        online: online,
-                        latitude: null,
-                        longitude: null
-                    })
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    const statusElement = document.getElementById('status-online-indicator');
-                    if (online) {
-                        statusElement.innerText = "● ONLINE";
-                        statusElement.style.backgroundColor = "var(--neon-green)";
-                    } else {
-                        statusElement.innerText = "● OFFLINE";
-                        statusElement.style.backgroundColor = "#666";
-                    }
-                }
-            } catch (err) {
-                console.error("Erro ao enviar status online:", err);
-            }
-        }
-
-        async function iniciarCorrida() {
-    if (!idCorridaAtual) {
-        alert('Nenhuma corrida para iniciar.');
-        return;
+    // VERIFICAÇÃO DE LOGIN
+    if (!usuario || !usuario.id || usuario.tipo !== 'motoboy') {
+        console.error('Usuário não autorizado ou não logado.');
+        window.location.href = 'index.html';
     }
 
-    try {
-        const res = await fetch(`${MEU_IP}/iniciar-corrida`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                corrida_id: idCorridaAtual,
-                motoboy_id: usuario.id
-            })
-        });
+    // EXIBE NOME E CATEGORIA
+    document.getElementById('msg-ola').innerText = "OLÁ, " + usuario.nome.split(' ')[0].toUpperCase();
+    const categoriaExibicao = usuario.categoria || "GERAL";
+    document.getElementById('label-categoria').innerText = `SUA CATEGORIA: ${categoriaExibicao.toUpperCase()}`;
 
-        const data = await res.json();
+    const MEU_IP = 'https://falcoes-app.onrender.com';
+    let idCorridaSelecionada = null;
+    let idCorridaAtual = null;
+    let onlineInterval = null;
+    let estadoVerificacaoInterval = null;
+    let temCorridaAtiva = false;
 
-        if (!data.success) {
-            alert(data.message || '⏳ Aguardando pagamento do cliente.');
+    // Armazena os IDs dos setIntervals para os contadores (Corrida na lista)
+    let intervalosContadores = {};
+
+    // Controle da corrida sendo exibida (Corrida na lista)
+    let corridaSendoExibida = null;
+    let notificacaoAtiva = false;
+    let intervaloMonitoramento = null; // Monitora se a corrida na lista foi aceita por outro
+
+    // Monitoramento da corrida ACEITA
+    let monitoramentoAtivaInterval = null;
+
+
+    /***********************
+     *  FUNÇÕES DE UTILIDADE
+     ***********************/
+    function limparContadores() {
+        Object.values(intervalosContadores).forEach(clearInterval);
+        intervalosContadores = {};
+    }
+
+    function limparMonitoramento() {
+        if (intervaloMonitoramento) {
+            clearInterval(intervaloMonitoramento);
+            intervaloMonitoramento = null;
+        }
+        corridaAtualMonitorada = null;
+    }
+
+    function pararMonitoramentoAtiva() {
+        if (monitoramentoAtivaInterval) {
+            clearInterval(monitoramentoAtivaInterval);
+            monitoramentoAtivaInterval = null;
+        }
+    }
+
+    function pararVerificacaoEstado() {
+        if (estadoVerificacaoInterval) {
+            clearInterval(estadoVerificacaoInterval);
+            estadoVerificacaoInterval = null;
+        }
+    }
+
+    function tocarAlerta() {
+        const audio = document.getElementById('som-alerta');
+        if (!audio) return;
+        try {
+            audio.pause();
+            audio.currentTime = 0;
+            audio.play().catch(err => console.log("Som bloqueado até interação do usuário"));
+        } catch (e) {
+            console.log("Erro ao tocar som:", e);
+        }
+    }
+    
+    // Função para deslogar
+    function deslogar() {
+        limparContadores();
+        limparMonitoramento();
+        pararMonitoramentoAtiva();
+        pararVerificacaoEstado();
+        enviarStatusOnline(false);
+        if (onlineInterval) {
+            clearInterval(onlineInterval);
+        }
+        localStorage.clear();
+        window.location.href = 'index.html';
+    }
+
+
+    /***********************
+     *  FUNÇÕES DE STATUS ONLINE
+     ***********************/
+
+    async function enviarStatusOnline(online) {
+        try {
+            const response = await fetch(`${MEU_IP}/motoboy/status-online`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    motoboy_id: usuario.id,
+                    online: online,
+                    latitude: null,
+                    longitude: null
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                const statusElement = document.getElementById('status-online-indicator');
+                if (online) {
+                    statusElement.innerText = "● ONLINE";
+                    statusElement.style.backgroundColor = "var(--neon-green)";
+                } else {
+                    statusElement.innerText = "● OFFLINE";
+                    statusElement.style.backgroundColor = "#666";
+                }
+            }
+        } catch (err) {
+            console.error("Erro ao enviar status online:", err);
+        }
+    }
+
+    /***********************
+     *  CONTROLE DE FLUXO E TELAS
+     ***********************/
+
+    function mostrarTela(tela) {
+        document.getElementById('tela-lista').style.display = 'none';
+        document.getElementById('tela-corrida-ativa').style.display = 'none';
+        document.getElementById('tela-bloqueio').style.display = 'none';
+
+        if (tela === 'lista') document.getElementById('tela-lista').style.display = 'block';
+        if (tela === 'ativa') document.getElementById('tela-corrida-ativa').style.display = 'block';
+        if (tela === 'bloqueio') document.getElementById('tela-bloqueio').style.display = 'block';
+    }
+
+    function preencherDadosAtiva(c) {
+        idCorridaAtual = c.corrida_id || c.id;
+
+        document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
+        document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
+        document.getElementById('ativa-cliente').innerText = c.nome_cliente;
+        document.getElementById('ativa-fone').innerText = c.telefone_cliente;
+        document.getElementById('ativa-origem').innerText = c.origem;
+        document.getElementById('ativa-destino').innerText = c.destino;
+
+        const btnIniciar = document.getElementById('btn-iniciar-corrida');
+        const btnFinalizar = document.querySelector("button[onclick='finalizarCorrida()']");
+        const btnCancelar = document.querySelector("button[onclick='cancelarCorridaMotoboy()']");
+
+        if (!btnIniciar || !btnFinalizar || !btnCancelar) return;
+
+        // Esconde todos por padrão
+        btnIniciar.style.display = 'none';
+        btnFinalizar.style.display = 'none';
+        btnCancelar.style.display = 'block'; // Cancelar é sempre possível (antes de iniciar e durante)
+
+        // Lógica de exibição de botões
+        if (c.status === 'liberada') {
+            btnIniciar.style.display = 'block';
+            btnIniciar.disabled = false;
+            btnIniciar.innerText = '▶️ INICIAR CORRIDA';
+            btnIniciar.style.opacity = '1';
+
+        } else if (c.status === 'em_andamento') {
+            btnFinalizar.style.display = 'block';
+            
+        } else if (c.status === 'aguardando_pagamento') {
+             // Nunca deve chegar aqui se a lógica de 'verificarEstado' for respeitada. 
+             // Se chegar, não mostra nenhum botão de ação
+             btnCancelar.style.display = 'none';
+             console.warn("Estado ativo inesperado: aguardando_pagamento");
+        }
+    }
+
+    /***********************
+     *  LÓGICA DO POLLING DE ESTADO
+     ***********************/
+    async function verificarDisponibilidadeCorrida(corridaId) {
+        try {
+            const res = await fetch(`${MEU_IP}/status-corrida/${corridaId}`);
+            const data = await res.json();
+            // Retorna false se não for 'pendente' ou se a requisição falhar
+            return data.success && data.status === 'pendente'; 
+        } catch (err) {
+            console.error('Erro ao verificar disponibilidade:', err);
+            return true; 
+        }
+    }
+    
+    async function verificarEstado() {
+        try {
+            // 1. Verifica se há corrida ativa (aceita)
+            const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
+            const dadosAtiva = await resAtiva.json();
+
+            if (dadosAtiva.tem_corrida) {
+                temCorridaAtiva = true;
+                idCorridaAtual = dadosAtiva.corrida.corrida_id || dadosAtiva.corrida.id;
+                const statusCorrida = dadosAtiva.corrida.status;
+
+                limparContadores();
+                limparMonitoramento();
+                pararVerificacaoEstado(); // Parar o polling de lista
+
+                // Se a corrida for liberada ou em andamento, mostra a tela ativa
+                if (statusCorrida === 'liberada' || statusCorrida === 'em_andamento') {
+                    mostrarTela('ativa');
+                    preencherDadosAtiva(dadosAtiva.corrida);
+                    // Garante que o monitoramento de corrida ativa está rodando
+                    if (!monitoramentoAtivaInterval) {
+                         pararMonitoramentoAtiva();
+                         monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); // Polling rápido para corrida ativa
+                    }
+                    return;
+                } 
+                // Se a corrida foi aceita mas ainda aguarda pagamento
+                else if (statusCorrida === 'aguardando_pagamento' || statusCorrida === 'aceita') {
+                    // Estado de espera após aceitar
+                    pararMonitoramentoAtiva();
+                    monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); // Polling rápido
+
+                    mostrarTela('lista'); // Volta para a tela de lista com aviso
+                    const container = document.getElementById('lista-corridas');
+                    if (container) {
+                        container.innerHTML = `
+                            <div style="text-align:center; padding:30px;">
+                                <div style="color:#ffca28; font-size:24px; margin-bottom:10px;">⏳</div>
+                                <div style="color:#ffca28; font-weight:bold; margin-bottom:10px;">
+                                    AGUARDANDO LIBERAÇÃO DA CORRIDA
+                                </div>
+                                <div style="color:#ccc; font-size:14px;">
+                                    Aguardando confirmação de pagamento do cliente.<br>
+                                    Você será notificado assim que for **liberada**.
+                                </div>
+                            </div>
+                        `;
+                    }
+                    return;
+                }
+                // Se o status for 'cancelada' ou 'finalizada', ele cai para o passo 2
+            }
+            
+            // 2. Não há corrida ativa ou a corrida ativa foi cancelada/finalizada. Limpa e verifica lista/bloqueio.
+            pararMonitoramentoAtiva();
+            temCorridaAtiva = false;
+            idCorridaAtual = null;
+
+
+            const resLista = await fetch(`${MEU_IP}/corridas-pendentes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ motoboy_id: usuario.id })
+            });
+            const dadosLista = await resLista.json();
+
+            if (dadosLista.success === false && dadosLista.bloqueado) {
+                limparContadores();
+                limparMonitoramento();
+                mostrarTela('bloqueio');
+                document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
+                
+            } else if (dadosLista.success === false && dadosLista.offline) {
+                document.getElementById('lista-corridas').innerHTML =
+                    '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE</div>';
+                mostrarTela('lista');
+
+            } else {
+                mostrarTela('lista');
+                let corrida = dadosLista.corrida || null;
+
+                // Se a corrida que estávamos monitorando na lista não existe mais, ou não está mais pendente
+                if (corridaSendoExibida && corrida && corridaSendoExibida.corrida_id !== corrida.corrida_id) {
+                    // Uma nova corrida chegou ou a antiga sumiu, forçamos a limpeza
+                    corridaSendoExibida = null;
+                } else if (!corrida && corridaSendoExibida) {
+                     // Corrida anterior sumiu, mas não veio nova
+                    corridaSendoExibida = null;
+                }
+                
+                renderizarLista(corrida);
+            }
+            
+            // Inicia o polling de lista/bloqueio, se ainda não estiver ativo
+            if (!estadoVerificacaoInterval && !temCorridaAtiva) {
+                estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
+            }
+
+        } catch (err) {
+            console.error("Erro ao verificar estado:", err);
+            // Em caso de erro, tenta reiniciar o polling da lista
+            mostrarTela('lista');
+            if (!estadoVerificacaoInterval) {
+                 estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
+            }
+        }
+    }
+
+
+    /***********************
+     *  CRIAÇÃO E RENDERIZAÇÃO DA LISTA
+     ***********************/
+     function iniciarContador(id, tempoInicial, onTimeout) {
+        limparContadores();
+
+        let tempoRestante = tempoInicial;
+        const cardElement = document.getElementById(`card-${id}`);
+        const contadorElement = cardElement ? cardElement.querySelector('.contador-tempo') : null;
+
+        if (!contadorElement) return;
+
+        const decremento = async () => {
+            if (tempoRestante <= 0) {
+                clearInterval(intervalosContadores[id]);
+                delete intervalosContadores[id];
+
+                if (cardElement) cardElement.remove();
+
+                try {
+                    await fetch(`${MEU_IP}/expirar-corrida`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            corrida_id: id,
+                            motoboy_id: usuario.id
+                        })
+                    });
+                } catch (e) {
+                    console.error("Erro ao notificar timeout da corrida:", e);
+                }
+
+                if (typeof onTimeout === 'function') onTimeout();
+                return;
+            }
+
+            contadorElement.innerText = `⏳ SUA VEZ: ${tempoRestante}s`;
+            tempoRestante--;
+        };
+
+        decremento();
+        intervalosContadores[id] = setInterval(decremento, 1000);
+    }
+
+    function criarCardCorrida(corrida) {
+        const container = document.getElementById('lista-corridas');
+
+        const div = document.createElement('div');
+        div.className = 'card-corrida';
+        div.id = `card-${corrida.corrida_id}`;
+
+        const htmlConteudo = `
+            <div class="card-top">
+                <span class="tipo-servico">${corrida.tipo_servico.toUpperCase()}</span>
+                <span class="valor">R$ ${parseFloat(corrida.valor).toFixed(2)}</span>
+            </div>
+            ${corrida.ciclo && corrida.ciclo > 1 ?
+                `<div style="background: #333; color: #ff9900; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 12px; text-align: center;">
+                    ⚡ CICLO ${corrida.ciclo}
+                </div>`
+                : ''
+            }
+            <div class="rota">
+                <div style="color:#ddd; margin-bottom:5px;">📍 ${corrida.origem}</div>
+                <div style="color:#ddd;">🏁 ${corrida.destino}</div>
+            </div>
+            <div class="contador-tempo" id="contador-${corrida.corrida_id}"></div>
+            <button class="btn-acao btn-verde" onclick="aceitarCorridaWrapper(${corrida.corrida_id})">ACEITAR</button>
+            <div style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">
+                ⚠️ Outros pilotos também estão vendo esta corrida
+            </div>
+        `;
+        div.innerHTML = htmlConteudo;
+        container.appendChild(div);
+
+        const tempoRestante = 60 - Math.ceil(parseFloat(corrida.segundos_passados || 0));
+
+        if (tempoRestante > 0) {
+            tocarAlerta();
+            iniciarContador(corrida.corrida_id, tempoRestante, () => {
+                // A corrida expirou na tela do motoboy, pede um novo estado
+                verificarEstado();
+            });
+        } else {
+            div.remove();
+            verificarEstado();
+        }
+    }
+
+    function renderizarLista(corrida) {
+        const container = document.getElementById('lista-corridas');
+
+        if (!corrida) {
+            container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
+            limparContadores();
+            limparMonitoramento();
+            notificacaoAtiva = false;
+            corridaSendoExibida = null;
             return;
         }
 
-        alert('🚀 Corrida iniciada com sucesso!');
-        
-        // Atualiza visual
-        verificarEstado();
-
-    } catch (err) {
-        console.error('Erro ao iniciar corrida:', err);
-        alert('Erro ao iniciar corrida.');
-    }
-}
-
-
-        // Função para deslogar
-        function deslogar() {
-            limparContadores();
-            limparMonitoramento();
-            pararVerificacaoEstado();
-            enviarStatusOnline(false);
-            if (onlineInterval) {
-                clearInterval(onlineInterval);
-            }
-            localStorage.clear();
-            window.location.href = 'index.html';
+        // Se a corrida for a mesma que está sendo exibida, não faz nada (mantém contador e monitoramento)
+        if (corridaSendoExibida && corridaSendoExibida.corrida_id === corrida.corrida_id) {
+            return;
         }
 
-        // INICIALIZA STATUS ONLINE AO CARREGAR A PÁGINA
-        document.addEventListener('DOMContentLoaded', function() {
-            enviarStatusOnline(true);
-            onlineInterval = setInterval(() => {
-                enviarStatusOnline(true);
-            }, 5000);
-            
-            // Verifica se já tem corrida ativa ao carregar
-            setTimeout(() => {
-                verificarCorridaAtivaInicial();
-            }, 500);
-        });
-
-        /***********************
-         *  ÁUDIO / NOTIFICAÇÃO
-         ***********************/
-        function tocarAlerta() {
-            const audio = document.getElementById('som-alerta');
-            if (!audio) return;
-            try {
-                audio.pause();
-                audio.currentTime = 0;
-                audio.play().catch(err => console.log("Som bloqueado até interação do usuário"));
-            } catch (e) {
-                console.log("Erro ao tocar som:", e);
-            }
-        }
-
-        /***********************
-         *  CONTADORES
-         ***********************/
-        function limparContadores() {
-            Object.values(intervalosContadores).forEach(clearInterval);
-            intervalosContadores = {};
-        }
-
-        function iniciarContador(id, tempoInicial, onTimeout) {
-            limparContadores(); 
-
-            let tempoRestante = tempoInicial;
-            const cardElement = document.getElementById(`card-${id}`);
-            const contadorElement = cardElement ? cardElement.querySelector('.contador-tempo') : null;
-
-            if (!contadorElement) return;
-
-            const decremento = async () => {
-                if (tempoRestante <= 0) {
-                    clearInterval(intervalosContadores[id]);
-                    delete intervalosContadores[id];
-
-                    if (cardElement) cardElement.remove();
-
-                    try {
-                        await fetch(`${MEU_IP}/expirar-corrida`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                corrida_id: id,
-                                motoboy_id: usuario.id
-                            })
-                        });
-                    } catch (e) {
-                        console.error("Erro ao notificar timeout da corrida:", e);
-                    }
-
-                    if (typeof onTimeout === 'function') onTimeout();
-                    return;
-                }
-
-                contadorElement.innerText = `⏳ SUA VEZ: ${tempoRestante}s`;
-                tempoRestante--;
-            };
-
-            decremento();
-            intervalosContadores[id] = setInterval(decremento, 1000);
-        }
-
-        /***********************
-         *  MONITORAMENTO DE CORRIDA
-         ***********************/
-        async function verificarDisponibilidadeCorrida(corridaId) {
-            try {
-                const res = await fetch(`${MEU_IP}/status-corrida/${corridaId}`);
-                const data = await res.json();
-                
-                if (!data.success || data.status !== 'pendente') {
-
-                    console.log(`Corrida ${corridaId} não está mais disponível. Status: ${data.status}`);
-                    return false;
-                }
-                return true;
-            } catch (err) {
-                console.error('Erro ao verificar disponibilidade:', err);
-                return true;
-            }
-        }
-
-        function limparMonitoramento() {
-            if (intervaloMonitoramento) {
-                clearInterval(intervaloMonitoramento);
-                intervaloMonitoramento = null;
-            }
-            corridaAtualMonitorada = null;
-        }
-
-        function iniciarMonitoramento(corridaId) {
-            limparMonitoramento();
-            
-            corridaAtualMonitorada = corridaId;
-            
-            intervaloMonitoramento = setInterval(async () => {
-                if (temCorridaAtiva) {
-    await verificarEstado(); // continua acompanhando status
-    return;
-}
-                
-                const disponivel = await verificarDisponibilidadeCorrida(corridaId);
-                
-                if (!disponivel && corridaSendoExibida && corridaSendoExibida.corrida_id === corridaId) {
-                    console.log(`Corrida ${corridaId} foi aceita por outro motoboy. Limpando...`);
-                    
-                    const container = document.getElementById('lista-corridas');
-                    container.innerHTML = '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ Esta corrida já foi aceita por outro piloto</div>';
-                    
-                    limparContadores();
-                    limparMonitoramento();
-                    notificacaoAtiva = false;
-                    corridaSendoExibida = null;
-                    
-                    tocarAlerta();
-                    
-                    setTimeout(verificarEstado, 3000);
-                }
-            }, 2000);
-        }
-
-        /***********************
-         *  CONTROLE DE VERIFICAÇÃO
-         ***********************/
-        function pararVerificacaoEstado() {
-            if (estadoVerificacaoInterval) {
-                clearInterval(estadoVerificacaoInterval);
-                estadoVerificacaoInterval = null;
-            }
-        }
-        
-        function iniciarVerificacaoEstado() {
-            pararVerificacaoEstado();
-            estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
-        }
-
-        /***********************
-         *  MODAIS
-         ***********************/
-        function fecharModal(idModal) {
-            document.getElementById(idModal).style.display = 'none';
-            if (idModal === 'modal-confirmacao') idCorridaSelecionada = null;
-        }
-
-        function mostrarErro(mensagem) {
-            document.getElementById('msg-erro-texto').innerText = mensagem;
-            document.getElementById('modal-erro').style.display = 'flex';
-        }
-
-        /***********************
-         *  POLLING / ESTADO
-         ***********************/
-        async function verificarCorridaAtivaInicial() {
-            try {
-                const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
-                const dadosAtiva = await resAtiva.json();
-
-                if (dadosAtiva.tem_corrida) {
-                    temCorridaAtiva = true;
-                    limparContadores();
-                    limparMonitoramento();
-                    mostrarTela('ativa');
-                    preencherDadosAtiva(dadosAtiva.corrida);
-                } else {
-                    verificarEstado();
-                    iniciarVerificacaoEstado();
-                }
-            } catch (err) {
-                console.error("Erro ao verificar corrida ativa inicial:", err);
-                verificarEstado();
-                iniciarVerificacaoEstado();
-            }
-        }
-
-        async function verificarEstado() {
-            try {
-                
-
-                const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
-                const dadosAtiva = await resAtiva.json();
-
-                if (dadosAtiva.tem_corrida) {
-    // ⚠️ VERIFICA SE PODE INICIAR A CORRIDA
-    const statusCorrida = dadosAtiva.corrida.status;
-    
-    // Motoboy só pode iniciar se:
-    // 1. Pagamento online foi confirmado (PAGO_ONLINE)
-    // 2. OU se status é 'aceita' (pagamento em dinheiro combinado)
-    const podeIniciar = statusCorrida === 'liberada' || statusCorrida === 'em_andamento';
-
-    
-    if (podeIniciar) {
-        temCorridaAtiva = true;
-        limparContadores();
+        // Se for uma nova corrida ou a anterior sumiu, limpa e renderiza
         limparMonitoramento();
-        mostrarTela('ativa');
-        preencherDadosAtiva(dadosAtiva.corrida);
-        return;
-    } else {
-        // ⚠️ SE NÃO PODE INICIAR (ex: AGUARDANDO_PAGAMENTO)
-        // Mostra mensagem e volta para lista
-        console.log('Corrida não pode ser iniciada ainda. Status:', statusCorrida);
-        mostrarTela('lista');
-        
-        // ⚠️ ADICIONE: Limpa a flag temCorridaAtiva
-        temCorridaAtiva = false;
-        idCorridaAtual = null;
-        
-        // Mostra mensagem para o motoboy
-        const container = document.getElementById('lista-corridas');
-        if (container) {
-            container.innerHTML = `
-                <div style="text-align:center; padding:30px;">
-                    <div style="color:#ffca28; font-size:24px; margin-bottom:10px;">⏳</div>
-                    <div style="color:#ffca28; font-weight:bold; margin-bottom:10px;">
-                        CORRIDA AGUARDANDO PAGAMENTO
-                    </div>
-                    <div style="color:#ccc; font-size:14px;">
-                        O cliente ainda não escolheu como pagar.<br>
-                        Você verá esta corrida quando o pagamento for confirmado.
-                    </div>
-                </div>
-            `;
-        }
-        return;
-    }
-}
-
-                const resLista = await fetch(`${MEU_IP}/corridas-pendentes`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ motoboy_id: usuario.id })
-                });
-                const dadosLista = await resLista.json();
-
-                if (dadosLista.success === false && dadosLista.bloqueado) {
-                    limparContadores();
-                    limparMonitoramento();
-                    mostrarTela('bloqueio');
-                    document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
-                } else if (dadosLista.success === false && dadosLista.offline) {
-                    document.getElementById('lista-corridas').innerHTML = 
-                        '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE</div>';
-                    mostrarTela('lista');
-                } else {
-                    mostrarTela('lista');
-                    
-                    let corrida = null;
-                    if (dadosLista.corrida) {
-                        corrida = dadosLista.corrida;
-                        
-                        const disponivel = await verificarDisponibilidadeCorrida(corrida.corrida_id);
-                        if (!disponivel) {
-                            const container = document.getElementById('lista-corridas');
-                            container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Buscando nova corrida...</div>';
-                            return;
-                        }
-                    }
-                    
-                    renderizarLista(corrida);
-                }
-
-            } catch (err) { 
-                console.error("Erro ao verificar estado:", err);
-            }
-        }
-
-        function mostrarTela(tela) {
-            document.getElementById('tela-lista').style.display = 'none';
-            document.getElementById('tela-corrida-ativa').style.display = 'none';
-            document.getElementById('tela-bloqueio').style.display = 'none';
-
-            if (tela === 'lista') document.getElementById('tela-lista').style.display = 'block';
-            if (tela === 'ativa') document.getElementById('tela-corrida-ativa').style.display = 'block';
-            if (tela === 'bloqueio') document.getElementById('tela-bloqueio').style.display = 'block';
-        }
-
-        function preencherDadosAtiva(c) {
-    idCorridaAtual = c.corrida_id || c.id;
-    
-    document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
-    document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
-    document.getElementById('ativa-cliente').innerText = c.nome_cliente;
-    document.getElementById('ativa-fone').innerText = c.telefone_cliente;
-    document.getElementById('ativa-origem').innerText = c.origem;
-    document.getElementById('ativa-destino').innerText = c.destino;
-    
-    // ⚠️ ADICIONE ESTE CÓDIGO AQUI (AVISO)
-    // Primeiro, remove qualquer aviso anterior
-    const card = document.querySelector('#tela-corrida-ativa .card-corrida');
-    if (card) {
-        const avisoAnterior = card.querySelector('.aviso-pagamento');
-        if (avisoAnterior) avisoAnterior.remove();
+        container.innerHTML = '';
+        limparContadores();
+        corridaSendoExibida = corrida;
+        notificacaoAtiva = true;
+        criarCardCorrida(corrida);
+        iniciarMonitoramento(corrida.corrida_id);
     }
     
-    
+    function iniciarMonitoramento(corridaId) {
+        limparMonitoramento();
 
-    const btnIniciar = document.getElementById('btn-iniciar-corrida');
-    const btnFinalizar = document.querySelector("button[onclick='finalizarCorrida()']");
-const btnCancelar  = document.querySelector("button[onclick='cancelarCorridaMotoboy()']");
+        corridaAtualMonitorada = corridaId;
 
-if (!btnIniciar) return;
+        // Monitora se a corrida na lista foi aceita por outro motoboy
+        intervaloMonitoramento = setInterval(async () => {
+            if (temCorridaAtiva) return; // Se já tem corrida ativa, sai
 
-// ⏳ aguardando pagamento
-if (c.status === 'aguardando_pagamento') {
-    btnIniciar.disabled = true;
-    btnIniciar.innerText = '⏳ AGUARDANDO PAGAMENTO';
-    btnIniciar.style.opacity = '0.6';
-}
+            const disponivel = await verificarDisponibilidadeCorrida(corridaId);
 
-// ✅ liberada → pode iniciar
-else if (c.status === 'liberada') {
-    btnIniciar.disabled = false;
-    btnIniciar.innerText = '▶️ INICIAR CORRIDA';
-    btnIniciar.style.opacity = '1';
-}
+            if (!disponivel && corridaSendoExibida && corridaSendoExibida.corrida_id === corridaId) {
+                console.log(`Corrida ${corridaId} foi aceita por outro motoboy. Limpando...`);
 
+                const container = document.getElementById('lista-corridas');
+                container.innerHTML = '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ Esta corrida já foi aceita por outro piloto</div>';
 
-// ✅ Quando liberada ou em andamento
-else {
-    if (btnFinalizar) btnFinalizar.style.display = 'block';
-    if (btnCancelar)  btnCancelar.style.display = 'block';
-}
-
-
-if (btnIniciar) {
-    if (c.status === 'liberada') {
-        btnIniciar.disabled = false;
-        btnIniciar.innerText = '▶️ INICIAR CORRIDA';
-        btnIniciar.style.opacity = '1';
-    } else {
-        btnIniciar.disabled = true;
-        btnIniciar.innerText = '⏳ AGUARDANDO PAGAMENTO';
-        btnIniciar.style.opacity = '0.6';
-    }
-}
-
-    
-    
-}
-
-        /***********************
-         *  CRIAÇÃO E RENDERIZAÇÃO
-         ***********************/
-        function criarCardCorrida(corrida) {
-            const container = document.getElementById('lista-corridas');
-
-            const div = document.createElement('div');
-            div.className = 'card-corrida';
-            div.id = `card-${corrida.corrida_id}`;
-
-            const htmlConteudo = `
-                <div class="card-top">
-                    <span class="tipo-servico">${corrida.tipo_servico.toUpperCase()}</span>
-                    <span class="valor">R$ ${parseFloat(corrida.valor).toFixed(2)}</span>
-                </div>
-                ${corrida.ciclo && corrida.ciclo > 1 ? 
-                    `<div style="background: #333; color: #ff9900; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 12px; text-align: center;">
-                        ⚡ CICLO ${corrida.ciclo}
-                    </div>` 
-                    : ''
-                }
-                <div class="rota">
-                    <div style="color:#ddd; margin-bottom:5px;">📍 ${corrida.origem}</div>
-                    <div style="color:#ddd;">🏁 ${corrida.destino}</div>
-                </div>
-                <div class="contador-tempo" id="contador-${corrida.corrida_id}"></div>
-                <button class="btn-acao btn-verde" onclick="aceitarCorrida(${corrida.corrida_id})">ACEITAR</button>
-                <div style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">
-                    ⚠️ Outros pilotos também estão vendo esta corrida
-                </div>
-            `;
-            div.innerHTML = htmlConteudo;
-            container.appendChild(div);
-
-            const tempoRestante = 60 - Math.ceil(parseFloat(corrida.segundos_passados || 0));
-            
-            if (tempoRestante > 0) {
-                tocarAlerta();
-                iniciarContador(corrida.corrida_id, tempoRestante, () => {
-                    document.getElementById('lista-corridas').innerHTML = '<div style="text-align:center; color:#555; padding:30px;">⏰ Tempo esgotado para esta corrida.</div>';
-                    notificacaoAtiva = false;
-                    corridaSendoExibida = null;
-                    limparMonitoramento();
-                    setTimeout(verificarEstado, 2000);
-                });
-            } else {
-                div.remove(); 
-                verificarEstado();
-            }
-        }
-
-        function renderizarLista(corrida) {
-            const container = document.getElementById('lista-corridas');
-            
-            if (!corrida) {
-                container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
                 limparContadores();
                 limparMonitoramento();
                 notificacaoAtiva = false;
                 corridaSendoExibida = null;
-                return;
-            }
-            
-            if (corridaSendoExibida && corridaSendoExibida.corrida_id === corrida.corrida_id) {
-                verificarDisponibilidadeCorrida(corrida.corrida_id).then(disponivel => {
-                    if (!disponivel) {
-                        console.log('Corrida foi aceita por outro motoboy, limpando tela...');
-                        container.innerHTML = '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ Esta corrida já foi aceita por outro piloto</div>';
-                        limparContadores();
-                        limparMonitoramento();
-                        notificacaoAtiva = false;
-                        corridaSendoExibida = null;
-                        setTimeout(verificarEstado, 3000);
-                    }
-                });
-                return;
-            }
-            
-            limparMonitoramento();
-            container.innerHTML = '';
-            limparContadores();
-            corridaSendoExibida = corrida;
-            notificacaoAtiva = true;
-            criarCardCorrida(corrida);
-            iniciarMonitoramento(corrida.corrida_id);
-        }
 
-        /***********************
-         *  ACEITAR CORRIDA
-         ***********************/
-        function abrirModalAceitar(id) {
-            console.log('Abrir modal para corrida ID:', id);
+                tocarAlerta();
+
+                setTimeout(verificarEstado, 3000);
+            }
+        }, 2000);
+    }
+
+
+    /***********************
+     *  AÇÕES E BOTÕES
+     ***********************/
+
+    function fecharModal(idModal) {
+        document.getElementById(idModal).style.display = 'none';
+        if (idModal === 'modal-confirmacao') idCorridaSelecionada = null;
+    }
+
+    function mostrarErro(mensagem) {
+        document.getElementById('msg-erro-texto').innerText = mensagem;
+        document.getElementById('modal-erro').style.display = 'flex';
+    }
+
+    // Função de clique no botão "ACEITAR" no card
+    async function aceitarCorridaWrapper(id) { 
+        try {
+            await enviarStatusOnline(true);
+            
+            const disponivel = await verificarDisponibilidadeCorrida(id);
+            if (!disponivel) {
+                mostrarErro("Esta corrida já foi aceita por outro piloto.");
+                verificarEstado();
+                return;
+            }
+            
             idCorridaSelecionada = id;
+            limparMonitoramento();
             
-            const modal = document.getElementById('modal-confirmacao');
-            if (!modal) {
-                console.error('Modal de confirmação não encontrado!');
-                return;
-            }
-            
-            modal.style.display = 'flex';
+            document.getElementById('modal-confirmacao').style.display = 'flex';
+        } catch (err) {
+            console.error("Erro ao preparar aceite:", err);
+            mostrarErro("Erro ao processar. Tente novamente.");
         }
-        
-        async function aceitarCorrida(id) { 
-            try {
-                console.log('Aceitar corrida ID:', id);
-                
-                await enviarStatusOnline(true);
-                
-                const cardElement = document.getElementById(`card-${id}`);
-                if (!cardElement) {
-                    mostrarErro("Corrida não disponível mais.");
-                    return;
-                }
-                
-                const disponivel = await verificarDisponibilidadeCorrida(id);
-                if (!disponivel) {
-                    mostrarErro("Esta corrida já foi aceita por outro piloto.");
-                    limparMonitoramento();
-                    setTimeout(() => verificarEstado(), 2000);
-                    return;
-                }
-                
-                idCorridaSelecionada = id;
-                limparMonitoramento();
-                
-                abrirModalAceitar(id);
-            } catch (err) {
-                console.error("Erro ao aceitar corrida:", err);
-                mostrarErro("Erro ao processar. Tente novamente.");
-            }
+    }
+
+    async function confirmarAceitarCorrida() {
+        if (!idCorridaSelecionada) {
+            alert('Nenhuma corrida selecionada.');
+            return;
         }
 
-        async function confirmarAceitarCorrida() {
-            if (!idCorridaSelecionada) {
-                alert('Nenhuma corrida selecionada.');
+        try {
+            const res = await fetch(`${MEU_IP}/aceitar-corrida`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    corrida_id: idCorridaSelecionada,
+                    motoboy_id: usuario.id
+                }),
+            });
+
+            if (!res.ok) {
+                throw new Error(`Erro HTTP: ${res.status}`);
+            }
+
+            const data = await res.json();
+
+            if (!data.success) {
+                fecharModal('modal-confirmacao');
+                mostrarErro(data.message || 'Não foi possível aceitar a corrida.');
+                verificarEstado(); 
                 return;
             }
 
-            try {
-                console.log('Confirmando aceite da corrida:', idCorridaSelecionada);
-
-                const res = await fetch(`${MEU_IP}/aceitar-corrida`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        corrida_id: idCorridaSelecionada,
-                        motoboy_id: usuario.id
-                    }),
-                });
-
-                if (!res.ok) {
-                    throw new Error(`Erro HTTP: ${res.status}`);
-                }
-
-                const data = await res.json();
-
-                if (!data.success) {
-                    alert(data.message || 'Não foi possível aceitar a corrida.');
-                    return;
-                }
-
-                idCorridaAtual = idCorridaSelecionada;
-                temCorridaAtiva = true;
-                
-                limparContadores();
-                limparMonitoramento();
-                pararVerificacaoEstado();
-                
-                console.log('Corrida aceita:', idCorridaAtual);
-
-                const modalConfirmacao = document.getElementById('modal-confirmacao');
-                if (modalConfirmacao) {
-                    modalConfirmacao.style.display = 'none';
-                }
-                
-                const modalSucesso = document.getElementById('modal-sucesso');
-                if (modalSucesso) {
-                    modalSucesso.style.display = 'flex';
-                }
-                
-                setTimeout(() => {
-                    if (modalSucesso) {
-                        modalSucesso.style.display = 'none';
-                    }
-                    mostrarCorridaEmAndamento();
-                }, 1000);
-
-            } catch (err) {
-                console.error('Erro ao confirmar aceite da corrida:', err);
-                mostrarErro('Erro ao aceitar corrida: ' + err.message);
-            }
-        }
-
-        function mostrarCorridaEmAndamento() {
-            mostrarTela('ativa');
+            // Sucesso
+            idCorridaAtual = idCorridaSelecionada;
+            temCorridaAtiva = true;
             
-            fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.tem_corrida) {
-                        preencherDadosAtiva(data.corrida);
-                        idCorridaAtual = data.corrida.corrida_id || data.corrida.id;
-                        temCorridaAtiva = true;
-                    } else {
-                        console.log('Não encontrou corrida ativa, voltando para lista');
-                        temCorridaAtiva = false;
-                        idCorridaAtual = null;
-                        mostrarTela('lista');
-                        iniciarVerificacaoEstado();
-                    }
-                })
-                .catch(err => {
-                    console.error('Erro ao buscar corrida ativa:', err);
-                });
-        }
-
-        /***********************
-         *  CANCELAMENTO E FINALIZAÇÃO
-         ***********************/
-        function cancelarCorridaMotoboy() {
-            console.log('ID CORRIDA ATUAL:', idCorridaAtual);
-            if (!idCorridaAtual) return;
-            document.getElementById('modal-cancelamento-motoboy').style.display = 'flex';
-            document.getElementById('justificativa-motoboy').value = '';
-            document.getElementById('justificativa-motoboy').focus();
-        }
-
-        async function confirmarCancelamentoMotoboy() {
-            const motivo = document.getElementById('justificativa-motoboy').value.trim();
-
-            if (motivo.length < 5) {
-                mostrarErro("A justificativa deve ter pelo menos 5 caracteres.");
-                return;
-            }
-
-            try {
-                const res = await fetch(`${MEU_IP}/motoboy-cancelar-corrida`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        corrida_id: idCorridaAtual,
-                        motoboy_id: usuario.id,
-                        motivo: motivo
-                    })
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    alert('Corrida cancelada. O cliente será notificado.');
-                    idCorridaAtual = null;
-                    temCorridaAtiva = false;
-                    fecharModal('modal-cancelamento-motoboy');
-                    mostrarTela('lista');
-                    iniciarVerificacaoEstado();
-                } else {
-                    mostrarErro(data.message || 'Erro ao cancelar corrida.');
-                }
-
-            } catch (err) {
-                console.error('Erro ao cancelar corrida:', err);
-                mostrarErro('Erro de conexão. Tente novamente.');
-            }
-        }
-
-        async function finalizarCorrida() {
-            console.log('Finalizar corrida ID:', idCorridaAtual);
-            
-            if (!idCorridaAtual) {
-                alert('Nenhuma corrida ativa para finalizar.');
-                return;
-            }
-
-            if (!confirm("Tem certeza que deseja finalizar esta corrida?")) return;
-
-            try {
-                const res = await fetch(`${MEU_IP}/finalizar-corrida`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        corrida_id: idCorridaAtual,
-                        motoboy_id: usuario.id 
-                    })
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    alert('Corrida finalizada com sucesso!');
-                    idCorridaAtual = null;
-                    temCorridaAtiva = false;
-                    mostrarTela('lista');
-                    iniciarVerificacaoEstado();
-                } else {
-                    alert(data.message || 'Erro ao finalizar corrida.');
-                }
-
-            } catch (err) {
-                console.error('Erro ao finalizar corrida:', err);
-                alert('Erro de conexão. Tente novamente.');
-            }
-        }
-
-        /***********************
-         *  INICIALIZAÇÃO
-         ***********************/
-        window.addEventListener('beforeunload', function() {
             limparContadores();
             limparMonitoramento();
             pararVerificacaoEstado();
-            enviarStatusOnline(false);
-        });
-        // Adicione esta função
-function verificarCorridaAtivaPeriodicamente() {
-    fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
-        .then(res => res.json())
-        .then(data => {
+            
+            fecharModal('modal-confirmacao');
+            document.getElementById('modal-sucesso').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.getElementById('modal-sucesso').style.display = 'none';
+                verificarEstado(); // Atualiza para a tela ativa (aguardando ou liberada)
+            }, 1000);
 
-            // ❌ corrida não existe mais
-            if (!data.tem_corrida) {
-                console.log('❌ Corrida não existe mais');
-                temCorridaAtiva = false;
-                idCorridaAtual = null;
-                mostrarTela('lista');
-                iniciarVerificacaoEstado();
+        } catch (err) {
+            console.error('Erro ao confirmar aceite da corrida:', err);
+            mostrarErro('Erro ao aceitar corrida: ' + (err.message || ''));
+        }
+    }
+    
+    async function iniciarCorrida() {
+        if (!idCorridaAtual) {
+            alert('Nenhuma corrida para iniciar.');
+            return;
+        }
+
+        try {
+            const res = await fetch(`${MEU_IP}/iniciar-corrida`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    corrida_id: idCorridaAtual,
+                    motoboy_id: usuario.id
+                })
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                alert(data.message || 'Erro ao iniciar corrida. Status não permitido.');
                 return;
             }
 
-            const corrida = data.corrida;
-
+            alert('🚀 Corrida iniciada com sucesso!');
+            verificarEstado();
             
-
-            // ⏳ ainda aguardando pagamento
-            console.log('⏳ Aguardando pagamento...');
-        })
-        .catch(err => {
-            console.error('Erro ao verificar corrida ativa:', err);
-        });
-}
-
-
-// E mude o final do código para:
-document.addEventListener('DOMContentLoaded', function() {
-    enviarStatusOnline(true);
-    onlineInterval = setInterval(() => {
-        enviarStatusOnline(true);
-    }, 5000);
+        } catch (err) {
+            console.error('Erro ao iniciar corrida:', err);
+            alert('Erro ao iniciar corrida.');
+        }
+    }
     
-    // Verifica corrida ativa imediatamente
-    setTimeout(() => {
-        fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.tem_corrida) {
-                    temCorridaAtiva = true;
-                    idCorridaAtual = data.corrida.corrida_id || data.corrida.id;
-                    mostrarTela('ativa');
-                    preencherDadosAtiva(data.corrida);
-                    
-                    // Verifica a cada 3 segundos
-                    setInterval(verificarCorridaAtivaPeriodicamente, 3000);
-                } else {
-                    verificarEstado();
-                    iniciarVerificacaoEstado();
-                }
-            })
-            .catch(err => {
-                console.error('Erro inicial:', err);
-                verificarEstado();
-                iniciarVerificacaoEstado();
+    async function finalizarCorrida() {
+        if (!idCorridaAtual) {
+            alert('Nenhuma corrida ativa para finalizar.');
+            return;
+        }
+
+        if (!confirm("Tem certeza que deseja finalizar esta corrida?")) return;
+
+        try {
+            const res = await fetch(`${MEU_IP}/finalizar-corrida`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    corrida_id: idCorridaAtual,
+                    motoboy_id: usuario.id 
+                })
             });
-    }, 500);
-});
 
-function mostrarOverlayPagamento() {
-  document.getElementById('overlay-pagamento').style.display = 'flex';
-}
+            const data = await res.json();
 
-function esconderOverlayPagamento() {
-  document.getElementById('overlay-pagamento').style.display = 'none';
-}
+            if (data.success) {
+                alert('Corrida finalizada com sucesso!');
+                idCorridaAtual = null;
+                temCorridaAtiva = false;
+                verificarEstado(); 
+            } else {
+                alert(data.message || 'Erro ao finalizar corrida.');
+            }
+
+        } catch (err) {
+            console.error('Erro ao finalizar corrida:', err);
+            alert('Erro de conexão. Tente novamente.');
+        }
+    }
+    
+    function cancelarCorridaMotoboy() {
+        if (!idCorridaAtual) return;
+        document.getElementById('modal-cancelamento-motoboy').style.display = 'flex';
+        document.getElementById('justificativa-motoboy').value = '';
+        document.getElementById('justificativa-motoboy').focus();
+    }
+    
+    async function confirmarCancelamentoMotoboy() {
+        const motivo = document.getElementById('justificativa-motoboy').value.trim();
+
+        if (motivo.length < 5) {
+            mostrarErro("A justificativa deve ter pelo menos 5 caracteres.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${MEU_IP}/motoboy-cancelar-corrida`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    corrida_id: idCorridaAtual,
+                    motoboy_id: usuario.id,
+                    motivo: motivo
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert('Corrida cancelada. O cliente será notificado.');
+                idCorridaAtual = null;
+                temCorridaAtiva = false;
+                fecharModal('modal-cancelamento-motoboy');
+                verificarEstado(); 
+            } else {
+                mostrarErro(data.message || 'Erro ao cancelar corrida.');
+            }
+
+        } catch (err) {
+            console.error('Erro ao cancelar corrida:', err);
+            mostrarErro('Erro de conexão. Tente novamente.');
+        }
+    }
 
 
+    /***********************
+     *  INICIALIZAÇÃO
+     ***********************/
+    
+    // Funcao que verifica o estado inicial
+    async function inicializarApp() {
+        enviarStatusOnline(true);
+        onlineInterval = setInterval(() => {
+            enviarStatusOnline(true);
+        }, 5000);
+        
+        // Inicia a verificação do estado imediatamente
+        await verificarEstado(); 
+        
+        // Garante que o polling da lista inicie, caso não haja corrida ativa
+        if (!temCorridaAtiva && !estadoVerificacaoInterval) {
+            estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
+        }
+    }
 
-    </script>
-    <!-- OVERLAY AGUARDANDO PAGAMENTO -->
-<div id="overlay-pagamento" style="
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100vw;
-  height:100vh;
-  background:rgba(0,0,0,0.9);
-  z-index:9999;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-">
 
-  <div style="max-width:320px;">
-    <div style="font-size:60px;">⏳</div>
-    <h2 style="color:#00e640; margin-top:20px;">
-      Aguardando pagamento
-    </h2>
-    <p style="color:#fff; font-size:18px; margin-top:10px;">
-      O cliente precisa concluir o pagamento<br>
-      para que você possa iniciar a corrida.
-    </p>
-  </div>
-
-</div>
-
-</body>
-</html>
+    document.addEventListener('DOMContentLoaded', function() {
+        inicializarApp();
+    });
+    
+    // Limpeza ao fechar/sair
+    window.addEventListener('beforeunload', function() {
+        limparContadores();
+        limparMonitoramento();
+        pararMonitoramentoAtiva();
+        pararVerificacaoEstado();
+        enviarStatusOnline(false);
+    });
+</script>
