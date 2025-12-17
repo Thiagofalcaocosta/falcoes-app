@@ -6,8 +6,8 @@
   --brand-green: #10B981;
   --brand-green-dark:#0beb38 ;
   --navy: #0b2340;
-  --black: #057618;
-  --white: #164a19;
+  --black: #ffffff;   /* texto principal */
+  --white: #ffffff;   /* botões claros */
   --bg: #000000;
   --card-bg: #0b0c0c;
   --muted: #08addf;
@@ -88,6 +88,10 @@ body{
 .header {
   display:flex; align-items:center; gap:14px; padding:14px 18px; background:linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3));
   border-bottom:1px solid #f3ebeb;
+  justify-content: center; /* Centraliza o conteúdo (o .container) */
+  align-items: center;
+  border-bottom:1px solid #f3ebeb;
+  background:linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3));
 }
 .header img{ width:56px; height:56px; border-radius:10px; object-fit:cover; }
 .brand-title{ font-weight:800; font-size:18px; }
@@ -133,18 +137,6 @@ body{
     background-color: #1a1a1a; /* Um pouco mais claro que o card-bg para contraste */
     color: var(--black); /* Texto branco */
 }
-
-/* Opções de serviço (Moto/Entrega) */
-/* ======= CLIENT / MOTOBOY SHARED ======= */
-.header {
-  display:flex; /* Mantido flex para o caso de ter um background fixo */
-  justify-content: center; /* Centraliza o conteúdo (o .container) */
-  align-items: center;
-  background:linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3));
-  border-bottom:1px solid #f3ebeb;
-  /* Removido o padding:14px 18px; daqui */
-}
-
 /* Novo estilo para o conteúdo do cabeçalho */
 .header-content {
     display: flex; 
@@ -545,6 +537,7 @@ input[type="date"] {
     z-index: 1000; /* Garante que fique acima de todos os outros elementos */
     transition: opacity 0.3s ease;
     opacity: 0;
+    
 }
 .modal-overlay.is-visible {
     display: flex;
@@ -616,3 +609,16 @@ input[type="date"] {
     font-size: 20px;
     font-weight: 800;
 }
+#modal-pagamento .modal-content {
+    position: relative;
+    z-index: 2147483647;
+}
+.modal-overlay {
+    z-index: 2147483646;
+}
+
+.modal-overlay .modal-content {
+    position: relative;
+    z-index: 2147483647;
+}
+
