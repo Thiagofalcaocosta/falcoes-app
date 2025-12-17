@@ -85,8 +85,7 @@ body{
     margin-top: 25px; /* Volta o espaçamento para o histórico */
 }
 /* ======= CLIENT / MOTOBOY SHARED ======= */
-.header {
-  display:flex; align-items:center; gap:14px; padding:14px 18px; background:linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3));
+.header {display:flex; align-items:center; gap:14px; padding:14px 18px; background:linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3));
   border-bottom:1px solid #f3ebeb;
   justify-content: center; /* Centraliza o conteúdo (o .container) */
   align-items: center;
@@ -622,3 +621,22 @@ input[type="date"] {
     z-index: 2147483647;
 }
 
+/* ===== MODAL PAGAMENTO (PRIORIDADE MÁXIMA) ===== */
+#modal-pagamento {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    align-items: center;
+    justify-content: center;
+    z-index: 2147483646;
+}
+
+#modal-pagamento.show {
+    display: flex !important;
+}
+
+#modal-pagamento .modal-content {
+    position: relative;
+    z-index: 2147483647;
+}
