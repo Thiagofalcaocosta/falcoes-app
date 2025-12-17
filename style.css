@@ -675,3 +675,19 @@ input[type="date"] {
     position: relative;
     z-index: 2147483647;
 }
+/* ===== AJUSTE FINAL DO CONTEÚDO DO MODAL ===== */
+#modal-pagamento {
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+#modal-pagamento.show {
+    display: flex !important;
+}
+
+#modal-pagamento .modal-content {
+    margin: 0;
+    max-width: 320px;
+    width: 90%;
+}
