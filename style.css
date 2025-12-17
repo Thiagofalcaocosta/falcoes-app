@@ -640,3 +640,12 @@ input[type="date"] {
     position: relative;
     z-index: 2147483647;
 }
+/* ===== FIX DEFINITIVO: MODAL PAGAMENTO ===== */
+#modal-pagamento {
+    opacity: 0;
+}
+
+#modal-pagamento.show {
+    display: flex !important;
+    opacity: 1 !important;
+}
