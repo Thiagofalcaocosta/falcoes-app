@@ -538,7 +538,7 @@ input[type="date"] {
     opacity: 0;
     
 }
-.modal-overlay.is-visible {
+/*.modal-overlay.is-visible {
     display: flex;
     opacity: 1;
 }
@@ -648,4 +648,30 @@ input[type="date"] {
 #modal-pagamento.show {
     display: flex !important;
     opacity: 1 !important;
+}
+/* ===== SISTEMA ÚNICO DE MODAIS (CORREÇÃO DEFINITIVA) ===== */
+
+/* Fundo do modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 2147483646;
+}
+
+/* Modal ATIVO */
+.modal-overlay.show {
+    display: flex !important;
+    opacity: 1 !important;
+}
+
+/* Conteúdo do modal */
+.modal-overlay .modal-content {
+    position: relative;
+    z-index: 2147483647;
 }
