@@ -699,22 +699,23 @@
                 style="margin-top:8px;">Fechar</button>
         </div>
     </div>
-    <div class="modal-overlay" id="modal-pagamento"> 
+    <div id="modal-pagamento">
     <div class="modal-content">
-        <div style="font-size:22px; color:var(--neon-green); margin-bottom:15px;">
-            💳 Escolha a forma de pagamento
+        <img src="SUA_LOGO.png" style="width: 80px; margin-bottom: 15px;">
+        <h3 style="color: var(--brand-green);">PAGAMENTO</h3>
+        <p>Um piloto aceitou! Como deseja pagar?</p>
+        
+        <div class="btn-pagamento-opcoes">
+            <button class="btn-pagamento-item" onclick="pagarDinheiro()">
+                💵 PAGAR EM DINHEIRO
+            </button>
+            <button class="btn-pagamento-item" onclick="pagarPix()">
+                📱 PAGAR COM PIX
+            </button>
         </div>
-
-        <button class="btn" onclick="pagarDinheiro()">
-            💵 PAGAR EM DINHEIRO
-        </button>
-
-        <button class="btn" onclick="pagarPix()" style="margin-top:10px;">
-            📲 PAGAR COM PIX
-        </button>
-
-        <button class="btn-cancelar"
-            onclick="document.getElementById('modal-pagamento').style.display='none'">
+        
+        <button onclick="document.getElementById('modal-pagamento').classList.remove('show')" 
+                style="background:none; border:none; color:var(--muted); margin-top:15px; cursor:pointer;">
             Fechar
         </button>
     </div>
