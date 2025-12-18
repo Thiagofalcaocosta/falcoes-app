@@ -707,11 +707,17 @@
         <h3 style="color: var(--neon-green); margin-bottom: 10px;">PAGAMENTO</h3>
         <p style="margin-bottom: 20px;">Um piloto aceitou! Como deseja pagar?</p>
         
-        <div class="btn-pagamento-opcoes" style="display: flex; flex-direction: column; gap: 10px;">
-            <button class="btn" onclick="pagarDinheiro()">
+        <div id="modal-pagamento">
+    <div class="modal-content">
+        <img src="SUA_LOGO.png" style="width: 80px; margin-bottom: 15px;">
+        <h3 style="color: var(--brand-green);">PAGAMENTO</h3>
+        <p>Um piloto aceitou! Como deseja pagar?</p>
+        
+        <div class="btn-pagamento-opcoes">
+            <button class="btn-pagamento-item" onclick="pagarDinheiro()">
                 💵 PAGAR EM DINHEIRO
             </button>
-            <button class="btn" onclick="pagarPix()">
+            <button class="btn-pagamento-item" onclick="pagarPix()">
                 📱 PAGAR COM PIX
             </button>
         </div>
