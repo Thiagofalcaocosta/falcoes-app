@@ -796,3 +796,50 @@ textarea#campo-encerramento {
     border: none;
     cursor: pointer;
 }
+
+/* ===== CARD USUÁRIO TOPO ===== */
+.top-user-card {
+    position: relative;
+    background: #1e1e1e;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+/* ===== BOTÃO SAIR ===== */
+.btn-logout {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: transparent;
+    border: 1px solid var(--error-color);
+    color: var(--error-color);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-logout:hover {
+    background: rgba(255, 68, 68, 0.15);
+}
+
+/* ===== TEXTO USUÁRIO ===== */
+.top-user-greeting {
+    font-size: 18px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.top-user-meta {
+    font-size: 13px;
+    color: #aaa;
+}
+
+.top-user-meta .dot {
+    margin: 0 6px;
+}

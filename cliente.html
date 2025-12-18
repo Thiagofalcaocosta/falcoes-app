@@ -65,32 +65,7 @@
             filter: drop-shadow(0 0 5px rgba(0, 230, 64, 0.5));
         }
 
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        .user-info {
-            font-weight: 600;
-            color: #ccc;
-        }
-
-        .estrelas {
-            background-color: rgba(255, 215, 0, 0.2);
-            color: #ffd700;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-weight: bold;
-        }
-
-        .logout a {
-            color: var(--error-color);
-            text-decoration: none;
-            font-weight: 600;
-        }
+        
 
         h2 {
             text-align: center;
@@ -717,10 +692,21 @@
                 onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
         </div>
 
-        <div class="header-top">
-            <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
-            <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
-        </div>
+        <div class="top-user-card">
+    <button class="btn-logout" onclick="logout()">SAIR</button>
+
+    <div class="top-user-greeting">
+        👋 Olá, <strong id="nome-usuario">---</strong>
+    </div>
+
+    <div class="top-user-meta">
+        ⭐ <span id="nota-usuario">5.0</span>
+        <span class="dot">•</span>
+        <span id="status-usuario">Online agora</span>
+    </div>
+</div>
+
+
 
         <div id="tela-pedido" class="tela ativa">
 
