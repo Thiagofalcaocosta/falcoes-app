@@ -750,3 +750,25 @@ textarea#campo-encerramento {
     flex-direction: column;
     align-items: center;
 }
+
+/* Modal de pagamento - ajuste visual simples */
+#modal-pagamento .modal-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+}
+
+/* Botões de pagamento no padrão do app */
+.btn-pagamento-opcoes .btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 800;
+    background-color: var(--neon-green);
+    color: #000;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+}
