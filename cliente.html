@@ -1349,20 +1349,22 @@
             }
             
             // --- 2) AGUARDANDO_PAGAMENTO / ACEITA ---
-            else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
-                const modal = document.getElementById('modal-pagamento');
-                if (modal) modal.classList.add('show');
+else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
+    const modal = document.getElementById('modal-pagamento');
+    if (modal) {
+        // Força a exibição do modal de pagamento
+        modal.style.display = 'flex'; 
+        modal.classList.add('show');
+    }
 
-                statusArea.style.borderColor  = '#f1c40f';
-                statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
-                statusTitulo.style.color      = '#f1c40f';
-                statusTitulo.innerText        = "🎯 ESCOLHA COMO PAGAR";
-                statusDesc.innerText          = "Um piloto aceitou! Escolha sua forma de pagamento.";
+    statusArea.style.borderColor  = '#f1c40f';
+    statusArea.style.background   = 'rgba(241, 196, 15, 0.1)';
+    statusTitulo.style.color      = '#f1c40f';
+    statusTitulo.innerText        = "🎯 ESCOLHA COMO PAGAR";
+    statusDesc.innerText          = "Um piloto aceitou! Escolha sua forma de pagamento.";
 
-                if (areaJustificativa) areaJustificativa.style.display = 'block';
-                
-            }
-
+    if (areaJustificativa) areaJustificativa.style.display = 'block';
+}
             // --- 3) LIBERADA ou EM_ANDAMENTO (Corrida Ativa) ---
             else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
                 const modal = document.getElementById('modal-pagamento');

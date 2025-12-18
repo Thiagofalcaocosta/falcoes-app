@@ -608,10 +608,7 @@ input[type="date"] {
     font-size: 20px;
     font-weight: 800;
 }
-#modal-pagamento .modal-content {
-    position: relative;
-    z-index: 2147483647;
-}
+
 .modal-overlay {
     z-index: 2147483646;
 }
@@ -620,36 +617,6 @@ input[type="date"] {
     position: relative;
     z-index: 2147483647;
 }
-
-/* ===== MODAL PAGAMENTO (PRIORIDADE MÁXIMA) ===== */
-#modal-pagamento {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    align-items: center;
-    justify-content: center;
-    z-index: 2147483646;
-}
-
-#modal-pagamento.show {
-    display: flex !important;
-}
-
-#modal-pagamento .modal-content {
-    position: relative;
-    z-index: 2147483647;
-}
-/* ===== FIX DEFINITIVO: MODAL PAGAMENTO ===== */
-#modal-pagamento {
-    opacity: 0;
-}
-
-#modal-pagamento.show {
-    display: flex !important;
-    opacity: 1 !important;
-}
-/* ===== SISTEMA ÚNICO DE MODAIS (CORREÇÃO DEFINITIVA) ===== */
 
 /* Fundo do modal */
 .modal-overlay {
@@ -675,19 +642,60 @@ input[type="date"] {
     position: relative;
     z-index: 2147483647;
 }
-/* ===== AJUSTE FINAL DO CONTEÚDO DO MODAL ===== */
+
+/* ===== MODAL PAGAMENTO (ESTILO FINAL) ===== */
 #modal-pagamento {
-    display: none;
+    display: none; /* Escondido por padrão */
+    position: fixed;
+    inset: 0; /* Ocupa a tela toda */
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9); /* Fundo bem escuro para destaque */
     align-items: center;
     justify-content: center;
+    z-index: 999999; /* Prioridade máxima */
 }
 
+/* Quando o JS adicionar a classe .show */
 #modal-pagamento.show {
     display: flex !important;
 }
 
 #modal-pagamento .modal-content {
-    margin: 0;
-    max-width: 320px;
-    width: 90%;
+    background-color: var(--card-bg);
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 350px;
+    width: 85%;
+    border: 1px solid var(--brand-green);
+    box-shadow: 0 0 20px rgba(0, 230, 64, 0.2);
+}
+
+/* Estilo dos Botões dentro do Modal */
+.btn-pagamento-opcoes {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.btn-pagamento-item {
+    background-color: var(--brand-green); /* Verde da sua logo */
+    color: #000;
+    padding: 15px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.2s;
+}
+
+.btn-pagamento-item:active {
+    transform: scale(0.95);
 }
