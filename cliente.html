@@ -699,30 +699,35 @@
                 style="margin-top:8px;">Fechar</button>
         </div>
     </div>
-    <div id="modal-pagamento">
+    <div id="modal-pagamento" class="modal-overlay">
     <div class="modal-content">
-        <img src="logo-192.png" style="width: 80px; margin-bottom: 15px;">
-        <h3 style="color: var(--brand-green);">PAGAMENTO</h3>
-        <p>Um piloto aceitou! Como deseja pagar?</p>
+        <div style="text-align: center; margin-bottom: 15px;">
+            <img src="assets/logo.png" style="width: 80px;" onerror="this.src='logo-192.png'">
+        </div>
         
-        <div class="btn-pagamento-opcoes">
-            <button class="btn-pagamento-item" onclick="pagarDinheiro()">
+        <h3 style="color: var(--neon-green); margin-bottom: 5px;">PAGAMENTO</h3>
+        <p style="font-size: 14px; color: #ccc; margin-bottom: 20px;">Um piloto aceitou! Como deseja pagar?</p>
+        
+        <div class="btn-pagamento-opcoes" style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="btn-pagamento-item" onclick="pagarDinheiro()" 
+                style="background-color: var(--neon-green); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
                 💵 PAGAR EM DINHEIRO
             </button>
-            <button class="btn-pagamento-item" onclick="pagarPix()">
+            
+            <button class="btn-pagamento-item" onclick="pagarPix()" 
+                style="background-color: var(--neon-green); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
                 📱 PAGAR COM PIX
             </button>
         </div>
         
-        <button onclick="document.getElementById('modal-pagamento').classList.remove('show')" 
-                style="background:none; border:none; color:var(--muted); margin-top:15px; cursor:pointer;">
-            Fechar
+        <button class="btn-cancelar" onclick="abrirJustificativaCliente()" 
+                style="margin-top: 20px; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold;">
+            🚫 CANCELAR CORRIDA
         </button>
     </div>
 </div>
 
-
-    <div class="container">
+        <div class="container"></div>
         <div class="logo-area"><img src="assets/logo.png" alt="Logo"
                 onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
         </div>
