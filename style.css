@@ -699,3 +699,35 @@ input[type="date"] {
 .btn-pagamento-item:active {
     transform: scale(0.95);
 }
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9); /* Escurece o fundo 90% */
+    display: none; /* Controlado pelo JS */
+    align-items: center;
+    justify-content: center;
+    z-index: 10000; /* Fica acima de tudo */
+}
+
+.modal-content {
+    background: #1a1a1a;
+    padding: 25px;
+    border-radius: 20px;
+    width: 85%;
+    max-width: 350px;
+    text-align: center;
+    border: 1px solid var(--neon-green);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+textarea#campo-encerramento {
+    width: 100%;
+    height: 80px;
+    background: #111;
+    border: 1px solid #333;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
