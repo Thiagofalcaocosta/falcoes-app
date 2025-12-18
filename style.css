@@ -772,3 +772,27 @@ textarea#campo-encerramento {
     border: none;
     cursor: pointer;
 }
+
+/* ===== FIX REAL DO MODAL DE PAGAMENTO ===== */
+
+/* Conteúdo do modal */
+#modal-pagamento .modal-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+}
+
+/* BOTÕES CORRETOS (classe certa!) */
+#modal-pagamento .btn-pagamento-item {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 800;
+    background-color: var(--neon-green);
+    color: #000;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+}
