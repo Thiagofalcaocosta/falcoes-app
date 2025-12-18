@@ -699,29 +699,24 @@
                 style="margin-top:8px;">Fechar</button>
         </div>
     </div>
-    <div id="modal-pagamento" class="modal-overlay">
+    <div class="modal-overlay" id="modal-pagamento">
     <div class="modal-content">
-        <div style="text-align: center; margin-bottom: 15px;">
-            <img src="assets/logo.png" style="width: 80px;" onerror="this.src='logo-192.png'">
-        </div>
+        <img src="assets/logo.png" alt="Logo" style="width: 80px; margin-bottom: 15px;" 
+             onerror="this.src='logo-192.png'; this.onerror=null;">
         
-        <h3 style="color: var(--neon-green); margin-bottom: 5px;">PAGAMENTO</h3>
-        <p style="font-size: 14px; color: #ccc; margin-bottom: 20px;">Um piloto aceitou! Como deseja pagar?</p>
+        <h3 style="color: var(--neon-green); margin-bottom: 10px;">PAGAMENTO</h3>
+        <p style="margin-bottom: 20px;">Um piloto aceitou! Como deseja pagar?</p>
         
-        <div class="btn-pagamento-opcoes" style="display: flex; flex-direction: column; gap: 12px;">
-            <button class="btn-pagamento-item" onclick="pagarDinheiro()" 
-                style="background-color: var(--neon-green); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <div class="btn-pagamento-opcoes" style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn" onclick="pagarDinheiro()">
                 💵 PAGAR EM DINHEIRO
             </button>
-            
-            <button class="btn-pagamento-item" onclick="pagarPix()" 
-                style="background-color: var(--neon-green); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <button class="btn" onclick="pagarPix()">
                 📱 PAGAR COM PIX
             </button>
         </div>
         
-        <button class="btn-cancelar" onclick="abrirJustificativaCliente()" 
-                style="margin-top: 20px; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold;">
+        <button class="btn-cancelar" onclick="cancelarPedido()" style="margin-top: 20px;">
             🚫 CANCELAR CORRIDA
         </button>
     </div>
