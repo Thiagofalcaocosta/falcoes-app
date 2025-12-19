@@ -562,44 +562,35 @@
     /***********************
      *  FUNÇÕES DE UTILIDADE
      ***********************/
-
-
-// ESSA FUNÇÃO CHAMA O WHATSAPP USANDO A VARIÁVEL DO TOPO
-// ESSA FUNÇÃO CHAMA O WHATSAPP COM MENSAGEM AUTOMÁTICA
+     // FUNÇÃO ÚNICA PARA O WHATSAPP COM MENSAGEM AUTOMÁTICA
 function abrirConversaZap() {
-    console.log("Iniciando abertura do WhatsApp...");
-
-    if (!telefoneClienteGlobal) {
+    if (!telefoneClienteGlobal || telefoneClienteGlobal === "") {
         alert("Número não identificado.");
         return;
     }
 
-    // 1. Garante que o telefone tenha apenas números e o DDI 55
+    // 1. Limpa o telefone
     let foneLimpo = telefoneClienteGlobal.toString().replace(/\D/g, '');
-    if (foneLimpo.length <= 11) foneLimpo = '55' + foneLimpo;
+    if (!foneLimpo.startsWith('55')) foneLimpo = '55' + foneLimpo;
 
-    // 2. Coleta de dados com fallback (segurança)
+    // 2. Pega os nomes da tela e do sistema para a mensagem
     const nomeC = document.getElementById('ativa-cliente')?.innerText || "Cliente";
-    const p = typeof usuario !== 'undefined' ? usuario : JSON.parse(localStorage.getItem('usuario') || '{}');
-    const nomeP = p.nome || "Piloto";
-    const motoP = p.modelo_moto || "Moto";
+    const nomeP = usuario.nome || "Piloto";
+    const motoP = usuario.modelo_moto || "Moto";
+    const placaP = usuario.placa || "";
 
-    // 3. Montagem da mensagem
-    const mensagem = `Olá, ${nomeC}! Sou o piloto ${nomeP}. Já aceitei sua corrida e estou a caminho. Minha moto é uma ${motoP}. Chego em breve! 🏍️`;
+    // 3. Monta a mensagem profissional
+    const mensagem = `Olá, ${nomeC}! Sou o piloto ${nomeP}. Já aceitei sua corrida e estou a caminho. Minha moto é uma ${motoP} ${placaP ? 'placa ' + placaP : ''}. Chego em breve! 🏍️`;
     
-    // 4. Criação do Link com a API padrão (mais estável para preenchimento)
-    const linkFinal = "https://api.whatsapp.com/send?phone=" + foneLimpo + "&text=" + encodeURIComponent(mensagem);
+    const linkFinal = `https://api.whatsapp.com/send?phone=${foneLimpo}&text=${encodeURIComponent(mensagem)}`;
 
-    console.log("Link gerado:", linkFinal);
-
-    // 5. Abertura forçada
-    const win = window.open(linkFinal, '_blank');
-    if (win) {
-        win.focus();
-    } else {
-        // Se o navegador bloquear o popup, tenta pelo redirecionamento direto
-        window.location.href = linkFinal;
-    }
+    // 4. Abre o link forçando a saída da "prisão" do app
+    const a = document.createElement('a');
+    a.href = linkFinal;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
 
     function limparContadores() {
@@ -712,24 +703,6 @@ function mostrarTela(idDesejado) {
             window.open(url, '_blank');
         }
     }
-
-// ESTA FUNÇÃO NOVA DEVE FICAR LOGO ABAIXO DA DE CIMA
-function abrirConversaZap() {
-    if (!telefoneClienteGlobal) {
-        alert("Número não encontrado.");
-        return;
-    }
-    const ddi = telefoneClienteGlobal.startsWith('55') ? '' : '55';
-    const link = `https://api.whatsapp.com/send?phone=${ddi}${telefoneClienteGlobal}`;
-    
-    // CRIA UM LINK INVISÍVEL E CLICA NELE PARA SAIR DA "PRISÃO" DO APP
-    const a = document.createElement('a');
-    a.href = link;
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
 
     /***********************
      *  FUNÇÕES DE STATUS ONLINE
