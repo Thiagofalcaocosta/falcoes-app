@@ -554,6 +554,38 @@
     /***********************
      *  FUNÇÕES DE UTILIDADE
      ***********************/
+function atualizarDadosCorridaAtiva(pedido) {
+    if (!pedido) return;
+
+    idCorridaAtual = pedido.id;
+    document.getElementById('ativa-cliente').innerText = pedido.nome_cliente || "Cliente";
+    document.getElementById('ativa-valor').innerText = `R$ ${pedido.valor}`;
+    document.getElementById('ativa-origem').innerText = pedido.origem;
+    document.getElementById('ativa-destino').innerText = pedido.destino;
+    
+    // GUARDA O NÚMERO NA VARIÁVEL QUE CRIAMOS NO TOPO
+    if (pedido.telefone_cliente) {
+        telefoneClienteGlobal = pedido.telefone_cliente.replace(/\D/g, '');
+    }
+}
+
+// ESSA FUNÇÃO CHAMA O WHATSAPP USANDO A VARIÁVEL DO TOPO
+function abrirConversaZap() {
+    if (!telefoneClienteGlobal || telefoneClienteGlobal === "") {
+        alert("Número do cliente não identificado. Tente atualizar a página.");
+        return;
+    }
+    const ddi = telefoneClienteGlobal.startsWith('55') ? '' : '55';
+    const link = `https://api.whatsapp.com/send?phone=${ddi}${telefoneClienteGlobal}`;
+    
+    const a = document.createElement('a');
+    a.href = link;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
     function limparContadores() {
         Object.values(intervalosContadores).forEach(clearInterval);
         intervalosContadores = {};
@@ -637,40 +669,6 @@ function mostrarTela(idDesejado) {
             window.open(url, '_blank');
         }
     }
-
-    // Preenche a tela de corrida ativa com os dados
-    function atualizarDadosCorridaAtiva(pedido) {
-        if (!pedido) return;
-
-        idCorridaAtual = pedido.id;
-        document.getElementById('ativa-cliente').innerText = pedido.nome_cliente || "Cliente";
-        document.getElementById('ativa-valor').innerText = `R$ ${pedido.valor}`;
-        document.getElementById('ativa-origem').innerText = pedido.origem;
-        document.getElementById('ativa-destino').innerText = pedido.destino;
-        document.getElementById('ativa-tipo').innerText = (pedido.tipo_servico || "MOTO TÁXI").toUpperCase();
-        
-        // Exibe o número do cliente na tela
-        if(document.getElementById('ativa-fone')) {
-             document.getElementById('ativa-fone').innerText = pedido.telefone_cliente;
-        }
-
-        // Lógica visual para saber se deve cobrar ou não
-        const labelPgto = document.getElementById('ativa-metodo-pagamento');
-        if (labelPgto) {
-            if (pedido.metodo_pagamento === 'pix') {
-                labelPgto.innerText = "PIX (JÁ PAGO ✅)";
-                labelPgto.style.color = "var(--neon-green)";
-            } else {
-                labelPgto.innerText = "DINHEIRO (COBRAR NO LOCAL 💰)";
-                labelPgto.style.color = "#ffaa00";
-            }
-        }
-
-        // AQUI ESTÁ A MUDANÇA: APAGUEI AS LINHAS DO HREF E SÓ GUARDO O NÚMERO
-    if (pedido.telefone_cliente) {
-        telefoneClienteGlobal = pedido.telefone_cliente.replace(/\D/g, '');
-    }
-}
 
 // ESTA FUNÇÃO NOVA DEVE FICAR LOGO ABAIXO DA DE CIMA
 function abrirConversaZap() {
