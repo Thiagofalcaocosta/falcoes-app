@@ -565,13 +565,27 @@
 
 
 // ESSA FUNÇÃO CHAMA O WHATSAPP USANDO A VARIÁVEL DO TOPO
+// ESSA FUNÇÃO CHAMA O WHATSAPP COM MENSAGEM AUTOMÁTICA
 function abrirConversaZap() {
     if (!telefoneClienteGlobal || telefoneClienteGlobal === "") {
         alert("Número do cliente não identificado. Tente atualizar a página.");
         return;
     }
+
+    // Pega os dados que já estão na tela ou no seu objeto de usuário
+    const nomeCliente = document.getElementById('ativa-cliente').innerText || "Cliente";
+    const nomePiloto = usuario.nome || "Piloto";
+    const modeloMoto = usuario.modelo_moto || "Moto";
+    const placaMoto = usuario.placa || "";
+
+    // MODELO DE MENSAGEM:
+    const mensagem = `Olá, ${nomeCliente}! Sou o piloto ${nomePiloto}. Já aceitei sua corrida e estou a caminho. Minha moto é uma ${modeloMoto} ${placaMoto ? 'de placa ' + placaMoto : ''}. Chego em breve! 🏍️`;
+    
+    // Codifica o texto para o link do WhatsApp
+    const mensagemUrl = encodeURIComponent(mensagem);
+
     const ddi = telefoneClienteGlobal.startsWith('55') ? '' : '55';
-    const link = `https://api.whatsapp.com/send?phone=${ddi}${telefoneClienteGlobal}`;
+    const link = `https://api.whatsapp.com/send?phone=${ddi}${telefoneClienteGlobal}&text=${mensagemUrl}`;
 
     const a = document.createElement('a');
     a.href = link;
