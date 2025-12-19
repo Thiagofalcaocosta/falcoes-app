@@ -777,9 +777,13 @@ function preencherDadosAtiva(c) {
     document.getElementById('ativa-fone').innerText = c.telefone_cliente;
     document.getElementById('ativa-origem').innerText = c.origem;
     document.getElementById('ativa-destino').innerText = c.destino;
+
+    if (pedido.telefone_cliente)
+        telefoneClienteGlobal = pedido.telefone_cliente.replace(/\D/g, '');
     
     // Renderiza os botões dinamicamente com base no status
     renderizarBotoesAtiva(c.status); 
+    
 }
 
     /***********************
