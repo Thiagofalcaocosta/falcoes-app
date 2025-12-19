@@ -660,15 +660,68 @@ app.post('/expirar-corrida', async (req, res) => {
 });
 
 app.post('/finalizar-corrida', async (req, res) => {
-  try {
-    await pool.query("UPDATE corridas SET status = 'concluida' WHERE id = $1", [
-      req.body.corrida_id,
-    ]);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Erro em /finalizar-corrida:', err && err.stack ? err.stack : err);
-    res.status(500).json({ success: false });
-  }
+    const { corrida_id, motoboy_id } = req.body;
+
+    if (!corrida_id || !motoboy_id) {
+        return res.status(400).json({ success: false, message: "Dados incompletos." });
+    }
+
+    try {
+        // 1. Inicia a transação
+        await pool.query('BEGIN');
+
+        // 2. Busca o valor bruto da corrida
+        const dadosCorrida = await pool.query(
+            "SELECT valor FROM corridas WHERE id = $1 AND motoboy_id = $2", 
+            [corrida_id, motoboy_id]
+        );
+        
+        if (dadosCorrida.rows.length === 0) {
+            await pool.query('ROLLBACK');
+            return res.json({ success: false, message: "Corrida não encontrada ou já finalizada." });
+        }
+
+        const valorBruto = parseFloat(dadosCorrida.rows[0].valor);
+        
+        // 3. CONFIGURAÇÃO DA TAXA (Exemplo: 15%)
+        const taxaAdmin = 0.15; 
+        const valorLiquido = valorBruto * (1 - taxaAdmin);
+
+        // 4. Atualiza o status da corrida para 'concluida'
+        const updateCorrida = await pool.query(
+            "UPDATE corridas SET status = 'concluida' WHERE id = $1 AND status != 'concluida'", 
+            [corrida_id]
+        );
+
+        if (updateCorrida.rowCount === 0) {
+            await pool.query('ROLLBACK');
+            return res.json({ success: false, message: "Esta corrida já foi concluída anteriormente." });
+        }
+
+        // 5. Adiciona o valor líquido ao saldo do motoboy na tabela 'usuarios'
+        // COALESCE garante que se o saldo for NULL, ele comece em 0
+        await pool.query(
+            "UPDATE usuarios SET saldo = COALESCE(saldo, 0) + $1 WHERE id = $2", 
+            [valorLiquido, motoboy_id]
+        );
+
+        // 6. Finaliza a transação com sucesso
+        await pool.query('COMMIT');
+        
+        console.log(`💰 Corrida ${corrida_id} finalizada. Bruto: R$${valorBruto}, Motoboy recebeu: R$${valorLiquido.toFixed(2)}`);
+        
+        res.json({ 
+            success: true, 
+            valor_final: valorLiquido,
+            message: "Corrida finalizada e saldo atualizado!" 
+        });
+
+    } catch (err) {
+        // Em caso de qualquer erro, desfaz as alterações no banco
+        await pool.query('ROLLBACK');
+        console.error('Erro em /finalizar-corrida:', err);
+        res.status(500).json({ success: false, message: "Erro interno no servidor." });
+    }
 });
 
 app.get('/minha-corrida-atual/:id', async (req, res) => {

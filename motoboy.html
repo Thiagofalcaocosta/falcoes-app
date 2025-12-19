@@ -444,10 +444,15 @@
 
 
     <div class="container">
-        <div class="header">
-            <img src="assets/logo.png" alt="Logo" class="logo-pequeno">
-            <div class="user-area">
-                <span id="msg-ola" class="moto-saudacao">OLÁ, PILOTO</span>
+    <div class="header">
+        <img src="assets/logo.png" alt="Logo" class="logo-pequeno">
+        <div class="user-area">
+            <span id="msg-ola" class="moto-saudacao">OLÁ, PILOTO</span>
+            
+            <div id="saldo-piloto" style="color: var(--neon-green); font-weight: 800; font-size: 14px; margin-top: 5px;">SALDO: R$ 0,00</div>
+            
+            
+</div>
                 <div class="status-wrapper">
                     <span id="status-online-indicator" class="status-moto">● ONLINE</span>
                     <a href="index.html" class="logout" onclick="deslogar()">SAIR</a>
@@ -614,6 +619,27 @@ function abrirConversaZap() {
             console.log("Erro ao tocar som:", e);
         }
     }
+
+    async function carregarSaldoMotoboy() {
+    try {
+        // Buscamos os dados do motoboy logado
+        const res = await fetch(`${MEU_IP}/admin/motoboys`);
+        const motoboys = await res.json();
+        
+        // Encontramos você na lista pelo ID
+        const eu = motoboys.find(m => m.id === usuario.id);
+        
+        if (eu && eu.saldo !== undefined) {
+            const valor = parseFloat(eu.saldo).toFixed(2).replace('.', ',');
+            document.getElementById('saldo-piloto').innerText = `SALDO: R$ ${valor}`;
+        }
+    } catch (err) {
+        console.error("Erro ao carregar saldo:", err);
+    }
+}
+
+// Faz o saldo carregar assim que o motoboy entra no app
+document.addEventListener('DOMContentLoaded', carregarSaldoMotoboy);
 
     // Substitua sua função mostrarTela por esta versão protegida
 function mostrarTela(idDesejado) {
@@ -1172,6 +1198,7 @@ function preencherDadosAtiva(c) {
                 alert('Corrida finalizada com sucesso!');
                 idCorridaAtual = null;
                 temCorridaAtiva = false;
+                carregarSaldoMotoboy();
                 verificarEstado(); 
             } else {
                 alert(data.message || 'Erro ao finalizar corrida.');
