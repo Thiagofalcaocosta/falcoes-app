@@ -196,36 +196,48 @@
     }
 
     async function carregarDashboard() {
-        try {
-            const res = await fetch(`${MEU_IP}/admin/dashboard`);
-            const data = await res.json();
+    try {
+        const res = await fetch(`${MEU_IP}/admin/dashboard`);
+        const data = await res.json();
 
-            document.getElementById('total-hoje').innerText = data.total_hoje;
-            document.getElementById('total-mes').innerText = data.total_mes;
-            document.getElementById('qtd-entrega').innerText = data.qtd_entrega;
-            document.getElementById('qtd-moto').innerText = data.qtd_moto;
+        document.getElementById('total-hoje').innerText = data.total_hoje;
+        document.getElementById('total-mes').innerText = data.total_mes;
+        document.getElementById('qtd-entrega').innerText = data.qtd_entrega;
+        document.getElementById('qtd-moto').innerText = data.qtd_moto;
 
-            const tbody = document.getElementById('tabela-historico');
-            tbody.innerHTML = '';
+        const tbody = document.getElementById('tabela-historico');
+        tbody.innerHTML = '';
 
-            data.historico.forEach(c => {
-                let statusClass = `status-${c.status}`;
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="font-weight:bold; color:#888;">#${c.id}</td>
-                        <td><span style="font-size:11px; font-weight:bold; color:var(--neon-green)">${c.tipo_servico.toUpperCase()}</span></td>
-                        <td style="color:var(--neon-green); font-weight:bold;">R$ ${c.valor}</td>
-                        <td>
-                            <div style="font-size:12px; color:#fff">📍 ${c.origem.split(',')[0]}</div>
-                            <div style="font-size:12px; color:#888">🏁 ${c.destino.split(',')[0]}</div>
-                        </td>
-                        <td><span class="status-tag ${statusClass}">${c.status}</span></td>
-                        <td style="font-size:13px;">${c.nome_motoboy || '<span style="color:#444">Aguardando...</span>'}</td>
-                    </tr>
-                `;
-            });
-        } catch (err) { console.error(err); }
+        data.historico.forEach(c => {
+            let statusClass = `status-${c.status}`;
+            
+            // --- LÓGICA DO MOTIVO DO CANCELAMENTO ---
+            // Se a corrida for cancelada e tiver um motivo, cria um alerta vermelho
+            const motivoCancelamento = (c.status === 'cancelada' && c.motivo_cancelamento) 
+                ? `<div style="color: #ff4444; font-size: 11px; font-weight: bold; margin-top: 8px; padding-top: 5px; border-top: 1px dashed #444;">
+                    ⚠️ MOTIVO: ${c.motivo_cancelamento}
+                   </div>` 
+                : '';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight:bold; color:#888;">#${c.id}</td>
+                    <td><span style="font-size:11px; font-weight:bold; color:var(--neon-green)">${c.tipo_servico.toUpperCase()}</span></td>
+                    <td style="color:var(--neon-green); font-weight:bold;">R$ ${c.valor}</td>
+                    <td>
+                        <div style="font-size:12px; color:#fff">📍 ${c.origem.split(',')[0]}</div>
+                        <div style="font-size:12px; color:#888">🏁 ${c.destino.split(',')[0]}</div>
+                        ${motivoCancelamento} 
+                    </td>
+                    <td><span class="status-tag ${statusClass}">${c.status}</span></td>
+                    <td style="font-size:13px;">${c.nome_motoboy || '<span style="color:#444">Aguardando...</span>'}</td>
+                </tr>
+            `;
+        });
+    } catch (err) { 
+        console.error("Erro ao carregar dashboard:", err); 
     }
+}
 
     async function carregarPendentes() {
         try {
