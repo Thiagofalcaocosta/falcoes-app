@@ -790,40 +790,49 @@ function preencherDadosAtiva(c) {
     idCorridaAtual = c.corrida_id || c.id;
     
     const valorBruto = parseFloat(c.valor);
-    const taxa = 0.15; // 15%
+    const taxa = 0.15;
     const valorTaxa = valorBruto * taxa;
     const valorLiquido = valorBruto - valorTaxa;
 
-    let valorExibicao = "";
     let avisoHTML = "";
+    let valorPrincipal = "";
 
     if (c.forma_pagamento === 'DINHEIRO') {
-        // FOCO NO VALOR TOTAL PARA COBRANÇA
-        valorExibicao = "R$ " + valorBruto.toFixed(2).replace('.', ',');
+        // No dinheiro, o valor de cima fica bem pequeno e o aviso toma conta da tela
+        valorPrincipal = `<span style="font-size: 14px; color: #888;">Taxa: R$ ${valorTaxa.toFixed(2).replace('.', ',')}</span>`;
+        
         avisoHTML = `
-            <div style="background: #ff9900; color: #000; padding: 12px; border-radius: 8px; margin-top: 10px; font-weight: 800; text-align: center; border: 2px solid #000;">
-                ⚠️ COBRAR DO CLIENTE: R$ ${valorBruto.toFixed(2).replace('.', ',')}
-                <div style="font-size: 11px; font-weight: 400; margin-top: 5px;">
-                    (A taxa de R$ ${valorTaxa.toFixed(2).replace('.', ',')} será descontada do seu saldo)
-                </div>
-            </div>`;
+            <div style="background: #ff0000; color: #fff; padding: 20px; border-radius: 12px; margin: 15px 0; font-weight: 900; text-align: center; border: 4px solid #fff; animation: piscar 1s infinite;">
+                <span style="font-size: 22px; display: block; margin-bottom: 5px;">⚠️ ATENÇÃO PILOTO</span>
+                <span style="font-size: 26px; display: block;">RECEBER R$ ${valorBruto.toFixed(2).replace('.', ',')}</span>
+                <span style="font-size: 12px; display: block; margin-top: 10px; color: #ffcccc;">(A taxa será descontada do seu saldo automaticamente)</span>
+            </div>
+            <style>
+                @keyframes piscar {
+                    0% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.8; transform: scale(0.98); }
+                    100% { opacity: 1; transform: scale(1); }
+                }
+            </style>`;
     } else {
-        // FOCO NO VALOR LÍQUIDO (JÁ PAGO)
-        valorExibicao = "R$ " + valorLiquido.toFixed(2).replace('.', ',');
+        // No PIX, mantemos o foco no que ele ganhou
+        valorPrincipal = `<span style="font-size: 24px; color: #25d366; font-weight: 800;">GANHO: R$ ${valorLiquido.toFixed(2).replace('.', ',')}</span>`;
+        
         avisoHTML = `
-            <div style="background: #25d366; color: #000; padding: 12px; border-radius: 8px; margin-top: 10px; font-weight: 800; text-align: center;">
-                ✅ PAGAMENTO PIX REALIZADO
-                <div style="font-size: 11px; font-weight: 400; margin-top: 5px;">
-                    (Valor líquido já creditado em seu saldo)
-                </div>
+            <div style="background: #25d366; color: #000; padding: 15px; border-radius: 12px; margin: 15px 0; font-weight: 800; text-align: center;">
+                <span style="font-size: 18px;">✅ PAGAMENTO VIA PIX</span>
+                <br>
+                <span style="font-size: 14px;">NÃO COBRAR O CLIENTE</span>
             </div>`;
     }
 
     // Aplica os dados na tela
     document.getElementById('ativa-tipo').innerText = (c.tipo_servico || "MOTO TÁXI").toUpperCase();
-    document.getElementById('ativa-valor').innerText = valorExibicao;
     
-    // Coloca o aviso no campo de método de pagamento
+    // Substitui o valor de cima pelo valor ajustado (pequeno no dinheiro, grande no pix)
+    document.getElementById('ativa-valor').innerHTML = valorPrincipal;
+    
+    // Insere o aviso gigante
     const campoMetodo = document.getElementById('ativa-metodo-pagamento');
     if (campoMetodo) {
         campoMetodo.innerHTML = avisoHTML;
@@ -834,7 +843,6 @@ function preencherDadosAtiva(c) {
     document.getElementById('ativa-origem').innerText = c.origem;
     document.getElementById('ativa-destino').innerText = c.destino;
 
-    // Captura telefone para o WhatsApp
     if (c.telefone_cliente) {
         telefoneClienteGlobal = c.telefone_cliente.replace(/\D/g, '');
     }
