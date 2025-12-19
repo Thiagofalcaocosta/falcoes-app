@@ -1100,7 +1100,7 @@ app.post('/admin/rejeitar', async (req, res) => {
 app.get('/admin/motoboys', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, nome, email, telefone, placa, modelo_moto, cor_moto, categoria, aprovado,
+      SELECT id, nome, email, telefone, placa, modelo_moto, cor_moto, categoria, aprovado, saldo,
              CASE WHEN online_ate > NOW() THEN 'Online' ELSE 'Offline' END AS status_online
       FROM usuarios
       WHERE tipo = 'motoboy' AND aprovado = true
