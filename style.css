@@ -796,3 +796,52 @@ textarea#campo-encerramento {
     border: none;
     cursor: pointer;
 }
+
+/* ========================================= */
+/* ESTILO DA LISTA DE SUGESTÕES DE ENDEREÇO */
+/* ========================================= */
+
+/* Container da lista (Flutuante) */
+.sugestoes-lista {
+    position: absolute;
+    top: 100%; /* Cola exatamente embaixo do input */
+    left: 0;
+    width: 100%;
+    background-color: #222; /* Fundo escuro igual aos cards */
+    border: 1px solid #444; /* Borda discreta */
+    border-radius: 0 0 10px 10px; /* Arredonda só embaixo */
+    z-index: 1000; /* Garante que fique em cima de tudo */
+    max-height: 200px; /* Limita altura */
+    overflow-y: auto; /* Adiciona rolagem se tiver muitas ruas */
+    display: none; /* Começa escondida */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5); /* Sombra para destacar */
+}
+
+/* Item individual da lista (Cada rua) */
+.sugestao-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #333;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+    text-align: left;
+}
+
+/* Efeito ao passar o mouse ou dedo */
+.sugestao-item:hover {
+    background-color: var(--brand-green); /* Fica verde neon */
+    color: #000; /* Texto preto para leitura */
+    font-weight: bold;
+}
+
+/* Remove a borda do último item */
+.sugestao-item:last-child {
+    border-bottom: none;
+}
+
+/* Garante que o input pai tenha posição relativa para a lista colar nele */
+.input-rua-wrapper {
+    position: relative;
+    width: 100%;
+}

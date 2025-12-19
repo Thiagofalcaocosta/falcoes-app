@@ -1244,28 +1244,113 @@
             reiniciarApp();
         }
     }
+    // === FUNÇÃO DE BUSCA DE ENDEREÇO (AUTOCOMPLETE) ===
+async function buscarEndereco(query, listaId, modo) {
+    const lista = document.getElementById(listaId);
     
+    // Se digitou menos de 3 letras, limpa a lista e para
+    if (!query || query.length < 3) {
+        lista.innerHTML = '';
+        lista.style.display = 'none';
+        return;
+    }
+
+    // Coordenadas de Três Corações (Prioridade na busca)
+    const proximidade = `-45.2581,-21.6931`; 
+
+    try {
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?` +
+                    `access_token=${MAPBOX_ACCESS_TOKEN}&` +
+                    `proximity=${proximidade}&` + // Foca em Três Corações
+                    `types=address,poi&` +
+                    `language=pt&` +
+                    `country=br&` +
+                    `limit=5`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        lista.innerHTML = '';
+        lista.style.display = 'block';
+
+        if (data.features.length === 0) {
+            lista.style.display = 'none';
+            return;
+        }
+
+        data.features.forEach(f => {
+            const item = document.createElement('div');
+            item.className = 'sugestao-item';
+            // Exibe o endereço bonitinho na lista
+            item.innerText = f.place_name.replace(', Minas Gerais', '').replace(', Brasil', ''); 
+            
+            item.onclick = () => {
+                // 1. Pega apenas o nome da rua (sem número e sem cidade)
+                const nomeRua = f.text; 
+                
+                // 2. Tenta achar o bairro
+                const bairroObj = f.context.find(c => c.id.startsWith('neighborhood'));
+                const bairro = bairroObj ? bairroObj.text : "Centro";
+                
+                // 3. Preenche os campos
+                document.getElementById(`rua-${modo}`).value = nomeRua;
+                document.getElementById(`bairro-${modo}`).value = bairro;
+                
+                // 4. Salva as coordenadas para calcular rota
+                if (modo === 'origem') coordsOrigem = { lat: f.center[1], lon: f.center[0] };
+                else coordsDestino = { lat: f.center[1], lon: f.center[0] };
+
+                // 5. Limpa a lista
+                lista.innerHTML = '';
+                lista.style.display = 'none';
+
+                // 6. Foca no campo NÚMERO (Isso é o segredo!)
+                document.getElementById(`num-${modo}`).focus();
+                
+                // 7. Já tenta calcular a rota se tiver os dois pontos
+                calcularRota();
+            };
+            lista.appendChild(item);
+        });
+    } catch (e) {
+        console.error("Erro na busca:", e);
+    }
+}
+
+// Fecha a lista se clicar fora dela
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.address-container')) {
+        document.querySelectorAll('.sugestoes-lista').forEach(el => el.style.display = 'none');
+    }
+});
     // === ENVIO DE PEDIDO ===
     async function pedir() {
-        if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
-        const ruaOrigem = document.getElementById('rua-origem').value;
-        const numOrigem = document.getElementById('num-origem').value;
-        const bairroOrigem = document.getElementById('bairro-origem').value;
-        const ruaDestino = document.getElementById('rua-destino').value;
-        const numDestino = document.getElementById('num-destino').value;
-        const bairroDestino = document.getElementById('bairro-destino').value;
-        const detalhes = document.getElementById('detalhes-entrega').value;
+    if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
+    
+    // Pegamos a rua e removemos qualquer número que venha nela (limpeza de segurança)
+    const ruaOrigemPura = document.getElementById('rua-origem').value.split(',')[0].trim();
+    const ruaDestinoPura = document.getElementById('rua-destino').value.split(',')[0].trim();
+    
+    const numOrigem = document.getElementById('num-origem').value.trim();
+    const bairroOrigem = document.getElementById('bairro-origem').value.trim();
+    
+    const numDestino = document.getElementById('num-destino').value.trim();
+    const bairroDestino = document.getElementById('bairro-destino').value.trim();
+    const detalhes = document.getElementById('detalhes-entrega').value;
 
-        let erro = false;
-        if (!ruaOrigem) { showToast("Preencha a Rua de Origem", "error"); return; }
-        if (!numOrigem.trim()) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
-        if (!ruaDestino) { showToast("Preencha a Rua de Destino", "error"); return; }
-        if (!numDestino.trim()) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
-        if (servicoSelecionado === 'entrega' && !detalhes.trim()) { document.getElementById('detalhes-entrega').classList.add('erro'); showToast("Descreva o que vamos entregar!", "error"); return; }
-        if (erro) { showToast("⚠️ Preencha o NÚMERO dos endereços!", "error"); return; }
+    let erro = false;
+    // Validação obrigatória do número
+    if (!numOrigem) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
+    if (!numDestino) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
+    
+    if (erro) { 
+        showToast("⚠️ O número da casa é obrigatório!", "error"); 
+        return; 
+    }
 
-        const strOrigem = `${ruaOrigem}, Nº ${numOrigem}, ${bairroOrigem}`;
-        const strDestino = `${ruaDestino}, Nº ${numDestino}, ${bairroDestino}`;
+    // MONTANDO O ENDEREÇO FINAL: Aqui garantimos que o número digitado é o que aparece
+    const strOrigem = `${ruaOrigemPura}, Nº ${numOrigem}, ${bairroOrigem}`;
+    const strDestino = `${ruaDestinoPura}, Nº ${numDestino}, ${bairroDestino}`;
         const strDestinoFinal = servicoSelecionado === 'entrega'
             ? `${strDestino} (ITEM: ${detalhes})`
             : strDestino;
