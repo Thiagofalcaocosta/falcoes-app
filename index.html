@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Falcões App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* --- IDENTIDADE VISUAL DARK --- */
         :root {
@@ -18,35 +19,81 @@
         }
 
         .login-container { 
-            background: var(--card-color); padding: 40px 30px; border-radius: 15px; width: 100%; max-width: 350px; 
-            border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0, 230, 64, 0.1); text-align: center;
+            background: var(--card-color); padding: 40px 30px; border-radius: 20px; width: 100%; max-width: 350px; 
+            border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); text-align: center;
         }
 
-        .logo-area img { max-height: 100px; filter: drop-shadow(0 0 5px rgba(0,230,64,0.5)); margin-bottom: 20px; }
-        h2 { color: var(--neon-green); text-transform: uppercase; margin-bottom: 30px; font-weight: 800; letter-spacing: 1px;}
+        .logo-area img { max-height: 90px; filter: drop-shadow(0 0 8px rgba(0,230,64,0.4)); margin-bottom: 15px; }
+        h2 { color: var(--neon-green); text-transform: uppercase; margin-bottom: 25px; font-weight: 800; letter-spacing: 1px; font-size: 22px;}
 
-        input { 
-            width: 100%; padding: 14px; margin-bottom: 15px; background-color: var(--input-bg); border: 1px solid var(--border-color);
-            color: white; border-radius: 8px; box-sizing: border-box; font-size: 15px; transition: 0.3s;
+        /* Grupo de Input com Ícone */
+        .input-group {
+            position: relative;
+            margin-bottom: 15px;
+            text-align: left;
         }
-        input:focus { border-color: var(--neon-green); outline: none; box-shadow: 0 0 8px rgba(0,230,64,0.3); }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+            transition: 0.3s;
+        }
+
+        .input-group input { 
+            width: 100%; padding: 14px 14px 14px 45px; background-color: var(--input-bg); border: 1px solid var(--border-color);
+            color: white; border-radius: 10px; box-sizing: border-box; font-size: 15px; transition: 0.3s;
+        }
+
+        /* Efeito de Foco Neon */
+        .input-group input:focus { 
+            border-color: var(--neon-green); outline: none; 
+            box-shadow: 0 0 12px rgba(0, 230, 64, 0.2); 
+            background-color: #333;
+        }
+
+        .input-group input:focus + i { color: var(--neon-green); }
+
+        /* Botão de Ver Senha */
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            left: auto !important; /* Sobrescreve o left do ícone padrão */
+            cursor: pointer;
+            color: #777 !important;
+        }
+        .toggle-password:hover { color: var(--neon-green) !important; }
 
         button { 
             width: 100%; padding: 15px; margin-top: 10px; background-color: var(--neon-green); color: #000; border: none; 
-            border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 800; text-transform: uppercase; transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 800; text-transform: uppercase; 
+            transition: all 0.3s ease;
         }
-        button:hover { transform: scale(1.02); box-shadow: 0 0 15px var(--neon-green); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 230, 64, 0.4); }
+        button:disabled { background-color: #444; color: #888; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        .links { margin-top: 25px; font-size: 14px; color: #aaa; }
+        .forgot-password {
+            display: block;
+            margin-top: 12px;
+            color: #888;
+            text-decoration: none;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+        .forgot-password:hover { color: var(--neon-green); }
+
+        .links { margin-top: 30px; padding-top: 20px; border-top: 1px solid #333; font-size: 14px; color: #aaa; }
         
         .btn-criar-conta {
             color: var(--neon-green); text-decoration: none; font-weight: bold; 
-            border: 1px solid var(--neon-green); padding: 10px 20px; border-radius: 20px;
-            display: inline-block; margin-top: 10px; transition: 0.3s;
+            border: 1px solid var(--neon-green); padding: 10px 20px; border-radius: 25px;
+            display: inline-block; margin-top: 12px; transition: 0.3s;
         }
         .btn-criar-conta:hover { background-color: var(--neon-green); color: black; }
 
-        /* --- MODAL PERSONALIZADO (NOVO) --- */
+        /* MODAL PERSONALIZADO */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9); display: none; justify-content: center; align-items: center; z-index: 1000;
@@ -57,30 +104,13 @@
             animation: popIn 0.3s ease;
         }
         @keyframes popIn { from{transform: scale(0.8); opacity:0;} to{transform: scale(1); opacity:1;} }
-
         .modal-icone { font-size: 40px; margin-bottom: 15px; display: block; }
         .modal-titulo { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: white; text-transform: uppercase;}
         .modal-msg { font-size: 14px; color: #ccc; margin-bottom: 20px; line-height: 1.5; }
-        
-        .btn-modal {
-            width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none;
-        }
-        .btn-fechar-erro { background: #333; color: white; border: 1px solid var(--danger-color); color: var(--danger-color); }
+        .btn-modal { width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; }
+        .btn-fechar-erro { background: #333; color: var(--danger-color); border: 1px solid var(--danger-color); }
         .btn-fechar-erro:hover { background: var(--danger-color); color: white; }
-
     </style>
-    <script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("/service-worker.js")
-    .then(() => console.log("SW registrado!"))
-    .catch(err => console.log("Erro SW:", err));
-}
-</script>
-
-    <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#00e640">
-
 </head>
 <body>
 
@@ -100,19 +130,43 @@ if ("serviceWorker" in navigator) {
         
         <h2>Acessar Conta</h2>
         
-        <input type="email" id="email" placeholder="Seu E-mail">
-        <input type="password" id="senha" placeholder="Sua Senha">
+        <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="email" placeholder="Seu E-mail">
+        </div>
+
+        <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="senha" placeholder="Sua Senha">
+            <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
+        </div>
         
-        <button onclick="fazerLogin()">ENTRAR</button>
+        <button id="btn-entrar" onclick="fazerLogin()">ENTRAR</button>
+        
+        <a href="#" class="forgot-password" onclick="mostrarAviso('RECUPERAÇÃO', 'A função de recuperar senha será implementada em breve. Entre em contato com o suporte.', 'aviso')">Esqueceu sua senha?</a>
 
         <div class="links">
-            <p>Não tem conta?</p>
+            <p>Não tem uma conta?</p>
             <a href="cadastro.html" class="btn-criar-conta">CRIAR CONTA NOVA</a>
         </div>
     </div>
 
     <script>
-        // Função para exibir o modal bonito
+        // Função para Mostrar/Esconder Senha
+        function togglePassword() {
+            const senhaInput = document.getElementById('senha');
+            const icon = document.querySelector('.toggle-password');
+            if (senhaInput.type === 'password') {
+                senhaInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                senhaInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
         function mostrarAviso(titulo, mensagem, tipo) {
             const modal = document.getElementById('modal-aviso');
             const box = document.getElementById('box-aviso');
@@ -131,7 +185,6 @@ if ("serviceWorker" in navigator) {
                 txtTitulo.style.color = 'var(--warning-color)';
                 icone.innerText = '⏳';
             }
-            
             modal.style.display = 'flex';
         }
 
@@ -142,10 +195,10 @@ if ("serviceWorker" in navigator) {
         async function fazerLogin() {
             const email = document.getElementById('email').value;
             const senha = document.getElementById('senha').value;
+            const btn = document.getElementById('btn-entrar');
 
             if(!email || !senha) return mostrarAviso("CAMPO VAZIO", "Por favor, preencha seu e-mail e senha.", "erro");
 
-            const btn = document.querySelector('button');
             const textoOriginal = btn.innerText;
             btn.innerText = "VERIFICANDO...";
             btn.disabled = true;
@@ -161,7 +214,6 @@ if ("serviceWorker" in navigator) {
 
                 if (data.success) {
                     localStorage.setItem('usuario', JSON.stringify(data.user));
-                    
                     if(data.user.tipo === 'motoboy') {
                         window.location.href = 'motoboy.html';
                     } else if (data.user.tipo === 'admin') {
@@ -170,13 +222,9 @@ if ("serviceWorker" in navigator) {
                         window.location.href = 'cliente.html';
                     }
                 } else {
-                    // Aqui entra o modal bonito em vez do alert feio
-                    // Se for "em análise", usa ícone de tempo, senão ícone de erro
                     const tipo = data.message.includes('análise') ? 'aviso' : 'erro';
                     const titulo = data.message.includes('análise') ? 'CONTA EM ANÁLISE' : 'ERRO DE ACESSO';
-                    
                     mostrarAviso(titulo, data.message, tipo);
-                    
                     btn.innerText = textoOriginal;
                     btn.disabled = false;
                 }
