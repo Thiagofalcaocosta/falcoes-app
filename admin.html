@@ -4,77 +4,93 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administração - Falcões</title>
-
-    <!-- Manifest PWA -->
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#00e640">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
         :root {
-            --bg-color: #121212;
-            --card-color: #1e1e1e;
-            --neon-green: #00e640;
-            --text-color: #ffffff;
-            --border-color: #333;
-            --danger-color: #ff4444;
-            --warning-color: #ffaa00;
+            --bg-color: #0f0f0f; --card-color: #1a1a1a; --neon-green: #00e640;
+            --text-color: #ffffff; --border-color: #2a2a2a; --danger-color: #ff4444;
+            --warning-color: #ffaa00; --info-color: #007bff;
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            padding: 20px;
-            margin: 0;
+            font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color);
+            margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh;
         }
 
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 20px; }
-        .logo-pequeno { height: 50px; }
+        /* HEADER */
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: #000; padding: 15px 25px; border-bottom: 1px solid var(--border-color);
+        }
+        .logo-pequeno { height: 45px; filter: drop-shadow(0 0 5px var(--neon-green)); }
         
-        .menu-tabs { display: flex; gap: 10px; margin-bottom: 30px; }
-        .tab-btn {
-            background: transparent; border: 1px solid var(--border-color); color: #aaa;
-            padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;
+        /* MENU TABS */
+        .menu-tabs { 
+            display: flex; background: #000; padding: 10px 20px; gap: 10px;
+            overflow-x: auto; border-bottom: 1px solid var(--border-color);
         }
+        .tab-btn {
+            background: transparent; border: 1px solid #333; color: #888;
+            padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; 
+            transition: 0.3s; white-space: nowrap; display: flex; align-items: center; gap: 8px;
+        }
+        .tab-btn i { font-size: 16px; }
         .tab-btn.ativo { background: var(--neon-green); color: black; border-color: var(--neon-green); }
-        .tab-btn:hover { border-color: var(--neon-green); }
+        .tab-btn:hover:not(.ativo) { border-color: var(--neon-green); color: var(--neon-green); }
 
-        .conteudo-aba { display: none; animation: fadeIn 0.5s; }
+        .container-principal { padding: 25px; flex: 1; }
+        .conteudo-aba { display: none; animation: fadeIn 0.4s ease; }
         .conteudo-aba.ativo { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* CARDS ESTATÍSTICAS */
         .cards-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .card-stat { 
-            background: var(--card-color); padding: 20px; border-radius: 10px; 
-            border: 1px solid var(--border-color); text-align: center;
+            background: var(--card-color); padding: 25px; border-radius: 15px; 
+            border: 1px solid var(--border-color); text-align: center; transition: 0.3s;
         }
-        .stat-valor { font-size: 32px; font-weight: 800; color: var(--neon-green); display: block; margin-top: 10px; }
-        .stat-titulo { color: #aaa; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .card-stat:hover { border-color: var(--neon-green); transform: translateY(-5px); }
+        .stat-valor { font-size: 36px; font-weight: 800; color: var(--neon-green); display: block; margin-top: 10px; }
+        .stat-titulo { color: #888; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
 
-        table { width: 100%; border-collapse: collapse; background: var(--card-color); border-radius: 10px; overflow: hidden; font-size: 14px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { background-color: #000; color: var(--neon-green); text-transform: uppercase; }
-        tr:hover { background-color: #252525; }
+        /* TABELAS */
+        .tabela-container { background: var(--card-color); border-radius: 15px; border: 1px solid var(--border-color); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background-color: #000; color: var(--neon-green); text-transform: uppercase; padding: 15px; text-align: left; border-bottom: 2px solid var(--border-color); }
+        td { padding: 15px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        tr:hover { background-color: rgba(255, 255, 255, 0.03); }
 
-        .tipo-tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .tag-moto { background: #ffd700; color: black; }
-        .tag-entrega { background: #00e640; color: black; }
+        /* TAGS DE STATUS */
+        .status-tag { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .status-pendente { background: rgba(255, 170, 0, 0.15); color: var(--warning-color); border: 1px solid var(--warning-color); }
+        .status-concluida { background: rgba(0, 123, 255, 0.15); color: var(--info-color); border: 1px solid var(--info-color); }
+        .status-cancelada { background: rgba(255, 68, 68, 0.15); color: var(--danger-color); border: 1px solid var(--danger-color); }
+        .status-aceita { background: rgba(0, 230, 64, 0.15); color: var(--neon-green); border: 1px solid var(--neon-green); }
 
-        .painel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .coluna { background: #181818; padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); min-height: 400px; }
-        .coluna h3 { border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 0; text-align: center; color: var(--neon-green); } 
-        .card-usuario { background: var(--card-color); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .nome { font-size: 18px; font-weight: bold; color: white; }
-        .info { font-size: 14px; color: #aaa; margin-top: 5px; }
-        .destaque { color: var(--neon-green); font-weight: bold; }
-        .acoes { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; padding: 8px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-aprovar { background-color: var(--neon-green); color: black; }
-        .btn-rejeitar { border: 1px solid var(--danger-color); background: transparent; color: var(--danger-color); }
-        .btn-remover { background-color: var(--danger-color); color: white; flex: none; width: 40px; }
+        /* GESTÃO DE USUÁRIOS */
+        .painel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; }
+        .coluna { background: var(--card-color); padding: 25px; border-radius: 20px; border: 1px solid var(--border-color); }
+        .coluna h3 { color: var(--neon-green); margin-top: 0; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+        
+        .card-user-gestao { 
+            background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 15px; 
+            border-left: 4px solid var(--neon-green); position: relative;
+        }
+        .user-info { margin-bottom: 10px; }
+        .user-name { font-weight: bold; font-size: 16px; color: #fff; display: block; }
+        .user-sub { font-size: 13px; color: #888; display: block; margin-top: 4px; }
+        
+        .btn-acao { 
+            padding: 8px 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-aprove { background: var(--neon-green); color: #000; }
+        .btn-deny { background: transparent; border: 1px solid var(--danger-color); color: var(--danger-color); }
+        .btn-del { position: absolute; right: 15px; top: 15px; color: #555; background: none; border: none; cursor: pointer; }
+        .btn-del:hover { color: var(--danger-color); }
 
-        .vazio { text-align: center; color: #555; margin-top: 50px; }
-        .tabela-gestao td { vertical-align: middle; }
+        .vazio { text-align: center; color: #555; padding: 40px; font-style: italic; }
     </style>
 </head>
 
@@ -82,122 +98,101 @@
 
 <div class="header">
     <img src="assets/logo.png" class="logo-pequeno">
-    <h2 style="margin:0; color: var(--neon-green);">PAINEL CHEFE</h2>
-    <a href="index.html" style="color: var(--danger-color); text-decoration: none;">Sair</a>
+    <div style="text-align: right;">
+        <span style="display: block; font-size: 12px; color: #666;">LOGADO COMO ADM</span>
+        <a href="index.html" style="color: var(--danger-color); text-decoration: none; font-weight: bold; font-size: 14px;">SAIR <i class="fas fa-sign-out-alt"></i></a>
+    </div>
 </div>
 
 <div class="menu-tabs">
-    <button class="tab-btn ativo" onclick="mudarAba('dashboard', event)">📊 DASHBOARD</button>
-    <button class="tab-btn" onclick="mudarAba('aprovacoes', event)">👥 APROVAÇÕES</button>
-    <button class="tab-btn" onclick="mudarAba('gerenciar', event)">⚙️ GERENCIAR USUÁRIOS</button>
+    <button class="tab-btn ativo" onclick="mudarAba('dashboard', event)"><i class="fas fa-chart-line"></i> DASHBOARD</button>
+    <button class="tab-btn" onclick="mudarAba('aprovacoes', event)"><i class="fas fa-user-clock"></i> APROVAÇÕES</button>
+    <button class="tab-btn" onclick="mudarAba('gerenciar', event)"><i class="fas fa-users-cog"></i> GESTÃO DE USUÁRIOS</button>
 </div>
 
-<div id="dashboard" class="conteudo-aba ativo">
-    <div class="cards-resumo">
-        <div class="card-stat">
-            <span class="stat-titulo">Corridas Hoje</span>
-            <span class="stat-valor" id="total-hoje">0</span>
-        </div>
-        <div class="card-stat">
-            <span class="stat-titulo">Corridas no Mês</span>
-            <span class="stat-valor" id="total-mes">0</span>
-        </div>
-        <div class="card-stat">
-            <span class="stat-titulo">Entregas</span>
-            <span class="stat-valor" id="qtd-entrega" style="color:#fff">0</span>
-        </div>
-        <div class="card-stat">
-            <span class="stat-titulo">Moto Táxi</span>
-            <span class="stat-valor" id="qtd-moto" style="color:#fff">0</span>
-        </div>
-    </div>
-
-    <h3 style="color: #ddd; border-bottom: 1px solid #333; padding-bottom: 10px;">ÚLTIMOS PEDIDOS</h3>
+<div class="container-principal">
     
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>TIPO</th>
-                <th>VALOR</th>
-                <th>ORIGEM / DESTINO</th>
-                <th>STATUS</th>
-                <th>MOTIVO/OBS</th>
-                <th>MOTOBOY</th>
-            </tr>
-        </thead>
-        <tbody id="tabela-historico"></tbody>
-    </table>
-</div>
-
-<div id="aprovacoes" class="conteudo-aba">
-    <div class="painel-grid">
-        <div class="coluna">
-            <h3>CLIENTES PENDENTES</h3>
-            <div id="lista-clientes">
-                <div class="vazio">Nenhum cliente pendente (Aprovação automática no servidor).</div>
+    <div id="dashboard" class="conteudo-aba ativo">
+        <div class="cards-resumo">
+            <div class="card-stat">
+                <span class="stat-titulo">Corridas Hoje</span>
+                <span class="stat-valor" id="total-hoje">0</span>
+            </div>
+            <div class="card-stat">
+                <span class="stat-titulo">Corridas Mês</span>
+                <span class="stat-valor" id="total-mes">0</span>
+            </div>
+            <div class="card-stat">
+                <span class="stat-titulo">Total Entregas</span>
+                <span class="stat-valor" id="qtd-entrega" style="color:#fff">0</span>
+            </div>
+            <div class="card-stat">
+                <span class="stat-titulo">Total Moto Táxi</span>
+                <span class="stat-valor" id="qtd-moto" style="color:#fff">0</span>
             </div>
         </div>
-        <div class="coluna">
-            <h3>PILOTOS PENDENTES</h3>
-            <div id="lista-motoboys">Carregando...</div>
-        </div>
-    </div>
-</div>
 
-<div id="gerenciar" class="conteudo-aba">
-    <div class="painel-grid">
-        <div class="coluna">
-            <h3>MOTOBYS CADASTRADOS (Ativos)</h3>
-            <table class="tabela-gestao">
+        <h3 style="color: #ddd; margin-bottom: 15px;"><i class="fas fa-history"></i> ÚLTIMOS PEDIDOS</h3>
+        <div class="tabela-container">
+            <table>
                 <thead>
                     <tr>
-                        <th>Nome / Contato</th>
-                        <th>Moto / Categoria</th>
-                        <th>Ação</th>
+                        <th>ID</th>
+                        <th>TIPO</th>
+                        <th>VALOR</th>
+                        <th>LOCALIZAÇÃO (ORIGEM > DESTINO)</th>
+                        <th>STATUS</th>
+                        <th>PILOTO</th>
                     </tr>
                 </thead>
-                <tbody id="tabela-motoboys-ativos"></tbody>
-            </table>
-        </div>
-
-        <div class="coluna">
-            <h3>CLIENTES CADASTRADOS</h3>
-            <table class="tabela-gestao">
-                <thead>
-                    <tr>
-                        <th>Nome / Contato</th>
-                        <th>Ação</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-clientes-ativos"></tbody>
+                <tbody id="tabela-historico"></tbody>
             </table>
         </div>
     </div>
+
+    <div id="aprovacoes" class="conteudo-aba">
+        <div class="painel-grid">
+            <div class="coluna">
+                <h3><i class="fas fa-user-check"></i> CLIENTES PENDENTES</h3>
+                <div id="lista-clientes"><div class="vazio">Aprovação automática ativada.</div></div>
+            </div>
+            <div class="coluna">
+                <h3><i class="fas fa-motorcycle"></i> PILOTOS PENDENTES</h3>
+                <div id="lista-motoboys">Carregando...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gerenciar" class="conteudo-aba">
+        <div class="painel-grid">
+            <div class="coluna">
+                <h3><i class="fas fa-user-shield"></i> PILOTOS ATIVOS</h3>
+                <div id="container-motoboys-ativos"></div>
+            </div>
+            <div class="coluna">
+                <h3><i class="fas fa-users"></i> CLIENTES CADASTRADOS</h3>
+                <div id="container-clientes-ativos"></div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
     const MEU_IP = 'https://falcoes-app.onrender.com';
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuario'));
 
-    const usuario = JSON.parse(localStorage.getItem('usuario'));
-    if (!usuario || usuario.tipo !== 'admin') {
-        window.location.href = 'index.html';
-    }
+    if (!usuarioLogado || usuarioLogado.tipo !== 'admin') window.location.href = 'index.html';
 
     function mudarAba(aba, event) {
         document.querySelectorAll('.conteudo-aba').forEach(el => el.classList.remove('ativo'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('ativo'));
-        
         document.getElementById(aba).classList.add('ativo');
-        const btn = event && event.target.closest('.tab-btn');
-        if (btn) btn.classList.add('ativo');
+        event.target.closest('.tab-btn').classList.add('ativo');
 
         if (aba === 'dashboard') carregarDashboard();
         if (aba === 'aprovacoes') carregarPendentes();
-        if (aba === 'gerenciar') {
-            carregarMotoboysAtivos();
-            carregarClientes();
-        }
+        if (aba === 'gerenciar') { carregarMotoboysAtivos(); carregarClientes(); }
     }
 
     async function carregarDashboard() {
@@ -214,208 +209,96 @@
             tbody.innerHTML = '';
 
             data.historico.forEach(c => {
-                const classeTipo = c.tipo_servico === 'moto-taxi' ? 'tag-moto' : 'tag-entrega';
-                const nomeMoto = c.nome_motoboy ? c.nome_motoboy.split(' ') : '<span style="color:#555">--</span>';
-                
-                let statusCor = 'white';
-                if (c.status === 'pendente') statusCor = 'orange';
-                if (c.status === 'aceita') statusCor = '#00e640';
-                if (c.status === 'concluida') statusCor = '#007bff';
-                if (c.status === 'cancelada') statusCor = '#ff4444';
-
-                const motivo = c.status === 'cancelada' && c.motivo_cancelamento ?
-                    `<span style="color:#ff4444; font-size:11px;">${c.motivo_cancelamento}</span>` : '-';
-
-                const row = `
+                let statusClass = `status-${c.status}`;
+                tbody.innerHTML += `
                     <tr>
-                        <td>#${c.id}</td>
-                        <td><span class="tipo-tag ${classeTipo}">${c.tipo_servico}</span></td>
+                        <td style="font-weight:bold; color:#888;">#${c.id}</td>
+                        <td><span style="font-size:11px; font-weight:bold; color:var(--neon-green)">${c.tipo_servico.toUpperCase()}</span></td>
                         <td style="color:var(--neon-green); font-weight:bold;">R$ ${c.valor}</td>
                         <td>
-                            <div style="font-size:12px; color:#ccc">📍 ${c.origem.split(',')}</div>
-                            <div style="font-size:12px; color:#ccc">🏁 ${c.destino.split(',')}</div>
+                            <div style="font-size:12px; color:#fff">📍 ${c.origem.split(',')[0]}</div>
+                            <div style="font-size:12px; color:#888">🏁 ${c.destino.split(',')[0]}</div>
                         </td>
-                        <td style="color:${statusCor}; font-weight:bold; text-transform:uppercase">${c.status}</td>
-                        <td>${motivo}</td>
-                        <td>${nomeMoto}</td>
+                        <td><span class="status-tag ${statusClass}">${c.status}</span></td>
+                        <td style="font-size:13px;">${c.nome_motoboy || '<span style="color:#444">Aguardando...</span>'}</td>
                     </tr>
                 `;
-                tbody.innerHTML += row;
             });
-
         } catch (err) { console.error(err); }
     }
 
     async function carregarPendentes() {
         try {
-            const response = await fetch(`${MEU_IP}/admin/pendentes`);
-            const usuarios = await response.json();
+            const res = await fetch(`${MEU_IP}/admin/pendentes`);
+            const users = await res.json();
+            const divMoto = document.getElementById('lista-motoboys');
+            divMoto.innerHTML = '';
             
-            document.getElementById('lista-clientes').innerHTML = '<div class="vazio">Nenhum cliente pendente (Aprovação automática no servidor).</div>';
+            const pendentes = users.filter(u => u.tipo === 'motoboy');
+            if(pendentes.length === 0) divMoto.innerHTML = '<div class="vazio">Nenhum piloto aguardando.</div>';
             
-            const divMotoboys = document.getElementById('lista-motoboys');
-            divMotoboys.innerHTML = '';
-
-            let cm = 0;
-
-            usuarios.forEach(user => {
-                if (user.tipo === 'motoboy') {
-                    cm++; divMotoboys.innerHTML += criarCardAprovacao(user);
-                }
+            pendentes.forEach(u => {
+                divMoto.innerHTML += `
+                    <div class="card-user-gestao">
+                        <span class="user-name">${u.nome}</span>
+                        <span class="user-sub"><i class="fas fa-phone"></i> ${u.telefone}</span>
+                        <span class="user-sub"><i class="fas fa-motorcycle"></i> ${u.modelo_moto} (${u.placa})</span>
+                        <div style="display:flex; gap:10px; margin-top:15px;">
+                            <button class="btn-acao btn-aprove" onclick="decisao(${u.id}, 'aprovar')">APROVAR</button>
+                            <button class="btn-acao btn-deny" onclick="decisao(${u.id}, 'rejeitar')">REJEITAR</button>
+                        </div>
+                    </div>
+                `;
             });
-
-            if (cm === 0) divMotoboys.innerHTML = '<div class="vazio">Nenhum pendente.</div>';
-
-        } catch (err) { console.error(err); }
-    }
-
-    function criarCardAprovacao(u) {
-        const extra = u.tipo === 'motoboy' ?
-            `<div class="info">🏍️ ${u.modelo_moto} | ${u.placa}</div>
-             <div class="info">🎨 ${u.cor_moto}</div>
-             <div class="info" style="margin-top:5px; color:#ffd700; font-size:11px; border:1px solid #ffd700; padding:2px 5px; display:inline-block; border-radius:4px;">${u.categoria}</div>`
-            : '';
-        
-        return `
-            <div class="card-usuario">
-                <div class="nome">${u.nome}</div>
-                <div class="info">📞 ${u.telefone}</div>
-                ${extra}
-                <div class="acoes">
-                    <button class="btn-rejeitar" onclick="decisao(${u.id}, 'rejeitar')">REJEITAR</button>
-                    <button class="btn-aprovar" onclick="decisao(${u.id}, 'aprovar')">APROVAR</button>
-                </div>
-            </div>
-        `;
-    }
-
-    async function decisao(id, acao) {
-        if (!confirm(`Confirma ${acao}?`)) return;
-        const url = acao === 'aprovar' ? '/admin/aprovar' : '/admin/rejeitar';
-        try {
-            const res = await fetch(`${MEU_IP}${url}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id })
-            });
-            const data = await res.json();
-            if (data.success) {
-                carregarPendentes();
-                if (document.getElementById('gerenciar').classList.contains('ativo')) {
-                    carregarMotoboysAtivos();
-                }
-            } else {
-                alert(`Falha na operação: ${data.message || 'Erro desconhecido.'}`);
-            }
-        } catch (err) { alert("Erro de conexão"); }
+        } catch (e) { console.error(e); }
     }
 
     async function carregarMotoboysAtivos() {
-        const tbody = document.getElementById('tabela-motoboys-ativos');
-        tbody.innerHTML = `<tr><td colspan="3" class="vazio">Carregando Motoboys...</td></tr>`;
+        const div = document.getElementById('container-motoboys-ativos');
         try {
             const res = await fetch(`${MEU_IP}/admin/motoboys`);
-            const motoboys = await res.json();
-
-            tbody.innerHTML = '';
-            if (motoboys.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="vazio">Nenhum Motoboy ativo encontrado.</td></tr>`;
-                return;
-            }
-
-            motoboys.forEach(m => {
-                const row = `
-                    <tr>
-                        <td>
-                            <div class="nome">${m.nome} (#${m.id})</div>
-                            <div class="info">📧 ${m.email}</div>
-                            <div class="info">📞 ${m.telefone}</div>
-                        </td>
-                        <td>
-                            <div class="info">🏍️ ${m.modelo_moto} | ${m.placa}</div>
-                            <div class="info" style="color:#ffd700; font-weight:bold;">Cat: ${m.categoria}</div>
-                        </td>
-                        <td>
-                            <button class="btn-remover" title="Remover permanentemente" onclick="removerUsuario(${m.id})">❌</button>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-
-        } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="3" class="vazio" style="color:var(--danger-color)">Erro ao carregar Motoboys.</td></tr>`;
-            console.error(err);
-        }
+            const data = await res.json();
+            div.innerHTML = data.map(m => `
+                <div class="card-user-gestao">
+                    <button class="btn-del" onclick="removerUsuario(${m.id})"><i class="fas fa-trash"></i></button>
+                    <span class="user-name">${m.nome} (#${m.id})</span>
+                    <span class="user-sub">${m.email}</span>
+                    <span class="user-sub" style="color:var(--neon-green)">Cat: ${m.categoria}</span>
+                </div>
+            `).join('');
+        } catch (e) { div.innerHTML = "Erro ao carregar."; }
     }
 
     async function carregarClientes() {
-        const tbody = document.getElementById('tabela-clientes-ativos');
-        tbody.innerHTML = `<tr><td colspan="2" class="vazio">Carregando Clientes...</td></tr>`;
+        const div = document.getElementById('container-clientes-ativos');
         try {
             const res = await fetch(`${MEU_IP}/admin/clientes`);
-            const clientes = await res.json();
+            const data = await res.json();
+            div.innerHTML = data.map(c => `
+                <div class="card-user-gestao" style="border-left-color: #888;">
+                    <button class="btn-del" onclick="removerUsuario(${c.id})"><i class="fas fa-trash"></i></button>
+                    <span class="user-name">${c.nome} (#${c.id})</span>
+                    <span class="user-sub">${c.telefone}</span>
+                </div>
+            `).join('');
+        } catch (e) { div.innerHTML = "Erro ao carregar."; }
+    }
 
-            tbody.innerHTML = '';
-            if (clientes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="2" class="vazio">Nenhum Cliente encontrado.</td></tr>`;
-                return;
-            }
-
-            clientes.forEach(c => {
-                const row = `
-                    <tr>
-                        <td>
-                            <div class="nome">${c.nome} (#${c.id})</div>
-                            <div class="info">📧 ${c.email}</div>
-                            <div class="info">📞 ${c.telefone}</div>
-                        </td>
-                        <td>
-                            <button class="btn-remover" title="Remover permanentemente" onclick="removerUsuario(${c.id})">❌</button>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-
-        } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="2" class="vazio" style="color:var(--danger-color)">Erro ao carregar Clientes.</td></tr>`;
-            console.error(err);
-        }
+    async function decisao(id, acao) {
+        if(!confirm(`Confirma ${acao}?`)) return;
+        const res = await fetch(`${MEU_IP}/admin/${acao === 'aprovar' ? 'aprovar' : 'rejeitar'}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+        });
+        if((await res.json()).success) carregarPendentes();
     }
 
     async function removerUsuario(id) {
-        if (!confirm(`⚠️ ATENÇÃO: Confirma a REMOÇÃO PERMANENTE do usuário ID ${id}? Todas as corridas associadas a ele serão afetadas.`)) return;
-
-        try {
-            const res = await fetch(`${MEU_IP}/admin/remover/${id}`, {
-                method: 'DELETE',
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                alert('Usuário removido com sucesso!');
-                carregarMotoboysAtivos();
-                carregarClientes();
-            } else {
-                alert(`Falha ao remover: ${data.message || 'Erro desconhecido.'}`);
-            }
-        } catch (err) {
-            alert("Erro de conexão ao tentar remover o usuário.");
-            console.error(err);
-        }
+        if(!confirm("⚠️ REMOVER PERMANENTEMENTE?")) return;
+        const res = await fetch(`${MEU_IP}/admin/remover/${id}`, { method: 'DELETE' });
+        if((await res.json()).success) { carregarMotoboysAtivos(); carregarClientes(); }
     }
 
     carregarDashboard();
-</script>
-
-<!-- Service Worker registration ADICIONADO (nenhuma outra mudança no seu código) -->
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-        .then(() => console.log('SW registrado!'))
-        .catch(err => console.log('Erro registrando SW:', err));
-}
 </script>
 
 </body>
