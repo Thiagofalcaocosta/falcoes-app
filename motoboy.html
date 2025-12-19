@@ -567,31 +567,39 @@
 // ESSA FUNÇÃO CHAMA O WHATSAPP USANDO A VARIÁVEL DO TOPO
 // ESSA FUNÇÃO CHAMA O WHATSAPP COM MENSAGEM AUTOMÁTICA
 function abrirConversaZap() {
+    console.log("Iniciando abertura do WhatsApp...");
+
     if (!telefoneClienteGlobal) {
         alert("Número não identificado.");
         return;
     }
 
-    // 1. Limpa o telefone (deixa só números)
-    let foneLimpo = telefoneClienteGlobal.replace(/\D/g, '');
-    if (!foneLimpo.startsWith('55')) foneLimpo = '55' + foneLimpo;
+    // 1. Garante que o telefone tenha apenas números e o DDI 55
+    let foneLimpo = telefoneClienteGlobal.toString().replace(/\D/g, '');
+    if (foneLimpo.length <= 11) foneLimpo = '55' + foneLimpo;
 
-    // 2. Tenta pegar os nomes (se falhar, usa termos genéricos)
+    // 2. Coleta de dados com fallback (segurança)
     const nomeC = document.getElementById('ativa-cliente')?.innerText || "Cliente";
-    
-    // Pega os dados do piloto (tenta de duas formas)
     const p = typeof usuario !== 'undefined' ? usuario : JSON.parse(localStorage.getItem('usuario') || '{}');
     const nomeP = p.nome || "Piloto";
     const motoP = p.modelo_moto || "Moto";
 
-    // 3. Monta a mensagem bem simples para teste
-    const msg = `Olá ${nomeC}, aqui é o piloto ${nomeP}. Estou a caminho com uma ${motoP}.`;
+    // 3. Montagem da mensagem
+    const mensagem = `Olá, ${nomeC}! Sou o piloto ${nomeP}. Já aceitei sua corrida e estou a caminho. Minha moto é uma ${motoP}. Chego em breve! 🏍️`;
     
-    // 4. Cria o link final
-    const linkFinal = `https://wa.me/${foneLimpo}?text=${encodeURIComponent(msg)}`;
+    // 4. Criação do Link com a API padrão (mais estável para preenchimento)
+    const linkFinal = "https://api.whatsapp.com/send?phone=" + foneLimpo + "&text=" + encodeURIComponent(mensagem);
 
-    // 5. Abre a conversa
-    window.open(linkFinal, '_blank');
+    console.log("Link gerado:", linkFinal);
+
+    // 5. Abertura forçada
+    const win = window.open(linkFinal, '_blank');
+    if (win) {
+        win.focus();
+    } else {
+        // Se o navegador bloquear o popup, tenta pelo redirecionamento direto
+        window.location.href = linkFinal;
+    }
 }
 
     function limparContadores() {
