@@ -517,9 +517,13 @@
             </div>
     <script>
     /***********************
-     *  VARIÁVEIS GLOBAIS
+     * VARIÁVEIS GLOBAIS
      ***********************/
     const usuario = JSON.parse(localStorage.getItem('usuario'));
+    const MEU_IP = 'https://falcoes-app.onrender.com';
+    
+    // VARIÁVEL GLOBAL - DEVE FICAR AQUI NO TOPO
+    let telefoneClienteGlobal = ""; 
 
     // VERIFICAÇÃO DE LOGIN
     if (!usuario || !usuario.id || usuario.tipo !== 'motoboy') {
@@ -532,7 +536,6 @@
     const categoriaExibicao = usuario.categoria || "GERAL";
     document.getElementById('label-categoria').innerText = `SUA CATEGORIA: ${categoriaExibicao.toUpperCase()}`;
 
-    const MEU_IP = 'https://falcoes-app.onrender.com';
     let idCorridaSelecionada = null;
     let idCorridaAtual = null;
     let onlineInterval = null;
@@ -565,7 +568,8 @@ function atualizarDadosCorridaAtiva(pedido) {
     
     // GUARDA O NÚMERO NA VARIÁVEL QUE CRIAMOS NO TOPO
     if (pedido.telefone_cliente) {
-        telefoneClienteGlobal = pedido.telefone_cliente.replace(/\D/g, '');
+        telefoneClienteGlobal = pedido.telefone_cliente.replace(/\D/g, '')
+        console.log("Telefone capturado:", telefoneClienteGlobal); // Para você ver no consol
     }
 }
 
@@ -577,7 +581,7 @@ function abrirConversaZap() {
     }
     const ddi = telefoneClienteGlobal.startsWith('55') ? '' : '55';
     const link = `https://api.whatsapp.com/send?phone=${ddi}${telefoneClienteGlobal}`;
-    
+
     const a = document.createElement('a');
     a.href = link;
     a.target = '_blank';
