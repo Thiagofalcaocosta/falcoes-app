@@ -557,21 +557,7 @@
     /***********************
      *  FUNÇÕES DE UTILIDADE
      ***********************/
-function atualizarDadosCorridaAtiva(pedido) {
-    if (!pedido) return;
 
-    idCorridaAtual = pedido.id;
-    document.getElementById('ativa-cliente').innerText = pedido.nome_cliente || "Cliente";
-    document.getElementById('ativa-valor').innerText = `R$ ${pedido.valor}`;
-    document.getElementById('ativa-origem').innerText = pedido.origem;
-    document.getElementById('ativa-destino').innerText = pedido.destino;
-    
-    // GUARDA O NÚMERO NA VARIÁVEL QUE CRIAMOS NO TOPO
-    if (pedido.telefone_cliente) {
-        telefoneClienteGlobal = pedido.telefone_cliente.replace(/\D/g, '')
-        console.log("Telefone capturado:", telefoneClienteGlobal); // Para você ver no consol
-    }
-}
 
 // ESSA FUNÇÃO CHAMA O WHATSAPP USANDO A VARIÁVEL DO TOPO
 function abrirConversaZap() {
@@ -769,21 +755,38 @@ function renderizarBotoesAtiva(status) {
 
 
 function preencherDadosAtiva(c) {
+    if (!c) return;
+    
     idCorridaAtual = c.corrida_id || c.id;
     
-    document.getElementById('ativa-tipo').innerText = c.tipo_servico.toUpperCase();
+    // Preenchimento visual da tela
+    document.getElementById('ativa-tipo').innerText = (c.tipo_servico || "MOTO TÁXI").toUpperCase();
     document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
-    document.getElementById('ativa-cliente').innerText = c.nome_cliente;
-    document.getElementById('ativa-fone').innerText = c.telefone_cliente;
+    document.getElementById('ativa-cliente').innerText = c.nome_cliente || "Cliente";
+    document.getElementById('ativa-fone').innerText = c.telefone_cliente || "--";
     document.getElementById('ativa-origem').innerText = c.origem;
     document.getElementById('ativa-destino').innerText = c.destino;
+    
+    // Captura o telefone para a variável GLOBAL (do WhatsApp)
+    if (c.telefone_cliente) {
+        telefoneClienteGlobal = c.telefone_cliente.replace(/\D/g, '');
+        console.log("Telefone pronto para Zap:", telefoneClienteGlobal);
+    }
 
-    if (pedido.telefone_cliente)
-        telefoneClienteGlobal = pedido.telefone_cliente.replace(/\D/g, '');
+    // Lógica do método de pagamento (Copia da atualizarDadosCorridaAtiva)
+    const labelPgto = document.getElementById('ativa-metodo-pagamento');
+    if (labelPgto) {
+        if (c.metodo_pagamento === 'pix') {
+            labelPgto.innerText = "PIX (JÁ PAGO ✅)";
+            labelPgto.style.color = "var(--neon-green)";
+        } else {
+            labelPgto.innerText = "DINHEIRO (COBRAR NO LOCAL 💰)";
+            labelPgto.style.color = "#ffaa00";
+        }
+    }
     
-    // Renderiza os botões dinamicamente com base no status
+    // Renderiza os botões dinamicamente
     renderizarBotoesAtiva(c.status); 
-    
 }
 
     /***********************
