@@ -1266,43 +1266,42 @@ app.post('/mp-webhook', async (req, res) => {
 // RETORNO DO MERCADO PAGO
 app.get('/mp-retorno', async (req, res) => {
   try {
-    console.log('Retorno Mercado Pago:', req.query);
-    
-    const { external_reference, status, collection_status, payment_id } = req.query;
-    
-    // Verificar o pagamento no MP para garantir segurança
-    if (payment_id) {
-      try {
-        const payment = await paymentClient.get({ id: payment_id });
-        const finalStatus = payment.status || collection_status || status;
-        const corridaId = payment.external_reference || external_reference;
-        
-        if (novoStatus === 'liberada') {
-  await pool.query(
-    `
-    UPDATE corridas
-    SET status = 'liberada',
-        forma_pagamento = 'ONLINE'
-    WHERE id = $1
-    `,
-    [corridaId]
-  );
+    console.log('🔁 Retorno Mercado Pago:', req.query);
 
-  console.log(`✅ Corrida ${corridaId} liberada após pagamento online`);
-}
+    const { payment_id, external_reference } = req.query;
 
-      } catch (mpErr) {
-        console.error('Erro ao verificar pagamento no MP:', mpErr);
-      }
+    if (!payment_id) {
+      return res.redirect('/cliente.html');
     }
-    
-    // Redireciona com parâmetros para o frontend mostrar feedback
-    const queryParams = new URLSearchParams(req.query).toString();
-    return res.redirect(`${FRONT_URL}/cliente.html?${queryParams}`);
+
+    // Confere o pagamento direto no Mercado Pago (segurança)
+    const payment = await paymentClient.get({ id: payment_id });
+
+    const status = payment.status;
+    const corridaId = payment.external_reference || external_reference;
+
+    console.log('🔎 status final MP =', status, 'corridaId =', corridaId);
+
+    if (status === 'approved' && corridaId) {
+      await pool.query(
+        `
+        UPDATE corridas
+        SET status = 'liberada',
+            forma_pagamento = 'ONLINE'
+        WHERE id = $1
+        `,
+        [corridaId]
+      );
+
+      console.log(`✅ Corrida ${corridaId} liberada via retorno MP`);
+    }
+
+    // Sempre volta pro app
+    return res.redirect('/cliente.html');
 
   } catch (err) {
-    console.error('Erro em /mp-retorno:', err);
-    return res.redirect(`${FRONT_URL}/cliente.html?mp_error=1`);
+    console.error('❌ Erro no retorno Mercado Pago:', err);
+    return res.redirect('/cliente.html');
   }
 });
 
