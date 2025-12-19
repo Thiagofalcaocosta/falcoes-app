@@ -566,36 +566,32 @@
 
 // ESSA FUNÇÃO CHAMA O WHATSAPP USANDO A VARIÁVEL DO TOPO
 // ESSA FUNÇÃO CHAMA O WHATSAPP COM MENSAGEM AUTOMÁTICA
-// ESSA FUNÇÃO CHAMA O WHATSAPP COM MENSAGEM AUTOMÁTICA
 function abrirConversaZap() {
-    if (!telefoneClienteGlobal || telefoneClienteGlobal === "") {
-        alert("Número do cliente não identificado. Tente atualizar a página.");
+    if (!telefoneClienteGlobal) {
+        alert("Número não identificado.");
         return;
     }
 
-    // Tenta pegar o nome do cliente da tela
-    const elCliente = document.getElementById('ativa-cliente');
-    const nomeCliente = elCliente ? elCliente.innerText : "Cliente";
-    
-    // Pega seus dados do objeto que você usa para o Saldo
-    // Se 'usuario' não funcionar, usamos o que estiver no localStorage
-    const dadosPiloto = typeof usuario !== 'undefined' ? usuario : JSON.parse(localStorage.getItem('usuario') || '{}');
-    
-    const nomePiloto = dadosPiloto.nome || "seu piloto";
-    const modeloMoto = dadosPiloto.modelo_moto || "Moto";
-    const placaMoto = dadosPiloto.placa || "";
+    // 1. Limpa o telefone (deixa só números)
+    let foneLimpo = telefoneClienteGlobal.replace(/\D/g, '');
+    if (!foneLimpo.startsWith('55')) foneLimpo = '55' + foneLimpo;
 
-    // MONTA O TEXTO
-    const mensagem = `Olá, ${nomeCliente}! Sou o piloto ${nomePiloto}. Já aceitei sua corrida e estou a caminho. Minha moto é uma ${modeloMoto} ${placaMoto ? 'de placa ' + placaMoto : ''}. Chego em breve! 🏍️`;
+    // 2. Tenta pegar os nomes (se falhar, usa termos genéricos)
+    const nomeC = document.getElementById('ativa-cliente')?.innerText || "Cliente";
     
-    // IMPORTANTE: encodeURIComponent garante que o texto vire um link válido
-    const mensagemUrl = encodeURIComponent(mensagem);
+    // Pega os dados do piloto (tenta de duas formas)
+    const p = typeof usuario !== 'undefined' ? usuario : JSON.parse(localStorage.getItem('usuario') || '{}');
+    const nomeP = p.nome || "Piloto";
+    const motoP = p.modelo_moto || "Moto";
 
-    const ddi = telefoneClienteGlobal.startsWith('55') ? '' : '55';
-    const link = `https://api.whatsapp.com/send?phone=${ddi}${telefoneClienteGlobal}&text=${mensagemUrl}`;
+    // 3. Monta a mensagem bem simples para teste
+    const msg = `Olá ${nomeC}, aqui é o piloto ${nomeP}. Estou a caminho com uma ${motoP}.`;
+    
+    // 4. Cria o link final
+    const linkFinal = `https://wa.me/${foneLimpo}?text=${encodeURIComponent(msg)}`;
 
-    // Abre em uma nova aba
-    window.open(link, '_blank');
+    // 5. Abre a conversa
+    window.open(linkFinal, '_blank');
 }
 
     function limparContadores() {
