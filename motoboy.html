@@ -799,7 +799,7 @@ function preencherDadosAtiva(c) {
 
     if (c.forma_pagamento === 'DINHEIRO') {
         // No dinheiro, o valor de cima fica bem pequeno e o aviso toma conta da tela
-        valorPrincipal = `<span style="font-size: 14px; color: #888;">Taxa: R$ ${valorTaxa.toFixed(2).replace('.', ',')}</span>`;
+        valorPrincipal = "";
         
         avisoHTML = `
             <div style="background: #ff0000; color: #fff; padding: 20px; border-radius: 12px; margin: 15px 0; font-weight: 900; text-align: center; border: 4px solid #fff; animation: piscar 1s infinite;">
@@ -1037,7 +1037,6 @@ function preencherDadosAtiva(c) {
                 <span class="valor" style="display: block; color: var(--neon-green); font-size: 1.2em; font-weight: 800;">
                     GANHO: R$ ${ganhoFormatado}
                 </span>
-                <small style="font-size: 10px; color: #888;">Bruto: R$ ${valorBruto.toFixed(2).replace('.', ',')}</small>
             </div>
         </div>
         ${corrida.ciclo && corrida.ciclo > 1 ?
