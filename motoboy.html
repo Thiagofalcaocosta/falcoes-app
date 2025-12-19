@@ -787,40 +787,60 @@ function renderizarBotoesAtiva(status) {
 
 
 function preencherDadosAtiva(c) {
-    if (!c) return;
-    
     idCorridaAtual = c.corrida_id || c.id;
     
-    // Preenchimento visual da tela
+    const valorBruto = parseFloat(c.valor);
+    const taxa = 0.15; // 15%
+    const valorTaxa = valorBruto * taxa;
+    const valorLiquido = valorBruto - valorTaxa;
+
+    let valorExibicao = "";
+    let avisoHTML = "";
+
+    if (c.forma_pagamento === 'DINHEIRO') {
+        // FOCO NO VALOR TOTAL PARA COBRANÇA
+        valorExibicao = "R$ " + valorBruto.toFixed(2).replace('.', ',');
+        avisoHTML = `
+            <div style="background: #ff9900; color: #000; padding: 12px; border-radius: 8px; margin-top: 10px; font-weight: 800; text-align: center; border: 2px solid #000;">
+                ⚠️ COBRAR DO CLIENTE: R$ ${valorBruto.toFixed(2).replace('.', ',')}
+                <div style="font-size: 11px; font-weight: 400; margin-top: 5px;">
+                    (A taxa de R$ ${valorTaxa.toFixed(2).replace('.', ',')} será descontada do seu saldo)
+                </div>
+            </div>`;
+    } else {
+        // FOCO NO VALOR LÍQUIDO (JÁ PAGO)
+        valorExibicao = "R$ " + valorLiquido.toFixed(2).replace('.', ',');
+        avisoHTML = `
+            <div style="background: #25d366; color: #000; padding: 12px; border-radius: 8px; margin-top: 10px; font-weight: 800; text-align: center;">
+                ✅ PAGAMENTO PIX REALIZADO
+                <div style="font-size: 11px; font-weight: 400; margin-top: 5px;">
+                    (Valor líquido já creditado em seu saldo)
+                </div>
+            </div>`;
+    }
+
+    // Aplica os dados na tela
     document.getElementById('ativa-tipo').innerText = (c.tipo_servico || "MOTO TÁXI").toUpperCase();
-    document.getElementById('ativa-valor').innerText = "R$ " + parseFloat(c.valor).toFixed(2);
-    document.getElementById('ativa-cliente').innerText = c.nome_cliente || "Cliente";
-    document.getElementById('ativa-fone').innerText = c.telefone_cliente || "--";
+    document.getElementById('ativa-valor').innerText = valorExibicao;
+    
+    // Coloca o aviso no campo de método de pagamento
+    const campoMetodo = document.getElementById('ativa-metodo-pagamento');
+    if (campoMetodo) {
+        campoMetodo.innerHTML = avisoHTML;
+    }
+
+    document.getElementById('ativa-cliente').innerText = c.nome_cliente;
+    document.getElementById('ativa-fone').innerText = c.telefone_cliente;
     document.getElementById('ativa-origem').innerText = c.origem;
     document.getElementById('ativa-destino').innerText = c.destino;
-    
-    // Captura o telefone para a variável GLOBAL (do WhatsApp)
+
+    // Captura telefone para o WhatsApp
     if (c.telefone_cliente) {
         telefoneClienteGlobal = c.telefone_cliente.replace(/\D/g, '');
-        console.log("Telefone pronto para Zap:", telefoneClienteGlobal);
-    }
-
-    // Lógica do método de pagamento (Copia da atualizarDadosCorridaAtiva)
-    const labelPgto = document.getElementById('ativa-metodo-pagamento');
-    if (labelPgto) {
-        if (c.metodo_pagamento === 'pix') {
-            labelPgto.innerText = "PIX (JÁ PAGO ✅)";
-            labelPgto.style.color = "var(--neon-green)";
-        } else {
-            labelPgto.innerText = "DINHEIRO (COBRAR NO LOCAL 💰)";
-            labelPgto.style.color = "#ffaa00";
-        }
     }
     
-    // Renderiza os botões dinamicamente
     renderizarBotoesAtiva(c.status); 
 }
-
     /***********************
      *  LÓGICA DO POLLING DE ESTADO
      ***********************/
@@ -990,49 +1010,60 @@ function preencherDadosAtiva(c) {
     }
 
     function criarCardCorrida(corrida) {
-        const container = document.getElementById('lista-corridas');
+    const container = document.getElementById('lista-corridas');
 
-        const div = document.createElement('div');
-        div.className = 'card-corrida';
-        div.id = `card-${corrida.corrida_id}`;
+    // 1. CÁLCULO DO VALOR LÍQUIDO (Desconto de 15%)
+    const valorBruto = parseFloat(corrida.valor);
+    const taxa = 0.15;
+    const ganhoLiquido = valorBruto * (1 - taxa);
+    const ganhoFormatado = ganhoLiquido.toFixed(2).replace('.', ',');
 
-        const htmlConteudo = `
-            <div class="card-top">
-                <span class="tipo-servico">${corrida.tipo_servico.toUpperCase()}</span>
-                <span class="valor">R$ ${parseFloat(corrida.valor).toFixed(2)}</span>
+    const div = document.createElement('div');
+    div.className = 'card-corrida';
+    div.id = `card-${corrida.corrida_id}`;
+
+    const htmlConteudo = `
+        <div class="card-top">
+            <span class="tipo-servico">${corrida.tipo_servico.toUpperCase()}</span>
+            <div style="text-align: right;">
+                <span class="valor" style="display: block; color: var(--neon-green); font-size: 1.2em; font-weight: 800;">
+                    GANHO: R$ ${ganhoFormatado}
+                </span>
+                <small style="font-size: 10px; color: #888;">Bruto: R$ ${valorBruto.toFixed(2).replace('.', ',')}</small>
             </div>
-            ${corrida.ciclo && corrida.ciclo > 1 ?
-                `<div style="background: #333; color: #ff9900; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 12px; text-align: center;">
-                    ⚡ CICLO ${corrida.ciclo}
-                </div>`
-                : ''
-            }
-            <div class="rota">
-                <div style="color:#ddd; margin-bottom:5px;">📍 ${corrida.origem}</div>
-                <div style="color:#ddd;">🏁 ${corrida.destino}</div>
-            </div>
-            <div class="contador-tempo" id="contador-${corrida.corrida_id}"></div>
-            <button class="btn-acao btn-verde" onclick="aceitarCorridaWrapper(${corrida.corrida_id})">ACEITAR</button>
-            <div style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">
-                ⚠️ Outros pilotos também estão vendo esta corrida
-            </div>
-        `;
-        div.innerHTML = htmlConteudo;
-        container.appendChild(div);
-
-        const tempoRestante = 60 - Math.ceil(parseFloat(corrida.segundos_passados || 0));
-
-        if (tempoRestante > 0) {
-            tocarAlerta();
-            iniciarContador(corrida.corrida_id, tempoRestante, () => {
-                // A corrida expirou na tela do motoboy, pede um novo estado
-                verificarEstado();
-            });
-        } else {
-            div.remove();
-            verificarEstado();
+        </div>
+        ${corrida.ciclo && corrida.ciclo > 1 ?
+            `<div style="background: #333; color: #ff9900; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 12px; text-align: center;">
+                ⚡ CICLO ${corrida.ciclo}
+            </div>`
+            : ''
         }
+        <div class="rota">
+            <div style="color:#ddd; margin-bottom:5px;">📍 ${corrida.origem}</div>
+            <div style="color:#ddd;">🏁 ${corrida.destino}</div>
+        </div>
+        <div class="contador-tempo" id="contador-${corrida.corrida_id}"></div>
+        <button class="btn-acao btn-verde" onclick="aceitarCorridaWrapper(${corrida.corrida_id})">ACEITAR</button>
+        <div style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">
+            ⚠️ Outros pilotos também estão vendo esta corrida
+        </div>
+    `;
+    
+    div.innerHTML = htmlConteudo;
+    container.appendChild(div);
+
+    const tempoRestante = 60 - Math.ceil(parseFloat(corrida.segundos_passados || 0));
+
+    if (tempoRestante > 0) {
+        tocarAlerta();
+        iniciarContador(corrida.corrida_id, tempoRestante, () => {
+            verificarEstado();
+        });
+    } else {
+        div.remove();
+        verificarEstado();
     }
+}
 
     function renderizarLista(corrida) {
         const container = document.getElementById('lista-corridas');
