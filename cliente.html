@@ -1245,10 +1245,10 @@
         }
     }
     // === FUNÇÃO DE BUSCA DE ENDEREÇO (AUTOCOMPLETE) ===
+// === FUNÇÃO DE BUSCA DE ENDEREÇO (COM DETECÇÃO INTELIGENTE DE BAIRRO) ===
 async function buscarEndereco(query, listaId, modo) {
     const lista = document.getElementById(listaId);
     
-    // Se digitou menos de 3 letras, limpa a lista e para
     if (!query || query.length < 3) {
         lista.innerHTML = '';
         lista.style.display = 'none';
@@ -1261,7 +1261,7 @@ async function buscarEndereco(query, listaId, modo) {
     try {
         const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?` +
                     `access_token=${MAPBOX_ACCESS_TOKEN}&` +
-                    `proximity=${proximidade}&` + // Foca em Três Corações
+                    `proximity=${proximidade}&` +
                     `types=address,poi&` +
                     `language=pt&` +
                     `country=br&` +
@@ -1281,33 +1281,47 @@ async function buscarEndereco(query, listaId, modo) {
         data.features.forEach(f => {
             const item = document.createElement('div');
             item.className = 'sugestao-item';
-            // Exibe o endereço bonitinho na lista
-            item.innerText = f.place_name.replace(', Minas Gerais', '').replace(', Brasil', ''); 
+            // Limpa o texto para não ficar repetindo "Brasil", "Minas Gerais"
+            item.innerText = f.place_name
+                .replace(', Minas Gerais', '')
+                .replace(', Brasil', '')
+                .replace('Três Corações,', ''); 
             
             item.onclick = () => {
-                // 1. Pega apenas o nome da rua (sem número e sem cidade)
+                // 1. Pega apenas o nome da rua
                 const nomeRua = f.text; 
                 
-                // 2. Tenta achar o bairro
-                const bairroObj = f.context.find(c => c.id.startsWith('neighborhood'));
-                const bairro = bairroObj ? bairroObj.text : "Centro";
+                // 2. Tenta achar o bairro no "contexto" do Mapbox
+                let bairroEncontrado = "";
+                if (f.context) {
+                    const objBairro = f.context.find(c => c.id.startsWith('neighborhood'));
+                    if (objBairro) {
+                        bairroEncontrado = objBairro.text;
+                    }
+                }
                 
                 // 3. Preenche os campos
                 document.getElementById(`rua-${modo}`).value = nomeRua;
-                document.getElementById(`bairro-${modo}`).value = bairro;
+                document.getElementById(`bairro-${modo}`).value = bairroEncontrado;
                 
-                // 4. Salva as coordenadas para calcular rota
+                // 4. Salva as coordenadas
                 if (modo === 'origem') coordsOrigem = { lat: f.center[1], lon: f.center[0] };
                 else coordsDestino = { lat: f.center[1], lon: f.center[0] };
 
-                // 5. Limpa a lista
+                // 5. Esconde a lista
                 lista.innerHTML = '';
                 lista.style.display = 'none';
 
-                // 6. Foca no campo NÚMERO (Isso é o segredo!)
-                document.getElementById(`num-${modo}`).focus();
+                // === LÓGICA INTELIGENTE DE FOCO ===
+                if (bairroEncontrado) {
+                    // Cenário A: Achou o bairro -> Foca direto no NÚMERO (Rápido)
+                    document.getElementById(`num-${modo}`).focus();
+                } else {
+                    // Cenário B: Não achou -> Foca no BAIRRO para o cliente digitar
+                    document.getElementById(`bairro-${modo}`).focus();
+                    showToast("Por favor, preencha o bairro.", "info"); // Avisa o cliente
+                }
                 
-                // 7. Já tenta calcular a rota se tiver os dois pontos
                 calcularRota();
             };
             lista.appendChild(item);
