@@ -569,22 +569,26 @@ function abrirConversaZap() {
         return;
     }
 
-    // 1. Limpa o telefone
     let foneLimpo = telefoneClienteGlobal.toString().replace(/\D/g, '');
     if (!foneLimpo.startsWith('55')) foneLimpo = '55' + foneLimpo;
 
-    // 2. Pega os nomes da tela e do sistema para a mensagem
     const nomeC = document.getElementById('ativa-cliente')?.innerText || "Cliente";
     const nomeP = usuario.nome || "Piloto";
     const motoP = usuario.modelo_moto || "Moto";
     const placaP = usuario.placa || "";
 
-    // 3. Monta a mensagem profissional
-    const mensagem = `Olá, ${nomeC}! Sou o piloto ${nomeP}. Já aceitei sua corrida e estou a caminho. Minha moto é uma ${motoP} ${placaP ? 'placa ' + placaP : ''}. Chego em breve! 🏍️`;
+    // MENSAGEM COM IDENTIDADE E ORGANIZAÇÃO
+    // Use \n para pular linha e deixar o texto arrumado
+    const mensagem = `*FALCÕES APP* 🦅\n\n` +
+                     `Olá, *${nomeC}*!\n` +
+                     `Sou o piloto *${nomeP}* e já estou a caminho.\n\n` +
+                     `*Veículo:* ${motoP}\n` +
+                     `${placaP ? '*Placa:* ' + placaP + '\n' : ''}` +
+                     `*Status:* Em deslocamento 🏍️\n\n` +
+                     `Aguarde no local de origem, chego em breve!`;
     
     const linkFinal = `https://api.whatsapp.com/send?phone=${foneLimpo}&text=${encodeURIComponent(mensagem)}`;
 
-    // 4. Abre o link forçando a saída da "prisão" do app
     const a = document.createElement('a');
     a.href = linkFinal;
     a.target = '_blank';
