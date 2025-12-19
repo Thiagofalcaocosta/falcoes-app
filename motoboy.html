@@ -622,16 +622,22 @@ function abrirConversaZap() {
 
     async function carregarSaldoMotoboy() {
     try {
-        // Buscamos os dados do motoboy logado
         const res = await fetch(`${MEU_IP}/admin/motoboys`);
         const motoboys = await res.json();
-        
-        // Encontramos você na lista pelo ID
         const eu = motoboys.find(m => m.id === usuario.id);
         
         if (eu && eu.saldo !== undefined) {
-            const valor = parseFloat(eu.saldo).toFixed(2).replace('.', ',');
-            document.getElementById('saldo-piloto').innerText = `SALDO: R$ ${valor}`;
+            // Se o saldo no banco já for o líquido (atualizado pela rota de finalizar), 
+            // basta exibir. Se você quer calcular algo na hora, seria aqui:
+            const valorNumerico = parseFloat(eu.saldo);
+            
+            // Formata o valor para o padrão brasileiro
+            const valorFormatado = valorNumerico.toFixed(2).replace('.', ',');
+            
+            document.getElementById('saldo-piloto').innerText = `SALDO: R$ ${valorFormatado}`;
+            
+            // Cor do saldo: Vermelho se estiver devendo (negativo), Verde se tiver crédito
+            document.getElementById('saldo-piloto').style.color = valorNumerico < 0 ? "#ff4444" : "#25d366";
         }
     } catch (err) {
         console.error("Erro ao carregar saldo:", err);

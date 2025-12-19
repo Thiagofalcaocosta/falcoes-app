@@ -662,65 +662,57 @@ app.post('/expirar-corrida', async (req, res) => {
 app.post('/finalizar-corrida', async (req, res) => {
     const { corrida_id, motoboy_id } = req.body;
 
-    if (!corrida_id || !motoboy_id) {
-        return res.status(400).json({ success: false, message: "Dados incompletos." });
-    }
-
     try {
-        // 1. Inicia a transação
         await pool.query('BEGIN');
 
-        // 2. Busca o valor bruto da corrida
+        // 1. Busca valor e forma de pagamento da corrida
         const dadosCorrida = await pool.query(
-            "SELECT valor FROM corridas WHERE id = $1 AND motoboy_id = $2", 
-            [corrida_id, motoboy_id]
+            "SELECT valor, forma_pagamento FROM corridas WHERE id = $1", 
+            [corrida_id]
         );
         
         if (dadosCorrida.rows.length === 0) {
             await pool.query('ROLLBACK');
-            return res.json({ success: false, message: "Corrida não encontrada ou já finalizada." });
+            return res.json({ success: false, message: "Corrida não encontrada." });
         }
 
-        const valorBruto = parseFloat(dadosCorrida.rows[0].valor);
+        const valorTotal = parseFloat(dadosCorrida.rows[0].valor);
+        const formaPgto = dadosCorrida.rows[0].forma_pagamento; // 'DINHEIRO' ou 'PIX'/'ONLINE'
         
-        // 3. CONFIGURAÇÃO DA TAXA (Exemplo: 15%)
+        // 2. CONFIGURAÇÃO DA TAXA (Exemplo: 15%)
         const taxaAdmin = 0.15; 
-        const valorLiquido = valorBruto * (1 - taxaAdmin);
+        const valorTaxa = valorTotal * taxaAdmin;
+        const valorLiquido = valorTotal - valorTaxa;
 
-        // 4. Atualiza o status da corrida para 'concluida'
-        const updateCorrida = await pool.query(
-            "UPDATE corridas SET status = 'concluida' WHERE id = $1 AND status != 'concluida'", 
-            [corrida_id]
-        );
-
-        if (updateCorrida.rowCount === 0) {
-            await pool.query('ROLLBACK');
-            return res.json({ success: false, message: "Esta corrida já foi concluída anteriormente." });
+        // 3. LÓGICA DE CARTEIRA (Saldo)
+        if (formaPgto === 'DINHEIRO') {
+            // Se foi em dinheiro, o motoboy já está com o valor total. 
+            // Tiramos a taxa da carteira dele.
+            await pool.query(
+                "UPDATE usuarios SET saldo = COALESCE(saldo, 0) - $1 WHERE id = $2", 
+                [valorTaxa, motoboy_id]
+            );
+            console.log(`💸 Dinheiro: Taxa de R$${valorTaxa.toFixed(2)} descontada do saldo do motoboy.`);
+        } else {
+            // Se foi PIX/Online, o sistema recebeu. 
+            // Adicionamos apenas o valor líquido (já com desconto) ao saldo dele.
+            await pool.query(
+                "UPDATE usuarios SET saldo = COALESCE(saldo, 0) + $1 WHERE id = $2", 
+                [valorLiquido, motoboy_id]
+            );
+            console.log(`💳 PIX: Valor líquido de R$${valorLiquido.toFixed(2)} somado ao saldo do motoboy.`);
         }
 
-        // 5. Adiciona o valor líquido ao saldo do motoboy na tabela 'usuarios'
-        // COALESCE garante que se o saldo for NULL, ele comece em 0
-        await pool.query(
-            "UPDATE usuarios SET saldo = COALESCE(saldo, 0) + $1 WHERE id = $2", 
-            [valorLiquido, motoboy_id]
-        );
+        // 4. Atualiza status da corrida
+        await pool.query("UPDATE corridas SET status = 'concluida' WHERE id = $1", [corrida_id]);
 
-        // 6. Finaliza a transação com sucesso
         await pool.query('COMMIT');
-        
-        console.log(`💰 Corrida ${corrida_id} finalizada. Bruto: R$${valorBruto}, Motoboy recebeu: R$${valorLiquido.toFixed(2)}`);
-        
-        res.json({ 
-            success: true, 
-            valor_final: valorLiquido,
-            message: "Corrida finalizada e saldo atualizado!" 
-        });
+        res.json({ success: true, forma: formaPgto, taxa: valorTaxa });
 
     } catch (err) {
-        // Em caso de qualquer erro, desfaz as alterações no banco
         await pool.query('ROLLBACK');
-        console.error('Erro em /finalizar-corrida:', err);
-        res.status(500).json({ success: false, message: "Erro interno no servidor." });
+        console.error('Erro ao finalizar:', err);
+        res.status(500).json({ success: false });
     }
 });
 
