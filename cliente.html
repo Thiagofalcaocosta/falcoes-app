@@ -1244,8 +1244,7 @@
             reiniciarApp();
         }
     }
-    // === FUNÇÃO DE BUSCA DE ENDEREÇO (AUTOCOMPLETE) ===
-// === FUNÇÃO DE BUSCA DE ENDEREÇO (COM DETECÇÃO INTELIGENTE DE BAIRRO) ===
+    // === FUNÇÃO DE BUSCA (LIMPA E MANUAL) ===
 async function buscarEndereco(query, listaId, modo) {
     const lista = document.getElementById(listaId);
     
@@ -1255,7 +1254,7 @@ async function buscarEndereco(query, listaId, modo) {
         return;
     }
 
-    // Coordenadas de Três Corações (Prioridade na busca)
+    // Coordenadas de Três Corações
     const proximidade = `-45.2581,-21.6931`; 
 
     try {
@@ -1281,7 +1280,7 @@ async function buscarEndereco(query, listaId, modo) {
         data.features.forEach(f => {
             const item = document.createElement('div');
             item.className = 'sugestao-item';
-            // Limpa o texto para não ficar repetindo "Brasil", "Minas Gerais"
+            // Limpa o visual
             item.innerText = f.place_name
                 .replace(', Minas Gerais', '')
                 .replace(', Brasil', '')
@@ -1291,36 +1290,22 @@ async function buscarEndereco(query, listaId, modo) {
                 // 1. Pega apenas o nome da rua
                 const nomeRua = f.text; 
                 
-                // 2. Tenta achar o bairro no "contexto" do Mapbox
-                let bairroEncontrado = "";
-                if (f.context) {
-                    const objBairro = f.context.find(c => c.id.startsWith('neighborhood'));
-                    if (objBairro) {
-                        bairroEncontrado = objBairro.text;
-                    }
-                }
-                
-                // 3. Preenche os campos
+                // 2. Preenche SÓ A RUA
                 document.getElementById(`rua-${modo}`).value = nomeRua;
-                document.getElementById(`bairro-${modo}`).value = bairroEncontrado;
                 
-                // 4. Salva as coordenadas
+                // 3. LIMPA o Bairro (para obrigar ele a digitar o certo)
+                document.getElementById(`bairro-${modo}`).value = "";
+                
+                // 4. Salva coordenadas
                 if (modo === 'origem') coordsOrigem = { lat: f.center[1], lon: f.center[0] };
                 else coordsDestino = { lat: f.center[1], lon: f.center[0] };
 
-                // 5. Esconde a lista
+                // 5. Esconde lista
                 lista.innerHTML = '';
                 lista.style.display = 'none';
 
-                // === LÓGICA INTELIGENTE DE FOCO ===
-                if (bairroEncontrado) {
-                    // Cenário A: Achou o bairro -> Foca direto no NÚMERO (Rápido)
-                    document.getElementById(`num-${modo}`).focus();
-                } else {
-                    // Cenário B: Não achou -> Foca no BAIRRO para o cliente digitar
-                    document.getElementById(`bairro-${modo}`).focus();
-                    showToast("Por favor, preencha o bairro.", "info"); // Avisa o cliente
-                }
+                // 6. Foca no NÚMERO (Fluxo natural: Rua -> Nº -> Bairro)
+                document.getElementById(`num-${modo}`).focus();
                 
                 calcularRota();
             };
@@ -1341,7 +1326,7 @@ document.addEventListener('click', (e) => {
     async function pedir() {
     if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
     
-    // Pegamos a rua e removemos qualquer número que venha nela (limpeza de segurança)
+    // Limpeza dos dados
     const ruaOrigemPura = document.getElementById('rua-origem').value.split(',')[0].trim();
     const ruaDestinoPura = document.getElementById('rua-destino').value.split(',')[0].trim();
     
@@ -1353,18 +1338,25 @@ document.addEventListener('click', (e) => {
     const detalhes = document.getElementById('detalhes-entrega').value;
 
     let erro = false;
-    // Validação obrigatória do número
+
+    // --- VALIDAÇÃO DE ORIGEM ---
     if (!numOrigem) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
+    if (!bairroOrigem) { document.getElementById('bairro-origem').classList.add('erro'); erro = true; }
+
+    // --- VALIDAÇÃO DE DESTINO ---
     if (!numDestino) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
+    if (!bairroDestino) { document.getElementById('bairro-destino').classList.add('erro'); erro = true; }
     
     if (erro) { 
-        showToast("⚠️ O número da casa é obrigatório!", "error"); 
+        showToast("⚠️ Preencha NÚMERO e BAIRRO corretamente!", "error"); 
         return; 
     }
 
-    // MONTANDO O ENDEREÇO FINAL: Aqui garantimos que o número digitado é o que aparece
+    // --- SE PASSOU, MONTA O ENDEREÇO ---
     const strOrigem = `${ruaOrigemPura}, Nº ${numOrigem}, ${bairroOrigem}`;
     const strDestino = `${ruaDestinoPura}, Nº ${numDestino}, ${bairroDestino}`;
+    
+    // ... O resto da função pedir (fetch etc) continua igual aqui para baixo ...
         const strDestinoFinal = servicoSelecionado === 'entrega'
             ? `${strDestino} (ITEM: ${detalhes})`
             : strDestino;
