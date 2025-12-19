@@ -566,33 +566,36 @@
 
 // ESSA FUNÇÃO CHAMA O WHATSAPP USANDO A VARIÁVEL DO TOPO
 // ESSA FUNÇÃO CHAMA O WHATSAPP COM MENSAGEM AUTOMÁTICA
+// ESSA FUNÇÃO CHAMA O WHATSAPP COM MENSAGEM AUTOMÁTICA
 function abrirConversaZap() {
     if (!telefoneClienteGlobal || telefoneClienteGlobal === "") {
         alert("Número do cliente não identificado. Tente atualizar a página.");
         return;
     }
 
-    // Pega os dados que já estão na tela ou no seu objeto de usuário
-    const nomeCliente = document.getElementById('ativa-cliente').innerText || "Cliente";
-    const nomePiloto = usuario.nome || "Piloto";
-    const modeloMoto = usuario.modelo_moto || "Moto";
-    const placaMoto = usuario.placa || "";
+    // Tenta pegar o nome do cliente da tela
+    const elCliente = document.getElementById('ativa-cliente');
+    const nomeCliente = elCliente ? elCliente.innerText : "Cliente";
+    
+    // Pega seus dados do objeto que você usa para o Saldo
+    // Se 'usuario' não funcionar, usamos o que estiver no localStorage
+    const dadosPiloto = typeof usuario !== 'undefined' ? usuario : JSON.parse(localStorage.getItem('usuario') || '{}');
+    
+    const nomePiloto = dadosPiloto.nome || "seu piloto";
+    const modeloMoto = dadosPiloto.modelo_moto || "Moto";
+    const placaMoto = dadosPiloto.placa || "";
 
-    // MODELO DE MENSAGEM:
+    // MONTA O TEXTO
     const mensagem = `Olá, ${nomeCliente}! Sou o piloto ${nomePiloto}. Já aceitei sua corrida e estou a caminho. Minha moto é uma ${modeloMoto} ${placaMoto ? 'de placa ' + placaMoto : ''}. Chego em breve! 🏍️`;
     
-    // Codifica o texto para o link do WhatsApp
+    // IMPORTANTE: encodeURIComponent garante que o texto vire um link válido
     const mensagemUrl = encodeURIComponent(mensagem);
 
     const ddi = telefoneClienteGlobal.startsWith('55') ? '' : '55';
     const link = `https://api.whatsapp.com/send?phone=${ddi}${telefoneClienteGlobal}&text=${mensagemUrl}`;
 
-    const a = document.createElement('a');
-    a.href = link;
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // Abre em uma nova aba
+    window.open(link, '_blank');
 }
 
     function limparContadores() {
