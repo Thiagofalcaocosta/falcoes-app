@@ -1177,45 +1177,6 @@ app.post('/pagar-corrida', async (req, res) => {
       });
     }
 
-    // 💠 PAGAMENTO PIX (Mercado Pago)
-if (forma === 'PIX') {
-
-  // 1️⃣ Cria pagamento PIX
-  const payment = await paymentClient.create({
-    body: {
-      transaction_amount: Number(valor),
-      description: `Pagamento corrida #${corridaId}`,
-      payment_method_id: 'pix',
-      external_reference: String(corridaId),
-      payer: {
-        email: 'cliente@falcoes.app' // pode ser fixo ou buscar do cliente
-      },
-      metadata: {
-        corridaId: corridaId
-      }
-    }
-  });
-
-  // 2️⃣ Salva forma de pagamento
-  await pool.query(
-    `
-    UPDATE corridas
-    SET forma_pagamento = 'PIX'
-    WHERE id = $1
-    `,
-    [corridaId]
-  );
-
-  // 3️⃣ Retorna QR Code para o frontend
-  return res.json({
-    success: true,
-    qr_code: payment.point_of_interaction.transaction_data.qr_code,
-    qr_code_base64:
-      payment.point_of_interaction.transaction_data.qr_code_base64
-  });
-}
-
-
     // Resto do código do Mercado Pago permanece igual...
     // ... (seu código atual do Mercado Pago aqui)
     

@@ -731,10 +731,11 @@
             <button class="btn-pagamento-item" onclick="pagarDinheiro()">
                 💵 PAGAR EM DINHEIRO
             </button>
-            <button class="btn-pagamento-item" onclick="pagarPix()">
-                📱 PAGAR COM PIX
-            </button>
-        </div>
+            <button class="btn-pagamento-item"
+onclick="pagarCorridaOnline(idPedidoAtual, window.valorCalculado)">
+📱 PAGAR COM PIX
+</button>
+
         
         <button onclick="document.getElementById('modal-pagamento').classList.remove('show')" 
                 style="background:none; border:none; color:var(--muted); margin-top:15px; cursor:pointer;">
