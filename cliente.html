@@ -1529,43 +1529,47 @@ async function verificarStatus(id) {
     }
     
     async function confirmarEncerramentoCliente() {
-        const observacao = document.getElementById('campo-encerramento').value.trim();
+    const observacao = document.getElementById('campo-encerramento').value.trim();
 
-        document.getElementById('modal-encerramento').style.display = 'none';
-        document.getElementById('modal-busca').style.display = 'flex';
-        document.getElementById('status-titulo-modal').innerText = "Registrando finalização...";
-        document.getElementById('status-desc-modal').innerText = "Enviando confirmação..."; 
+    document.getElementById('modal-encerramento').style.display = 'none';
+    document.getElementById('modal-busca').style.display = 'flex';
+    document.getElementById('status-titulo-modal').innerText = "Registrando finalização...";
+    document.getElementById('status-desc-modal').innerText = "Enviando confirmação..."; 
 
-        try {
-            if (observacao && idPedidoAtual) {
-                await fetch(`${MEU_IP}/enviar-mensagem`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        corrida_id: idPedidoAtual,
-                        remetente: 'cliente',
-                        texto: observacao
-                    })
-                }).catch(err => console.warn('Falha ao enviar observacao:', err));
-            }
-
-            document.getElementById('modal-busca').style.display = 'none';
-            showToast("Finalização registrada. Obrigado!", "success", 3000);
-
-            clearInterval(intervaloVerificacao);
-            localStorage.removeItem('idPedidoAtual');
-            idPedidoAtual = null;
-
-            document.getElementById('acompanhamento-status-titulo').innerText = "PEDIDO CONCLUÍDO!";
-            document.getElementById('acompanhamento-status-desc').innerText = "Obrigado por usar Falcões.";
-            
-            setTimeout(() => reiniciarApp(), 1400);
-
-        } catch (e) {
-            document.getElementById('modal-busca').style.display = 'none';
-            showToast("Falha ao registrar finalização: " + e.message, "error");
+    try {
+        if (observacao && idPedidoAtual) {
+            await fetch(`${MEU_IP}/enviar-mensagem`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    corrida_id: idPedidoAtual,
+                    remetente: 'cliente',
+                    texto: observacao
+                })
+            }).catch(err => console.warn('Falha ao enviar observacao:', err));
         }
+
+        document.getElementById('modal-busca').style.display = 'none';
+        showToast("Finalização registrada. Obrigado!", "success", 3000);
+
+        // --- AQUI É O LUGAR CERTO ---
+        limparRascunho(); // Limpa os campos salvos para a próxima vez
+        // -----------------------------
+
+        clearInterval(intervaloVerificacao);
+        localStorage.removeItem('idPedidoAtual');
+        idPedidoAtual = null;
+
+        document.getElementById('acompanhamento-status-titulo').innerText = "PEDIDO CONCLUÍDO!";
+        document.getElementById('acompanhamento-status-desc').innerText = "Obrigado por usar Falcões.";
+        
+        setTimeout(() => reiniciarApp(), 1400);
+
+    } catch (e) {
+        document.getElementById('modal-busca').style.display = 'none';
+        showToast("Falha ao registrar finalização: " + e.message, "error");
     }
+}
     
 
     // === INICIALIZAÇÃO DE LISTENERS ===
@@ -1762,4 +1766,86 @@ function copiarCodigoPix() {
     setTimeout(() => { btn.innerText = "COPIAR CÓDIGO PIX"; }, 2000);
 
 }
+
+// ============================================================
+// SISTEMA DE MEMÓRIA AUTOMÁTICA (PERSISTÊNCIA DE DADOS)
+// ============================================================
+
+// 1. Lista dos campos que queremos salvar
+const camposParaSalvar = [
+    'rua-origem', 'num-origem', 'bairro-origem',
+    'rua-destino', 'num-destino', 'bairro-destino',
+    'detalhes-entrega'
+];
+
+// 2. Função que salva tudo no navegador
+function salvarRascunhoFormulario() {
+    const rascunho = {};
+    
+    // Salva o texto dos inputs
+    camposParaSalvar.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) rascunho[id] = el.value;
+    });
+
+    // IMPORTANTE: Salva também as coordenadas (para o mapa não quebrar)
+    if (typeof coordsOrigem !== 'undefined') rascunho.coordsOrigem = coordsOrigem;
+    if (typeof coordsDestino !== 'undefined') rascunho.coordsDestino = coordsDestino;
+    if (typeof servicoSelecionado !== 'undefined') rascunho.servico = servicoSelecionado;
+
+    localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
+}
+
+// 3. Função que recupera os dados quando a tela abre
+function restaurarRascunhoFormulario() {
+    const dados = JSON.parse(localStorage.getItem('rascunho_cliente'));
+    if (!dados) return; // Se não tem nada salvo, não faz nada
+
+    // Preenche os textos
+    camposParaSalvar.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && dados[id]) el.value = dados[id];
+    });
+
+    // Recupera as coordenadas e o serviço
+    if (dados.coordsOrigem) coordsOrigem = dados.coordsOrigem;
+    if (dados.coordsDestino) coordsDestino = dados.coordsDestino;
+    
+    // Se tinha um serviço selecionado, marca ele de novo
+    if (dados.servico) {
+        selecionarServico(dados.servico, dados.servico === 'moto-taxi' ? 10.0 : 8.50);
+    }
+
+    // Se tiver os dois endereços completos, já tenta recalcular a rota/preço
+    if (dados.coordsOrigem && dados.coordsDestino) {
+        calcularRota();
+    }
+}
+
+// 4. Função para limpar (Usar apenas quando a corrida for FINALIZADA com sucesso)
+function limparRascunho() {
+    localStorage.removeItem('rascunho_cliente');
+    // Limpa os campos visuais também
+    camposParaSalvar.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    coordsOrigem = null;
+    coordsDestino = null;
+    document.getElementById('resumo').innerHTML = '';
+}
+
+// 5. ATIVAÇÃO AUTOMÁTICA
+document.addEventListener('DOMContentLoaded', () => {
+    // Tenta restaurar assim que abre
+    restaurarRascunhoFormulario();
+
+    // Adiciona o "espião" que salva a cada letra digitada
+    camposParaSalvar.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', salvarRascunhoFormulario);
+        }
+    });
+});
 </script>
