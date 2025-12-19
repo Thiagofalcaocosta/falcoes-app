@@ -461,55 +461,64 @@
             <div id="lista-corridas">Carregando...</div>
         </div>
 
-        <div id="tela-corrida-ativa">
+        <div id="tela-corrida-ativa" style="display: none;">
     <div class="titulo-ativa">● CORRIDA EM ANDAMENTO</div>
-    <div class="card-corrida" id="ativa-card" style="border-color: var(--neon-green);">
+    <div class="card-corrida" id="ativa-card" style="border-color: var(--neon-green); padding: 20px;">
         
-        <div class="resumo-valor">
-            <span class="tipo-servico" id="ativa-tipo">MOTO TÁXI</span>
-            <span class="valor" id="ativa-valor">R$ 0,00</span>
+        <div class="resumo-valor" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <span class="tipo-servico" id="ativa-tipo" style="background: #333; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold;">MOTO TÁXI</span>
+            <div style="text-align: right;">
+                <span class="valor" id="ativa-valor" style="color: var(--neon-green); font-size: 24px; font-weight: 800; display: block;">R$ 0,00</span>
+                <span id="ativa-metodo-pagamento" style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #aaa;">DINHEIRO</span>
+            </div>
         </div>
 
-        <div class="info-cliente">
-            <div style="color:#aaa; font-size:12px;">CLIENTE:</div>
-            <div style="font-weight:bold; font-size:18px;" id="ativa-cliente">--</div>
-            <div style="color:#fff; margin-top:5px;" id="ativa-fone">--</div>
+        <div class="info-cliente" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; position: relative;">
+            <div style="color:#888; font-size: 11px; font-weight: bold; text-transform: uppercase;">Cliente</div>
+            <div style="font-weight: bold; font-size: 20px; color: #fff;" id="ativa-cliente">--</div>
+            
+            <a id="btn-whatsapp-cliente" href="#" target="_blank" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: #25d366; color: white; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                <i class="fab fa-whatsapp" style="font-size: 24px;"></i>
+            </a>
         </div>
         
-        <div class="rota-ativa-mapa">
-            <div class="ponto-rota">
-                <span class="icone-rota">🔺</span>
-                <div class="endereco-wrapper">
-                    <span class="label-endereco">BUSCAR EM:</span>
-                    <span class="destaque-endereco" id="ativa-origem">--</span>
+        <div class="rota-ativa-mapa" style="margin-bottom: 25px;">
+            <div class="ponto-rota" style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <span style="font-size: 20px;">🔺</span>
+                    <div style="width: 2px; height: 30px; background: #444; margin: 5px 0;"></div>
+                </div>
+                <div class="endereco-wrapper" style="flex: 1;">
+                    <span style="color: #ff4444; font-size: 11px; font-weight: bold; display: block;">BUSCAR EM:</span>
+                    <span id="ativa-origem" style="color: #fff; font-size: 15px; display: block; margin-top: 3px;">--</span>
+                    <button onclick="abrirGPS('origem')" style="background: transparent; border: 1px solid #444; color: #aaa; padding: 5px 10px; border-radius: 5px; font-size: 11px; margin-top: 8px; cursor: pointer;">
+                        <i class="fas fa-map-marker-alt"></i> VER NO MAPA
+                    </button>
                 </div>
             </div>
             
-            <div class="ponto-rota">
-                <span class="icone-rota">🏁</span>
-                <div class="endereco-wrapper">
-                    <span class="label-endereco">LEVAR PARA:</span>
-                    <span class="destaque-endereco" id="ativa-destino">--</span>
+            <div class="ponto-rota" style="display: flex; gap: 15px;">
+                <span style="font-size: 20px;">🏁</span>
+                <div class="endereco-wrapper" style="flex: 1;">
+                    <span style="color: var(--neon-green); font-size: 11px; font-weight: bold; display: block;">LEVAR PARA:</span>
+                    <span id="ativa-destino" style="color: #fff; font-size: 15px; display: block; margin-top: 3px;">--</span>
+                    <button onclick="abrirGPS('destino')" style="background: transparent; border: 1px solid #444; color: #aaa; padding: 5px 10px; border-radius: 5px; font-size: 11px; margin-top: 8px; cursor: pointer;">
+                        <i class="fas fa-location-arrow"></i> NAVEGAR ATÉ DESTINO
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div id="botoes-acao-ativa">
-            </div>
-    </div>
-</div>
-
-        <div id="tela-bloqueio">
-            <div class="aviso-bloqueio">
-                <h2 style="color:var(--danger-color); margin:0;">PAUSA OBRIGATÓRIA</h2>
-                <span class="tempo-bloqueio" id="tempo-restante">--</span>
-                <p>Novas corridas aparecerão após este tempo.</p>
-                <button onclick="verificarEstado()"
-                    style="background:transparent; border:1px solid #555; color:#aaa; padding:10px; border-radius:5px; cursor:pointer;">Atualizar</button>
-            </div>
+        <div id="botoes-acao-ativa" style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="btn-finalizar" id="btn-finalizar-corrida" style="background: var(--neon-green); color: #000; padding: 18px; border: none; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; text-transform: uppercase;">
+                <i class="fas fa-check-circle"></i> FINALIZAR CORRIDA
+            </button>
+            <button class="btn-cancelar-ativa" id="btn-cancelar-ativa" style="background: transparent; color: var(--danger-color); border: 1px solid var(--danger-color); padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer;">
+                CANCELAR CORRIDA
+            </button>
         </div>
     </div>
-
+</div>
     <script>
     /***********************
      *  VARIÁVEIS GLOBAIS
@@ -600,6 +609,60 @@
         }
         localStorage.clear();
         window.location.href = 'index.html';
+    }
+
+    /***********************
+     * FUNÇÕES DA CORRIDA ATIVA (GPS E WHATSAPP)
+     ***********************/
+
+    // Abre o Google Maps ou Waze
+    function abrirGPS(tipo) {
+        const endereco = tipo === 'origem' 
+            ? document.getElementById('ativa-origem').innerText 
+            : document.getElementById('ativa-destino').innerText;
+        
+        if (endereco && endereco !== '--') {
+            // No PC abre o Maps no navegador, no celular abre o App direto
+            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
+            window.open(url, '_blank');
+        }
+    }
+
+    // Preenche a tela de corrida ativa com os dados
+    function atualizarDadosCorridaAtiva(pedido) {
+        if (!pedido) return;
+
+        idCorridaAtual = pedido.id;
+        document.getElementById('ativa-cliente').innerText = pedido.nome_cliente || "Cliente";
+        document.getElementById('ativa-valor').innerText = `R$ ${pedido.valor}`;
+        document.getElementById('ativa-origem').innerText = pedido.origem;
+        document.getElementById('ativa-destino').innerText = pedido.destino;
+        document.getElementById('ativa-tipo').innerText = (pedido.tipo_servico || "MOTO TÁXI").toUpperCase();
+        
+        // Exibe o número do cliente na tela
+        if(document.getElementById('ativa-fone')) {
+             document.getElementById('ativa-fone').innerText = pedido.telefone_cliente;
+        }
+
+        // Lógica visual para saber se deve cobrar ou não
+        const labelPgto = document.getElementById('ativa-metodo-pagamento');
+        if (labelPgto) {
+            if (pedido.metodo_pagamento === 'pix') {
+                labelPgto.innerText = "PIX (JÁ PAGO ✅)";
+                labelPgto.style.color = "var(--neon-green)";
+            } else {
+                labelPgto.innerText = "DINHEIRO (COBRAR NO LOCAL 💰)";
+                labelPgto.style.color = "#ffaa00";
+            }
+        }
+
+        // Configura o link do botão de WhatsApp
+        if (pedido.telefone_cliente) {
+            const foneLimpo = pedido.telefone_cliente.replace(/\D/g, '');
+            // Se o número não tiver o 55, nós adicionamos
+            const linkWpp = `https://wa.me/${foneLimpo.length === 11 ? '55' + foneLimpo : foneLimpo}`;
+            document.getElementById('btn-whatsapp-cliente').href = linkWpp;
+        }
     }
 
 
