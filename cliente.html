@@ -1664,27 +1664,70 @@ async function pagarDinheiro() {
 }
 
 // pagamento pix
+let monitorandoPix = null;
+
 async function pagarPix() {
     if (!idPedidoAtual) {
-        alert('Pedido inválido');
+        showToast('Pedido inválido', 'error');
         return;
     }
 
-    const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            id: idPedidoAtual,
-            forma_pagamento: 'PIX'
-        })
-    });
+    // Feedback visual de carregamento
+    const btnPix = document.querySelector('button[onclick="pagarPix()"]');
+    const originalText = btnPix.innerHTML;
+    btnPix.innerText = "GERANDO CÓDIGO...";
+    btnPix.disabled = true;
 
-    const data = await res.json();
+    try {
+        const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: idPedidoAtual,
+                forma_pagamento: 'PIX'
+            })
+        });
 
-    if (data.init_point) {
-        window.location.href = data.init_point; // Mercado Pago
-    } else {
-        alert('Erro ao gerar pagamento PIX');
+        const data = await res.json();
+
+        if (data.success && data.pix_qr_64) {
+            const modalContent = document.querySelector('#modal-pagamento .modal-content');
+            
+            // Substitui o conteúdo do modal pelos dados do PIX
+            modalContent.innerHTML = `
+                <h3 style="color: var(--brand-green);">PAGAMENTO PIX</h3>
+                <p>Aponte a câmera ou copie o código:</p>
+                <img src="data:image/jpeg;base64,${data.pix_qr_64}" style="width: 200px; border-radius: 12px; margin: 10px 0; border: 4px solid white;">
+                <textarea id="pixCode" readonly style="width:100%; height:60px; font-size:11px; background:#222; color:#fff; border:1px solid #444; border-radius:8px; padding:8px; margin-bottom:10px; resize:none;">${data.pix_copia_cola}</textarea>
+                <button class="btn" onclick="copiarCodigoPix()" style="background:#00e640; color:black; font-weight:800;">COPIAR CÓDIGO PIX</button>
+                <div style="margin-top:15px; color:#ffd700; font-weight:bold; font-size:14px;">
+                    <span class="spinner-small"></span> Aguardando confirmação...
+                </div>
+                <button onclick="location.reload()" style="background:none; border:none; color:#aaa; margin-top:15px; cursor:pointer;">Cancelar e Voltar</button>
+            `;
+            
+            // O seu loop de 'verificarStatus' que já roda no fundo vai detectar a mudança para 'liberada'
+            showToast("Pix gerado com sucesso!", "success");
+        } else {
+            throw new Error("Dados do Pix não retornados");
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Erro ao gerar PIX. Tente novamente.', 'error');
+        btnPix.innerHTML = originalText;
+        btnPix.disabled = false;
     }
+}
+
+function copiarCodigoPix() {
+    const copyText = document.getElementById("pixCode");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); // Para dispositivos móveis
+    navigator.clipboard.writeText(copyText.value);
+    
+    const btn = document.querySelector('button[onclick="copiarCodigoPix()"]');
+    btn.innerText = "✅ COPIADO!";
+    setTimeout(() => { btn.innerText = "COPIAR CÓDIGO PIX"; }, 2000);
+
 }
 </script>

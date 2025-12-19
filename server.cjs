@@ -416,47 +416,54 @@ app.post('/escolher-pagamento', async (req, res) => {
     // 💰 PAGAMENTO EM DINHEIRO
     if (forma_pagamento === 'DINHEIRO') {
       const result = await pool.query(
-        `
-        UPDATE corridas
-        SET forma_pagamento = 'DINHEIRO',
-            status = 'liberada'
-        WHERE id = $1
-          AND status = 'aguardando_pagamento'
-        `,
+        "UPDATE corridas SET forma_pagamento = 'DINHEIRO', status = 'liberada' WHERE id = $1 AND status = 'aguardando_pagamento'",
         [id]
       );
-
-      if (result.rowCount === 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'Corrida não está aguardando pagamento'
-        });
-      }
-
-      return res.json({ success: true });
+      return res.json({ success: true, tipo: 'DINHEIRO' });
     }
 
-    // 🔁 PIX (mantém aguardando pagamento)
+    // 🔁 PIX (Integração Real)
     if (forma_pagamento === 'PIX') {
+      // 1. Busca o valor da corrida no banco
+      const corridaRes = await pool.query("SELECT valor FROM corridas WHERE id = $1", [id]);
+      if (corridaRes.rowCount === 0) return res.status(404).json({ success: false });
+      const valorTotal = parseFloat(corridaRes.rows[0].valor);
+
+      // 2. Cria o pagamento no Mercado Pago
+      const paymentResponse = await paymentClient.create({
+        body: {
+          transaction_amount: valorTotal,
+          description: `Corrida Falcões #${id}`,
+          payment_method_id: 'pix',
+          payer: {
+            email: 'cliente@falcoes.com' // Pode ser dinâmico se tiver no banco
+          },
+          external_reference: id.toString(),
+          notification_url: `${PUBLIC_BASE_URL}/mp-webhook` // Usa sua variável de URL
+        }
+      });
+
+      const pointOfInteraction = paymentResponse.point_of_interaction.transaction_data;
+
+      // 3. Atualiza o banco com o ID da forma de pagamento
       await pool.query(
-        `
-        UPDATE corridas
-        SET forma_pagamento = 'PIX'
-        WHERE id = $1
-          AND status = 'aguardando_pagamento'
-        `,
+        "UPDATE corridas SET forma_pagamento = 'PIX' WHERE id = $1",
         [id]
       );
 
-      // aqui entra Mercado Pago (já existente)
-      return res.json({ success: true });
+      // 4. Retorna os dados do QR Code para o frontend
+      return res.json({
+        success: true,
+        tipo: 'PIX',
+        pix_copia_cola: pointOfInteraction.qr_code,
+        pix_qr_64: pointOfInteraction.qr_code_base64
+      });
     }
 
-    return res.status(400).json({ success: false, message: 'Forma de pagamento inválida' });
-
+    return res.status(400).json({ success: false, message: 'Forma inválida' });
   } catch (err) {
-    console.error('Erro em /escolher-pagamento:', err);
-    res.status(500).json({ success: false });
+    console.error('Erro ao gerar Pix:', err);
+    res.status(500).json({ success: false, message: 'Erro ao processar Pix' });
   }
 });
 
