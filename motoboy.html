@@ -479,7 +479,9 @@
     <div style="font-weight: bold; font-size: 18px; color: #fff;" id="ativa-cliente">--</div>
     <div style="color:#fff; font-size: 13px; margin-top: 5px;" id="ativa-fone">--</div>
     
-    <a id="btn-whatsapp-cliente" href="#" target="_blank" rel="external" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: #25d366; color: white; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; z-index: 100;">
+    <a id="btn-whatsapp-cliente" 
+   onclick="abrirConversaZap()"
+   style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: #25d366; color: white; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; z-index: 100; cursor: pointer;">
     <i class="fab fa-whatsapp" style="font-size: 24px;"></i>
 </a>
 </div>
@@ -664,15 +666,29 @@ function mostrarTela(idDesejado) {
             }
         }
 
-        // Configura o link do botão de WhatsApp
-        if (pedido.telefone_cliente) {
-            const foneLimpo = pedido.telefone_cliente.replace(/\D/g, '');
-            // Se o número não tiver o 55, nós adicionamos
-            const linkWpp = `https://wa.me/${foneLimpo.length === 11 ? '55' + foneLimpo : foneLimpo}`;
-            document.getElementById('btn-whatsapp-cliente').href = linkWpp;
-        }
+        // AQUI ESTÁ A MUDANÇA: APAGUEI AS LINHAS DO HREF E SÓ GUARDO O NÚMERO
+    if (pedido.telefone_cliente) {
+        telefoneClienteGlobal = pedido.telefone_cliente.replace(/\D/g, '');
     }
+}
 
+// ESTA FUNÇÃO NOVA DEVE FICAR LOGO ABAIXO DA DE CIMA
+function abrirConversaZap() {
+    if (!telefoneClienteGlobal) {
+        alert("Número não encontrado.");
+        return;
+    }
+    const ddi = telefoneClienteGlobal.startsWith('55') ? '' : '55';
+    const link = `https://api.whatsapp.com/send?phone=${ddi}${telefoneClienteGlobal}`;
+    
+    // CRIA UM LINK INVISÍVEL E CLICA NELE PARA SAIR DA "PRISÃO" DO APP
+    const a = document.createElement('a');
+    a.href = link;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
 
     /***********************
      *  FUNÇÕES DE STATUS ONLINE
