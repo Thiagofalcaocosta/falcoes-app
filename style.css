@@ -846,3 +846,307 @@ textarea#campo-encerramento {
     width: 100%;
 }
 
+/* ============================================================ */
+/* NOVO DESIGN DO ACOMPANHAMENTO (COLE AQUI NO FINAL)           */
+/* ============================================================ */
+
+/* 1. Ajuste da Tela para permitir o novo layout */
+#tela-acompanhamento {
+    display: none; /* O JS controla quando aparece */
+    flex-direction: column;
+    text-align: left; /* Garante que o texto não fique centralizado forçado */
+}
+#tela-acompanhamento.ativa {
+    display: flex;
+}
+
+/* 2. Cabeçalho (Status + Timer + Badge) */
+.status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.status-info h2 {
+    font-size: 18px;
+    color: #fff;
+    margin: 0;
+    text-align: left;
+    letter-spacing: 0.5px;
+}
+
+.status-info p {
+    font-size: 13px;
+    color: #888;
+    margin: 4px 0 0 0;
+    text-align: left;
+}
+
+.status-timer {
+    font-size: 14px;
+    color: var(--neon-green);
+    font-weight: bold;
+    margin-top: 8px;
+    text-align: left;
+}
+
+.order-badge {
+    background: #222;
+    border: 1px solid #333;
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: #666;
+    font-weight: bold;
+    font-size: 14px;
+    height: fit-content;
+}
+
+/* 3. Botão de Cancelar Busca */
+.btn-cancel-outline {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--error-color);
+    color: var(--error-color);
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: 0.2s;
+}
+.btn-cancel-outline:hover {
+    background: var(--error-color);
+    color: white;
+}
+
+/* 4. Card do Piloto (Estilo Dark Premium) */
+.driver-card {
+    background: #1e1e1e; /* Fundo cinza escuro */
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.driver-img-fix {
+    width: 60px; 
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid var(--neon-green);
+    padding: 2px;
+    object-fit: cover;
+    filter: invert(100%); /* Deixa ícones pretos brancos */
+}
+
+.driver-info {
+    flex: 1;
+    text-align: left;
+}
+
+.driver-label {
+    font-size: 10px;
+    color: var(--neon-green);
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.driver-info h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #fff;
+    text-transform: capitalize;
+}
+
+.driver-meta {
+    margin-top: 4px;
+}
+
+.plate-badge {
+    background: #e0e0e0;
+    color: #000;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 900;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.vehicle-model {
+    color: #888;
+    font-size: 12px;
+    margin-left: 6px;
+}
+
+.driver-rating {
+    background: #2c2c2c;
+    color: #FFD700;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* 5. Botão WhatsApp */
+.btn-whatsapp-full {
+    background-color: #25D366;
+    color: white;
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 16px;
+    gap: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+/* 6. Rota (Timeline Visual) */
+.route-container {
+    position: relative;
+    padding-left: 5px;
+    margin: 20px 0;
+}
+
+.route-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    position: relative;
+    z-index: 2; /* Fica acima da linha */
+}
+
+.route-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #121212; /* Cor do fundo da tela para cortar a linha */
+    border: 3px solid #fff;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px #121212; /* Borda falsa externa */
+}
+.route-dot.dest {
+    border-color: var(--neon-green);
+}
+
+/* Linha pontilhada conectora */
+.route-connector {
+    width: 2px;
+    height: 25px; /* Altura da linha entre os pontos */
+    border-left: 2px dashed #444;
+    margin-left: 9px; /* Alinha com o centro das bolinhas */
+    margin-top: -2px;
+    margin-bottom: -2px;
+}
+
+.route-content {
+    text-align: left;
+    border-bottom: 1px solid #222;
+    width: 100%;
+    padding-bottom: 10px;
+}
+/* Tira a borda do último item */
+.route-item:last-child .route-content {
+    border-bottom: none;
+}
+
+.route-content label {
+    font-size: 10px;
+    color: #666;
+    font-weight: 800;
+    margin-bottom: 2px;
+    display: block;
+}
+
+.route-content span {
+    font-size: 14px;
+    color: #ddd;
+    line-height: 1.3;
+    display: block;
+}
+
+/* 7. Área de Preço e Justificativa */
+.price-section {
+    border-top: 1px solid #333;
+    padding-top: 20px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between; /* Botão Pagar esquerda, Preço direita */
+    align-items: center;
+}
+
+.price-display {
+    text-align: right;
+    margin-left: auto; /* Empurra pra direita se o botão de pagar sumir */
+}
+
+.price-display span {
+    font-size: 11px;
+    color: #888;
+    display: block;
+}
+
+.price-display h1 {
+    margin: 0;
+    font-size: 26px;
+    color: var(--neon-green);
+    letter-spacing: -1px;
+}
+
+/* Área de Justificativa */
+.cancel-area {
+    margin-top: 20px;
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #333;
+    text-align: left;
+}
+.cancel-area textarea {
+    width: 100%;
+    background: #121212;
+    border: 1px solid #444;
+    color: white;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+}
+.btn-danger-full {
+    width: 100%;
+    background: var(--error-color);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-top: 10px;
+    cursor: pointer;
+}
+.btn-danger-full:disabled {
+    background: #444;
+    cursor: not-allowed;
+}
+.btn-text-close {
+    background: none;
+    border: none;
+    color: #666;
+    width: 100%;
+    padding: 15px;
+    cursor: pointer;
+    margin-top: 10px;
+}
