@@ -20,6 +20,21 @@ const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('merca
 const app = express();
 const port = process.env.PORT || 3000;
 
+// ==================================================================
+// 🚨 CORREÇÃO URGENTE: ISSO TEM QUE SER A PRIMEIRA COISA (TOPO) 🚨
+// ==================================================================
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.header("Access-Control-Allow-Credentials", "true");
+    
+    // Responde pro navegador imediatamente que pode conectar
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 // 3A. CONFIGURAÇÃO MERCADO PAGO
 const mpAccessToken = process.env.MP_ACCESS_TOKEN_TEST || process.env.MP_ACCESS_TOKEN;
 
@@ -60,18 +75,6 @@ app.use(cors({
 app.use(express.static(path.join(__dirname)));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-// 2. LOG DE PEDIDOS
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*"); // Libera para todos
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    
-    // Se o navegador fizer uma pergunta prévia (OPTIONS), responde que SIM na hora
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
-});
 
 // ===============================================
 // 5. CONFIGURAÇÃO DO BANCO DE DADOS
