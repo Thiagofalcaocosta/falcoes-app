@@ -847,180 +847,109 @@ textarea#campo-encerramento {
 }
 
 /* ============================================================ */
-/* NOVO DESIGN DO ACOMPANHAMENTO (COLE AQUI NO FINAL)           */
+/* DESIGN PREMIUM FALCÕES (CORREÇÃO VISUAL)                     */
 /* ============================================================ */
 
-/* 1. Ajuste da Tela para permitir o novo layout */
+/* 1. Container Principal */
 #tela-acompanhamento {
-    display: none; /* O JS controla quando aparece */
+    display: none;
     flex-direction: column;
-    text-align: left; /* Garante que o texto não fique centralizado forçado */
+    gap: 15px; /* Espaço entre os cartões */
+    padding-bottom: 30px;
 }
 #tela-acompanhamento.ativa {
     display: flex;
 }
 
-/* 2. Cabeçalho (Status + Timer + Badge) */
+/* 2. Cartão de Status (Onde diz "Buscando...") */
 .status-header {
+    background: #1a1a1a; /* Fundo cinza suave */
+    border: 1px solid #333;
+    border-radius: 16px; /* Cantos bem arredondados */
+    padding: 20px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    border-bottom: 1px solid #333;
-    padding-bottom: 15px;
-    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Barra lateral colorida para indicar status */
+.status-header::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: var(--brand-green); /* Verde Falcões */
 }
 
 .status-info h2 {
     font-size: 18px;
     color: #fff;
-    margin: 0;
-    text-align: left;
+    margin: 0 0 5px 0;
+    font-weight: 700;
     letter-spacing: 0.5px;
 }
 
 .status-info p {
     font-size: 13px;
-    color: #888;
-    margin: 4px 0 0 0;
-    text-align: left;
+    color: #aaa;
+    margin: 0;
 }
 
 .status-timer {
     font-size: 14px;
-    color: var(--neon-green);
-    font-weight: bold;
-    margin-top: 8px;
-    text-align: left;
+    color: var(--brand-green);
+    font-weight: 800;
+    margin-top: 10px;
+    display: inline-block;
+    background: rgba(0, 230, 64, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
 }
 
 .order-badge {
-    background: #222;
+    background: #000;
     border: 1px solid #333;
+    color: #888;
     padding: 6px 10px;
     border-radius: 8px;
-    color: #666;
+    font-size: 12px;
     font-weight: bold;
-    font-size: 14px;
-    height: fit-content;
+    font-family: monospace;
 }
 
-/* 3. Botão de Cancelar Busca */
+/* 3. Botão de Cancelar (Mais elegante) */
 .btn-cancel-outline {
     width: 100%;
-    background: transparent;
-    border: 1px solid var(--error-color);
-    color: var(--error-color);
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-bottom: 20px;
-    transition: 0.2s;
-}
-.btn-cancel-outline:hover {
-    background: var(--error-color);
-    color: white;
-}
-
-/* 4. Card do Piloto (Estilo Dark Premium) */
-.driver-card {
-    background: #1e1e1e; /* Fundo cinza escuro */
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 15px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-
-.driver-img-fix {
-    width: 60px; 
-    height: 60px;
-    border-radius: 50%;
-    border: 2px solid var(--neon-green);
-    padding: 2px;
-    object-fit: cover;
-    filter: invert(100%); /* Deixa ícones pretos brancos */
-}
-
-.driver-info {
-    flex: 1;
-    text-align: left;
-}
-
-.driver-label {
-    font-size: 10px;
-    color: var(--neon-green);
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 2px;
-}
-
-.driver-info h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #fff;
-    text-transform: capitalize;
-}
-
-.driver-meta {
-    margin-top: 4px;
-}
-
-.plate-badge {
-    background: #e0e0e0;
-    color: #000;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 900;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.vehicle-model {
-    color: #888;
-    font-size: 12px;
-    margin-left: 6px;
-}
-
-.driver-rating {
-    background: #2c2c2c;
-    color: #FFD700;
-    padding: 4px 8px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-/* 5. Botão WhatsApp */
-.btn-whatsapp-full {
-    background-color: #25D366;
-    color: white;
-    text-decoration: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background: #1a1a1a;
+    border: 1px solid #ff4444; /* Vermelho mais vivo */
+    color: #ff4444;
     padding: 14px;
-    border-radius: 10px;
-    font-weight: 800;
-    font-size: 16px;
-    gap: 10px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
-    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 14px;
     cursor: pointer;
-    width: 100%;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.btn-cancel-outline:active {
+    background: #ff4444;
+    color: #fff;
+    transform: scale(0.98);
 }
 
-/* 6. Rota (Timeline Visual) */
+/* 4. Cartão da Rota (Agora com fundo) */
 .route-container {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 20px;
     position: relative;
-    padding-left: 5px;
-    margin: 20px 0;
 }
 
 .route-item {
@@ -1028,125 +957,125 @@ textarea#campo-encerramento {
     align-items: flex-start;
     gap: 15px;
     position: relative;
-    z-index: 2; /* Fica acima da linha */
+    z-index: 2;
 }
 
+/* Bolinhas da rota */
 .route-dot {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    background: #121212; /* Cor do fundo da tela para cortar a linha */
-    border: 3px solid #fff;
+    background: #1a1a1a;
+    border: 2px solid #fff;
     flex-shrink: 0;
-    box-shadow: 0 0 0 3px #121212; /* Borda falsa externa */
+    margin-top: 4px; /* Alinha com o texto */
+    box-shadow: 0 0 0 4px #1a1a1a; /* Máscara para cortar a linha */
 }
-.route-dot.dest {
-    border-color: var(--neon-green);
-}
+.route-dot.origin { border-color: #fff; }
+.route-dot.dest { border-color: var(--brand-green); background: var(--brand-green); }
 
-/* Linha pontilhada conectora */
+/* Linha conectora */
 .route-connector {
+    position: absolute;
+    left: 25px; /* Ajuste fino baseado no padding + metade da bolinha */
+    top: 30px;
+    bottom: 40px;
     width: 2px;
-    height: 25px; /* Altura da linha entre os pontos */
     border-left: 2px dashed #444;
-    margin-left: 9px; /* Alinha com o centro das bolinhas */
-    margin-top: -2px;
-    margin-bottom: -2px;
+    z-index: 1;
+}
+/* No seu HTML a estrutura é div > div, então vamos ajustar o conector visualmente */
+.route-container .route-item:first-child::after {
+    content: '';
+    position: absolute;
+    left: 5px; /* Centro da bolinha */
+    top: 20px;
+    height: 40px; /* Altura da linha */
+    width: 2px;
+    border-left: 2px dashed #555;
+    z-index: -1;
 }
 
 .route-content {
-    text-align: left;
-    border-bottom: 1px solid #222;
-    width: 100%;
-    padding-bottom: 10px;
+    flex: 1;
+    padding-bottom: 20px;
 }
-/* Tira a borda do último item */
 .route-item:last-child .route-content {
-    border-bottom: none;
+    padding-bottom: 0;
 }
 
 .route-content label {
     font-size: 10px;
     color: #666;
     font-weight: 800;
-    margin-bottom: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
     display: block;
 }
 
 .route-content span {
-    font-size: 14px;
-    color: #ddd;
-    line-height: 1.3;
+    font-size: 15px;
+    color: #eee;
+    line-height: 1.4;
+    font-weight: 500;
     display: block;
 }
 
-/* 7. Área de Preço e Justificativa */
+/* 5. Preço (Destaque) */
 .price-section {
-    border-top: 1px solid #333;
-    padding-top: 20px;
-    margin-top: 10px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 20px;
     display: flex;
-    justify-content: space-between; /* Botão Pagar esquerda, Preço direita */
+    justify-content: space-between;
     align-items: center;
 }
 
-.price-display {
-    text-align: right;
-    margin-left: auto; /* Empurra pra direita se o botão de pagar sumir */
-}
-
 .price-display span {
-    font-size: 11px;
+    font-size: 12px;
     color: #888;
-    display: block;
+    text-transform: uppercase;
 }
 
 .price-display h1 {
+    font-size: 28px;
+    color: var(--brand-green);
     margin: 0;
-    font-size: 26px;
-    color: var(--neon-green);
     letter-spacing: -1px;
 }
 
-/* Área de Justificativa */
-.cancel-area {
-    margin-top: 20px;
-    background: #1a1a1a;
-    padding: 15px;
-    border-radius: 10px;
+/* 6. Card do Piloto (Quando aparecer) */
+.driver-card {
+    background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
     border: 1px solid #333;
-    text-align: left;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
 }
-.cancel-area textarea {
-    width: 100%;
-    background: #121212;
-    border: 1px solid #444;
-    color: white;
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 6px;
+.driver-img-fix {
+    width: 65px; height: 65px;
+    border-radius: 50%;
+    border: 3px solid var(--brand-green);
+    object-fit: cover;
+    background: #000;
+    filter: invert(1);
 }
-.btn-danger-full {
-    width: 100%;
-    background: var(--error-color);
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    margin-top: 10px;
-    cursor: pointer;
-}
-.btn-danger-full:disabled {
-    background: #444;
-    cursor: not-allowed;
-}
-.btn-text-close {
-    background: none;
-    border: none;
-    color: #666;
-    width: 100%;
-    padding: 15px;
-    cursor: pointer;
+.driver-info h3 { font-size: 20px; color: #fff; margin: 0; }
+.vehicle-model { color: #ccc; font-size: 14px; }
+.plate-badge { background: #fff; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+
+.btn-whatsapp-full {
+    background: #25D366;
+    color: #fff;
+    padding: 16px;
+    border-radius: 12px;
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+    display: block;
     margin-top: 10px;
 }
