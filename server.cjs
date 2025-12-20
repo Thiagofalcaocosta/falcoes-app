@@ -32,7 +32,7 @@ const mpClient = new MercadoPagoConfig({
   accessToken: mpAccessToken,
   options: { 
     timeout: 5000,
-    idempotencyKey: 'falcoes-app'
+    
   }
 });
 
