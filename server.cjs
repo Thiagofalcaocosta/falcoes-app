@@ -46,9 +46,19 @@ const merchantOrderClient  = new MerchantOrder(mpClient);
 // 4. MIDDLEWARES
 // ===============================================
 
+// ===============================================
+// 4. MIDDLEWARES (CORREÇÃO DO BLOQUEIO CORS)
+// ===============================================
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
+
+// SUBSTITUA A LINHA "app.use(cors())" ANTIGA POR ISSO:
+app.use(cors({
+    origin: '*', // Libera para qualquer site (resolve o erro vermelho)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // 1. SERVIR ARQUIVOS ESTÁTICOS (CSS, IMAGENS, JS)
 app.use(express.static(path.join(__dirname)));
