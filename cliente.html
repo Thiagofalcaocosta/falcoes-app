@@ -840,13 +840,24 @@
         <div id="tela-acompanhamento" class="tela">
     
     <div class="status-header" id="acompanhamento-status-area">
+    
+    <div class="header-top-row">
         <div class="status-info">
             <h2 id="acompanhamento-status-titulo">BUSCANDO PILOTO...</h2>
             <p id="acompanhamento-status-desc">Notificando parceiros próximos</p>
-            <div id="tempo-restante-busca" class="status-timer">⏳ --s</div>
         </div>
-        <div class="order-badge"><span id="acompanhamento-id">000</span></div>
+        
+        <div class="order-badge-group">
+            <span class="badge-label">PEDIDO</span>
+            <span class="badge-value" id="acompanhamento-id">#000</span>
+        </div>
     </div>
+
+    <div id="tempo-restante-busca" class="status-timer">
+        ⏳ Tempo estimado para encontrar um piloto: --s
+    </div>
+
+</div>
 
     <button id="btn-cancelar-busca" onclick="cancelarBuscaMotoboy()" class="btn-cancel-outline">
         CANCELAR BUSCA

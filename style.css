@@ -1079,3 +1079,81 @@ textarea#campo-encerramento {
     display: block;
     margin-top: 10px;
 }
+
+/* === VISUAL MODERNO - TIMER E PEDIDO === */
+
+/* Ajuste do Container Principal */
+.status-header {
+    background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column; /* Um embaixo do outro */
+    gap: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+}
+
+/* Linha do Topo */
+.header-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.status-info h2 {
+    font-size: 18px;
+    color: #fff;
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+.status-info p {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
+/* PEDIDO: Azul Neon Gelo (Moderno e Sutil) */
+.order-badge-group {
+    background: rgba(0, 243, 255, 0.05); /* Fundo azul quase transparente */
+    border: 1px solid rgba(0, 243, 255, 0.3); /* Borda azul sutil */
+    padding: 5px 12px;
+    border-radius: 8px;
+    text-align: center;
+    min-width: 80px;
+}
+
+.badge-label {
+    display: block;
+    font-size: 9px;
+    color: #00f3ff; /* Azul Neon Gelo */
+    font-weight: 800;
+    margin-bottom: 2px;
+    letter-spacing: 1px;
+}
+
+.badge-value {
+    display: block;
+    font-size: 16px;
+    color: #fff;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+/* TIMER: Verde Neon da Marca (Cápsula) */
+.status-timer {
+    background: rgba(16, 185, 129, 0.1); /* Fundo verde bem suave */
+    border: 1px solid var(--brand-green); /* Borda Verde Neon */
+    color: var(--brand-green); /* Texto Verde Neon */
+    font-size: 13px;
+    font-weight: 700;
+    padding: 12px;
+    border-radius: 50px; /* Formato de pílula */
+    text-align: center;
+    width: 100%;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); /* Brilho leve */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
