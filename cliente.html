@@ -838,91 +838,84 @@
         </div>
 
         <div id="tela-acompanhamento" class="tela">
-            <h2>ACOMPANHANDO PEDIDO <span id="acompanhamento-id">#--</span></h2>
-
-            <div id="acompanhamento-status-area" class="motoboy-box"
-    style="border-color: #ffd700; background: rgba(255, 215, 0, 0.1);">
     
-    <div id="tempo-restante-busca" style="font-size: 40px; font-weight: 800; color: #ffca28; margin-bottom: 10px;">
-        ⏳ --s
+    <div class="status-header">
+        <div class="status-left">
+            <div class="pulse-indicator"></div>
+            <div class="status-text-group">
+                <h2 id="acompanhamento-status-titulo">BUSCANDO PILOTO...</h2>
+                <p id="acompanhamento-status-desc">Notificando parceiros próximos</p>
+                <div id="tempo-restante-busca" style="font-size: 12px; color: var(--brand-green); font-weight: 800; margin-top: 4px;">⏳ --s</div>
+            </div>
+        </div>
+        <div class="order-badge">#<span id="acompanhamento-id">000</span></div>
     </div>
-    
-    <div class="nome" id="acompanhamento-status-titulo" style="color: #ffd700;">BUSCANDO PILOTO...</div>
-    <div class="placa" id="acompanhamento-status-desc" style="font-size: 16px;">Notificando parceiros próximos.</div>
 
-    <button id="btn-cancelar-busca" onclick="cancelarBuscaMotoboy()" 
-        style="
-            background-color: var(--danger-color);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 15px;
-            display: none; /* Inicia oculto e é mostrado pelo JS */
-        ">
-        ❌ CANCELAR BUSCA
+    <button id="btn-cancelar-busca" onclick="cancelarBuscaMotoboy()" class="btn-cancel-outline">
+        CANCELAR BUSCA
     </button>
-</div>
 
-            <div id="motoboy-info-box" style="display:none; margin-top: 20px;">
-                <div class="motoboy-box">
-                    <div style="font-size: 32px; margin-bottom: 5px;">🏍️</div>
-                    <div style="font-size: 12px; color: #aaa; text-transform:uppercase;">Seu Piloto</div>
-                    <div class="nome" id="motoboy-nome">--</div>
-                    <div class="placa" id="motoboy-placa">--</div>
+    <div id="motoboy-info-box" style="display:none; animation: slideUp 0.5s ease;">
+        <div class="driver-card">
+            <div class="driver-avatar">
+                <img src="assets/capacete-icon.png" class="driver-img-fix" onerror="this.src='https://cdn-icons-png.flaticon.com/512/709/709699.png'">
+            </div>
+            <div class="driver-info">
+                <div class="driver-label">SEU PILOTO</div>
+                <h3 id="motoboy-nome">--</h3>
+                <div class="driver-meta">
+                    <span class="plate-badge" id="motoboy-placa">---</span>
+                    <span class="vehicle-model">Moto Falcões</span>
                 </div>
-
-                <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp" style="display: none;">
-                    <span style="font-size: 20px;">📞</span>
-                    CHAMAR NO WHATSAPP
-                </a>
             </div>
-
-            <h3>Detalhes da Viagem</h3>
-            <div id="viagem-origem" class="info-card">
-                <div class="label">📍 Origem</div>
-                <div class="value" id="detalhe-origem">Aguardando...</div>
+            <div class="driver-rating">
+                ★ 5.0
             </div>
-            <div id="viagem-destino" class="info-card">
-                <div class="label">🏁 Destino</div>
-                <div class="value" id="detalhe-destino">Aguardando...</div>
-            </div>
-            <div id="viagem-valor" class="info-card" style="text-align:center; border: 1px solid var(--neon-green);">
-                <div class="label">Total Estimado</div>
-                <div class="value" id="detalhe-valor" style="color: var(--neon-green); font-size: 20px;">R$ --</div>
-            </div>
-            <!-- AQUI: espaço para os botões de pagamento -->
-
-            <div id="area-pagamento-cliente"></div>
-            <div id="area-justificativa-integrada" style="display:none; margin-top: 15px; margin-bottom: 10px;">
-                <label
-                    style="color:var(--error-color); font-size:14px; margin-bottom: 5px; text-transform:none; letter-spacing:normal;">
-                    Diga por que deseja cancelar (mínimo 5 caracteres)
-                </label>
-                <textarea id="campo-justificativa-integrada"
-                    placeholder="Ex: Não preciso mais, endereço errado, demora..."
-                    style="width:100%; height:80px; padding:10px; border-radius:8px; background:var(--input-bg); border:1px solid var(--border-color); color:#fff; resize:none; font-family:inherit;"></textarea>
-
-                <div id="erro-just-integrada"
-                    style="color:var(--error-color); font-size:12px; margin-top:5px; display:none">
-                    Escreva uma justificativa válida.
-                </div>
-
-                <button id="btn-confirmar-cancelamento" class="btn"
-                    style="margin-top:10px; background:var(--error-color); color:#fff; font-weight:800;" disabled>
-                    CONFIRMAR CANCELAMENTO
-                </button>
-            </div>
-
-            
-            <button onclick="reiniciarApp()" class="btn"
-                style="background-color: #333; color: #ccc; margin-top: 10px;">FECHAR (apenas se finalizado)</button>
         </div>
 
+        <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp-full">
+            <i class="fab fa-whatsapp"></i> CHAMAR PILOTO
+        </a>
     </div>
+
+    <div class="route-container">
+        <div class="route-line"></div>
+        
+        <div class="route-item">
+            <div class="route-icon origin"></div>
+            <div class="route-text">
+                <label>RETIRADA</label>
+                <span id="detalhe-origem">...</span>
+            </div>
+        </div>
+        
+        <div class="route-item">
+            <div class="route-icon dest"></div>
+            <div class="route-text">
+                <label>ENTREGA</label>
+                <span id="detalhe-destino">...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="price-section">
+        <div id="area-pagamento-cliente"></div>
+        
+        <div class="price-footer">
+            <span>Total estimado</span>
+            <h1 id="detalhe-valor">R$ --</h1>
+        </div>
+    </div>
+
+    <div id="area-justificativa-integrada" class="cancel-area">
+        <label>Motivo do cancelamento:</label>
+        <textarea id="campo-justificativa-integrada" placeholder="Digite o motivo..." rows="3"></textarea>
+        <div id="erro-just-integrada" class="error-msg">Mínimo 5 caracteres.</div>
+        <button id="btn-confirmar-cancelamento" class="btn-danger-full" disabled>CONFIRMAR CANCELAMENTO</button>
+    </div>
+
+    <button onclick="reiniciarApp()" class="btn-text-close">Fechar tela</button>
+</div>
 
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
     <script>
