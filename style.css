@@ -862,54 +862,6 @@ textarea#campo-encerramento {
 }
 
 /* 2. Cartão de Status (Onde diz "Buscando...") */
-.status-header {
-    background: #1a1a1a; /* Fundo cinza suave */
-    border: 1px solid #333;
-    border-radius: 16px; /* Cantos bem arredondados */
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    position: relative;
-    overflow: hidden;
-}
-
-/* Barra lateral colorida para indicar status */
-.status-header::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 6px;
-    background: var(--brand-green); /* Verde Falcões */
-}
-
-.status-info h2 {
-    font-size: 18px;
-    color: #fff;
-    margin: 0 0 5px 0;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-.status-info p {
-    font-size: 13px;
-    color: #aaa;
-    margin: 0;
-}
-
-.status-timer {
-    font-size: 14px;
-    color: var(--brand-green);
-    font-weight: 800;
-    margin-top: 10px;
-    display: inline-block;
-    background: rgba(0, 230, 64, 0.1);
-    padding: 4px 8px;
-    border-radius: 6px;
-}
 
 .order-badge {
     background: #000;
