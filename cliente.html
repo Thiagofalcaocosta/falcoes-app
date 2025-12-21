@@ -1853,4 +1853,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// === FUNÇÃO MEU LOCAL (GPS) ===
+function usarMeuLocal() {
+    if (!navigator.geolocation) {
+        showToast("Seu navegador não suporta geolocalização.", "error");
+        return;
+    }
+
+    const btn = document.querySelector('.btn-my-location');
+    btn.classList.add('gps-loading'); // Ativa animação
+    showToast("Obtendo sua localização...", "info");
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        try {
+            // Usa o Mapbox para descobrir o endereço (Reverse Geocoding)
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lon},${lat}.json?types=address&access_token=${MAPBOX_ACCESS_TOKEN}`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.features && data.features.length > 0) {
+                const feature = data.features[0];
+                const rua = feature.text; // Nome da rua
+                const numero = feature.address || ""; // Número aproximado (se houver)
+                
+                // Tenta achar o bairro no contexto
+                const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
+                const bairro = (neighborhood && neighborhood.text) ? neighborhood.text : "Três Corações";
+
+                // Preenche os campos
+                document.getElementById('rua-origem').value = rua;
+                document.getElementById('num-origem').value = numero; // Mapa as vezes erra o número, mas ajuda
+                document.getElementById('bairro-origem').value = bairro;
+
+                // Salva coordenadas globais
+                coordsOrigem = { lat, lon };
+                
+                // Coloca marcador no mapa
+                if (markerOrigem) map.removeLayer(markerOrigem);
+                markerOrigem = L.marker([lat, lon]).addTo(map);
+                map.setView([lat, lon], 16);
+
+                showToast("Localização encontrada!", "success");
+                
+                // Recalcula rota se já tiver destino
+                calcularRota();
+                
+                // Salva no rascunho
+                salvarRascunhoFormulario();
+            } else {
+                showToast("Não consegui identificar o endereço exato.", "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Erro ao converter GPS em endereço.", "error");
+        } finally {
+            btn.classList.remove('gps-loading');
+        }
+
+    }, (err) => {
+        btn.classList.remove('gps-loading');
+        if(err.code === 1) showToast("Permissão de localização negada.", "error");
+        else showToast("Erro ao buscar GPS. Verifique se está ligado.", "error");
+    }, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+    });
+}
 </script>
