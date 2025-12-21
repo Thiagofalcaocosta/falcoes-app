@@ -847,265 +847,96 @@ textarea#campo-encerramento {
 }
 
 /* ============================================================ */
-/* DESIGN PREMIUM FALCÕES (CORREÇÃO VISUAL)                     */
+/* 🎨 VISUAL FINAL - NEON, PULSO E ALINHAMENTOS                 */
 /* ============================================================ */
 
-/* 1. Container Principal */
-#tela-acompanhamento {
-    display: none;
-    flex-direction: column;
-    gap: 15px; /* Espaço entre os cartões */
-    padding-bottom: 30px;
-}
-#tela-acompanhamento.ativa {
-    display: flex;
+/* --- 1. ANIMAÇÃO DE PULSO NEON (VERDE) --- */
+@keyframes neonPulseGreen {
+    0% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2), inset 0 0 5px rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.6), inset 0 0 10px rgba(16, 185, 129, 0.3); border-color: rgba(16, 185, 129, 1); }
+    100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2), inset 0 0 5px rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.5); }
 }
 
-/* 2. Cartão de Status (Onde diz "Buscando...") */
-
-.order-badge {
-    background: #000;
-    border: 1px solid #333;
-    color: #888;
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: bold;
-    font-family: monospace;
-}
-
-/* 3. Botão de Cancelar (Mais elegante) */
-.btn-cancel-outline {
-    width: 100%;
-    background: #1a1a1a;
-    border: 1px solid #ff4444; /* Vermelho mais vivo */
-    color: #ff4444;
-    padding: 14px;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-.btn-cancel-outline:active {
-    background: #ff4444;
-    color: #fff;
-    transform: scale(0.98);
-}
-
-/* 4. Cartão da Rota (Agora com fundo) */
-.route-container {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 16px;
-    padding: 20px;
-    position: relative;
-}
-
-.route-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 15px;
-    position: relative;
-    z-index: 2;
-}
-
-/* Bolinhas da rota */
-.route-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #1a1a1a;
-    border: 2px solid #fff;
-    flex-shrink: 0;
-    margin-top: 4px; /* Alinha com o texto */
-    box-shadow: 0 0 0 4px #1a1a1a; /* Máscara para cortar a linha */
-}
-.route-dot.origin { border-color: #fff; }
-.route-dot.dest { border-color: var(--brand-green); background: var(--brand-green); }
-
-/* Linha conectora */
-.route-connector {
-    position: absolute;
-    left: 25px; /* Ajuste fino baseado no padding + metade da bolinha */
-    top: 30px;
-    bottom: 40px;
-    width: 2px;
-    border-left: 2px dashed #444;
-    z-index: 1;
-}
-/* No seu HTML a estrutura é div > div, então vamos ajustar o conector visualmente */
-.route-container .route-item:first-child::after {
-    content: '';
-    position: absolute;
-    left: 5px; /* Centro da bolinha */
-    top: 20px;
-    height: 40px; /* Altura da linha */
-    width: 2px;
-    border-left: 2px dashed #555;
-    z-index: -1;
-}
-
-.route-content {
-    flex: 1;
-    padding-bottom: 20px;
-}
-.route-item:last-child .route-content {
-    padding-bottom: 0;
-}
-
-.route-content label {
-    font-size: 10px;
-    color: #666;
-    font-weight: 800;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-    display: block;
-}
-
-.route-content span {
-    font-size: 15px;
-    color: #eee;
-    line-height: 1.4;
-    font-weight: 500;
-    display: block;
-}
-
-/* 5. Preço (Destaque) */
-.price-section {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 16px;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.price-display span {
-    font-size: 12px;
-    color: #888;
-    text-transform: uppercase;
-}
-
-.price-display h1 {
-    font-size: 28px;
-    color: var(--brand-green);
-    margin: 0;
-    letter-spacing: -1px;
-}
-
-/* 6. Card do Piloto (Quando aparecer) */
-.driver-card {
-    background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
-    border: 1px solid #333;
-    border-radius: 16px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-}
-.driver-img-fix {
-    width: 65px; height: 65px;
-    border-radius: 50%;
-    border: 3px solid var(--brand-green);
-    object-fit: cover;
-    background: #000;
-    filter: invert(1);
-}
-.driver-info h3 { font-size: 20px; color: #fff; margin: 0; }
-.vehicle-model { color: #ccc; font-size: 14px; }
-.plate-badge { background: #fff; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px; }
-
-.btn-whatsapp-full {
-    background: #25D366;
-    color: #fff;
-    padding: 16px;
-    border-radius: 12px;
-    font-weight: 800;
-    text-align: center;
-    text-decoration: none;
-    display: block;
-    margin-top: 10px;
-}
-
-/* === VISUAL MODERNO - TIMER E PEDIDO === */
-
-/* Ajuste do Container Principal */
+/* --- 2. CABEÇALHO (COM PULSO ATIVO) --- */
 .status-header {
     background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
-    border: 1px solid #333;
+    border: 1px solid var(--brand-green); /* Borda verde base */
     border-radius: 16px;
     padding: 20px;
     display: flex;
-    flex-direction: column; /* Um embaixo do outro */
+    flex-direction: column;
     gap: 15px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    /* Aplica a animação de pulso */
+    animation: neonPulseGreen 2s infinite ease-in-out;
 }
 
 /* Linha do Topo */
 .header-top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    width: 100%;
+    display: flex; justify-content: space-between; align-items: flex-start; width: 100%;
 }
+.status-info h2 { font-size: 18px; color: #fff; margin: 0; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+.status-info p { font-size: 12px; color: #aaa; margin-top: 4px; }
 
-.status-info h2 {
-    font-size: 18px;
-    color: #fff;
-    margin: 0;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-}
-.status-info p {
-    font-size: 12px;
-    color: #888;
-    margin-top: 4px;
-}
-
-/* PEDIDO: Azul Neon Gelo (Moderno e Sutil) */
+/* PEDIDO (AZUL NEON GELO) */
 .order-badge-group {
-    background: rgba(0, 243, 255, 0.05); /* Fundo azul quase transparente */
-    border: 1px solid rgba(0, 243, 255, 0.3); /* Borda azul sutil */
-    padding: 5px 12px;
-    border-radius: 8px;
-    text-align: center;
-    min-width: 80px;
+    background: rgba(0, 243, 255, 0.05);
+    border: 1px solid #00f3ff;
+    padding: 5px 12px; border-radius: 8px; text-align: center; min-width: 80px;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); /* Brilho azul */
 }
+.badge-label { display: block; font-size: 9px; color: #00f3ff; font-weight: 800; letter-spacing: 1px; text-shadow: 0 0 5px #00f3ff; }
+.badge-value { display: block; font-size: 16px; color: #fff; font-weight: bold; font-family: monospace; }
 
-.badge-label {
-    display: block;
-    font-size: 9px;
-    color: #00f3ff; /* Azul Neon Gelo */
-    font-weight: 800;
-    margin-bottom: 2px;
-    letter-spacing: 1px;
-}
-
-.badge-value {
-    display: block;
-    font-size: 16px;
-    color: #fff;
-    font-weight: bold;
-    font-family: monospace;
-}
-
-/* TIMER: Verde Neon da Marca (Cápsula) */
+/* TIMER (VERDE NEON CÁPSULA) */
 .status-timer {
-    background: rgba(16, 185, 129, 0.1); /* Fundo verde bem suave */
-    border: 1px solid var(--brand-green); /* Borda Verde Neon */
-    color: var(--brand-green); /* Texto Verde Neon */
-    font-size: 13px;
-    font-weight: 700;
-    padding: 12px;
-    border-radius: 50px; /* Formato de pílula */
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid var(--brand-green);
+    color: var(--brand-green);
+    font-size: 13px; font-weight: 700; padding: 12px; border-radius: 50px; text-align: center; width: 100%;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+#timer-segundos { font-weight: 900; font-size: 14px; }
+
+/* --- 3. ROTA (MAIS ESPAÇO E RÓTULOS AZUL NEON) --- */
+.route-container { margin-top: 10px; } /* Um pouco mais de espaço acima */
+.route-item {
+    margin-bottom: 35px; /* AUMENTADO: Mais distância entre Retirada e Entrega */
+}
+.route-item:last-child { margin-bottom: 0; }
+
+/* Rótulos RETIRADA/ENTREGA em AZUL NEON */
+.route-content label {
+    color: #00f3ff; /* Azul Neon */
+    font-size: 11px; font-weight: 900; letter-spacing: 1px; margin-bottom: 5px;
+    text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); /* Brilho Neon */
+}
+/* Ajuste da linha conectora para o novo espaçamento */
+.route-connector { top: 30px; bottom: 25px; }
+
+/* --- 4. PREÇO (CENTRALIZADO E NEON) --- */
+.price-section {
+    padding-top: 25px;
+    /* Centraliza tudo */
+    justify-content: center;
+    flex-direction: column;
     text-align: center;
-    width: 100%;
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); /* Brilho leve */
-    text-transform: uppercase;
+    gap: 5px;
+}
+
+/* Rótulo "Total Estimado" destacado */
+.price-display span {
+    font-size: 13px;
+    color: #fff; /* Branco para destaque */
+    font-weight: 700;
     letter-spacing: 0.5px;
+    opacity: 0.9;
+}
+
+/* Valor em VERDE NEON FORTE */
+.price-display h1 {
+    font-size: 32px; /* Maior */
+    color: var(--brand-green);
+    text-shadow: 0 0 20px rgba(16, 185, 129, 0.6); /* Brilho forte */
+    font-weight: 900;
 }
