@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9388.0">
+    <link rel="stylesheet" href="/style.css?v=9348.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -753,8 +753,9 @@
 
         <div class="header-top">
             <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
-            <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
-        </div>
+            <div class="logout">
+    <a id="btn-topo-acao" href="#" onclick="cliqueBotaoTopo()">SAIR</a>
+</div>
 
         <div id="tela-pedido" class="tela ativa">
 
@@ -868,10 +869,6 @@
 
     <button id="btn-cancelar-busca" onclick="cancelarBuscaMotoboy()" class="btn-cancel-outline">
         CANCELAR BUSCA
-    </button>
-
-    <button id="btn-fechar-novo" class="btn-fechar-topo" onclick="fecharTela()" style="display:none;">
-        FECHAR TELA X
     </button>
 
     <div id="motoboy-info-box" style="display:none;">
@@ -2077,4 +2074,56 @@ function fecharTela() {
     // Se quiser esconder o card manualmente também:
     document.getElementById('motoboy-info-box').style.display = 'none';
 }
+
+// === LÓGICA DO BOTÃO INTELIGENTE (SAIR vira FECHAR) ===
+
+// 1. Substitui a função mudarTela para controlar o botão do topo
+function mudarTela(novaTelaId) {
+    // Esconde todas as telas e mostra a nova
+    document.querySelectorAll('.tela').forEach(tela => tela.classList.remove('ativa'));
+    const telaNova = document.getElementById(novaTelaId);
+    if(telaNova) telaNova.classList.add('ativa');
+
+    // Pega o botão do topo
+    const btnTopo = document.getElementById('btn-topo-acao');
+    
+    if (btnTopo) {
+        // Se entrou na tela de acompanhamento, o botão vira "FECHAR" (Vermelho)
+        if (novaTelaId === 'tela-acompanhamento') {
+            btnTopo.innerText = "FECHAR ✖";
+            btnTopo.style.color = "#ff4444"; 
+        } 
+        // Se for qualquer outra tela, o botão vira "SAIR" (Branco/Padrão)
+        else {
+            btnTopo.innerText = "SAIR";
+            btnTopo.style.color = ""; 
+        }
+    }
+}
+
+// 2. Função que decide o que fazer quando clica no botão do topo
+function cliqueBotaoTopo() {
+    const btnTopo = document.getElementById('btn-topo-acao');
+    
+    // Se o texto for "SAIR", faz logout
+    if (btnTopo && btnTopo.innerText === "SAIR") {
+        logout();
+    } 
+    // Se não for "SAIR" (ou seja, é "FECHAR"), apenas fecha a tela
+    else {
+        fecharTela();
+    }
+}
+
+// 3. Função para Fechar a tela e limpar tudo
+function fecharTela() {
+    // Esconde modais se estiverem abertos
+    const modalBusca = document.getElementById('modal-busca');
+    if (modalBusca) modalBusca.style.display = 'none';
+
+    // Chama sua função original de reiniciar para voltar ao inicio
+    reiniciarApp(); 
+}
+
+
 </script>
