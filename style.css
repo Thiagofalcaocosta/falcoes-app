@@ -1071,3 +1071,40 @@ textarea#campo-encerramento {
     color: #ff4444 !important; /* Texto vermelho */
     box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);
 }
+
+/* ============================================================ */
+/* 🛠️ CORREÇÃO DA FOTO GIGANTE E CARD DO MOTORISTA              */
+/* ============================================================ */
+
+.driver-card {
+    /* Garante que o texto fique ao lado da foto, não embaixo */
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    
+    background: #141414 !important;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* O Container da Bolinha */
+.driver-avatar {
+    width: 70px !important;     /* Largura fixa */
+    height: 70px !important;    /* Altura fixa */
+    min-width: 70px !important; /* Não deixa esmagar */
+    
+    border-radius: 50%;         /* Redondo */
+    overflow: hidden;           /* Corta o que sobrar */
+    border: 2px solid var(--neon-green); /* Borda verde */
+    background: #000;           /* Fundo preto caso a imagem falhe */
+}
+
+/* A Imagem dentro da Bolinha */
+.driver-img-fix {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important; /* Ajusta a foto sem esticar */
+}
