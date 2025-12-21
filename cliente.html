@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9748.0">
+    <link rel="stylesheet" href="/style.css?v=9798.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -850,10 +850,10 @@
 
         <div id="tela-acompanhamento" class="tela">
 
-    <button onclick="fecharTela()" class="btn-fechar-texto">
+    <button onclick="fecharTela()" 
+            style="position: fixed; top: 20px; right: 20px; background: transparent; border: none; color: #ff4444; font-weight: bold; font-size: 14px; z-index: 9999; text-transform: uppercase; cursor: pointer;">
         FECHAR TELA X
     </button>
-
 
     <div class="status-header" id="acompanhamento-status-area">
         <div class="header-top-row">
@@ -969,11 +969,31 @@
 
     // === FUNÇÕES DE GERENCIAMENTO DE TELA E UTILIDADES ===
     function mudarTela(novaTelaId) {
-        document.querySelectorAll('.tela').forEach(tela => {
-            tela.classList.remove('ativa');
-        });
-        document.getElementById(novaTelaId).classList.add('ativa');
+    // 1. Remove a classe 'ativa' de todas as telas
+    document.querySelectorAll('.tela').forEach(tela => {
+        tela.classList.remove('ativa');
+    });
+    
+    // 2. Adiciona a classe 'ativa' na tela nova
+    const telaNova = document.getElementById(novaTelaId);
+    if (telaNova) {
+        telaNova.classList.add('ativa');
     }
+
+    // 3. LÓGICA DO BOTÃO SAIR
+    // Procura o botão sair pelo seletor da classe dele
+    const divLogout = document.querySelector('.logout'); 
+    
+    if (divLogout) {
+        // Se estiver indo para a tela de acompanhamento, ESCONDE o Sair
+        if (novaTelaId === 'tela-acompanhamento') {
+            divLogout.style.display = 'none';
+        } else {
+            // Em qualquer outra tela, MOSTRA o Sair
+            divLogout.style.display = 'block';
+        }
+    }
+}
 
     function reiniciarApp() {
         localStorage.removeItem('idPedidoAtual');
