@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9958.0">
+    <link rel="stylesheet" href="/style.css?v=9918.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -775,56 +775,64 @@
 
             <div id="form-endereco">
 
-                <label>📍 Onde vamos buscar? (Origem)</label>
-                <div class="address-container">
-                    <div class="row-rua">
-                        <div class="input-rua-wrapper">
-                            <input type="text" id="rua-origem" placeholder="Busque a rua..."
-                                oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
-                            <div id="lista-origem" class="sugestoes-lista"></div>
-                        </div>
-                        <button class="btn-map-icon" onclick="ativarMapa('origem')" title="Marcar no mapa">🗺️</button>
-                    </div>
-                    <div class="row-details">
-                        <div class="input-num-wrapper">
-                            <input type="text" id="num-origem" placeholder="Nº" oninput="removerErro(this)">
-                            <span class="erro-msg">Obrigatório</span>
-                        </div>
-                        <div class="input-bairro-wrapper">
-                            <input type="text" id="bairro-origem" placeholder="Bairro">
-                        </div>
-                    </div>
-                </div>
-
-                <label>🏁 Onde vamos levar? (Destino)</label>
-                <div class="address-container">
-                    <div class="row-rua">
-                        <div class="input-rua-wrapper">
-                            <input type="text" id="rua-destino" placeholder="Busque a rua..."
-                                oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
-                            <div id="lista-destino" class="sugestoes-lista"></div>
-                        </div>
-                        <button class="btn-map-icon" onclick="ativarMapa('destino')" title="Marcar no mapa">🗺️</button>
-                    </div>
-                    <div class="row-details">
-                        <div class="input-num-wrapper">
-                            <input type="text" id="num-destino" placeholder="Nº" oninput="removerErro(this)">
-                            <span class="erro-msg">Obrigatório</span>
-                        </div>
-                        <div class="input-bairro-wrapper">
-                            <input type="text" id="bairro-destino" placeholder="Bairro">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="detalhes-entrega-container">
-                    <label>📦 O que vamos levar?</label>
-                    <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..."
-                        oninput="removerErro(this)">
-                    <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
-                </div>
-
+    <label>📍 Onde vamos buscar? (Origem)</label>
+    <div class="address-container">
+        <div class="row-rua">
+            <div class="input-rua-wrapper">
+                <input type="text" id="rua-origem" placeholder="Busque a rua..."
+                    oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
+                <div id="lista-origem" class="sugestoes-lista"></div>
             </div>
+            
+            <button class="btn-map-icon btn-my-location" onclick="usarMeuLocal()" title="Usar minha localização">
+                📍
+            </button>
+
+            <button class="btn-map-icon" onclick="ativarMapa('origem')" title="Marcar no mapa">
+                🗺️
+            </button>
+        </div>
+        
+        <div class="row-details">
+            <div class="input-num-wrapper">
+                <input type="text" id="num-origem" placeholder="Nº" oninput="removerErro(this)">
+                <span class="erro-msg">Obrigatório</span>
+            </div>
+            <div class="input-bairro-wrapper">
+                <input type="text" id="bairro-origem" placeholder="Bairro">
+            </div>
+        </div>
+    </div>
+
+    <label>🏁 Onde vamos levar? (Destino)</label>
+    <div class="address-container">
+        <div class="row-rua">
+            <div class="input-rua-wrapper">
+                <input type="text" id="rua-destino" placeholder="Busque a rua..."
+                    oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
+                <div id="lista-destino" class="sugestoes-lista"></div>
+            </div>
+            <button class="btn-map-icon" onclick="ativarMapa('destino')" title="Marcar no mapa">🗺️</button>
+        </div>
+        <div class="row-details">
+            <div class="input-num-wrapper">
+                <input type="text" id="num-destino" placeholder="Nº" oninput="removerErro(this)">
+                <span class="erro-msg">Obrigatório</span>
+            </div>
+            <div class="input-bairro-wrapper">
+                <input type="text" id="bairro-destino" placeholder="Bairro">
+            </div>
+        </div>
+    </div>
+
+    <div id="detalhes-entrega-container">
+        <label>📦 O que vamos levar?</label>
+        <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..."
+            oninput="removerErro(this)">
+        <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
+    </div>
+
+</div>
 
             <div id="map"></div>
             <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no
