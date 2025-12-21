@@ -1248,3 +1248,21 @@ textarea#campo-encerramento {
     background: #111 !important; /* Um cinza quase preto para destacar do fundo preto total */
     border-color: #333 !important;
 }
+
+/* --- CORREÇÃO DO BOTÃO VOADOR --- */
+
+/* 1. O PAI (A caixa colorida) vira a âncora */
+#acompanhamento-status-area {
+    position: relative !important; /* Esse é o macete! */
+    z-index: 100; /* Garante que a caixa fique numa camada boa */
+    overflow: visible !important; /* Deixa o botão sair um pouquinho pra fora se precisar */
+}
+
+/* 2. O FILHO (O botão) obedece ao pai */
+#btn-fechar-novo {
+    position: absolute !important;
+    top: -12px !important;   /* Sobe um pouco para ficar na borda */
+    right: -5px !important;  /* Encosta na direita */
+    display: none;           /* Começa escondido (o JS que vai mostrar ele) */
+    z-index: 999 !important; /* Fica por cima de tudo */
+}
