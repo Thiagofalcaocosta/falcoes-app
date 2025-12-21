@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9698.0">
+    <link rel="stylesheet" href="/style.css?v=9898.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -850,27 +850,29 @@
 
         <div id="tela-acompanhamento" class="tela" style="padding-bottom: 80px;">
 
-    <div class="status-header" id="acompanhamento-status-area">
-        
-        <button id="btn-fechar-novo" class="btn-fechar-topo" onclick="fecharTela()" style="display:none;">
-            FECHAR TELA X
-        </button>
+    <div class="status-header" id="acompanhamento-status-area" style="position: relative !important; padding-top: 20px;">
     
-        <div class="header-top-row">
-            <div class="status-info">
-                <h2 id="acompanhamento-status-titulo">BUSCANDO PILOTO...</h2>
-                <p id="acompanhamento-status-desc">Notificando parceiros próximos</p>
-            </div>
-            
-            <div class="order-badge-group" style="margin-right: 30px;"> <span class="badge-label">PEDIDO</span>
-                <span class="badge-value" id="acompanhamento-id">#000</span>
-            </div>
+    <button id="btn-fechar-novo" onclick="fecharTela()" 
+            style="position: absolute !important; top: 10px !important; right: 10px !important; display: none; background: rgba(0,0,0,0.6); border: 1px solid #ff4444; color: #ff4444; font-weight: bold; font-size: 11px; padding: 5px 10px; border-radius: 20px; z-index: 9999; cursor: pointer;">
+        FECHAR TELA X
+    </button>
+
+    <div class="header-top-row">
+        <div class="status-info">
+            <h2 id="acompanhamento-status-titulo" style="margin-top: 10px;">BUSCANDO PILOTO...</h2>
+            <p id="acompanhamento-status-desc">Notificando parceiros próximos</p>
         </div>
-    
-        <div id="tempo-restante-busca" class="status-timer">
-            ⏳ Tempo estimado para encontrar um piloto: <span id="timer-segundos">--</span>s
+        
+        <div class="order-badge-group"> 
+            <span class="badge-label">PEDIDO</span>
+            <span class="badge-value" id="acompanhamento-id">#000</span>
         </div>
     </div>
+
+    <div id="tempo-restante-busca" class="status-timer">
+        ⏳ Tempo estimado: <span id="timer-segundos">--</span>s
+    </div>
+</div>
     
     <button id="btn-cancelar-busca" onclick="cancelarBuscaMotoboy()">
         CANCELAR BUSCA
