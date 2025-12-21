@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=5888.0">
+    <link rel="stylesheet" href="/style.css?v=9868.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -1421,6 +1421,7 @@ document.addEventListener('click', (e) => {
     // === VERIFICAÇÃO DE STATUS FINAL (FECHA MODAL PIX) ===
 // === VERIFICAÇÃO DE STATUS COM CORES DINÂMICAS ===
 // === VERIFICAÇÃO DE STATUS (FORÇA BRUTA NAS CORES) ===
+// === VERIFICAÇÃO DE STATUS (COM FUNDOS NEON COLORIDOS) ===
 async function verificarStatus(id) {
     try {
         const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
@@ -1440,20 +1441,22 @@ async function verificarStatus(id) {
         const btnFechar = document.querySelector('button[onclick="reiniciarApp()"]');
         const modal = document.getElementById('modal-pagamento'); 
 
-        // 1. Limpa elementos extras
+        // Limpezas
         motoboyBox.style.display = 'none';
         btnWpp.style.display     = 'none';
         if (areaJustificativa) areaJustificativa.style.display = 'none';
         if (btnFechar) btnFechar.style.display = 'none'; 
 
-        // 2. Lógica de Cores (Usando setAttribute para forçar)
+        // =================================================================
+        // LÓGICA DE CORES E FUNDOS (BACKGROUND COM RGBA)
+        // =================================================================
         
-        // --- CANCELADA (VERMELHO) ---
+        // --- 🔴 CANCELADA (Fundo Vermelho Neon) ---
         if (pedido.status === 'cancelada') {
             clearInterval(intervaloVerificacao);
             
-            // FORÇA O ESTILO VERMELHO
-            statusArea.setAttribute('style', 'border-color: #ff4444 !important; box-shadow: 0 0 20px rgba(255, 68, 68, 0.4) !important;');
+            // Fundo Vermelho com 15% de opacidade + Borda Vermelha
+            statusArea.setAttribute('style', 'background: rgba(255, 68, 68, 0.15) !important; border: 1px solid #ff4444 !important; box-shadow: 0 0 20px rgba(255, 68, 68, 0.4) !important;');
             statusTitulo.style.color = '#ff4444';
             
             statusTitulo.innerText = "PEDIDO CANCELADO ❌";
@@ -1464,21 +1467,23 @@ async function verificarStatus(id) {
             document.getElementById('btn-cancelar-busca').style.display = 'none';
         }
 
-        // --- BUSCANDO (AMARELO) ---
+        // --- 🟡 BUSCANDO (Fundo Amarelo Suave) ---
         else if (pedido.status === 'pendente') {
-            statusArea.setAttribute('style', 'border-color: #ffd700 !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.2) !important;');
-            statusTitulo.style.color = '#fff';
+            // Fundo Amarelo com 5% de opacidade (bem leve)
+            statusArea.setAttribute('style', 'background: rgba(255, 215, 0, 0.05) !important; border: 1px solid #ffd700 !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.2) !important;');
+            statusTitulo.style.color = '#fff'; // Título branco para contraste
             
             statusTitulo.innerText = "BUSCANDO PILOTO...";
             statusDesc.innerText = "Notificando parceiros próximos";
         }
 
-        // --- AGUARDANDO PAGAMENTO (AMARELO) ---
+        // --- 🟡 AGUARDANDO PAGAMENTO (Fundo Amarelo Pulsante) ---
         else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
             if (modal && !modal.classList.contains('show')) {
                 modal.style.display = 'flex'; modal.classList.add('show');
             }
-            statusArea.setAttribute('style', 'border-color: #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important;');
+            // Fundo Amarelo um pouco mais forte (10%)
+            statusArea.setAttribute('style', 'background: rgba(255, 215, 0, 0.1) !important; border: 1px solid #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important;');
             statusTitulo.style.color = '#ffd700';
             
             statusTitulo.innerText = "🎯 ESCOLHA COMO PAGAR";
@@ -1489,18 +1494,18 @@ async function verificarStatus(id) {
             document.getElementById('btn-cancelar-busca').style.display = 'none';
         }
 
-        // --- SUCESSO / EM CORRIDA (VERDE) ---
+        // --- 🟢 SUCESSO / EM CORRIDA (Fundo Verde Neon) ---
         else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
             if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
 
-            // FORÇA O ESTILO VERDE
-            statusArea.setAttribute('style', 'border-color: #00e640 !important; box-shadow: 0 0 25px rgba(0, 230, 64, 0.4) !important; background: rgba(0, 230, 64, 0.05);');
+            // Fundo Verde com 10% de opacidade + Borda Verde
+            statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.1) !important; border: 1px solid #00e640 !important; box-shadow: 0 0 25px rgba(0, 230, 64, 0.4) !important;');
             statusTitulo.style.color = '#00e640';
 
             statusTitulo.innerText = pedido.status === 'liberada' ? "PAGAMENTO CONFIRMADO ✅" : "EM CORRIDA 🚀";
             statusDesc.innerText = pedido.status === 'liberada' ? "Piloto a caminho!" : "Viagem em andamento.";
             
-            motoboyBox.style.display = 'block'; // Mostra a caixa do motoboy (agora arrumada)
+            motoboyBox.style.display = 'block';
             document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
             document.getElementById('motoboy-placa').innerText = pedido.placa || "Moto";
 
@@ -1515,10 +1520,11 @@ async function verificarStatus(id) {
             document.getElementById('btn-cancelar-busca').style.display = 'none';
         }
 
-        // --- FINALIZADA ---
+        // --- ⚪ FINALIZADA (Padrão) ---
         else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
             clearInterval(intervaloVerificacao);
             statusArea.style.borderColor = '#fff';
+            statusArea.style.background = 'transparent'; // Sem fundo
             statusTitulo.style.color = '#fff';
             statusTitulo.innerText = "CORRIDA FINALIZADA";
             statusDesc.innerText = "Obrigado por usar Falcões.";

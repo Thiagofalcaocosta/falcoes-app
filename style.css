@@ -1108,3 +1108,37 @@ textarea#campo-encerramento {
     height: 100% !important;
     object-fit: cover !important; /* Ajusta a foto sem esticar */
 }
+
+/* ============================================================ */
+/* 🟢 BOTÃO WHATSAPP (CORREÇÃO DE COR)                          */
+/* ============================================================ */
+
+.btn-whatsapp-full {
+    background-color: #25D366 !important; /* Verde Oficial do Zap */
+    color: #fff !important; /* Texto Branco */
+    text-decoration: none !important; /* Tira o sublinhado roxo */
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    
+    padding: 16px;
+    border-radius: 12px;
+    font-weight: 800;
+    margin-top: 15px;
+    font-size: 16px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); /* Brilho Verde */
+    transition: transform 0.2s;
+}
+
+.btn-whatsapp-full:hover {
+    background-color: #1FAF59 !important;
+    transform: scale(1.02);
+}
+
+/* Garante que ícones dentro dele sejam brancos */
+.btn-whatsapp-full span {
+    color: #fff !important;
+}
