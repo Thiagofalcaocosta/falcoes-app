@@ -1018,18 +1018,31 @@ textarea#campo-encerramento {
     background: rgba(0, 243, 255, 0.2) !important;
 }
 
-/* Botão de Limpar Discreto */
+/* --- BOTÃO LIMPAR (ESTILO PREMIUM DISCRETO) --- */
 .btn-limpar-discreto {
-    background: transparent;
-    border: 1px solid #333;
-    color: #666;
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: 11px;
+    background-color: #252525 !important; /* Fundo cinza escuro igual aos cards */
+    color: #888 !important; /* Texto cinza claro para não chamar atenção */
+    border: 1px solid #333 !important; /* Borda sutil */
+    
+    padding: 8px 15px !important;
+    border-radius: 20px !important; /* Bem redondo (Pill shape) */
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    
     cursor: pointer;
-    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px; /* Espaço entre o ícone e o texto */
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
-.btn-limpar-discreto:hover {
-    border-color: var(--error-color);
-    color: var(--error-color);
+
+/* Efeito ao passar o mouse ou tocar */
+.btn-limpar-discreto:hover, .btn-limpar-discreto:active {
+    background-color: rgba(255, 68, 68, 0.1) !important; /* Fundo vermelho bem fraquinho */
+    border-color: #ff4444 !important; /* Borda vermelha */
+    color: #ff4444 !important; /* Texto vermelho */
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);
 }
