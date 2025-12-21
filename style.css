@@ -1266,3 +1266,31 @@ textarea#campo-encerramento {
     display: none;           /* Começa escondido (o JS que vai mostrar ele) */
     z-index: 999 !important; /* Fica por cima de tudo */
 }
+/* ============================================================ */
+/* 🛠️ CORREÇÃO FINAL DO BOTÃO FECHAR (SEGURA ELE!)         */
+
+/* Ajuste fino para o badge do pedido não bater no botão */
+.order-badge-group {
+    margin-right: 0 !important; /* O padding do pai já resolve */
+}
+
+/* Botão Fechar Texto (Estilo igual ao SAIR) */
+.btn-fechar-texto {
+    position: absolute;
+    top: 15px; /* Mesma altura do cabeçalho */
+    right: 20px; /* Mesma posição do botão Sair */
+    background: transparent;
+    border: none;
+    color: #ff4444; /* Vermelho Neon */
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 2000; /* Para ficar por cima de tudo */
+    text-transform: uppercase;
+    text-decoration: none;
+}
+
+.btn-fechar-texto:hover {
+    color: #ff1a1a;
+    text-shadow: 0 0 8px rgba(255, 68, 68, 0.6);
+}
