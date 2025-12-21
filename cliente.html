@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9988.0">
+    <link rel="stylesheet" href="/style.css?v=9188.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -1419,6 +1419,7 @@ document.addEventListener('click', (e) => {
     }
 
     // === VERIFICAÇÃO DE STATUS FINAL (FECHA MODAL PIX) ===
+// === VERIFICAÇÃO DE STATUS COM CORES DINÂMICAS ===
 async function verificarStatus(id) {
     try {
         const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
@@ -1427,63 +1428,86 @@ async function verificarStatus(id) {
 
         if (!data.success || !pedido) return;
 
-        // --- VARIÁVEIS DE TELA ---
+        // Elementos da tela
         const statusTitulo = document.getElementById('acompanhamento-status-titulo');
         const statusDesc   = document.getElementById('acompanhamento-status-desc');
-        const statusArea   = document.getElementById('acompanhamento-status-area');
+        const statusArea   = document.getElementById('acompanhamento-status-area'); // O Card Principal
+        
         const motoboyBox   = document.getElementById('motoboy-info-box');
         const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
         const areaJustificativa = document.getElementById('area-justificativa-integrada');
         const btnFechar = document.querySelector('button[onclick="reiniciarApp()"]');
         const modal = document.getElementById('modal-pagamento'); 
 
-        // ✅ FECHAMENTO AUTOMÁTICO: Se o status for liberada/pago, esconde o modal
-        if (['liberada', 'em_andamento', 'concluida', 'finalizada'].includes(pedido.status)) {
-            if (modal && (modal.classList.contains('show') || modal.style.display === 'flex')) {
-                modal.classList.remove('show');
-                modal.style.display = 'none';
-                showToast("Pagamento Confirmado!", "success");
-            }
-        }
-
-        // --- LIMPEZA E TRANSIÇÕES ---
+        // 1. LIMPEZA PADRÃO
         motoboyBox.style.display = 'none';
         btnWpp.style.display     = 'none';
         if (areaJustificativa) areaJustificativa.style.display = 'none';
         if (btnFechar) btnFechar.style.display = 'none'; 
 
-        if (pedido.status !== 'pendente' && buscaMotoboyInterval) {
-            clearInterval(buscaMotoboyInterval);
-            buscaMotoboyInterval = null;
+        // 2. LÓGICA DE CORES E TEXTOS (AQUI É O SEGREDO)
+        
+        // --- CASO 1: CANCELADA (VERMELHO) ---
+        if (pedido.status === 'cancelada') {
+            clearInterval(intervaloVerificacao);
+            
+            // Visual de Erro/Cancelado
+            statusArea.style.borderColor = '#ff4444'; // Borda Vermelha
+            statusArea.style.boxShadow = '0 0 15px rgba(255, 68, 68, 0.3)'; // Brilho Vermelho
+            statusTitulo.style.color = '#ff4444'; 
+            
+            statusTitulo.innerText = "PEDIDO CANCELADO ❌";
+            statusDesc.innerText = "Esta corrida foi cancelada.";
+            
+            if (btnFechar) btnFechar.style.display = 'block';
+            
+            // Esconde timer e botão cancelar busca
             document.getElementById('tempo-restante-busca').style.display = 'none';
             document.getElementById('btn-cancelar-busca').style.display = 'none';
         }
 
-        // --- STATUS 1: BUSCANDO ---
-        if (pedido.status === 'pendente') {
-            statusArea.style.borderColor = '#ffd700';
+        // --- CASO 2: BUSCANDO (AMARELO) ---
+        else if (pedido.status === 'pendente') {
+            statusArea.style.borderColor = '#ffd700'; // Amarelo
+            statusArea.style.boxShadow = '0 0 10px rgba(255, 215, 0, 0.2)';
+            statusTitulo.style.color = '#fff';
+            
             statusTitulo.innerText = "BUSCANDO PILOTO...";
+            statusDesc.innerText = "Notificando parceiros próximos";
         }
-        
-        // --- STATUS 2: AGUARDANDO PAGAMENTO ---
+
+        // --- CASO 3: AGUARDANDO PAGAMENTO (AMARELO PISCANDO) ---
         else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
             if (modal && !modal.classList.contains('show')) {
                 modal.style.display = 'flex'; 
                 modal.classList.add('show');
             }
+            statusArea.style.borderColor = '#ffd700';
+            statusTitulo.style.color = '#ffd700';
+            
             statusTitulo.innerText = "🎯 ESCOLHA COMO PAGAR";
-            statusDesc.innerText = "Um piloto aceitou! Escolha sua forma de pagamento.";
-            if (areaJustificativa) areaJustificativa.style.display = 'block';
+            statusDesc.innerText = "Um piloto aceitou! Aguardando pagamento.";
+            
+            // Para o timer
+            if(buscaMotoboyInterval) clearInterval(buscaMotoboyInterval);
+            document.getElementById('tempo-restante-busca').style.display = 'none';
+            document.getElementById('btn-cancelar-busca').style.display = 'none';
         }
 
-        // --- STATUS 3: PAGO / EM VIAGEM ---
+        // --- CASO 4: PAGO / EM VIAGEM (VERDE SUCESSO) ---
         else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
-            statusArea.style.borderColor = 'var(--neon-green)';
-            statusArea.style.background = 'rgba(0, 230, 64, 0.1)';
-            statusTitulo.style.color = 'var(--neon-green)';
+            // Fecha modal se estiver aberto
+            if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
+
+            // Visual de Sucesso
+            statusArea.style.borderColor = '#00e640'; // Verde Neon
+            statusArea.style.boxShadow = '0 0 20px rgba(0, 230, 64, 0.3)'; // Brilho Verde
+            statusTitulo.style.color = '#00e640';
+
             statusTitulo.innerText = pedido.status === 'liberada' ? "PAGAMENTO CONFIRMADO ✅" : "EM CORRIDA 🚀";
             statusDesc.innerText = pedido.status === 'liberada' ? "Piloto a caminho!" : "Viagem em andamento.";
             
+            // Mostra dados do motoboy
             motoboyBox.style.display = 'block';
             document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
             document.getElementById('motoboy-placa').innerText = pedido.placa || "Moto";
@@ -1493,20 +1517,24 @@ async function verificarStatus(id) {
                 btnWpp.href = `https://wa.me/${fone.length === 11 ? '55' + fone : fone}`;
                 btnWpp.style.display = 'flex';
             }
-        }
-        
-        // --- STATUS 4: FINALIZADA ---
-        else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
-            clearInterval(intervaloVerificacao); 
-            statusTitulo.innerText = "CORRIDA FINALIZADA";
-            if (btnFechar) btnFechar.style.display = 'block';
+            
+            // Limpa timer
+            if(buscaMotoboyInterval) clearInterval(buscaMotoboyInterval);
+            document.getElementById('tempo-restante-busca').style.display = 'none';
+            document.getElementById('btn-cancelar-busca').style.display = 'none';
         }
 
-        // --- STATUS 5: CANCELADA ---
-        else if (pedido.status === 'cancelada') {
+        // --- CASO 5: FINALIZADA (CINZA/VERDE) ---
+        else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
             clearInterval(intervaloVerificacao);
-            statusTitulo.innerText = "PEDIDO CANCELADO!";
+            statusArea.style.borderColor = '#fff';
+            statusTitulo.style.color = '#fff';
+            
+            statusTitulo.innerText = "CORRIDA FINALIZADA";
+            statusDesc.innerText = "Obrigado por usar Falcões.";
+            
             if (btnFechar) btnFechar.style.display = 'block';
+            document.getElementById('tempo-restante-busca').style.display = 'none';
         }
 
     } catch (e) {

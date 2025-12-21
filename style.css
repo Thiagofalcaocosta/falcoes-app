@@ -851,15 +851,42 @@ textarea#campo-encerramento {
 /* ============================================================ */
 
 /* 1. TRAZ O FUNDO "CARTÃO" DE VOLTA (Para não boiar) */
-.route-container, 
-.price-section,
+/* 1. CARD DO MOTORISTA (Continua Cinza Padrão) */
 .driver-card {
-    background: #141414 !important; /* Cinza bem escuro */
+    background: #141414 !important;
     border: 1px solid #333;
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* Sombra para destacar do fundo */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 10;
+}
+
+/* 2. ROTA (Agora com Borda AZUL NEON) */
+.route-container {
+    background: #141414 !important;
+    border: 1px solid #00f3ff !important; /* Azul Neon */
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.15); /* Brilho leve */
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 10;
+}
+
+/* 3. PREÇO (Agora com Borda VERDE NEON e Mais Compacto) */
+.price-section {
+    background: #141414 !important;
+    border: 1px solid var(--neon-green) !important; /* Verde Neon */
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.15); /* Brilho leve */
+    border-radius: 16px;
+    padding: 10px 15px !important; /* Altura reduzida */
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
     position: relative;
     z-index: 10;
 }
@@ -907,7 +934,7 @@ textarea#campo-encerramento {
 }
 /* 👇 O TRUQUE: Isso força a frase a aparecer antes do número */
 .status-timer::before {
-    content: "⏳ Tempo estimado: ";
+    content: "Tempo estimado: ";
     color: #ccc; /* Cor da frase */
     font-weight: normal;
     margin-right: 5px;
@@ -944,26 +971,24 @@ textarea#campo-encerramento {
 /* ============================================================ */
 
 #btn-cancelar-busca {
-    width: 100%; /* Ocupa a largura toda */
-    background: rgba(255, 68, 68, 0.05) !important; /* Fundo vermelho quase transparente */
-    border: 1px solid #ff4444 !important; /* Borda Vermelho Neon */
-    color: #ff4444 !important; /* Texto Vermelho */
-    
-    padding: 16px;
-    font-size: 14px;
-    font-weight: 800;
-    border-radius: 12px;
+    width: 80% !important; /* Menor que a tela */
+    margin: 10px auto !important; /* Centraliza */
+    display: block;
+    background: transparent !important;
+    border: 1px solid #ff4444 !important;
+    color: #ff4444 !important;
+    padding: 10px; /* Mais fino */
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 30px; /* Bem redondo */
     cursor: pointer;
-    
-    margin-top: 15px;
-    margin-bottom: 5px;
-    
     text-transform: uppercase;
-    letter-spacing: 1.5px;
+    letter-spacing: 1px;
     transition: all 0.3s ease;
-    
-    /* Brilho Neon Vermelho Suave */
-    box-shadow: 0 0 12px rgba(255, 68, 68, 0.2);
+}
+#btn-cancelar-busca:hover {
+    background: rgba(255, 68, 68, 0.1) !important;
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
 }
 
 /* Efeito ao clicar (Fica aceso) */
