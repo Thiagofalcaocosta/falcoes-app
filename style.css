@@ -938,11 +938,12 @@ textarea#campo-encerramento {
     margin: 5px 0 0 0;
     text-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
 }
+
 /* ============================================================ */
-/* 🔴 BOTÃO CANCELAR - ESTILO NEON (FINAL)                      */
+/* 🔴 BOTÃO CANCELAR - NOME CORRIGIDO (AGORA VAI)               */
 /* ============================================================ */
 
-#btn-cancel-busca {
+#btn-cancelar-busca {
     width: 100%; /* Ocupa a largura toda */
     background: rgba(255, 68, 68, 0.05) !important; /* Fundo vermelho quase transparente */
     border: 1px solid #ff4444 !important; /* Borda Vermelho Neon */
@@ -954,8 +955,8 @@ textarea#campo-encerramento {
     border-radius: 12px;
     cursor: pointer;
     
-    margin-top: 10px; /* Espaço para não colar no timer */
-    margin-bottom: 20px; /* Espaço para não colar na rota */
+    margin-top: 15px;
+    margin-bottom: 5px;
     
     text-transform: uppercase;
     letter-spacing: 1.5px;
@@ -966,10 +967,10 @@ textarea#campo-encerramento {
 }
 
 /* Efeito ao clicar (Fica aceso) */
-#btn-cancel-busca:active {
+#btn-cancelar-busca:active {
     background: #ff4444 !important;
     color: #000 !important;
-    box-shadow: 0 0 25px rgba(255, 68, 68, 0.8); /* Brilho forte */
-    transform: scale(0.98); /* Leve "apertada" */
+    box-shadow: 0 0 25px rgba(255, 68, 68, 0.8);
+    transform: scale(0.98);
 }
 
