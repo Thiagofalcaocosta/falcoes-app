@@ -974,27 +974,45 @@ textarea#campo-encerramento {
     transform: scale(0.98);
 }
 
-/* --- BOTÃO MEU LOCAL (AZUL NEON) --- */
+/* --- BOTÃO MEU LOCAL (COM TEXTO DISCRETO) --- */
 .btn-my-location {
-    border-color: #00f3ff !important; /* Azul Neon */
+    width: auto !important; /* Deixa o botão esticar para caber o texto */
+    padding: 0 10px !important; /* Espaço interno confortável */
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 5px; /* Separa o ícone do texto */
+    
+    /* Estilo Neon Azul */
+    border-color: #00f3ff !important;
     color: #00f3ff !important;
-    margin-right: 8px; /* Espaço entre os botões */
-    box-shadow: 0 0 5px rgba(0, 243, 255, 0.2);
+    background: rgba(0, 243, 255, 0.02); /* Fundo muito leve */
+    box-shadow: 0 0 5px rgba(0, 243, 255, 0.1);
     transition: all 0.3s ease;
 }
 
-.btn-my-location:hover {
-    background: rgba(0, 243, 255, 0.1) !important;
-    box-shadow: 0 0 15px rgba(0, 243, 255, 0.6);
+/* Texto "MEU LOCAL" */
+.gps-text {
+    font-size: 9px; /* Bem discreto */
+    font-weight: 800; /* Negrito para leitura fácil */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+    padding-top: 1px; /* Ajuste fino de alinhamento */
 }
 
-/* Animação enquanto busca o GPS */
+/* Efeito ao passar o mouse ou clicar */
+.btn-my-location:hover, .btn-my-location:active {
+    background: rgba(0, 243, 255, 0.15) !important;
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+}
+
+/* MANTIDA: Animação enquanto busca o GPS */
 @keyframes gpsPulse {
     0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 243, 255, 0.7); }
-    70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(0, 243, 255, 0); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 243, 255, 0); }
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 243, 255, 0); }
 }
-
 .gps-loading {
     animation: gpsPulse 1.5s infinite;
     background: rgba(0, 243, 255, 0.2) !important;
