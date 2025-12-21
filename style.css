@@ -1142,3 +1142,109 @@ textarea#campo-encerramento {
 .btn-whatsapp-full span {
     color: #fff !important;
 }
+
+/* ============================================================ */
+/* 🔴 NOVO: ESTILO DA TELA DE CANCELAMENTO E BOTOES NEON    */
+/* ============================================================ */
+
+/* Container Principal do Cancelamento */
+.card-cancelamento {
+    position: relative; /* Necessário para o botão fechar ficar no canto */
+    background-color: #000; /* Fundo Preto Profundo */
+    padding: 25px 20px;
+    border-radius: 20px;
+    border: 1px solid #333;
+    color: white;
+    max-width: 100%;
+    margin: 0 auto;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8); /* Sombra forte em volta */
+}
+
+/* Títulos e Textos do Cancelamento */
+.header-cancelamento {
+    margin-top: 15px; /* Espaço para não bater no botão fechar */
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.titulo-cancelado {
+    color: #ff4d4d; /* Vermelho Neon */
+    font-size: 22px;
+    font-weight: 900;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    text-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
+}
+
+.subtitulo {
+    color: #ccc;
+    font-size: 14px;
+}
+
+/* --- NOVO BOTÃO FECHAR (NO TOPO DIREITO) --- */
+.btn-fechar-topo {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: 1px solid #ff4d4d;
+    color: #ff4d4d;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(255, 77, 77, 0.2);
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    z-index: 20; /* Garante que fica por cima de tudo */
+}
+
+.btn-fechar-topo:hover {
+    background-color: rgba(255, 77, 77, 0.1);
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
+    transform: scale(1.05);
+}
+
+/* --- NOVO BOTÃO WHATSAPP (NEON OUTLINE) --- */
+/* Esse substitui o visual do antigo botão sólido apenas onde usarmos essa classe */
+.btn-whatsapp {
+    width: 100%;
+    padding: 15px;
+    margin-top: 5px;
+    margin-bottom: 20px;
+    background-color: transparent; /* Fundo transparente */
+    border: 2px solid #25D366; /* Borda Verde */
+    border-radius: 12px;
+    color: #25D366;
+    font-weight: 800;
+    font-size: 15px;
+    text-transform: uppercase;
+    text-decoration: none; /* Remove sublinhado de link */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 0 10px rgba(37, 211, 102, 0.2), inset 0 0 5px rgba(37, 211, 102, 0.1);
+    transition: all 0.3s ease;
+}
+
+.btn-whatsapp i {
+    font-size: 20px;
+}
+
+.btn-whatsapp:hover {
+    background-color: rgba(37, 211, 102, 0.1);
+    box-shadow: 0 0 20px rgba(37, 211, 102, 0.6), inset 0 0 10px rgba(37, 211, 102, 0.2);
+    transform: scale(1.02);
+    color: #25D366;
+}
+
+/* Ajuste fino para os cards antigos ficarem bons dentro do fundo preto */
+.card-cancelamento .driver-card, 
+.card-cancelamento .route-container,
+.card-cancelamento .price-section {
+    background: #111 !important; /* Um cinza quase preto para destacar do fundo preto total */
+    border-color: #333 !important;
+}

@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9868.0">
+    <link rel="stylesheet" href="/style.css?v=9968.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -890,10 +890,17 @@
             <div class="driver-rating">★ 5.0</div>
         </div>
 
-        <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp-full">
-            <span style="font-size: 18px;">📞</span> CHAMAR PILOTO
-        </a>
+        <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp">
+    <i class="fab fa-whatsapp"></i> CHAMAR NO WHATSAPP
+</a>
     </div>
+
+    <div id="motoboy-info-box" style="display:none;">
+    <button id="btn-fechar-novo" class="btn-fechar-topo" onclick="fecharTela()" style="display:none;">
+        FECHAR X
+    </button>
+
+    <div class="driver-card"> ... (resto do código) ...
 
     <div class="route-container">
         <div class="route-item">
@@ -927,7 +934,7 @@
         <button id="btn-confirmar-cancelamento" class="btn-danger-full" disabled>CONFIRMAR CANCELAMENTO</button>
     </div>
 
-    <button onclick="reiniciarApp()" class="btn-text-close" style="display:none;">Fechar tela</button>
+    
 </div>
 
     </div>
@@ -1438,7 +1445,7 @@ async function verificarStatus(id) {
         const motoboyBox   = document.getElementById('motoboy-info-box');
         const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
         const areaJustificativa = document.getElementById('area-justificativa-integrada');
-        const btnFechar = document.querySelector('button[onclick="reiniciarApp()"]');
+        const btnFechar = document.getElementById('btn-fechar-novo');
         const modal = document.getElementById('modal-pagamento'); 
 
         // Limpezas
@@ -2068,4 +2075,13 @@ restaurarRascunhoFormulario();
         el.addEventListener('input', salvarRascunhoFormulario);
     }
 });
+
+// Função do novo botão Fechar
+function fecharTela() {
+    reiniciarApp(); // Chama sua função original de reiniciar
+    document.getElementById('modal-busca').style.display = 'none'; // Garante que fecha modais
+    
+    // Se quiser esconder o card manualmente também:
+    document.getElementById('motoboy-info-box').style.display = 'none';
+}
 </script>
