@@ -1017,3 +1017,19 @@ textarea#campo-encerramento {
     animation: gpsPulse 1.5s infinite;
     background: rgba(0, 243, 255, 0.2) !important;
 }
+
+/* Botão de Limpar Discreto */
+.btn-limpar-discreto {
+    background: transparent;
+    border: 1px solid #333;
+    color: #666;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-limpar-discreto:hover {
+    border-color: var(--error-color);
+    color: var(--error-color);
+}

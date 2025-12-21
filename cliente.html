@@ -758,7 +758,12 @@
 
         <div id="tela-pedido" class="tela ativa">
 
-            <h2>NOVA SOLICITAÇÃO</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 style="margin: 0;">NOVA SOLICITAÇÃO</h2>
+    <button onclick="limparFormularioManual()" class="btn-limpar-discreto">
+        🗑️ Limpar
+    </button>
+</div>
 
             <div class="opcoes-servico">
                 <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
@@ -1110,10 +1115,7 @@
         calcularRota();
     }
 
-    function logout() {
-        localStorage.clear();
-        window.location.reload();
-    }
+    
 
     function calcDistanciaReta(c1, c2) {
         const R = 6371;
@@ -1924,4 +1926,123 @@ function usarMeuLocal() {
         maximumAge: 0
     });
 }
+
+// ============================================================
+// 🧠 MEGA BLOCO: LIMPEZA INTELIGENTE, MEMÓRIA E SAIR
+// ============================================================
+
+// 1. FUNÇÃO SAIR CORRIGIDA (Redireciona para o login real)
+function logout() {
+    localStorage.clear(); 
+    // Manda o usuário para a tela inicial/login em vez de recarregar a tela atual quebrada
+    window.location.href = 'index.html'; 
+}
+
+// 2. FUNÇÃO DO BOTÃO "LIMPAR" (A Lixeira)
+function limparFormularioManual() {
+    // Limpa visualmente os campos
+    document.getElementById('rua-origem').value = '';
+    document.getElementById('num-origem').value = '';
+    document.getElementById('bairro-origem').value = '';
+    document.getElementById('rua-destino').value = '';
+    document.getElementById('num-destino').value = '';
+    document.getElementById('bairro-destino').value = '';
+    document.getElementById('detalhes-entrega').value = '';
+    
+    // Zera variáveis internas do sistema
+    coordsOrigem = null;
+    coordsDestino = null;
+    servicoSelecionado = null;
+    
+    // Remove marcadores do mapa se existirem
+    if(typeof map !== 'undefined') {
+        if(typeof markerOrigem !== 'undefined' && markerOrigem) map.removeLayer(markerOrigem);
+        if(typeof markerDestino !== 'undefined' && markerDestino) map.removeLayer(markerDestino);
+    }
+    
+    // Esconde o resumo de preço
+    const resumo = document.getElementById('resumo');
+    if(resumo) resumo.style.display = 'none';
+
+    // Apaga a memória do navegador
+    localStorage.removeItem('rascunho_cliente');
+    
+    showToast("Campos limpos com sucesso!", "info");
+}
+
+// 3. SALVAR TUDO AUTOMATICAMENTE (Com Data e Hora)
+function salvarRascunhoFormulario() {
+    const rascunho = {};
+    
+    ['rua-origem', 'num-origem', 'bairro-origem', 
+     'rua-destino', 'num-destino', 'bairro-destino', 
+     'detalhes-entrega'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) rascunho[id] = el.value;
+    });
+
+    if (typeof coordsOrigem !== 'undefined') rascunho.coordsOrigem = coordsOrigem;
+    if (typeof coordsDestino !== 'undefined') rascunho.coordsDestino = coordsDestino;
+    if (typeof servicoSelecionado !== 'undefined') rascunho.servico = servicoSelecionado;
+
+    // IMPORTANTE: Salva a hora exata (Timestamp) para saber se está velho depois
+    rascunho.timestamp = new Date().getTime();
+
+    localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
+}
+
+// 4. RESTAURAR (Só se foi salvo há menos de 2 horas)
+function restaurarRascunhoFormulario() {
+    const dadosString = localStorage.getItem('rascunho_cliente');
+    if (!dadosString) return;
+
+    const dados = JSON.parse(dadosString);
+
+    // --- REGRA DE VALIDADE (2 HORAS) ---
+    const AGORA = new Date().getTime();
+    const DUAS_HORAS = 2 * 60 * 60 * 1000; // 7200000 milissegundos
+
+    // Se o rascunho for velho, apaga e não preenche nada
+    if (dados.timestamp && (AGORA - dados.timestamp > DUAS_HORAS)) {
+        console.log("Rascunho expirado (mais de 2h). Limpando...");
+        localStorage.removeItem('rascunho_cliente');
+        return; 
+    }
+    // -------------------------
+
+    // Se estiver novo, preenche tudo
+    ['rua-origem', 'num-origem', 'bairro-origem', 
+     'rua-destino', 'num-destino', 'bairro-destino', 
+     'detalhes-entrega'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && dados[id]) el.value = dados[id];
+    });
+
+    if (dados.coordsOrigem) coordsOrigem = dados.coordsOrigem;
+    if (dados.coordsDestino) coordsDestino = dados.coordsDestino;
+    
+    if (dados.servico) {
+        // Seleciona o botão certo visualmente
+        selecionarServico(dados.servico, dados.servico === 'moto-taxi' ? 10.0 : 8.50);
+    }
+
+    // Se tiver os dois endereços, já calcula o preço
+    if (dados.coordsOrigem && dados.coordsDestino) {
+        calcularRota();
+    }
+}
+
+// 5. ATIVAR OS ESPIÕES (Start)
+// Tenta restaurar assim que carrega o script
+restaurarRascunhoFormulario();
+
+// Adiciona o evento de salvar a cada letra digitada
+['rua-origem', 'num-origem', 'bairro-origem', 
+ 'rua-destino', 'num-destino', 'bairro-destino', 
+ 'detalhes-entrega'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('input', salvarRascunhoFormulario);
+    }
+});
 </script>
