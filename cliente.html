@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9798.0">
+    <link rel="stylesheet" href="/style.css?v=9998.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -848,10 +848,10 @@
             <button onclick="pedir()" id="btn-pedir" class="btn" disabled>SELECIONE O SERVIÇO</button>
         </div>
 
-        <div id="tela-acompanhamento" class="tela">
+        <div id="tela-acompanhamento" class="tela" style="position: relative; min-height: 100vh;">
 
-    <button onclick="fecharTela()" 
-            style="position: fixed; top: 20px; right: 20px; background: transparent; border: none; color: #ff4444; font-weight: bold; font-size: 14px; z-index: 9999; text-transform: uppercase; cursor: pointer;">
+    <button id="btn-fechar-novo" onclick="fecharTela()" 
+            style="position: absolute; top: 15px; right: 15px; display: none; background: transparent; border: none; color: #ff4444; font-weight: bold; font-size: 14px; z-index: 9999; text-transform: uppercase; cursor: pointer;">
         FECHAR TELA X
     </button>
 
