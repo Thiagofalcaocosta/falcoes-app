@@ -1294,3 +1294,88 @@ textarea#campo-encerramento {
     color: #ff1a1a;
     text-shadow: 0 0 8px rgba(255, 68, 68, 0.6);
 }
+
+/* ============================================================ */
+/* 🚑 PACOTE DE CORREÇÃO VISUAL (RESTAURA O NEON) 🚑 */
+/* ============================================================ */
+
+/* 1. ARRAMA A FOTO GIGANTE DO PILOTO */
+.driver-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    background: #141414 !important;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+.driver-avatar {
+    width: 70px !important;    /* Tamanho fixo da bolinha */
+    height: 70px !important;   /* Tamanho fixo da bolinha */
+    min-width: 70px !important;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #00e640; /* Borda Verde */
+    background: #000;
+}
+.driver-img-fix {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important; /* Foto não estica */
+}
+
+/* 2. BOTÃO CANCELAR BUSCA (VOLTA A SER VERMELHO NEON) */
+#btn-cancelar-busca {
+    width: 90% !important;
+    margin: 15px auto !important;
+    display: block;
+    background: transparent !important; /* Fundo transparente */
+    border: 1px solid #ff4444 !important; /* Borda Vermelha */
+    color: #ff4444 !important;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 800;
+    border-radius: 30px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+/* 3. BOTÃO WHATSAPP (VOLTA A SER VERDE NEON) */
+.btn-whatsapp {
+    width: 100%;
+    padding: 15px;
+    margin-top: 10px;
+    background-color: transparent !important;
+    border: 1px solid #25D366 !important; /* Borda Verde */
+    border-radius: 12px;
+    color: #25D366 !important;
+    font-weight: 800;
+    font-size: 15px;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* 4. POSICIONA O BOTÃO 'FECHAR TELA' DENTRO DO CARD */
+#acompanhamento-status-area {
+    position: relative !important; /* Segura o botão dentro dele */
+}
+#btn-fechar-novo {
+    position: absolute !important;
+    top: 15px !important;
+    right: 15px !important;
+    background: rgba(0, 0, 0, 0.6) !important; /* Fundo escurinho */
+    border: 1px solid #ff4444 !important;
+    color: #ff4444 !important;
+    padding: 5px 12px !important;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    z-index: 100;
+    display: none; /* Começa invisível (o JS mostra depois) */
+}
