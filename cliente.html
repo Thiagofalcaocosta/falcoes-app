@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9368.0">
+    <link rel="stylesheet" href="/style.css?v=9388.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -849,29 +849,29 @@
         </div>
 
         <div id="tela-acompanhamento" class="tela">
-    
+
     <div class="status-header" id="acompanhamento-status-area">
-    
-    <div class="header-top-row">
-        <div class="status-info">
-            <h2 id="acompanhamento-status-titulo">BUSCANDO PILOTO...</h2>
-            <p id="acompanhamento-status-desc">Notificando parceiros próximos</p>
+        <div class="header-top-row">
+            <div class="status-info">
+                <h2 id="acompanhamento-status-titulo">BUSCANDO PILOTO...</h2>
+                <p id="acompanhamento-status-desc">Notificando parceiros próximos</p>
+            </div>
+            <div class="order-badge-group">
+                <span class="badge-label">PEDIDO</span>
+                <span class="badge-value" id="acompanhamento-id">#000</span>
+            </div>
         </div>
-        
-        <div class="order-badge-group">
-            <span class="badge-label">PEDIDO</span>
-            <span class="badge-value" id="acompanhamento-id">#000</span>
+        <div id="tempo-restante-busca" class="status-timer">
+            ⏳ Tempo estimado para encontrar um piloto: <span id="timer-segundos">--</span>s
         </div>
     </div>
-
-    <div id="tempo-restante-busca" class="status-timer">
-        ⏳ Tempo estimado para encontrar um piloto: <span id="timer-segundos">--</span>s
-    </div>
-
-</div>
 
     <button id="btn-cancelar-busca" onclick="cancelarBuscaMotoboy()" class="btn-cancel-outline">
         CANCELAR BUSCA
+    </button>
+
+    <button id="btn-fechar-novo" class="btn-fechar-topo" onclick="fecharTela()" style="display:none;">
+        FECHAR TELA X
     </button>
 
     <div id="motoboy-info-box" style="display:none;">
@@ -891,16 +891,9 @@
         </div>
 
         <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp">
-    <i class="fab fa-whatsapp"></i> CHAMAR NO WHATSAPP
-</a>
+            <i class="fab fa-whatsapp"></i> CHAMAR NO WHATSAPP
+        </a>
     </div>
-
-    <div id="motoboy-info-box" style="display:none;">
-    <button id="btn-fechar-novo" class="btn-fechar-topo" onclick="fecharTela()" style="display:none;">
-        FECHAR X
-    </button>
-    
-    <div class="driver-card"> ... (resto do código) ...
 
     <div class="route-container">
         <div class="route-item">
@@ -921,7 +914,8 @@
     </div>
 
     <div class="price-section">
-        <div id="area-pagamento-cliente"></div> <div class="price-display">
+        <div id="area-pagamento-cliente"></div> 
+        <div class="price-display">
             <span>Total estimado</span>
             <h1 id="detalhe-valor">R$ --</h1>
         </div>
@@ -934,7 +928,6 @@
         <button id="btn-confirmar-cancelamento" class="btn-danger-full" disabled>CONFIRMAR CANCELAMENTO</button>
     </div>
 
-    
 </div>
 
     </div>
