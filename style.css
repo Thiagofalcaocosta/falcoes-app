@@ -851,42 +851,15 @@ textarea#campo-encerramento {
 /* ============================================================ */
 
 /* 1. TRAZ O FUNDO "CARTÃO" DE VOLTA (Para não boiar) */
-/* 1. CARD DO MOTORISTA (Continua Cinza Padrão) */
+.route-container, 
+.price-section,
 .driver-card {
-    background: #141414 !important;
+    background: #141414 !important; /* Cinza bem escuro */
     border: 1px solid #333;
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    position: relative;
-    z-index: 10;
-}
-
-/* 2. ROTA (Agora com Borda AZUL NEON) */
-.route-container {
-    background: #141414 !important;
-    border: 1px solid #00f3ff !important; /* Azul Neon */
-    box-shadow: 0 0 10px rgba(0, 243, 255, 0.15); /* Brilho leve */
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 15px;
-    position: relative;
-    z-index: 10;
-}
-
-/* 3. PREÇO (Agora com Borda VERDE NEON e Mais Compacto) */
-.price-section {
-    background: #141414 !important;
-    border: 1px solid var(--neon-green) !important; /* Verde Neon */
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.15); /* Brilho leve */
-    border-radius: 16px;
-    padding: 10px 15px !important; /* Altura reduzida */
-    margin-bottom: 15px;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* Sombra para destacar do fundo */
     position: relative;
     z-index: 10;
 }
@@ -934,7 +907,7 @@ textarea#campo-encerramento {
 }
 /* 👇 O TRUQUE: Isso força a frase a aparecer antes do número */
 .status-timer::before {
-    content: "Tempo estimado: ";
+    content: "⏳ Tempo estimado: ";
     color: #ccc; /* Cor da frase */
     font-weight: normal;
     margin-right: 5px;
@@ -971,24 +944,26 @@ textarea#campo-encerramento {
 /* ============================================================ */
 
 #btn-cancelar-busca {
-    width: 80% !important; /* Menor que a tela */
-    margin: 10px auto !important; /* Centraliza */
-    display: block;
-    background: transparent !important;
-    border: 1px solid #ff4444 !important;
-    color: #ff4444 !important;
-    padding: 10px; /* Mais fino */
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 30px; /* Bem redondo */
+    width: 100%; /* Ocupa a largura toda */
+    background: rgba(255, 68, 68, 0.05) !important; /* Fundo vermelho quase transparente */
+    border: 1px solid #ff4444 !important; /* Borda Vermelho Neon */
+    color: #ff4444 !important; /* Texto Vermelho */
+    
+    padding: 16px;
+    font-size: 14px;
+    font-weight: 800;
+    border-radius: 12px;
     cursor: pointer;
+    
+    margin-top: 15px;
+    margin-bottom: 5px;
+    
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     transition: all 0.3s ease;
-}
-#btn-cancelar-busca:hover {
-    background: rgba(255, 68, 68, 0.1) !important;
-    box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+    
+    /* Brilho Neon Vermelho Suave */
+    box-shadow: 0 0 12px rgba(255, 68, 68, 0.2);
 }
 
 /* Efeito ao clicar (Fica aceso) */
@@ -1041,341 +1016,4 @@ textarea#campo-encerramento {
 .gps-loading {
     animation: gpsPulse 1.5s infinite;
     background: rgba(0, 243, 255, 0.2) !important;
-}
-
-/* --- BOTÃO LIMPAR (ESTILO PREMIUM DISCRETO) --- */
-.btn-limpar-discreto {
-    background-color: #252525 !important; /* Fundo cinza escuro igual aos cards */
-    color: #888 !important; /* Texto cinza claro para não chamar atenção */
-    border: 1px solid #333 !important; /* Borda sutil */
-    
-    padding: 8px 15px !important;
-    border-radius: 20px !important; /* Bem redondo (Pill shape) */
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px; /* Espaço entre o ícone e o texto */
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-/* Efeito ao passar o mouse ou tocar */
-.btn-limpar-discreto:hover, .btn-limpar-discreto:active {
-    background-color: rgba(255, 68, 68, 0.1) !important; /* Fundo vermelho bem fraquinho */
-    border-color: #ff4444 !important; /* Borda vermelha */
-    color: #ff4444 !important; /* Texto vermelho */
-    box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);
-}
-
-/* ============================================================ */
-/* 🛠️ CORREÇÃO DA FOTO GIGANTE E CARD DO MOTORISTA              */
-/* ============================================================ */
-
-.driver-card {
-    /* Garante que o texto fique ao lado da foto, não embaixo */
-    display: flex !important;
-    align-items: center !important;
-    gap: 15px !important;
-    
-    background: #141414 !important;
-    border: 1px solid #333;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
-
-/* O Container da Bolinha */
-.driver-avatar {
-    width: 70px !important;     /* Largura fixa */
-    height: 70px !important;    /* Altura fixa */
-    min-width: 70px !important; /* Não deixa esmagar */
-    
-    border-radius: 50%;         /* Redondo */
-    overflow: hidden;           /* Corta o que sobrar */
-    border: 2px solid var(--neon-green); /* Borda verde */
-    background: #000;           /* Fundo preto caso a imagem falhe */
-}
-
-/* A Imagem dentro da Bolinha */
-.driver-img-fix {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important; /* Ajusta a foto sem esticar */
-}
-
-/* ============================================================ */
-/* 🟢 BOTÃO WHATSAPP (CORREÇÃO DE COR)                          */
-/* ============================================================ */
-
-.btn-whatsapp-full {
-    background-color: #25D366 !important; /* Verde Oficial do Zap */
-    color: #fff !important; /* Texto Branco */
-    text-decoration: none !important; /* Tira o sublinhado roxo */
-    
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    
-    padding: 16px;
-    border-radius: 12px;
-    font-weight: 800;
-    margin-top: 15px;
-    font-size: 16px;
-    border: none;
-    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); /* Brilho Verde */
-    transition: transform 0.2s;
-}
-
-.btn-whatsapp-full:hover {
-    background-color: #1FAF59 !important;
-    transform: scale(1.02);
-}
-
-/* Garante que ícones dentro dele sejam brancos */
-.btn-whatsapp-full span {
-    color: #fff !important;
-}
-
-/* ============================================================ */
-/* 🔴 NOVO: ESTILO DA TELA DE CANCELAMENTO E BOTOES NEON    */
-/* ============================================================ */
-
-/* Container Principal do Cancelamento */
-.card-cancelamento {
-    position: relative; /* Necessário para o botão fechar ficar no canto */
-    background-color: #000; /* Fundo Preto Profundo */
-    padding: 25px 20px;
-    border-radius: 20px;
-    border: 1px solid #333;
-    color: white;
-    max-width: 100%;
-    margin: 0 auto;
-    box-shadow: 0 0 30px rgba(0,0,0,0.8); /* Sombra forte em volta */
-}
-
-/* Títulos e Textos do Cancelamento */
-.header-cancelamento {
-    margin-top: 15px; /* Espaço para não bater no botão fechar */
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.titulo-cancelado {
-    color: #ff4d4d; /* Vermelho Neon */
-    font-size: 22px;
-    font-weight: 900;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-    text-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
-}
-
-.subtitulo {
-    color: #ccc;
-    font-size: 14px;
-}
-
-/* --- NOVO BOTÃO FECHAR (NO TOPO DIREITO) --- */
-.btn-fechar-topo {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: transparent;
-    border: 1px solid #ff4d4d;
-    color: #ff4d4d;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow: 0 0 5px rgba(255, 77, 77, 0.2);
-    text-transform: uppercase;
-    transition: all 0.3s ease;
-    z-index: 20; /* Garante que fica por cima de tudo */
-}
-
-.btn-fechar-topo:hover {
-    background-color: rgba(255, 77, 77, 0.1);
-    box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
-    transform: scale(1.05);
-}
-
-/* --- NOVO BOTÃO WHATSAPP (NEON OUTLINE) --- */
-/* Esse substitui o visual do antigo botão sólido apenas onde usarmos essa classe */
-.btn-whatsapp {
-    width: 100%;
-    padding: 15px;
-    margin-top: 5px;
-    margin-bottom: 20px;
-    background-color: transparent; /* Fundo transparente */
-    border: 2px solid #25D366; /* Borda Verde */
-    border-radius: 12px;
-    color: #25D366;
-    font-weight: 800;
-    font-size: 15px;
-    text-transform: uppercase;
-    text-decoration: none; /* Remove sublinhado de link */
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    box-shadow: 0 0 10px rgba(37, 211, 102, 0.2), inset 0 0 5px rgba(37, 211, 102, 0.1);
-    transition: all 0.3s ease;
-}
-
-.btn-whatsapp i {
-    font-size: 20px;
-}
-
-.btn-whatsapp:hover {
-    background-color: rgba(37, 211, 102, 0.1);
-    box-shadow: 0 0 20px rgba(37, 211, 102, 0.6), inset 0 0 10px rgba(37, 211, 102, 0.2);
-    transform: scale(1.02);
-    color: #25D366;
-}
-
-/* Ajuste fino para os cards antigos ficarem bons dentro do fundo preto */
-.card-cancelamento .driver-card, 
-.card-cancelamento .route-container,
-.card-cancelamento .price-section {
-    background: #111 !important; /* Um cinza quase preto para destacar do fundo preto total */
-    border-color: #333 !important;
-}
-
-/* --- CORREÇÃO DO BOTÃO VOADOR --- */
-
-/* 1. O PAI (A caixa colorida) vira a âncora */
-#acompanhamento-status-area {
-    position: relative !important; /* Esse é o macete! */
-    z-index: 100; /* Garante que a caixa fique numa camada boa */
-    overflow: visible !important; /* Deixa o botão sair um pouquinho pra fora se precisar */
-}
-
-/* 2. O FILHO (O botão) obedece ao pai */
-#btn-fechar-novo {
-    position: absolute !important;
-    top: -12px !important;   /* Sobe um pouco para ficar na borda */
-    right: -5px !important;  /* Encosta na direita */
-    display: none;           /* Começa escondido (o JS que vai mostrar ele) */
-    z-index: 999 !important; /* Fica por cima de tudo */
-}
-/* ============================================================ */
-/* 🛠️ CORREÇÃO FINAL DO BOTÃO FECHAR (SEGURA ELE!)         */
-
-/* Ajuste fino para o badge do pedido não bater no botão */
-.order-badge-group {
-    margin-right: 0 !important; /* O padding do pai já resolve */
-}
-
-/* Botão Fechar Texto (Estilo igual ao SAIR) */
-.btn-fechar-texto {
-    position: absolute;
-    top: 15px; /* Mesma altura do cabeçalho */
-    right: 20px; /* Mesma posição do botão Sair */
-    background: transparent;
-    border: none;
-    color: #ff4444; /* Vermelho Neon */
-    font-weight: bold;
-    font-size: 14px;
-    cursor: pointer;
-    z-index: 2000; /* Para ficar por cima de tudo */
-    text-transform: uppercase;
-    text-decoration: none;
-}
-
-.btn-fechar-texto:hover {
-    color: #ff1a1a;
-    text-shadow: 0 0 8px rgba(255, 68, 68, 0.6);
-}
-
-/* ============================================================ */
-/* 🚑 PACOTE DE CORREÇÃO VISUAL (RESTAURA O NEON) 🚑 */
-/* ============================================================ */
-
-/* 1. ARRAMA A FOTO GIGANTE DO PILOTO */
-.driver-card {
-    display: flex !important;
-    align-items: center !important;
-    gap: 15px !important;
-    background: #141414 !important;
-    border: 1px solid #333;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 15px;
-}
-.driver-avatar {
-    width: 70px !important;    /* Tamanho fixo da bolinha */
-    height: 70px !important;   /* Tamanho fixo da bolinha */
-    min-width: 70px !important;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 2px solid #00e640; /* Borda Verde */
-    background: #000;
-}
-.driver-img-fix {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important; /* Foto não estica */
-}
-
-/* 2. BOTÃO CANCELAR BUSCA (VOLTA A SER VERMELHO NEON) */
-#btn-cancelar-busca {
-    width: 90% !important;
-    margin: 15px auto !important;
-    display: block;
-    background: transparent !important; /* Fundo transparente */
-    border: 1px solid #ff4444 !important; /* Borda Vermelha */
-    color: #ff4444 !important;
-    padding: 12px;
-    font-size: 13px;
-    font-weight: 800;
-    border-radius: 30px;
-    cursor: pointer;
-    text-transform: uppercase;
-}
-
-/* 3. BOTÃO WHATSAPP (VOLTA A SER VERDE NEON) */
-.btn-whatsapp {
-    width: 100%;
-    padding: 15px;
-    margin-top: 10px;
-    background-color: transparent !important;
-    border: 1px solid #25D366 !important; /* Borda Verde */
-    border-radius: 12px;
-    color: #25D366 !important;
-    font-weight: 800;
-    font-size: 15px;
-    text-transform: uppercase;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-/* 4. POSICIONA O BOTÃO 'FECHAR TELA' DENTRO DO CARD */
-#acompanhamento-status-area {
-    position: relative !important; /* Segura o botão dentro dele */
-}
-#btn-fechar-novo {
-    position: absolute !important;
-    top: 15px !important;
-    right: 15px !important;
-    background: rgba(0, 0, 0, 0.6) !important; /* Fundo escurinho */
-    border: 1px solid #ff4444 !important;
-    color: #ff4444 !important;
-    padding: 5px 12px !important;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 800;
-    cursor: pointer;
-    z-index: 100;
-    display: none; /* Começa invisível (o JS mostra depois) */
 }
