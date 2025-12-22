@@ -1,4 +1,3 @@
-!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
@@ -685,7 +684,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=6448.0">
+    <link rel="stylesheet" href="/style.css?v=6948.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -1186,36 +1185,50 @@
 
     // === FUNÇÕES DE BUSCA/TIMEOUT ===
     function iniciarContadorBusca(corridaId, tempoLimite) {
-        tempoBuscaRestante = tempoLimite;
-        const elementoTempo = document.getElementById('tempo-restante-busca');
-        const btnCancel = document.getElementById('btn-cancelar-busca');
+    tempoBuscaRestante = tempoLimite;
+    
+    // Pega o container principal e o span do número
+    const divTempo = document.getElementById('tempo-restante-busca');
+    const spanNumero = document.getElementById('timer-segundos');
+    const btnCancel = document.getElementById('btn-cancelar-busca');
 
-        if (!elementoTempo || !btnCancel) return;
-        if (buscaMotoboyInterval) {
-            clearInterval(buscaMotoboyInterval);
+    if (!divTempo || !btnCancel) return;
+
+    // Limpa intervalo anterior se existir
+    if (typeof buscaMotoboyInterval !== 'undefined' && buscaMotoboyInterval) {
+        clearInterval(buscaMotoboyInterval);
+    }
+    
+    // Mostra os elementos
+    btnCancel.style.display = 'block'; 
+    divTempo.style.display = 'block'; 
+
+    const decremento = () => {
+        if (tempoBuscaRestante <= 0) {
+            if (typeof buscaMotoboyInterval !== 'undefined') clearInterval(buscaMotoboyInterval);
+            
+            // Texto final
+            divTempo.innerHTML = '⏰ Tempo esgotado';
+            btnCancel.style.display = 'none';
+            
+            encerrarBuscaPorTimeout(corridaId); 
+            return;
+        }
+
+        // ATUALIZA APENAS O NÚMERO (Mantém o texto "Tempo estimado")
+        if (spanNumero) {
+            spanNumero.innerText = tempoBuscaRestante;
+        } else {
+            // Caso de segurança se o span sumir
+            divTempo.innerText = `⏳ Tempo: ${tempoBuscaRestante}s`;
         }
         
-        btnCancel.style.display = 'block'; 
-        elementoTempo.style.display = 'block'; 
+        tempoBuscaRestante--;
+    };
 
-        const decremento = () => {
-            if (tempoBuscaRestante <= 0) {
-                clearInterval(buscaMotoboyInterval);
-                buscaMotoboyInterval = null;
-                elementoTempo.innerText = '⏰ ENCERRADO';
-                btnCancel.style.display = 'none';
-                
-                encerrarBuscaPorTimeout(corridaId); 
-                return;
-            }
-
-            elementoTempo.innerText = `⏳ ${tempoBuscaRestante}s`;
-            tempoBuscaRestante--;
-        };
-
-        decremento();
-        buscaMotoboyInterval = setInterval(decremento, 1000);
-    }
+    decremento(); // Roda a primeira vez na hora
+    buscaMotoboyInterval = setInterval(decremento, 1000);
+}
 
     async function cancelarBuscaMotoboy() {
         const id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
