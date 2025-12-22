@@ -1309,3 +1309,41 @@ textarea#campo-encerramento {
     background: #555;
     transform: translateY(-2px);
 }
+
+/* ===== CORREÇÃO DO TIMER DUPLICADO ===== */
+
+/* Garante que só tenha UMA área de timer */
+#tempo-restante-busca {
+    display: none; /* Começa escondido */
+    font-size: 14px;
+    margin-top: 5px;
+    color: #aaa;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid var(--brand-green);
+    padding: 12px;
+    border-radius: 50px;
+    text-align: center;
+    width: 100%;
+    text-transform: uppercase;
+}
+
+/* Remove qualquer estilo inline conflitante */
+.status-timer {
+    all: unset; /* Reseta qualquer estilo herdado */
+}
+
+/* Remove qualquer timer extra que possa estar aparecendo */
+[class*="timer"], [id*="tempo"], [class*="Tempo"], [id*="Tempo"] {
+    display: none !important;
+}
+
+/* Só mostra o #tempo-restante-busca quando o JS ativar */
+#tempo-restante-busca:not([style*="display: none"]) {
+    display: block !important;
+}
+
+/* Remove texto duplicado que possa estar vindo do JS */
+#tempo-restante-busca::before,
+#tempo-restante-busca::after {
+    content: "" !important;
+}

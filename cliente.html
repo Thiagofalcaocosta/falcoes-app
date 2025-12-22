@@ -1185,20 +1185,35 @@
 
     // === FUNÇÕES DE BUSCA/TIMEOUT ===
     function iniciarContadorBusca(corridaId, tempoLimite = 90) {
-    tempoBuscaRestante = tempoLimite;
-    const elementoTempo = document.getElementById('timer-segundos');
-    
-    if (!elementoTempo) return;
-    
-    // Limpa timer anterior se existir
+    // Limpa timer anterior
     if (buscaMotoboyInterval) {
         clearInterval(buscaMotoboyInterval);
+        buscaMotoboyInterval = null;
     }
     
-    // Mostra o elemento do timer
-    document.getElementById('tempo-restante-busca').style.display = 'block';
+    tempoBuscaRestante = tempoLimite;
+    const timerElement = document.getElementById('timer-segundos');
+    const containerTimer = document.getElementById('tempo-restante-busca');
     
-    // Atualiza o timer a cada segundo
+    // Garante que os elementos existam
+    if (!timerElement || !containerTimer) {
+        console.error('Elementos do timer não encontrados');
+        return;
+    }
+    
+    // Mostra o container
+    containerTimer.style.display = 'block';
+    
+    // Reseta para o formato original
+    containerTimer.innerHTML = '⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s';
+    
+    // Atualiza o número inicial
+    const spanTimer = document.getElementById('timer-segundos');
+    if (spanTimer) {
+        spanTimer.textContent = tempoLimite;
+        spanTimer.style.color = 'var(--neon-green)';
+    }
+    
     const atualizarTimer = () => {
         if (tempoBuscaRestante <= 0) {
             clearInterval(buscaMotoboyInterval);
@@ -1207,24 +1222,23 @@
             return;
         }
         
-        // Atualiza o número
-        elementoTempo.textContent = tempoBuscaRestante;
-        
-        // Muda a cor conforme o tempo diminui
-        if (tempoBuscaRestante <= 30) {
-            elementoTempo.style.color = "#ff9900"; // Laranja
-        }
-        if (tempoBuscaRestante <= 10) {
-            elementoTempo.style.color = "#ff4444"; // Vermelho
+        // Atualiza APENAS o número
+        if (spanTimer) {
+            spanTimer.textContent = tempoBuscaRestante;
+            
+            // Muda a cor conforme o tempo diminui
+            if (tempoBuscaRestante <= 30) {
+                spanTimer.style.color = "#ff9900";
+            }
+            if (tempoBuscaRestante <= 10) {
+                spanTimer.style.color = "#ff4444";
+            }
         }
         
         tempoBuscaRestante--;
     };
     
-    // Inicia imediatamente
     atualizarTimer();
-    
-    // Executa a cada segundo
     buscaMotoboyInterval = setInterval(atualizarTimer, 1000);
 }
 
@@ -1276,12 +1290,19 @@
             })
         });
         
-        // Atualiza a interface para mostrar "TEMPO ESGOTADO"
+        // PARA o timer
+        if (buscaMotoboyInterval) {
+            clearInterval(buscaMotoboyInterval);
+            buscaMotoboyInterval = null;
+        }
+        
+        // Atualiza a interface
         const statusTitulo = document.getElementById('acompanhamento-status-titulo');
         const statusDesc = document.getElementById('acompanhamento-status-desc');
         const timerElement = document.getElementById('timer-segundos');
-        const statusArea = document.getElementById('acompanhamento-status-area');
+        const containerTimer = document.getElementById('tempo-restante-busca');
         
+        // 1. Atualiza o título e descrição
         if (statusTitulo) {
             statusTitulo.innerHTML = '<i class="fas fa-clock"></i> TEMPO ESGOTADO';
             statusTitulo.style.color = "#ff4444";
@@ -1292,14 +1313,31 @@
             statusDesc.style.color = "#aaa";
         }
         
+        // 2. Atualiza APENAS o número do timer (não todo o HTML)
         if (timerElement) {
             timerElement.textContent = "0";
             timerElement.style.color = "#ff4444";
         }
         
-        if (statusArea) {
-            statusArea.style.background = 'rgba(255, 68, 68, 0.15)';
-            statusArea.style.border = '1px solid #ff4444';
+        // 3. Muda o texto do container SEM duplicar
+        if (containerTimer) {
+            // Remove todo o conteúdo anterior
+            containerTimer.textContent = "";
+            
+            // Cria nova estrutura
+            const icon = document.createElement('span');
+            icon.textContent = "⏰ ";
+            icon.style.color = "#ff4444";
+            
+            const text = document.createElement('span');
+            text.innerHTML = "<strong>TEMPO ESGOTADO</strong>";
+            text.style.color = "#ff4444";
+            text.style.fontWeight = "bold";
+            
+            // Adiciona os elementos
+            containerTimer.appendChild(icon);
+            containerTimer.appendChild(text);
+            containerTimer.style.color = "#ff4444";
         }
         
         // Para a verificação contínua
@@ -1314,9 +1352,6 @@
         // Mostra opções para o usuário
         mostrarOpcoesTempoEsgotado();
         
-        // Remove o pedido do localStorage (opcional)
-        // localStorage.removeItem('idPedidoAtual');
-        
         showToast('Tempo limite de busca esgotado. Nenhum piloto encontrado.', 'error');
         
     } catch (err) {
@@ -1324,17 +1359,16 @@
         showToast('Erro ao processar tempo esgotado.', 'error');
     }
 }
-
 function mostrarOpcoesTempoEsgotado() {
     const container = document.getElementById('acompanhamento-status-area');
     
     if (!container) return;
     
-    // Remove opções anteriores se existirem
+    // Remove opções anteriores
     const opcoesAntigas = document.getElementById('opcoes-tempo-esgotado');
     if (opcoesAntigas) opcoesAntigas.remove();
     
-    // Cria o container de opções
+    // Cria as opções
     const opcoesDiv = document.createElement('div');
     opcoesDiv.id = 'opcoes-tempo-esgotado';
     opcoesDiv.style.cssText = `
@@ -1347,93 +1381,136 @@ function mostrarOpcoesTempoEsgotado() {
     
     opcoesDiv.innerHTML = `
         <p style="margin-bottom: 10px; color: #fff; font-size: 14px;">
-            O que deseja fazer?
+            Nenhum piloto disponível. O que deseja fazer?
         </p>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button onclick="tentarNovamente()" class="btn-primary" style="flex: 1; min-width: 120px;">
-                <i class="fas fa-redo"></i> Tentar Novamente
+                <i class="fas fa-redo"></i> Nova Busca
             </button>
             <button onclick="voltarParaNovaCorrida()" class="btn-secondary" style="flex: 1; min-width: 120px;">
-                <i class="fas fa-plus-circle"></i> Nova Corrida
+                <i class="fas fa-plus-circle"></i> Outro Pedido
             </button>
         </div>
+        <p style="margin-top: 10px; color: #888; font-size: 11px;">
+            "Nova Busca" recria o pedido. "Outro Pedido" volta ao início.
+        </p>
     `;
     
     container.appendChild(opcoesDiv);
 }
 
 async function tentarNovamente() {
-    if (!idPedidoAtual) {
-        showToast('Não há pedido para tentar novamente.', 'error');
+    // 1. Pega os dados do pedido atual do localStorage
+    const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
+    if (!pedidoSalvo) {
+        showToast('Não foi possível recuperar os dados do pedido anterior.', 'error');
+        voltarParaNovaCorrida();
         return;
     }
     
-    // Remove as opções de tempo esgotado
+    // 2. Remove as opções de tempo esgotado
     const opcoesDiv = document.getElementById('opcoes-tempo-esgotado');
     if (opcoesDiv) opcoesDiv.remove();
     
-    // Reseta a interface
+    // 3. Reseta a interface para "BUSCANDO..."
     const statusTitulo = document.getElementById('acompanhamento-status-titulo');
     const statusDesc = document.getElementById('acompanhamento-status-desc');
-    const timerElement = document.getElementById('timer-segundos');
-    const statusArea = document.getElementById('acompanhamento-status-area');
+    const containerTimer = document.getElementById('tempo-restante-busca');
     
     if (statusTitulo) {
         statusTitulo.innerHTML = '<i class="fas fa-search-location"></i> BUSCANDO...';
-        statusTitulo.style.color = '';
+        statusTitulo.style.color = '#fff';
     }
     
     if (statusDesc) {
         statusDesc.textContent = "Aguarde, estamos localizando um piloto.";
-        statusDesc.style.color = '';
+        statusDesc.style.color = '#aaa';
     }
     
-    if (timerElement) {
-        timerElement.style.color = 'var(--neon-green)';
+    // 4. Reseta o timer
+    if (containerTimer) {
+        containerTimer.innerHTML = '⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s';
+        containerTimer.style.color = '#aaa';
+        containerTimer.style.display = 'block';
     }
     
-    if (statusArea) {
-        statusArea.style.background = '';
-        statusArea.style.border = '';
-    }
-    
-    // Mostra o botão de cancelamento com taxa
+    // 5. Mostra o botão de cancelamento
     const areaCancelar = document.getElementById('area-botao-cancelar-taxa');
     if (areaCancelar) {
         areaCancelar.style.display = 'block';
     }
     
+    // 6. Esconde opções extras se existirem
+    const extraOptions = document.getElementById('extra-options');
+    if (extraOptions) extraOptions.style.display = 'none';
+    
+    showToast('Criando novo pedido com os mesmos dados...', 'info');
+    
     try {
-        // Chama o backend para reiniciar a busca
-        const res = await fetch(`${MEU_IP}/reiniciar-busca/${idPedidoAtual}`, {
+        // 7. CRIA UM NOVO PEDIDO com os mesmos dados
+        const body = {
+            cliente_id: usuario.id,
+            origem: pedidoSalvo.origem,
+            destino: pedidoSalvo.destino,
+            valor: pedidoSalvo.valor,
+            tipo_servico: pedidoSalvo.tipo_servico || 'moto-taxi'
+        };
+
+        const res = await fetch(`${MEU_IP}/pedir-corrida`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
         });
         
-        const data = await res.json();
+        const json = await res.json();
         
-        if (data.success) {
-            // Reinicia o timer
+        if (json.success) {
+            // 8. Atualiza o ID do pedido atual
+            idPedidoAtual = json.id;
+            localStorage.setItem('idPedidoAtual', idPedidoAtual);
+            
+            // 9. Atualiza o número do pedido na tela
+            document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
+            
+            // 10. Reinicia o timer
             iniciarContadorBusca(idPedidoAtual, 90);
             
-            // Reinicia a verificação de status
+            // 11. Reinicia a verificação de status
             clearInterval(intervaloVerificacao);
             intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
             
-            showToast('Buscando pilotos novamente...', 'info');
+            showToast('Novo pedido criado! Buscando pilotos...', 'success');
+            
         } else {
-            showToast('Não foi possível reiniciar a busca.', 'error');
+            throw new Error(json.message || 'Falha ao criar novo pedido');
         }
+        
     } catch (error) {
         console.error('Erro ao tentar novamente:', error);
-        showToast('Erro ao reiniciar busca.', 'error');
+        showToast('Erro ao criar novo pedido: ' + error.message, 'error');
+        
+        // Se falhar, volta para nova corrida
+        setTimeout(() => voltarParaNovaCorrida(), 2000);
     }
 }
-
 function voltarParaNovaCorrida() {
-    // Limpa tudo e volta para a tela de pedido
-    reiniciarApp();
+    // Limpa os dados atuais
+    clearInterval(intervaloVerificacao);
+    clearInterval(buscaMotoboyInterval);
+    
+    // Mantém o rascunho do formulário, mas remove o pedido atual
+    localStorage.removeItem('idPedidoAtual');
+    localStorage.removeItem('pedidoAtual');
+    
+    // Volta para a tela de pedido
+    mudarTela('tela-pedido');
+    
+    // Restaura o formulário com os dados salvos (se existirem)
+    restaurarRascunhoFormulario();
+    
+    showToast('Preencha os dados para um novo pedido', 'info');
 }
+
     // === FUNÇÃO DE BUSCA (LIMPA E MANUAL) ===
 async function buscarEndereco(query, listaId, modo) {
     const lista = document.getElementById(listaId);
@@ -1514,7 +1591,10 @@ document.addEventListener('click', (e) => {
 });
     // === ENVIO DE PEDIDO ===
     async function pedir() {
-    if (!servicoSelecionado) { showToast("Selecione Moto Táxi ou Entrega", "error"); return; }
+    if (!servicoSelecionado) { 
+        showToast("Selecione Moto Táxi ou Entrega", "error"); 
+        return; 
+    }
     
     // Limpeza dos dados
     const ruaOrigemPura = document.getElementById('rua-origem').value.split(',')[0].trim();
@@ -1530,12 +1610,24 @@ document.addEventListener('click', (e) => {
     let erro = false;
 
     // --- VALIDAÇÃO DE ORIGEM ---
-    if (!numOrigem) { document.getElementById('num-origem').classList.add('erro'); erro = true; }
-    if (!bairroOrigem) { document.getElementById('bairro-origem').classList.add('erro'); erro = true; }
+    if (!numOrigem) { 
+        document.getElementById('num-origem').classList.add('erro'); 
+        erro = true; 
+    }
+    if (!bairroOrigem) { 
+        document.getElementById('bairro-origem').classList.add('erro'); 
+        erro = true; 
+    }
 
     // --- VALIDAÇÃO DE DESTINO ---
-    if (!numDestino) { document.getElementById('num-destino').classList.add('erro'); erro = true; }
-    if (!bairroDestino) { document.getElementById('bairro-destino').classList.add('erro'); erro = true; }
+    if (!numDestino) { 
+        document.getElementById('num-destino').classList.add('erro'); 
+        erro = true; 
+    }
+    if (!bairroDestino) { 
+        document.getElementById('bairro-destino').classList.add('erro'); 
+        erro = true; 
+    }
     
     if (erro) { 
         showToast("⚠️ Preencha NÚMERO e BAIRRO corretamente!", "error"); 
@@ -1546,60 +1638,75 @@ document.addEventListener('click', (e) => {
     const strOrigem = `${ruaOrigemPura}, Nº ${numOrigem}, ${bairroOrigem}`;
     const strDestino = `${ruaDestinoPura}, Nº ${numDestino}, ${bairroDestino}`;
     
-    // ... O resto da função pedir (fetch etc) continua igual aqui para baixo ...
-        const strDestinoFinal = servicoSelecionado === 'entrega'
-            ? `${strDestino} (ITEM: ${detalhes})`
-            : strDestino;
-        
-        document.getElementById('modal-busca').style.display = 'flex';
-        document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
-        document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
+    const strDestinoFinal = servicoSelecionado === 'entrega'
+        ? `${strDestino} (ITEM: ${detalhes})`
+        : strDestino;
+    
+    document.getElementById('modal-busca').style.display = 'flex';
+    document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
+    document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
 
-        try {
-            const body = {
-                cliente_id: usuario.id,
+    try {
+        const body = {
+            cliente_id: usuario.id,
+            origem: strOrigem,
+            destino: strDestinoFinal,
+            valor: window.valorCalculado || 10.0,
+            tipo_servico: servicoSelecionado
+        };
+
+        const res = await fetch(`${MEU_IP}/pedir-corrida`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            idPedidoAtual = json.id;
+            
+            // SALVA DADOS COMPLETOS PARA POSSÍVEL REUSO
+            const dadosParaSalvar = {
                 origem: strOrigem,
-                destino: strDestinoFinal,
+                destino: strDestino,
                 valor: window.valorCalculado || 10.0,
-                tipo_servico: servicoSelecionado
+                tipo_servico: servicoSelecionado,
+                detalhes: servicoSelecionado === 'entrega' ? detalhes : null,
+                campos: {
+                    ruaOrigem: document.getElementById('rua-origem').value,
+                    numOrigem: numOrigem,
+                    bairroOrigem: bairroOrigem,
+                    ruaDestino: document.getElementById('rua-destino').value,
+                    numDestino: numDestino,
+                    bairroDestino: bairroDestino,
+                    detalhesEntrega: servicoSelecionado === 'entrega' ? detalhes : ''
+                }
             };
-
-            const res = await fetch(`${MEU_IP}/pedir-corrida`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            const json = await res.json();
-
-            if (json.success) {
-                idPedidoAtual = json.id;
-                localStorage.setItem('idPedidoAtual', idPedidoAtual);
-                localStorage.setItem('pedidoAtual', JSON.stringify({
-                    origem: strOrigem,
-                    destino: strDestino,
-                    valor: window.valorCalculado
-                }));
-                
-                // 2. Preencher a nova tela com os dados iniciais
-                preencherDetalhesAcompanhamento(); // Chamar a função para preencher os IDs da tela de acompanhamento
-
-                // 3. Trocar para a tela de Acompanhamento e fechar o modal
-                mudarTela('tela-acompanhamento');
-                document.getElementById('modal-busca').style.display = 'none';
-
-                // 4. INICIAR CONTADOR DE BUSCA E VERIFICAÇÃO DE STATUS
-                iniciarContadorBusca(idPedidoAtual, 90); // 90 segundos de limite
-                intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-                showToast("Solicitação enviada. Buscando piloto...", "info");
-
-            } else {
-                throw new Error(json.message);
-            }
-        } catch (e) {
+            
+            localStorage.setItem('idPedidoAtual', idPedidoAtual);
+            localStorage.setItem('pedidoAtual', JSON.stringify(dadosParaSalvar));
+            
+            // Preenche a tela de acompanhamento
+            preencherDetalhesAcompanhamento();
+            
+            // Troca para a tela de Acompanhamento
+            mudarTela('tela-acompanhamento');
             document.getElementById('modal-busca').style.display = 'none';
-            showToast("Erro ao enviar pedido: " + e.message, "error");
+            
+            // Inicia contador e verificação
+            iniciarContadorBusca(idPedidoAtual, 90);
+            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+            
+            showToast("Solicitação enviada. Buscando piloto...", "info");
+
+        } else {
+            throw new Error(json.message);
         }
+    } catch (e) {
+        document.getElementById('modal-busca').style.display = 'none';
+        showToast("Erro ao enviar pedido: " + e.message, "error");
     }
+}
 
     // === VERIFICAÇÃO DE STATUS FINAL (FECHA MODAL PIX) ===
 // === VERIFICAÇÃO DE STATUS COM CORES DINÂMICAS ===
@@ -2339,5 +2446,44 @@ async function cancelarComTaxa() {
     } catch (e) {
         alert("Erro ao cancelar.");
     }
+
+    function limparTimersDuplicados() {
+    // Remove todos os elementos que possam ser timers duplicados
+    const todosElementos = document.querySelectorAll('*');
+    todosElementos.forEach(el => {
+        const texto = el.textContent || el.innerText;
+        if (texto.includes('TEMPO ESTIMADO') || 
+            texto.includes('Tempo estimado') || 
+            texto.includes('TIMER') ||
+            el.id?.includes('timer') ||
+            el.className?.includes('timer')) {
+            
+            // Mantém apenas o elemento principal
+            if (el.id !== 'tempo-restante-busca' && 
+                el.id !== 'timer-segundos' &&
+                !el.closest('#tempo-restante-busca')) {
+                
+                console.log('Removendo timer duplicado:', el);
+                el.remove();
+            }
+        }
+    });
+}
 }    
+
+function resetarTimerCompletamente() {
+    const containerTimer = document.getElementById('tempo-restante-busca');
+    if (containerTimer) {
+        // Volta ao HTML original
+        containerTimer.innerHTML = '⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s';
+        containerTimer.style.color = '#aaa';
+        containerTimer.style.display = 'none';
+    }
+    
+    // Para qualquer timer ativo
+    if (buscaMotoboyInterval) {
+        clearInterval(buscaMotoboyInterval);
+        buscaMotoboyInterval = null;
+    }
+}
 </script>
