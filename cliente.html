@@ -413,24 +413,30 @@
 
         /* NOVO ESTILO WHATSAPP */
         .btn-whatsapp {
-            background-color: #25D366;
-            /* Cor oficial do WhatsApp */
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            width: 100%;
-            margin-top: 15px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
+    background-color: #25D366;  /* Fundo Verde Cheio */
+    border: none;
+    color: #000;                /* Texto Preto para contraste */
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    width: 100%;
+    margin-top: 15px;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: 0.3s;
+    box-shadow: 0 0 10px rgba(37, 211, 102, 0.5); /* Brilho Neon */
+}
+.btn-whatsapp:hover {
+    background-color: #1ebe57;
+    box-shadow: 0 0 20px rgba(37, 211, 102, 0.8); /* Brilho mais forte */
+    transform: scale(1.02);
+}
 
         .btn-whatsapp:hover {
             background-color: #1FAF59;
