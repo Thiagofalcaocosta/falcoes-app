@@ -684,7 +684,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=6948.0">
+    <link rel="stylesheet" href="/style.css?v=6949.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -1187,46 +1187,46 @@
     function iniciarContadorBusca(corridaId, tempoLimite) {
     tempoBuscaRestante = tempoLimite;
     
-    // Pega o container principal e o span do número
-    const divTempo = document.getElementById('tempo-restante-busca');
-    const spanNumero = document.getElementById('timer-segundos');
+    // Elementos da tela
+    const divTempoPrincipal = document.getElementById('tempo-restante-busca');
+    const spanNumero = document.getElementById('timer-segundos'); // Onde vai o número
     const btnCancel = document.getElementById('btn-cancelar-busca');
 
-    if (!divTempo || !btnCancel) return;
+    // Se não achar os elementos, para para não dar erro
+    if (!divTempoPrincipal || !btnCancel) return;
 
-    // Limpa intervalo anterior se existir
+    // Limpa contagem anterior se existir
     if (typeof buscaMotoboyInterval !== 'undefined' && buscaMotoboyInterval) {
         clearInterval(buscaMotoboyInterval);
     }
     
-    // Mostra os elementos
+    // Mostra os elementos na tela
     btnCancel.style.display = 'block'; 
-    divTempo.style.display = 'block'; 
+    divTempoPrincipal.style.display = 'block'; 
 
+    // Função que roda a cada segundo
     const decremento = () => {
+        // Se o tempo acabou
         if (tempoBuscaRestante <= 0) {
             if (typeof buscaMotoboyInterval !== 'undefined') clearInterval(buscaMotoboyInterval);
             
-            // Texto final
-            divTempo.innerHTML = '⏰ Tempo esgotado';
+            divTempoPrincipal.innerHTML = '⏰ Tempo esgotado'; // Muda o texto final
             btnCancel.style.display = 'none';
             
             encerrarBuscaPorTimeout(corridaId); 
             return;
         }
 
-        // ATUALIZA APENAS O NÚMERO (Mantém o texto "Tempo estimado")
+        // --- A MÁGICA AQUI ---
+        // Atualiza SÓ O NÚMERO dentro do span, mantendo o resto do texto intacto
         if (spanNumero) {
             spanNumero.innerText = tempoBuscaRestante;
-        } else {
-            // Caso de segurança se o span sumir
-            divTempo.innerText = `⏳ Tempo: ${tempoBuscaRestante}s`;
-        }
+        } 
         
         tempoBuscaRestante--;
     };
 
-    decremento(); // Roda a primeira vez na hora
+    decremento(); // Atualiza o número na hora (sem esperar 1seg)
     buscaMotoboyInterval = setInterval(decremento, 1000);
 }
 
