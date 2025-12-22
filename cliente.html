@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=5348.0">
+    <link rel="stylesheet" href="/style.css?v=5848.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -874,7 +874,7 @@
         </button>
         <span class="aviso-taxa-texto">
             <i class="fas fa-exclamation-triangle" style="color:#ffcc00;"></i> 
-            O cancelamento agora desconta taxa de deslocamento.
+            O cancelamento aqui desconta taxa de deslocamento de 5 reais.
         </span>
     </div>
 
@@ -1513,40 +1513,72 @@ async function verificarStatus(id) {
         // --- 🟢 SUCESSO / EM CORRIDA (Fundo Verde Neon) ---
         // DENTRO DE function verificarStatus(id) ...
 
-else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
-    if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
+// --- 🟢 SUCESSO / EM CORRIDA (Fundo Verde Neon) ---
+        else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
+            
+            // Proteção para o Modal
+            if (modal) { 
+                modal.classList.remove('show'); 
+                modal.style.display = 'none'; 
+            }
 
-    // 1. ESCONDE O BOTÃO SAIR (Adiciona classe no body)
-    document.body.classList.add('esconder-logout');
+            // Proteção para esconder o botão Sair
+            if (document.body) {
+                document.body.classList.add('esconder-logout');
+            }
 
-    // 2. MOSTRA O BOTÃO DE CANCELAR COM TAXA
-    document.getElementById('area-botao-cancelar-taxa').style.display = 'block';
+            // Proteção para o Botão de Cancelar com Taxa
+            const btnTaxa = document.getElementById('area-botao-cancelar-taxa');
+            if (btnTaxa) btnTaxa.style.display = 'block';
 
-    // 3. TEXTOS CLAROS NO FUNDO VERDE
-    statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.15) !important; border: 1px solid #00e640 !important;');
-    statusTitulo.style.color = '#00e640';
-    
-    // Ícone de moto e texto direto
-    statusTitulo.innerHTML = '<i class="fas fa-motorcycle"></i> PILOTO A CAMINHO'; 
-    statusDesc.innerText = "Ele já está se deslocando até você.";
+            // Proteção para a área de Status (Cabeçalho Verde)
+            if (statusArea) {
+                statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.15) !important; border: 1px solid #00e640 !important;');
+            }
+            if (statusTitulo) {
+                statusTitulo.style.color = '#00e640';
+                statusTitulo.innerHTML = '<i class="fas fa-motorcycle"></i> PILOTO A CAMINHO';
+            }
+            if (statusDesc) {
+                statusDesc.innerText = "Ele já está se deslocando até você.";
+            }
 
-    if(pedido.status === 'em_andamento') {
-        statusTitulo.innerHTML = '<i class="fas fa-route"></i> EM VIAGEM';
-        statusDesc.innerText = "Você está a caminho do destino.";
-        // Esconde cancelar se já estiver na garupa/com a carga (opcional)
-        document.getElementById('area-botao-cancelar-taxa').style.display = 'none'; 
-    }
-    
-    // Preenche dados do piloto
-    motoboyBox.style.display = 'block';
-    document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
-    document.getElementById('motoboy-placa').innerText = pedido.placa || "---";
+            // Lógica para quando embarcar (Em Viagem)
+            if (pedido.status === 'em_andamento') {
+                if (statusTitulo) statusTitulo.innerHTML = '<i class="fas fa-route"></i> EM VIAGEM';
+                if (statusDesc) statusDesc.innerText = "Você está a caminho do destino.";
+                if (btnTaxa) btnTaxa.style.display = 'none'; // Esconde o cancelar
+            }
 
-    // ... resto do código (whatsapp, timers) continua igual ...
-    if(buscaMotoboyInterval) clearInterval(buscaMotoboyInterval);
-    document.getElementById('tempo-restante-busca').style.display = 'none';
-    document.getElementById('btn-cancelar-busca').style.display = 'none';
-}
+            // Proteção e Preenchimento dos Dados do Piloto
+            if (motoboyBox) motoboyBox.style.display = 'block';
+            
+            const elNome = document.getElementById('motoboy-nome');
+            const elPlaca = document.getElementById('motoboy-placa');
+            const elModelo = document.getElementById('motoboy-modelo');
+            const elCor = document.getElementById('motoboy-cor');
+
+            if (elNome) elNome.innerText = pedido.nome_motoboy || "Piloto Falcões";
+            if (elPlaca) elPlaca.innerText = pedido.placa || "---";
+            if (elModelo) elModelo.innerText = pedido.modelo_moto || "Moto Falcões";
+            if (elCor) elCor.innerText = pedido.cor_moto || "--";
+
+            // Proteção do WhatsApp
+            if (pedido.telefone_motoboy && btnWpp) {
+                const fone = pedido.telefone_motoboy.replace(/\D/g, '');
+                btnWpp.href = `https://wa.me/${fone.length === 11 ? '55' + fone : fone}`;
+                btnWpp.style.display = 'flex';
+            }
+
+            // PARA OS TIMERS E BOTÕES ANTIGOS (Aqui é onde costuma dar o erro)
+            if (buscaMotoboyInterval) clearInterval(buscaMotoboyInterval);
+            
+            const elTempo = document.getElementById('tempo-restante-busca');
+            if (elTempo) elTempo.style.display = 'none';
+            
+            const elCancelBusca = document.getElementById('btn-cancelar-busca');
+            if (elCancelBusca) elCancelBusca.style.display = 'none';
+        }
         // --- ⚪ FINALIZADA (Padrão) ---
         else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
             clearInterval(intervaloVerificacao);
