@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9698.0">
+    <link rel="stylesheet" href="/style.css?v=9398.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -872,43 +872,41 @@
         <button onclick="cancelarComTaxa()" class="btn-cancelar-taxa">
             <i class="fas fa-ban"></i> Cancelar Corrida
         </button>
-        <span class="aviso-taxa-texto">⚠️ O cancelamento agora desconta taxa de deslocamento.</span>
+        <span class="aviso-taxa-texto">
+            <i class="fas fa-exclamation-triangle" style="color:#ffcc00;"></i> 
+            O cancelamento agora desconta taxa de deslocamento.
+        </span>
     </div>
 
-    <button id="btn-cancelar-busca" onclick="cancelarBuscaMotoboy()" class="btn-cancel-outline">
-        CANCELAR BUSCA
-    </button>
-
-    <button id="btn-fechar-novo" class="btn-fechar-topo" onclick="fecharTela()" style="display:none;">
-        FECHAR TELA X
-    </button>
-
-    <div id="motoboy-info-box" style="display:none; margin-top: 15px;">
+    <div id="motoboy-info-box" style="display:none;">
         <div class="driver-card">
             <div class="driver-card-header">
-                <img src="https://cdn-icons-png.flaticon.com/512/709/709699.png" class="driver-img-fix" alt="Avatar">
-                <div class="driver-title">PILOTO OFICIAL FALCÕES</div>
+                <img src="https://cdn-icons-png.flaticon.com/512/709/709699.png" class="driver-img-fix" alt="Avatar" id="motoboy-foto">
+                <div class="driver-title-box">
+                    <span class="driver-subtitle">SEU PILOTO</span>
+                    <h3 class="driver-name-main" id="motoboy-nome">--</h3>
+                    <div style="color: var(--neon-green); font-size: 12px; font-weight: bold;">⭐ 5.0</div>
+                </div>
             </div>
             
-            <div class="info-linha">
-                <span class="info-rotulo">Nome</span>
-                <span class="info-dado" id="motoboy-nome">--</span>
-            </div>
-            <div class="info-linha">
-                <span class="info-rotulo">Veículo</span>
-                <span class="info-dado" id="motoboy-modelo">Moto Falcões</span> </div>
-            <div class="info-linha"> <span class="info-rotulo">Cor</span>
-                <span class="info-dado" id="motoboy-cor">--</span>
-            </div>
-            <div class="info-linha" style="border:none;">
-                <span class="info-rotulo">Placa</span>
-                <span class="info-dado">
-                    <span class="plate-badge" id="motoboy-placa" style="position:static;">---</span>
-                </span>
+            <div class="driver-data-grid">
+                <div class="data-item">
+                    <span class="data-label">Veículo</span>
+                    <span class="data-value" id="motoboy-modelo" style="color:#fff;">Moto Falcões</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Cor</span>
+                    <span class="data-value" id="motoboy-cor" style="color:#fff;">--</span>
+                </div>
+                <div class="data-item" style="grid-column: span 2;"> <span class="data-label">Placa</span>
+                    <span class="data-value">
+                        <span class="plate-badge-new" id="motoboy-placa">---</span>
+                    </span>
+                </div>
             </div>
         </div>
 
-        <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp">
+        <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp" style="margin-top: 20px;">
             <i class="fab fa-whatsapp"></i> FALAR COM O PILOTO
         </a>
     </div>
