@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=5848.0">
+    <link rel="stylesheet" href="/style.css?v=6848.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -1458,8 +1458,15 @@ async function verificarStatus(id) {
         const modal = document.getElementById('modal-pagamento'); 
 
         // Limpezas
-        motoboyBox.style.display = 'none';
-        btnWpp.style.display     = 'none';
+        // Se motoboyBox existir, esconda
+if (motoboyBox) {
+    motoboyBox.style.display = 'none';
+}
+
+// Se btnWpp existir, esconda
+if (btnWpp) {
+    btnWpp.style.display = 'none';
+}
         if (areaJustificativa) areaJustificativa.style.display = 'none';
         if (btnFechar) btnFechar.style.display = 'none'; 
 
