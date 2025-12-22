@@ -1184,37 +1184,49 @@
 
 
     // === FUNÇÕES DE BUSCA/TIMEOUT ===
-    function iniciarContadorBusca(corridaId, tempoLimite) {
-        tempoBuscaRestante = tempoLimite;
-        const elementoTempo = document.getElementById('tempo-restante-busca');
-        const btnCancel = document.getElementById('btn-cancelar-busca');
-
-        if (!elementoTempo || !btnCancel) return;
-        if (buscaMotoboyInterval) {
+    function iniciarContadorBusca(corridaId, tempoLimite = 90) {
+    tempoBuscaRestante = tempoLimite;
+    const elementoTempo = document.getElementById('timer-segundos');
+    
+    if (!elementoTempo) return;
+    
+    // Limpa timer anterior se existir
+    if (buscaMotoboyInterval) {
+        clearInterval(buscaMotoboyInterval);
+    }
+    
+    // Mostra o elemento do timer
+    document.getElementById('tempo-restante-busca').style.display = 'block';
+    
+    // Atualiza o timer a cada segundo
+    const atualizarTimer = () => {
+        if (tempoBuscaRestante <= 0) {
             clearInterval(buscaMotoboyInterval);
+            buscaMotoboyInterval = null;
+            encerrarBuscaPorTimeout(corridaId);
+            return;
         }
         
-        btnCancel.style.display = 'block'; 
-        elementoTempo.style.display = 'block'; 
-
-        const decremento = () => {
-            if (tempoBuscaRestante <= 0) {
-                clearInterval(buscaMotoboyInterval);
-                buscaMotoboyInterval = null;
-                elementoTempo.innerText = '⏰ ENCERRADO';
-                btnCancel.style.display = 'none';
-                
-                encerrarBuscaPorTimeout(corridaId); 
-                return;
-            }
-
-            elementoTempo.innerText = `⏳ ${tempoBuscaRestante}s`;
-            tempoBuscaRestante--;
-        };
-
-        decremento();
-        buscaMotoboyInterval = setInterval(decremento, 1000);
-    }
+        // Atualiza o número
+        elementoTempo.textContent = tempoBuscaRestante;
+        
+        // Muda a cor conforme o tempo diminui
+        if (tempoBuscaRestante <= 30) {
+            elementoTempo.style.color = "#ff9900"; // Laranja
+        }
+        if (tempoBuscaRestante <= 10) {
+            elementoTempo.style.color = "#ff4444"; // Vermelho
+        }
+        
+        tempoBuscaRestante--;
+    };
+    
+    // Inicia imediatamente
+    atualizarTimer();
+    
+    // Executa a cada segundo
+    buscaMotoboyInterval = setInterval(atualizarTimer, 1000);
+}
 
     async function cancelarBuscaMotoboy() {
         const id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
@@ -1253,19 +1265,175 @@
     }
 
     async function encerrarBuscaPorTimeout(corridaId) {
-        try {
-            await fetch(`${MEU_IP}/cancelar-pedido`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: corridaId, motivo: 'Cancelado automaticamente por timeout.' })
-            });
-            showToast('Tempo limite de busca esgotado. Tente novamente.', 'error');
-            reiniciarApp();
-        } catch (err) {
-            console.error('Erro ao encerrar busca por timeout:', err);
-            reiniciarApp();
+    try {
+        // Chama o backend para cancelar
+        await fetch(`${MEU_IP}/cancelar-pedido`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                id: corridaId, 
+                motivo: 'Cancelado automaticamente por tempo esgotado (90 segundos).' 
+            })
+        });
+        
+        // Atualiza a interface para mostrar "TEMPO ESGOTADO"
+        const statusTitulo = document.getElementById('acompanhamento-status-titulo');
+        const statusDesc = document.getElementById('acompanhamento-status-desc');
+        const timerElement = document.getElementById('timer-segundos');
+        const statusArea = document.getElementById('acompanhamento-status-area');
+        
+        if (statusTitulo) {
+            statusTitulo.innerHTML = '<i class="fas fa-clock"></i> TEMPO ESGOTADO';
+            statusTitulo.style.color = "#ff4444";
         }
+        
+        if (statusDesc) {
+            statusDesc.textContent = "Não encontramos um piloto disponível no momento.";
+            statusDesc.style.color = "#aaa";
+        }
+        
+        if (timerElement) {
+            timerElement.textContent = "0";
+            timerElement.style.color = "#ff4444";
+        }
+        
+        if (statusArea) {
+            statusArea.style.background = 'rgba(255, 68, 68, 0.15)';
+            statusArea.style.border = '1px solid #ff4444';
+        }
+        
+        // Para a verificação contínua
+        clearInterval(intervaloVerificacao);
+        
+        // Esconde o botão de cancelamento com taxa
+        const areaCancelar = document.getElementById('area-botao-cancelar-taxa');
+        if (areaCancelar) {
+            areaCancelar.style.display = 'none';
+        }
+        
+        // Mostra opções para o usuário
+        mostrarOpcoesTempoEsgotado();
+        
+        // Remove o pedido do localStorage (opcional)
+        // localStorage.removeItem('idPedidoAtual');
+        
+        showToast('Tempo limite de busca esgotado. Nenhum piloto encontrado.', 'error');
+        
+    } catch (err) {
+        console.error('Erro ao encerrar busca por timeout:', err);
+        showToast('Erro ao processar tempo esgotado.', 'error');
     }
+}
+
+function mostrarOpcoesTempoEsgotado() {
+    const container = document.getElementById('acompanhamento-status-area');
+    
+    if (!container) return;
+    
+    // Remove opções anteriores se existirem
+    const opcoesAntigas = document.getElementById('opcoes-tempo-esgotado');
+    if (opcoesAntigas) opcoesAntigas.remove();
+    
+    // Cria o container de opções
+    const opcoesDiv = document.createElement('div');
+    opcoesDiv.id = 'opcoes-tempo-esgotado';
+    opcoesDiv.style.cssText = `
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(255, 68, 68, 0.1);
+        border-radius: 8px;
+        border-left: 4px solid #ff4444;
+    `;
+    
+    opcoesDiv.innerHTML = `
+        <p style="margin-bottom: 10px; color: #fff; font-size: 14px;">
+            O que deseja fazer?
+        </p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="tentarNovamente()" class="btn-primary" style="flex: 1; min-width: 120px;">
+                <i class="fas fa-redo"></i> Tentar Novamente
+            </button>
+            <button onclick="voltarParaNovaCorrida()" class="btn-secondary" style="flex: 1; min-width: 120px;">
+                <i class="fas fa-plus-circle"></i> Nova Corrida
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(opcoesDiv);
+}
+
+async function tentarNovamente() {
+    if (!idPedidoAtual) {
+        showToast('Não há pedido para tentar novamente.', 'error');
+        return;
+    }
+    
+    // Remove as opções de tempo esgotado
+    const opcoesDiv = document.getElementById('opcoes-tempo-esgotado');
+    if (opcoesDiv) opcoesDiv.remove();
+    
+    // Reseta a interface
+    const statusTitulo = document.getElementById('acompanhamento-status-titulo');
+    const statusDesc = document.getElementById('acompanhamento-status-desc');
+    const timerElement = document.getElementById('timer-segundos');
+    const statusArea = document.getElementById('acompanhamento-status-area');
+    
+    if (statusTitulo) {
+        statusTitulo.innerHTML = '<i class="fas fa-search-location"></i> BUSCANDO...';
+        statusTitulo.style.color = '';
+    }
+    
+    if (statusDesc) {
+        statusDesc.textContent = "Aguarde, estamos localizando um piloto.";
+        statusDesc.style.color = '';
+    }
+    
+    if (timerElement) {
+        timerElement.style.color = 'var(--neon-green)';
+    }
+    
+    if (statusArea) {
+        statusArea.style.background = '';
+        statusArea.style.border = '';
+    }
+    
+    // Mostra o botão de cancelamento com taxa
+    const areaCancelar = document.getElementById('area-botao-cancelar-taxa');
+    if (areaCancelar) {
+        areaCancelar.style.display = 'block';
+    }
+    
+    try {
+        // Chama o backend para reiniciar a busca
+        const res = await fetch(`${MEU_IP}/reiniciar-busca/${idPedidoAtual}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            // Reinicia o timer
+            iniciarContadorBusca(idPedidoAtual, 90);
+            
+            // Reinicia a verificação de status
+            clearInterval(intervaloVerificacao);
+            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+            
+            showToast('Buscando pilotos novamente...', 'info');
+        } else {
+            showToast('Não foi possível reiniciar a busca.', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao tentar novamente:', error);
+        showToast('Erro ao reiniciar busca.', 'error');
+    }
+}
+
+function voltarParaNovaCorrida() {
+    // Limpa tudo e volta para a tela de pedido
+    reiniciarApp();
+}
     // === FUNÇÃO DE BUSCA (LIMPA E MANUAL) ===
 async function buscarEndereco(query, listaId, modo) {
     const lista = document.getElementById(listaId);
@@ -1501,6 +1669,14 @@ if (btnWpp) {
 
         // --- 🟡 AGUARDANDO PAGAMENTO (Fundo Amarelo Pulsante) ---
         else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
+            // Dentro do if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
+if (buscaMotoboyInterval) {
+    clearInterval(buscaMotoboyInterval);
+    buscaMotoboyInterval = null;
+}
+
+// Esconde o timer
+document.getElementById('tempo-restante-busca').style.display = 'none';
             if (modal && !modal.classList.contains('show')) {
                 modal.style.display = 'flex'; modal.classList.add('show');
             }
@@ -1521,7 +1697,13 @@ if (btnWpp) {
 
 // --- 🟢 SUCESSO / EM CORRIDA (Fundo Verde Neon) ---
         else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
-            
+            if (buscaMotoboyInterval) {
+    clearInterval(buscaMotoboyInterval);
+    buscaMotoboyInterval = null;
+}
+
+// Também esconde o timer:
+document.getElementById('tempo-restante-busca').style.display = 'none';
             // Proteção para o Modal
             if (modal) { 
                 modal.classList.remove('show'); 
