@@ -684,7 +684,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=6949.0">
+    <link rel="stylesheet" href="/style.css?v=9949.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -1185,50 +1185,36 @@
 
     // === FUNÇÕES DE BUSCA/TIMEOUT ===
     function iniciarContadorBusca(corridaId, tempoLimite) {
-    tempoBuscaRestante = tempoLimite;
-    
-    // Elementos da tela
-    const divTempoPrincipal = document.getElementById('tempo-restante-busca');
-    const spanNumero = document.getElementById('timer-segundos'); // Onde vai o número
-    const btnCancel = document.getElementById('btn-cancelar-busca');
+        tempoBuscaRestante = tempoLimite;
+        const elementoTempo = document.getElementById('tempo-restante-busca');
+        const btnCancel = document.getElementById('btn-cancelar-busca');
 
-    // Se não achar os elementos, para para não dar erro
-    if (!divTempoPrincipal || !btnCancel) return;
-
-    // Limpa contagem anterior se existir
-    if (typeof buscaMotoboyInterval !== 'undefined' && buscaMotoboyInterval) {
-        clearInterval(buscaMotoboyInterval);
-    }
-    
-    // Mostra os elementos na tela
-    btnCancel.style.display = 'block'; 
-    divTempoPrincipal.style.display = 'block'; 
-
-    // Função que roda a cada segundo
-    const decremento = () => {
-        // Se o tempo acabou
-        if (tempoBuscaRestante <= 0) {
-            if (typeof buscaMotoboyInterval !== 'undefined') clearInterval(buscaMotoboyInterval);
-            
-            divTempoPrincipal.innerHTML = '⏰ Tempo esgotado'; // Muda o texto final
-            btnCancel.style.display = 'none';
-            
-            encerrarBuscaPorTimeout(corridaId); 
-            return;
+        if (!elementoTempo || !btnCancel) return;
+        if (buscaMotoboyInterval) {
+            clearInterval(buscaMotoboyInterval);
         }
-
-        // --- A MÁGICA AQUI ---
-        // Atualiza SÓ O NÚMERO dentro do span, mantendo o resto do texto intacto
-        if (spanNumero) {
-            spanNumero.innerText = tempoBuscaRestante;
-        } 
         
-        tempoBuscaRestante--;
-    };
+        btnCancel.style.display = 'block'; 
+        elementoTempo.style.display = 'block'; 
 
-    decremento(); // Atualiza o número na hora (sem esperar 1seg)
-    buscaMotoboyInterval = setInterval(decremento, 1000);
-}
+        const decremento = () => {
+            if (tempoBuscaRestante <= 0) {
+                clearInterval(buscaMotoboyInterval);
+                buscaMotoboyInterval = null;
+                elementoTempo.innerText = '⏰ ENCERRADO';
+                btnCancel.style.display = 'none';
+                
+                encerrarBuscaPorTimeout(corridaId); 
+                return;
+            }
+
+            elementoTempo.innerText = `⏳ ${tempoBuscaRestante}s`;
+            tempoBuscaRestante--;
+        };
+
+        decremento();
+        buscaMotoboyInterval = setInterval(decremento, 1000);
+    }
 
     async function cancelarBuscaMotoboy() {
         const id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
