@@ -684,7 +684,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9949.0">
+    <link rel="stylesheet" href="/style.css?v=9999.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -1313,31 +1313,15 @@
             statusDesc.style.color = "#aaa";
         }
         
-        // 2. Atualiza APENAS o número do timer (não todo o HTML)
+        // 2. Remove o elemento do timer original (evita duplicação)
         if (timerElement) {
-            timerElement.textContent = "0";
-            timerElement.style.color = "#ff4444";
+            timerElement.remove();
         }
         
-        // 3. Muda o texto do container SEM duplicar
+        // 3. SUBSTITUI COMPLETAMENTE o conteúdo do container
         if (containerTimer) {
-            // Remove todo o conteúdo anterior
-            containerTimer.textContent = "";
-            
-            // Cria nova estrutura
-            const icon = document.createElement('span');
-            icon.textContent = "⏰ ";
-            icon.style.color = "#ff4444";
-            
-            const text = document.createElement('span');
-            text.innerHTML = "<strong>TEMPO ESGOTADO</strong>";
-            text.style.color = "#ff4444";
-            text.style.fontWeight = "bold";
-            
-            // Adiciona os elementos
-            containerTimer.appendChild(icon);
-            containerTimer.appendChild(text);
-            containerTimer.style.color = "#ff4444";
+            containerTimer.innerHTML = '⏰ <span style="color:#ff4444; font-weight:bold;">TEMPO ESGOTADO</span>';
+            containerTimer.style.color = '#ff4444';
         }
         
         // Para a verificação contínua
@@ -1400,98 +1384,17 @@ function mostrarOpcoesTempoEsgotado() {
 }
 
 async function tentarNovamente() {
-    // 1. Pega os dados do pedido atual do localStorage
-    const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
-    if (!pedidoSalvo) {
-        showToast('Não foi possível recuperar os dados do pedido anterior.', 'error');
-        voltarParaNovaCorrida();
-        return;
-    }
+    // ... código anterior ...
     
-    // 2. Remove as opções de tempo esgotado
-    const opcoesDiv = document.getElementById('opcoes-tempo-esgotado');
-    if (opcoesDiv) opcoesDiv.remove();
-    
-    // 3. Reseta a interface para "BUSCANDO..."
-    const statusTitulo = document.getElementById('acompanhamento-status-titulo');
-    const statusDesc = document.getElementById('acompanhamento-status-desc');
-    const containerTimer = document.getElementById('tempo-restante-busca');
-    
-    if (statusTitulo) {
-        statusTitulo.innerHTML = '<i class="fas fa-search-location"></i> BUSCANDO...';
-        statusTitulo.style.color = '#fff';
-    }
-    
-    if (statusDesc) {
-        statusDesc.textContent = "Aguarde, estamos localizando um piloto.";
-        statusDesc.style.color = '#aaa';
-    }
-    
-    // 4. Reseta o timer
+    // 4. Reseta o timer CORRETAMENTE
     if (containerTimer) {
+        // RESTAURA o conteúdo ORIGINAL do timer
         containerTimer.innerHTML = '⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s';
         containerTimer.style.color = '#aaa';
         containerTimer.style.display = 'block';
     }
     
-    // 5. Mostra o botão de cancelamento
-    const areaCancelar = document.getElementById('area-botao-cancelar-taxa');
-    if (areaCancelar) {
-        areaCancelar.style.display = 'block';
-    }
-    
-    // 6. Esconde opções extras se existirem
-    const extraOptions = document.getElementById('extra-options');
-    if (extraOptions) extraOptions.style.display = 'none';
-    
-    showToast('Criando novo pedido com os mesmos dados...', 'info');
-    
-    try {
-        // 7. CRIA UM NOVO PEDIDO com os mesmos dados
-        const body = {
-            cliente_id: usuario.id,
-            origem: pedidoSalvo.origem,
-            destino: pedidoSalvo.destino,
-            valor: pedidoSalvo.valor,
-            tipo_servico: pedidoSalvo.tipo_servico || 'moto-taxi'
-        };
-
-        const res = await fetch(`${MEU_IP}/pedir-corrida`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        
-        const json = await res.json();
-        
-        if (json.success) {
-            // 8. Atualiza o ID do pedido atual
-            idPedidoAtual = json.id;
-            localStorage.setItem('idPedidoAtual', idPedidoAtual);
-            
-            // 9. Atualiza o número do pedido na tela
-            document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
-            
-            // 10. Reinicia o timer
-            iniciarContadorBusca(idPedidoAtual, 90);
-            
-            // 11. Reinicia a verificação de status
-            clearInterval(intervaloVerificacao);
-            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-            
-            showToast('Novo pedido criado! Buscando pilotos...', 'success');
-            
-        } else {
-            throw new Error(json.message || 'Falha ao criar novo pedido');
-        }
-        
-    } catch (error) {
-        console.error('Erro ao tentar novamente:', error);
-        showToast('Erro ao criar novo pedido: ' + error.message, 'error');
-        
-        // Se falhar, volta para nova corrida
-        setTimeout(() => voltarParaNovaCorrida(), 2000);
-    }
+    // ... resto do código ...
 }
 function voltarParaNovaCorrida() {
     // Limpa os dados atuais
