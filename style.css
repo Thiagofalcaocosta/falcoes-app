@@ -905,14 +905,6 @@ textarea#campo-encerramento {
     font-size: 14px; font-weight: 700; padding: 12px; border-radius: 50px; text-align: center; width: 100%;
     text-transform: uppercase;
 }
-/* 👇 O TRUQUE: Isso força a frase a aparecer antes do número */
-.status-timer::before {
-    content: "⏳ Tempo estimado: ";
-    color: #ccc; /* Cor da frase */
-    font-weight: normal;
-    margin-right: 5px;
-    text-transform: none;
-}
 
 /* 5. ROTA (AZUL NEON) */
 .route-item { margin-bottom: 25px; position: relative; display: flex; gap: 15px; }
