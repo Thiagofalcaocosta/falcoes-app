@@ -1396,19 +1396,7 @@ function mostrarOpcoesTempoEsgotado() {
     container.appendChild(opcoesDiv);
 }
 
-async function tentarNovamente() {
-    // ... código anterior ...
-    
-    // 4. Reseta o timer CORRETAMENTE
-    if (containerTimer) {
-        // RESTAURA o conteúdo ORIGINAL do timer
-        containerTimer.innerHTML = '⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s';
-        containerTimer.style.color = '#aaa';
-        containerTimer.style.display = 'block';
-    }
-    
-    // ... resto do código ...
-}
+
 function voltarParaNovaCorrida() {
     // Limpa os dados atuais
     clearInterval(intervaloVerificacao);
