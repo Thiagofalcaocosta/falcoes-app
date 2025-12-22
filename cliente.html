@@ -1313,27 +1313,14 @@
             statusDesc.style.color = "#aaa";
         }
         
-        // 2. CORREÇÃO: NÃO remove o timerElement, apenas atualiza
+        // 2. Remove o elemento do timer original (evita duplicação)
         if (timerElement) {
-            timerElement.textContent = "0";
-            timerElement.style.color = "#ff4444";
+            timerElement.remove();
         }
         
-        // 3. CORREÇÃO: Atualiza APENAS o conteúdo de texto, mantendo a estrutura
+        // 3. SUBSTITUI COMPLETAMENTE o conteúdo do container
         if (containerTimer) {
-            // Encontra o texto "Tempo estimado:" e substitui
-            const elementos = containerTimer.childNodes;
-            
-            for (let node of elementos) {
-                if (node.nodeType === Node.TEXT_NODE && 
-                    node.textContent.includes('Tempo estimado:')) {
-                    // Substitui APENAS o texto "Tempo estimado:" por "⏰"
-                    node.textContent = '⏰ ';
-                    break;
-                }
-            }
-            
-            // Muda a cor do container
+            containerTimer.innerHTML = '⏰ <span style="color:#ff4444; font-weight:bold;">TEMPO ESGOTADO</span>';
             containerTimer.style.color = '#ff4444';
         }
         
@@ -1396,7 +1383,19 @@ function mostrarOpcoesTempoEsgotado() {
     container.appendChild(opcoesDiv);
 }
 
-
+async function tentarNovamente() {
+    // ... código anterior ...
+    
+    // 4. Reseta o timer CORRETAMENTE
+    if (containerTimer) {
+        // RESTAURA o conteúdo ORIGINAL do timer
+        containerTimer.innerHTML = '⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s';
+        containerTimer.style.color = '#aaa';
+        containerTimer.style.display = 'block';
+    }
+    
+    // ... resto do código ...
+}
 function voltarParaNovaCorrida() {
     // Limpa os dados atuais
     clearInterval(intervaloVerificacao);
