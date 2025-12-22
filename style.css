@@ -1017,3 +1017,62 @@ textarea#campo-encerramento {
     animation: gpsPulse 1.5s infinite;
     background: rgba(0, 243, 255, 0.2) !important;
 }
+
+/* --- CSS NOVO PARA TELA DE ACOMPANHAMENTO --- */
+
+/* Esconde o botão sair APENAS quando esta classe é ativada via JS */
+.esconder-logout .logout { display: none !important; }
+
+/* Botão de Cancelar com Taxa (Área Vermelha) */
+.area-cancelar-taxa {
+    margin: 15px 0;
+    text-align: center;
+    animation: fadeIn 0.5s;
+}
+.btn-cancelar-taxa {
+    background-color: transparent;
+    border: 1px solid #ff4444;
+    color: #ff4444;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    text-transform: uppercase;
+    transition: 0.3s;
+}
+.btn-cancelar-taxa:hover {
+    background-color: rgba(255, 68, 68, 0.1);
+}
+.aviso-taxa-texto {
+    color: #888;
+    font-size: 10px;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Melhoria no Cartão do Piloto */
+.driver-card {
+    border-left: 4px solid var(--neon-green); /* Detalhe visual */
+    background: #1a1a1a;
+}
+.info-linha {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+}
+.info-rotulo {
+    color: #888;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.info-dado {
+    color: #fff;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: right;
+}

@@ -685,7 +685,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9388.0">
+    <link rel="stylesheet" href="/style.css?v=9398.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -848,13 +848,15 @@
             <button onclick="pedir()" id="btn-pedir" class="btn" disabled>SELECIONE O SERVIÇO</button>
         </div>
 
-        <div id="tela-acompanhamento" class="tela">
+       <div id="tela-acompanhamento" class="tela">
 
     <div class="status-header" id="acompanhamento-status-area">
         <div class="header-top-row">
             <div class="status-info">
-                <h2 id="acompanhamento-status-titulo">BUSCANDO PILOTO...</h2>
-                <p id="acompanhamento-status-desc">Notificando parceiros próximos</p>
+                <h2 id="acompanhamento-status-titulo" style="display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-search-location"></i> BUSCANDO...
+                </h2>
+                <p id="acompanhamento-status-desc">Aguarde, estamos localizando um piloto.</p>
             </div>
             <div class="order-badge-group">
                 <span class="badge-label">PEDIDO</span>
@@ -862,32 +864,50 @@
             </div>
         </div>
         <div id="tempo-restante-busca" class="status-timer">
-            ⏳ Tempo estimado para encontrar um piloto: <span id="timer-segundos">--</span>s
+            ⏳ Buscando: <span id="timer-segundos">--</span>s
         </div>
+    </div>
+
+    <div id="area-botao-cancelar-taxa" class="area-cancelar-taxa" style="display:none;">
+        <button onclick="cancelarComTaxa()" class="btn-cancelar-taxa">
+            <i class="fas fa-ban"></i> Cancelar Corrida
+        </button>
+        <span class="aviso-taxa-texto">⚠️ O cancelamento agora desconta taxa de deslocamento.</span>
     </div>
 
     <button id="btn-cancelar-busca" onclick="cancelarBuscaMotoboy()" class="btn-cancel-outline">
         CANCELAR BUSCA
     </button>
 
-    <div id="motoboy-info-box" style="display:none;">
+    <button id="btn-fechar-novo" class="btn-fechar-topo" onclick="fecharTela()" style="display:none;">
+        FECHAR TELA X
+    </button>
+
+    <div id="motoboy-info-box" style="display:none; margin-top: 15px;">
         <div class="driver-card">
-            <div class="driver-avatar">
-                <img src="https://cdn-icons-png.flaticon.com/512/709/709699.png" class="driver-img-fix" alt="Foto do Piloto">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <img src="https://cdn-icons-png.flaticon.com/512/709/709699.png" class="driver-img-fix" alt="Avatar">
+                <div style="color: var(--neon-green); font-size: 12px; font-weight: bold; margin-top:5px;">PILOTO OFICIAL FALCÕES</div>
             </div>
-            <div class="driver-info">
-                <div class="driver-label">SEU PILOTO</div>
-                <h3 id="motoboy-nome">--</h3>
-                <div class="driver-meta">
-                    <span class="plate-badge" id="motoboy-placa">---</span>
-                    <span class="vehicle-model">Moto Falcões</span>
-                </div>
+            
+            <div class="info-linha">
+                <span class="info-rotulo">Nome</span>
+                <span class="info-dado" id="motoboy-nome">--</span>
             </div>
-            <div class="driver-rating">★ 5.0</div>
+            <div class="info-linha">
+                <span class="info-rotulo">Veículo</span>
+                <span class="info-dado">Moto Falcões</span>
+            </div>
+            <div class="info-linha" style="border:none;">
+                <span class="info-rotulo">Placa</span>
+                <span class="info-dado">
+                    <span class="plate-badge" id="motoboy-placa" style="position:static;">---</span>
+                </span>
+            </div>
         </div>
 
         <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp">
-            <i class="fab fa-whatsapp"></i> CHAMAR NO WHATSAPP
+            <i class="fab fa-whatsapp"></i> FALAR COM O PILOTO
         </a>
     </div>
 
@@ -1491,31 +1511,42 @@ async function verificarStatus(id) {
         }
 
         // --- 🟢 SUCESSO / EM CORRIDA (Fundo Verde Neon) ---
-        else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
-            if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
+        // DENTRO DE function verificarStatus(id) ...
 
-            // Fundo Verde com 10% de opacidade + Borda Verde
-            statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.1) !important; border: 1px solid #00e640 !important; box-shadow: 0 0 25px rgba(0, 230, 64, 0.4) !important;');
-            statusTitulo.style.color = '#00e640';
+else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
+    if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
 
-            statusTitulo.innerText = pedido.status === 'liberada' ? "PAGAMENTO CONFIRMADO ✅" : "EM CORRIDA 🚀";
-            statusDesc.innerText = pedido.status === 'liberada' ? "Piloto a caminho!" : "Viagem em andamento.";
-            
-            motoboyBox.style.display = 'block';
-            document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
-            document.getElementById('motoboy-placa').innerText = pedido.placa || "Moto";
+    // 1. ESCONDE O BOTÃO SAIR (Adiciona classe no body)
+    document.body.classList.add('esconder-logout');
 
-            if (pedido.telefone_motoboy) {
-                const fone = pedido.telefone_motoboy.replace(/\D/g, '');
-                btnWpp.href = `https://wa.me/${fone.length === 11 ? '55' + fone : fone}`;
-                btnWpp.style.display = 'flex';
-            }
-            
-            if(buscaMotoboyInterval) clearInterval(buscaMotoboyInterval);
-            document.getElementById('tempo-restante-busca').style.display = 'none';
-            document.getElementById('btn-cancelar-busca').style.display = 'none';
-        }
+    // 2. MOSTRA O BOTÃO DE CANCELAR COM TAXA
+    document.getElementById('area-botao-cancelar-taxa').style.display = 'block';
 
+    // 3. TEXTOS CLAROS NO FUNDO VERDE
+    statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.15) !important; border: 1px solid #00e640 !important;');
+    statusTitulo.style.color = '#00e640';
+    
+    // Ícone de moto e texto direto
+    statusTitulo.innerHTML = '<i class="fas fa-motorcycle"></i> PILOTO A CAMINHO'; 
+    statusDesc.innerText = "Ele já está se deslocando até você.";
+
+    if(pedido.status === 'em_andamento') {
+        statusTitulo.innerHTML = '<i class="fas fa-route"></i> EM VIAGEM';
+        statusDesc.innerText = "Você está a caminho do destino.";
+        // Esconde cancelar se já estiver na garupa/com a carga (opcional)
+        document.getElementById('area-botao-cancelar-taxa').style.display = 'none'; 
+    }
+    
+    // Preenche dados do piloto
+    motoboyBox.style.display = 'block';
+    document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto Falcões";
+    document.getElementById('motoboy-placa').innerText = pedido.placa || "---";
+
+    // ... resto do código (whatsapp, timers) continua igual ...
+    if(buscaMotoboyInterval) clearInterval(buscaMotoboyInterval);
+    document.getElementById('tempo-restante-busca').style.display = 'none';
+    document.getElementById('btn-cancelar-busca').style.display = 'none';
+}
         // --- ⚪ FINALIZADA (Padrão) ---
         else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
             clearInterval(intervaloVerificacao);
@@ -2066,4 +2097,27 @@ restaurarRascunhoFormulario();
 });
     // Se quiser esconder o card manualmente também:
     document.getElementById('motoboy-info-box').style.display = 'none';
+
+async function cancelarComTaxa() {
+    if(!confirm("⚠️ ATENÇÃO!\n\nO piloto já está se deslocando.\nAo cancelar agora, será cobrada uma taxa de deslocamento.\n\nDeseja realmente cancelar?")) return;
+
+    const id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
+    if (!id) return;
+
+    // Reaproveita sua lógica de cancelamento existente
+    try {
+        const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id, motivo: '[CLIENTE] Cancelou após aceito (Ciente da Taxa)' })
+        });
+        const json = await res.json();
+        if (json.success) {
+            alert("Corrida cancelada.");
+            reiniciarApp();
+        }
+    } catch (e) {
+        alert("Erro ao cancelar.");
+    }
+}    
 </script>
