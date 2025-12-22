@@ -870,10 +870,6 @@
         CANCELAR BUSCA
     </button>
 
-    <button id="btn-fechar-novo" class="btn-fechar-topo" onclick="fecharTela()" style="display:none;">
-        FECHAR TELA X
-    </button>
-
     <div id="motoboy-info-box" style="display:none;">
         <div class="driver-card">
             <div class="driver-avatar">
@@ -2068,13 +2064,6 @@ restaurarRascunhoFormulario();
         el.addEventListener('input', salvarRascunhoFormulario);
     }
 });
-
-// Função do novo botão Fechar
-function fecharTela() {
-    reiniciarApp(); // Chama sua função original de reiniciar
-    document.getElementById('modal-busca').style.display = 'none'; // Garante que fecha modais
-    
     // Se quiser esconder o card manualmente também:
     document.getElementById('motoboy-info-box').style.display = 'none';
-}
 </script>
