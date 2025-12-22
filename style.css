@@ -1076,3 +1076,28 @@ textarea#campo-encerramento {
     font-weight: bold;
     text-align: right;
 }
+
+/* Ajuste para a imagem do piloto não ficar gigante */
+.driver-card-header {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Espaço entre foto e título */
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333;
+}
+
+.driver-img-fix {
+    width: 60px;  /* Tamanho fixo para a foto */
+    height: 60px;
+    border-radius: 50%; /* Deixa redonda */
+    object-fit: cover; /* Garante que a foto preencha o círculo sem distorcer */
+    border: 2px solid var(--neon-green); /* Borda verde para destacar */
+}
+
+.driver-title {
+    color: var(--neon-green);
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
