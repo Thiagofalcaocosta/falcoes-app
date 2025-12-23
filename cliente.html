@@ -1888,22 +1888,47 @@ document.getElementById('tempo-restante-busca').style.display = 'none';
     
     // Lógica de Justificativa Integrada (Validação e Envio) - Mantida no DOMContentLoaded para listeners
 
-    function cancelarPedido() {
-        // Esconde o botão original "CANCELAR PEDIDO"
-        const btnCancelar = document.getElementById('btn-cancelar-acomp');
-        if (btnCancelar) btnCancelar.style.display = 'none';
+    // === SUBSTITUA APENAS A FUNÇÃO cancelarComTaxa POR ESTA ===
+async function cancelarComTaxa() {
+    // 1. Tenta pegar o ID da memória ou do HTML para não falhar
+    let idParaCancelar = idPedidoAtual || localStorage.getItem('idPedidoAtual');
 
-        // Mostra o campo de justificativa integrada
-        const areaJustificativa = document.getElementById('area-justificativa-integrada');
-        if (areaJustificativa) areaJustificativa.style.display = 'block';
-
-        const campo = document.getElementById('campo-justificativa-integrada');
-        const btnConfirm = document.getElementById('btn-confirmar-cancelamento');
-        if (campo) campo.focus();
-        if (btnConfirm) btnConfirm.disabled = true;
-
-        showToast("Justifique o cancelamento para prosseguir.", "info");
+    if (!idParaCancelar) {
+        const elId = document.getElementById('acompanhamento-id');
+        if (elId) idParaCancelar = elId.innerText.replace('#', '').trim();
     }
+
+    if (!idParaCancelar) {
+        alert("Erro: Não foi possível identificar o pedido. Atualize a página.");
+        return;
+    }
+
+    if(!confirm("⚠️ ATENÇÃO!\n\nO piloto já está se deslocando.\nAo cancelar agora, será cobrada uma taxa de R$ 5,00.\n\nDeseja realmente cancelar?")) return;
+
+    try {
+        const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                id: idParaCancelar, 
+                motivo: '[CLIENTE] Cancelou corrida em andamento (Taxa R$5,00)',
+                cancelado_por: 'cliente' // <--- O MOTOBOY PRECISA DISSO PRO RADAR TOCAR
+            })
+        });
+        const json = await res.json();
+        
+        if (json.success) {
+            alert("Corrida cancelada com sucesso.");
+            localStorage.removeItem('idPedidoAtual');
+            window.location.reload();
+        } else {
+            alert("Erro ao cancelar: " + (json.message || "Tente novamente."));
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Erro de conexão ao cancelar.");
+    }
+}
     
     async function confirmarEncerramentoCliente() {
     const observacao = document.getElementById('campo-encerramento').value.trim();
@@ -2517,86 +2542,23 @@ function resetarTimerCompletamente() {
     }
 }
 
-// === FUNÇÃO DO TIMER (COLE ISSO NO FINAL DO SEU SCRIPT) ===
+/* === COLE ISSO NO FINAL PARA TER O TIMER DE BARRA CORRETO === */
 
-function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
-    console.log("Iniciando timer para o pedido:", idPedido);
-    
-    // 1. Limpa qualquer contagem que já esteja rodando antes
-    if (window.timerBuscaInterval) clearInterval(window.timerBuscaInterval);
-
-    // 2. Pega os elementos da tela
-    const elNumero = document.getElementById('timer-numeros'); // O número dentro do círculo
-    const elContainer = document.getElementById('tempo-restante-busca'); // O círculo todo
-    const btnCancelar = document.getElementById('btn-cancelar-busca');
-
-    // Se não achar o círculo na tela, para tudo para não dar erro
-    if (!elContainer) {
-        console.warn("Círculo do timer não encontrado no HTML.");
-        return;
-    }
-
-    // Garante que o círculo e o botão de cancelar apareçam
-    elContainer.style.display = 'flex';
-    if (btnCancelar) btnCancelar.style.display = 'block';
-
-    let restantes = segundosIniciais;
-
-    // 3. Atualiza o número na tela imediatamente (sem esperar 1 segundo)
-    if (elNumero) elNumero.innerText = restantes;
-
-    // 4. Começa a contagem regressiva (diminui 1 a cada segundo)
-    window.timerBuscaInterval = setInterval(() => {
-        restantes--;
-        
-        // Atualiza o número
-        if (elNumero) {
-            elNumero.innerText = restantes;
-        }
-
-        // Se o tempo acabar (chegar no zero)
-        if (restantes <= 0) {
-            clearInterval(window.timerBuscaInterval);
-            
-            // Muda o visual do círculo para "Esgotado"
-            elContainer.style.borderColor = "red";
-            elContainer.innerHTML = '<span style="color:red; font-weight:bold; font-size:16px;">Tempo<br>Esgotado</span>';
-            
-            // Esconde o botão de cancelar busca
-            if (btnCancelar) btnCancelar.style.display = 'none';
-            
-            // Aqui você pode colocar uma função para cancelar automático se quiser
-            // cancelarBuscaAutomatico(); 
-        }
-    }, 1000);
-}
-function atualizarTextoTimer(elemento, segundos) {
-    // Procura o span específico onde fica o número
-    const spanNumero = document.getElementById('timer-numeros');
-
-    if (spanNumero) {
-        // Se achou o span, atualiza só o número mantendo o 's'
-        spanNumero.innerText = segundos + "s";
-    } else {
-        // (Segurança) Se por algum motivo o span sumiu, recria a estrutura
-        elemento.innerHTML = `⏳ Tempo estimado: <span id="timer-numeros" style="color: var(--neon-green); font-weight: bold;">${segundos}s</span>`;
-    }
-}
-// === FUNÇÃO DO TIMER ESTILO BARRA (Pílula) ===
 function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
     console.log("Iniciando timer barra:", idPedido);
     
-    // 1. Limpa timer anterior
+    // 1. Limpa timers anteriores
     if (window.timerBuscaInterval) clearInterval(window.timerBuscaInterval);
+    if (window.buscaMotoboyInterval) clearInterval(window.buscaMotoboyInterval);
 
     // 2. Elementos
-    const elNumero = document.getElementById('timer-numeros'); // Onde vai o número
-    const elContainer = document.getElementById('tempo-restante-busca'); // A barra verde
+    const elContainer = document.getElementById('tempo-restante-busca'); 
     const btnCancelar = document.getElementById('btn-cancelar-busca');
+    const elNumero = document.getElementById('timer-numeros');
 
     if (!elContainer) return;
 
-    // Reseta visual (caso estivesse vermelho antes)
+    // Reseta visual da barra
     elContainer.style.display = 'flex';
     elContainer.style.borderColor = 'rgba(0, 255, 0, 0.3)';
     elContainer.innerHTML = '⏳ Tempo estimado: <span id="timer-numeros" style="color: var(--neon-green); font-weight: bold; font-size: 16px; margin-left:5px;">' + segundosIniciais + 's</span>';
@@ -2609,11 +2571,9 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
     window.timerBuscaInterval = setInterval(() => {
         restantes--;
         
-        // Atualiza só o número, se o span ainda existir
+        // Atualiza o número na tela
         const spanNum = document.getElementById('timer-numeros');
-        if (spanNum) {
-            spanNum.innerText = restantes + "s";
-        }
+        if (spanNum) spanNum.innerText = restantes + "s";
 
         // Se acabar o tempo
         if (restantes <= 0) {
@@ -2628,7 +2588,6 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
     }, 1000);
 }
 
-// Mantém esta função simples para atualizações manuais se precisar
 function atualizarTextoTimer(elemento, segundos) {
     const spanNumero = document.getElementById('timer-numeros');
     if (spanNumero) spanNumero.innerText = segundos + "s";
