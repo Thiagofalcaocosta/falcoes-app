@@ -966,7 +966,7 @@
             <i class="fas fa-ban"></i> Cancelar Corrida
         </button>
         <span class="aviso-taxa-texto" style="display:block; font-size:11px; color:#888; margin-top:5px;">
-            <i class="fas fa-exclamation-triangle" style="color:#ffcc00;"></i> Taxa de cancelamento pode aplicar.
+            <i class="fas fa-exclamation-triangle" style="color:#ffcc00;"></i> ⚠️ Uma taxa de cancelamento de R$ 5,00 pode ser aplicada (deslocamento motoboy).
         </span>
     </div>
 
@@ -2455,8 +2455,8 @@ restaurarRascunhoFormulario();
     // Se quiser esconder o card manualmente também:
     document.getElementById('motoboy-info-box').style.display = 'none';
 
-async function cancelarComTaxa() {
-    if(!confirm("⚠️ ATENÇÃO!\n\nO piloto já está se deslocando.\nAo cancelar agora, será cobrada uma taxa de deslocamento.\n\nDeseja realmente cancelar?")) return;
+    async function cancelarComTaxa() {
+    if(!confirm("⚠️ ATENÇÃO!\n\nO piloto já está se deslocando.\nAo cancelar agora, será cobrada uma taxa de deslocamento de 5 reais.\n\nDeseja realmente cancelar?")) return;
 
     const id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
     if (!id) return;
