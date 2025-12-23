@@ -688,6 +688,52 @@
     border: none;
 }
 
+/* Botão de Estorno (Contato ADM) */
+.area-estorno {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(255, 204, 0, 0.05); /* Fundo amarelo bem leve */
+    border: 1px solid #ffcc00;
+    border-radius: 12px;
+    text-align: center;
+    animation: fadeIn 0.5s;
+}
+
+.titulo-estorno {
+    color: #ffcc00;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.desc-estorno {
+    color: #ccc;
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.btn-falar-adm {
+    background: transparent;
+    border: 1px solid #ffcc00;
+    color: #ffcc00;
+    padding: 10px;
+    border-radius: 8px;
+    width: 100%;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.btn-falar-adm:hover {
+    background: rgba(255, 204, 0, 0.15);
+}
+
 
     </style>
     <script type="importmap">
@@ -709,7 +755,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9969.0">
+    <link rel="stylesheet" href="/style.css?v=5969.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -875,6 +921,16 @@
        <div id="tela-acompanhamento" class="tela">
 
     <div class="status-header" id="acompanhamento-status-area">
+    <div id="area-estorno-adm" class="area-estorno" style="display:none;">
+        <div class="titulo-estorno">⚠️ CORRIDA CANCELADA?</div>
+        <p class="desc-estorno">
+            Houve um imprevisto com o piloto.<br>
+            Solicite o reembolso (Taxa administrativa: R$ 0,10).
+        </p>
+        <a id="btn-link-estorno" href="#" target="_blank" class="btn-falar-adm">
+            <i class="fab fa-whatsapp"></i> FALAR COM O ADM
+        </a>
+    </div>    
         <div class="header-top-row">
             <div class="status-info">
                 <h2 id="acompanhamento-status-titulo" style="display:flex; align-items:center; gap:8px;">
@@ -1678,20 +1734,40 @@ if (btnWpp) {
         // LÓGICA DE CORES E FUNDOS (BACKGROUND COM RGBA)
         // =================================================================
         
-        // --- 🔴 CANCELADA (Fundo Vermelho Neon) ---
+        // --- 🔴 CANCELADA (Fundo Vermelho + Botão Estorno) ---
         if (pedido.status === 'cancelada') {
-            clearInterval(intervaloVerificacao);
+            if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
             
-            // Fundo Vermelho com 15% de opacidade + Borda Vermelha
-            statusArea.setAttribute('style', 'background: rgba(255, 68, 68, 0.15) !important; border: 1px solid #ff4444 !important; box-shadow: 0 0 20px rgba(255, 68, 68, 0.4) !important;');
-            statusTitulo.style.color = '#ff4444';
+            // Estiliza o topo como vermelho
+            if (statusArea) statusArea.setAttribute('style', 'background: rgba(255, 68, 68, 0.15) !important; border: 1px solid #ff4444 !important;');
+            if (statusTitulo) {
+                statusTitulo.style.color = '#ff4444';
+                statusTitulo.innerText = "PEDIDO CANCELADO ❌";
+            }
+            if (statusDesc) statusDesc.innerText = "Esta corrida foi cancelada pelo piloto/sistema.";
             
-            statusTitulo.innerText = "PEDIDO CANCELADO ❌";
-            statusDesc.innerText = "Esta corrida foi cancelada.";
-            
+            // MOSTRA O BOTÃO DE FECHAR
             if (btnFechar) btnFechar.style.display = 'block';
-            document.getElementById('tempo-restante-busca').style.display = 'none';
-            document.getElementById('btn-cancelar-busca').style.display = 'none';
+            
+            // --- AQUI ESTÁ A MÁGICA DO ESTORNO ---
+            const areaEstorno = document.getElementById('area-estorno-adm');
+            const linkEstorno = document.getElementById('btn-link-estorno');
+            
+            if (areaEstorno) areaEstorno.style.display = 'block'; // Mostra a caixa amarela
+            
+            if (linkEstorno) {
+                // Gera o link do Zap já com a mensagem pronta
+                const numAdm = "5535999999999"; // <--- COLOQUE O NÚMERO DO ADM AQUI
+                const texto = `Olá ADM, o pedido #${id} foi cancelado pelo piloto. Gostaria de solicitar o estorno (ciente da taxa de 0,10 centavos).`;
+                linkEstorno.href = `https://wa.me/${numAdm}?text=${encodeURIComponent(texto)}`;
+            }
+            // ---------------------------------------
+
+            // Esconde coisas desnecessárias
+            const elTempo = document.getElementById('tempo-restante-busca');
+            if (elTempo) elTempo.style.display = 'none';
+            const elCancel = document.getElementById('btn-cancelar-busca');
+            if (elCancel) elCancel.style.display = 'none';
         }
 
         // --- 🟡 BUSCANDO (Fundo Amarelo Suave) ---
