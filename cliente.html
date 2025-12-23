@@ -1252,63 +1252,7 @@
 
 
     // === FUNÇÕES DE BUSCA/TIMEOUT ===
-    function iniciarContadorBusca(corridaId, tempoLimite = 90) {
-    // Limpa timer anterior
-    if (buscaMotoboyInterval) {
-        clearInterval(buscaMotoboyInterval);
-        buscaMotoboyInterval = null;
-    }
     
-    tempoBuscaRestante = tempoLimite;
-    const timerElement = document.getElementById('timer-segundos');
-    const containerTimer = document.getElementById('tempo-restante-busca');
-    
-    // Garante que os elementos existam
-    if (!timerElement || !containerTimer) {
-        console.error('Elementos do timer não encontrados');
-        return;
-    }
-    
-    // Mostra o container
-    containerTimer.style.display = 'block';
-    
-    // Reseta para o formato original
-    containerTimer.innerHTML = '⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s';
-    
-    // Atualiza o número inicial
-    const spanTimer = document.getElementById('timer-segundos');
-    if (spanTimer) {
-        spanTimer.textContent = tempoLimite;
-        spanTimer.style.color = 'var(--neon-green)';
-    }
-    
-    const atualizarTimer = () => {
-        if (tempoBuscaRestante <= 0) {
-            clearInterval(buscaMotoboyInterval);
-            buscaMotoboyInterval = null;
-            encerrarBuscaPorTimeout(corridaId);
-            return;
-        }
-        
-        // Atualiza APENAS o número
-        if (spanTimer) {
-            spanTimer.textContent = tempoBuscaRestante;
-            
-            // Muda a cor conforme o tempo diminui
-            if (tempoBuscaRestante <= 30) {
-                spanTimer.style.color = "#ff9900";
-            }
-            if (tempoBuscaRestante <= 10) {
-                spanTimer.style.color = "#ff4444";
-            }
-        }
-        
-        tempoBuscaRestante--;
-    };
-    
-    atualizarTimer();
-    buscaMotoboyInterval = setInterval(atualizarTimer, 1000);
-}
 
     async function cancelarBuscaMotoboy() {
         const id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
@@ -1681,214 +1625,6 @@ document.addEventListener('click', (e) => {
     }
 }
 
-    // === VERIFICAÇÃO DE STATUS FINAL (FECHA MODAL PIX) ===
-// === VERIFICAÇÃO DE STATUS COM CORES DINÂMICAS ===
-// === VERIFICAÇÃO DE STATUS (FORÇA BRUTA NAS CORES) ===
-// === VERIFICAÇÃO DE STATUS (COM FUNDOS NEON COLORIDOS) ===
-async function verificarStatus(id) {
-    try {
-        const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
-        const data = await res.json();
-        const pedido = data.pedido;
-
-        if (!data.success || !pedido) return;
-
-        // Elementos
-        const statusTitulo = document.getElementById('acompanhamento-status-titulo');
-        const statusDesc   = document.getElementById('acompanhamento-status-desc');
-        const statusArea   = document.getElementById('acompanhamento-status-area'); 
-        
-        const motoboyBox   = document.getElementById('motoboy-info-box');
-        const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
-        const areaJustificativa = document.getElementById('area-justificativa-integrada');
-        const btnFechar = document.getElementById('btn-fechar-novo');
-        const modal = document.getElementById('modal-pagamento'); 
-
-        // Limpezas
-        // Se motoboyBox existir, esconda
-if (motoboyBox) {
-    motoboyBox.style.display = 'none';
-}
-
-// Se btnWpp existir, esconda
-if (btnWpp) {
-    btnWpp.style.display = 'none';
-}
-        if (areaJustificativa) areaJustificativa.style.display = 'none';
-        if (btnFechar) btnFechar.style.display = 'none'; 
-
-        // =================================================================
-        // LÓGICA DE CORES E FUNDOS (BACKGROUND COM RGBA)
-        // =================================================================
-        
-        // --- 🔴 CANCELADA (Fundo Vermelho + Botão Estorno) ---
-        if (pedido.status === 'cancelada') {
-            if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
-            
-            // Estiliza o topo como vermelho
-            if (statusArea) statusArea.setAttribute('style', 'background: rgba(255, 68, 68, 0.15) !important; border: 1px solid #ff4444 !important;');
-            if (statusTitulo) {
-                statusTitulo.style.color = '#ff4444';
-                statusTitulo.innerText = "PEDIDO CANCELADO ❌";
-            }
-            if (statusDesc) statusDesc.innerText = "Esta corrida foi cancelada pelo piloto/sistema.";
-            
-            // MOSTRA O BOTÃO DE FECHAR
-            if (btnFechar) btnFechar.style.display = 'block';
-            
-            // --- AQUI ESTÁ A MÁGICA DO ESTORNO ---
-            const areaEstorno = document.getElementById('area-estorno-adm');
-            const linkEstorno = document.getElementById('btn-link-estorno');
-            
-            if (areaEstorno) areaEstorno.style.display = 'block'; // Mostra a caixa amarela
-            
-            if (linkEstorno) {
-                // Gera o link do Zap já com a mensagem pronta
-                const numAdm = "5535997806080"; // <--- COLOQUE O NÚMERO DO ADM AQUI
-                const texto = `Olá ADM, o pedido #${id} foi cancelado pelo piloto. Gostaria de solicitar o estorno (ciente da taxa de 0,10 centavos).`;
-                linkEstorno.href = `https://wa.me/${numAdm}?text=${encodeURIComponent(texto)}`;
-            }
-            // ---------------------------------------
-
-            // Esconde coisas desnecessárias
-            const elTempo = document.getElementById('tempo-restante-busca');
-            if (elTempo) elTempo.style.display = 'none';
-            const elCancel = document.getElementById('btn-cancelar-busca');
-            if (elCancel) elCancel.style.display = 'none';
-        }
-
-        // --- 🟡 BUSCANDO (Fundo Amarelo Suave) ---
-        else if (pedido.status === 'pendente') {
-            // Fundo Amarelo com 5% de opacidade (bem leve)
-            statusArea.setAttribute('style', 'background: rgba(255, 215, 0, 0.05) !important; border: 1px solid #ffd700 !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.2) !important;');
-            statusTitulo.style.color = '#fff'; // Título branco para contraste
-            
-            statusTitulo.innerText = "BUSCANDO PILOTO...";
-            statusDesc.innerText = "Notificando parceiros próximos";
-        }
-
-        // --- 🟡 AGUARDANDO PAGAMENTO (Fundo Amarelo Pulsante) ---
-        else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
-            // Dentro do if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
-if (buscaMotoboyInterval) {
-    clearInterval(buscaMotoboyInterval);
-    buscaMotoboyInterval = null;
-}
-
-// Esconde o timer
-document.getElementById('tempo-restante-busca').style.display = 'none';
-            if (modal && !modal.classList.contains('show')) {
-                modal.style.display = 'flex'; modal.classList.add('show');
-            }
-            // Fundo Amarelo um pouco mais forte (10%)
-            statusArea.setAttribute('style', 'background: rgba(255, 215, 0, 0.1) !important; border: 1px solid #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important;');
-            statusTitulo.style.color = '#ffd700';
-            
-            statusTitulo.innerText = "🎯 ESCOLHA COMO PAGAR";
-            statusDesc.innerText = "Um piloto aceitou! Aguardando pagamento.";
-            
-            if(buscaMotoboyInterval) clearInterval(buscaMotoboyInterval);
-            document.getElementById('tempo-restante-busca').style.display = 'none';
-            document.getElementById('btn-cancelar-busca').style.display = 'none';
-        }
-
-        // --- 🟢 SUCESSO / EM CORRIDA (Fundo Verde Neon) ---
-        // DENTRO DE function verificarStatus(id) ...
-
-// --- 🟢 SUCESSO / EM CORRIDA (Fundo Verde Neon) ---
-        else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
-            if (buscaMotoboyInterval) {
-    clearInterval(buscaMotoboyInterval);
-    buscaMotoboyInterval = null;
-}
-
-// Também esconde o timer:
-document.getElementById('tempo-restante-busca').style.display = 'none';
-            // Proteção para o Modal
-            if (modal) { 
-                modal.classList.remove('show'); 
-                modal.style.display = 'none'; 
-            }
-
-            // Proteção para esconder o botão Sair
-            if (document.body) {
-                document.body.classList.add('esconder-logout');
-            }
-
-            // Proteção para o Botão de Cancelar com Taxa
-            const btnTaxa = document.getElementById('area-botao-cancelar-taxa');
-            if (btnTaxa) btnTaxa.style.display = 'block';
-
-            // Proteção para a área de Status (Cabeçalho Verde)
-            if (statusArea) {
-                statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.15) !important; border: 1px solid #00e640 !important;');
-            }
-            if (statusTitulo) {
-                statusTitulo.style.color = '#00e640';
-                statusTitulo.innerHTML = '<i class="fas fa-motorcycle"></i> PILOTO A CAMINHO';
-            }
-            if (statusDesc) {
-                statusDesc.innerText = "Ele já está se deslocando até você.";
-            }
-
-            // Lógica para quando embarcar (Em Viagem)
-            if (pedido.status === 'em_andamento') {
-                if (statusTitulo) statusTitulo.innerHTML = '<i class="fas fa-route"></i> EM VIAGEM';
-                if (statusDesc) statusDesc.innerText = "Você está a caminho do destino.";
-                if (btnTaxa) btnTaxa.style.display = 'none'; // Esconde o cancelar
-            }
-
-            // Proteção e Preenchimento dos Dados do Piloto
-            if (motoboyBox) motoboyBox.style.display = 'block';
-            
-            const elNome = document.getElementById('motoboy-nome');
-            const elPlaca = document.getElementById('motoboy-placa');
-            const elModelo = document.getElementById('motoboy-modelo');
-            const elCor = document.getElementById('motoboy-cor');
-
-            if (elNome) elNome.innerText = pedido.nome_motoboy || "Piloto Falcões";
-            if (elPlaca) elPlaca.innerText = pedido.placa || "---";
-            if (elModelo) elModelo.innerText = pedido.modelo_moto || "Moto Falcões";
-            if (elCor) elCor.innerText = pedido.cor_moto || "--";
-
-            // Proteção do WhatsApp
-            if (pedido.telefone_motoboy && btnWpp) {
-                const fone = pedido.telefone_motoboy.replace(/\D/g, '');
-                btnWpp.href = `https://wa.me/${fone.length === 11 ? '55' + fone : fone}`;
-                btnWpp.style.display = 'flex';
-            }
-
-            // PARA OS TIMERS E BOTÕES ANTIGOS (Aqui é onde costuma dar o erro)
-            if (buscaMotoboyInterval) clearInterval(buscaMotoboyInterval);
-            
-            const elTempo = document.getElementById('tempo-restante-busca');
-            if (elTempo) elTempo.style.display = 'none';
-            
-            const elCancelBusca = document.getElementById('btn-cancelar-busca');
-            if (elCancelBusca) elCancelBusca.style.display = 'none';
-        }
-        // --- ⚪ FINALIZADA (Padrão) ---
-        else if (pedido.status === 'concluida' || pedido.status === 'finalizada') {
-            clearInterval(intervaloVerificacao);
-            statusArea.style.borderColor = '#fff';
-            statusArea.style.background = 'transparent'; // Sem fundo
-            statusTitulo.style.color = '#fff';
-            statusTitulo.innerText = "CORRIDA FINALIZADA";
-            statusDesc.innerText = "Obrigado por usar Falcões.";
-            if (btnFechar) btnFechar.style.display = 'block';
-            document.getElementById('tempo-restante-busca').style.display = 'none';
-        }
-
-    } catch (e) {
-        console.error("Erro no status:", e);
-    }
-}
-    
-    // === FUNÇÕES DE CANCELAMENTO E PAGAMENTO ===
-    
-    // Lógica de Justificativa Integrada (Validação e Envio) - Mantida no DOMContentLoaded para listeners
-
-    // === SUBSTITUA APENAS A FUNÇÃO cancelarComTaxa POR ESTA ===
     // === SUBSTITUA SÓ A FUNÇÃO cancelarComTaxa POR ESTA ===
 async function cancelarComTaxa() {
     // 1. Pega o ID com segurança (Memória ou Tela)
@@ -2513,52 +2249,175 @@ function resetarTimerCompletamente() {
 
 /* === COLE ISSO NO FINAL PARA TER O TIMER DE BARRA CORRETO === */
 
-function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
-    console.log("Iniciando timer barra:", idPedido);
-    
-    // 1. Limpa timers anteriores
-    if (window.timerBuscaInterval) clearInterval(window.timerBuscaInterval);
-    if (window.buscaMotoboyInterval) clearInterval(window.buscaMotoboyInterval);
 
-    // 2. Elementos
+
+function atualizarTextoTimer(elemento, segundos) {
+    const spanNumero = document.getElementById('timer-numeros');
+    if (spanNumero) spanNumero.innerText = segundos + "s";
+}
+
+// ============================================================
+// ✅ BLOCO CORRIGIDO (TIMER + STATUS UNIFICADOS)
+// Cole isso no final do seu script, substituindo as funções antigas
+// ============================================================
+
+// 1. Variáveis Globais de Controle
+let timerBuscaInterval = null;   // Controla o relógio visual (90s)
+
+// 2. Função do Timer Visual (Corrigida)
+function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
+    // Limpa qualquer timer anterior para evitar duplicidade
+    if (timerBuscaInterval) clearInterval(timerBuscaInterval);
+
     const elContainer = document.getElementById('tempo-restante-busca'); 
-    const btnCancelar = document.getElementById('btn-cancelar-busca');
     const elNumero = document.getElementById('timer-numeros');
+    const btnCancelar = document.getElementById('btn-cancelar-busca');
 
     if (!elContainer) return;
 
-    // Reseta visual da barra
+    // Reseta o visual
     elContainer.style.display = 'flex';
     elContainer.style.borderColor = 'rgba(0, 255, 0, 0.3)';
+    elContainer.style.color = '#ccc';
     elContainer.innerHTML = '⏳ Tempo estimado: <span id="timer-numeros" style="color: var(--neon-green); font-weight: bold; font-size: 16px; margin-left:5px;">' + segundosIniciais + 's</span>';
     
     if (btnCancelar) btnCancelar.style.display = 'block';
 
     let restantes = segundosIniciais;
 
-    // 3. Loop do contador
-    window.timerBuscaInterval = setInterval(() => {
+    timerBuscaInterval = setInterval(() => {
         restantes--;
         
-        // Atualiza o número na tela
+        // Tenta pegar o elemento novamente (caso o DOM tenha mudado)
         const spanNum = document.getElementById('timer-numeros');
         if (spanNum) spanNum.innerText = restantes + "s";
 
-        // Se acabar o tempo
+        // Cores de alerta
+        if (spanNum && restantes <= 30) spanNum.style.color = "#ff9900"; // Laranja
+        if (spanNum && restantes <= 10) spanNum.style.color = "#ff4444"; // Vermelho
+
         if (restantes <= 0) {
-            clearInterval(window.timerBuscaInterval);
-            
-            // Muda para vermelho
-            elContainer.style.borderColor = "red";
-            elContainer.innerHTML = '<span style="color:red; font-weight:bold;">Tempo Esgotado. Tente novamente.</span>';
-            
-            if (btnCancelar) btnCancelar.style.display = 'none';
+            clearInterval(timerBuscaInterval);
+            timerBuscaInterval = null;
+            encerrarBuscaPorTimeout(idPedido);
         }
     }, 1000);
 }
 
-function atualizarTextoTimer(elemento, segundos) {
-    const spanNumero = document.getElementById('timer-numeros');
-    if (spanNumero) spanNumero.innerText = segundos + "s";
+// 3. Função de Verificação de Status (Que sabe parar o timer acima)
+async function verificarStatus(id) {
+    try {
+        const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+        const data = await res.json();
+        const pedido = data.pedido;
+
+        if (!data.success || !pedido) return;
+
+        // Elementos da Interface
+        const statusTitulo = document.getElementById('acompanhamento-status-titulo');
+        const statusDesc   = document.getElementById('acompanhamento-status-desc');
+        const statusArea   = document.getElementById('acompanhamento-status-area'); 
+        const motoboyBox   = document.getElementById('motoboy-info-box');
+        const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
+        const modal        = document.getElementById('modal-pagamento'); 
+        const btnTaxa      = document.getElementById('area-botao-cancelar-taxa');
+        const elTempo      = document.getElementById('tempo-restante-busca');
+        const btnCancelBusca = document.getElementById('btn-cancelar-busca');
+        const btnFechar    = document.getElementById('btn-fechar-novo');
+
+        // --- Lógica de Estados ---
+
+        // 🔴 CANCELADA
+        if (pedido.status === 'cancelada') {
+            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+            if (timerBuscaInterval) clearInterval(timerBuscaInterval); // PARA O TIMER
+            
+            if (statusArea) statusArea.setAttribute('style', 'background: rgba(255, 68, 68, 0.15) !important; border: 1px solid #ff4444 !important;');
+            if (statusTitulo) { statusTitulo.style.color = '#ff4444'; statusTitulo.innerText = "PEDIDO CANCELADO ❌"; }
+            if (statusDesc) statusDesc.innerText = "Esta corrida foi cancelada.";
+            
+            // Ativa área de estorno
+            const areaEstorno = document.getElementById('area-estorno-adm');
+            if(areaEstorno) areaEstorno.style.display = 'block';
+            
+            if(btnFechar) btnFechar.style.display = 'block';
+            
+            if (elTempo) elTempo.style.display = 'none';
+            if (btnCancelBusca) btnCancelBusca.style.display = 'none';
+        }
+
+        // 🟡 PENDENTE (BUSCANDO)
+        else if (pedido.status === 'pendente') {
+            // Apenas atualiza texto, o timer roda separado
+            if (statusTitulo) statusTitulo.innerText = "BUSCANDO PILOTO...";
+        }
+
+        // 🟡 AGUARDANDO PAGAMENTO / ACEITA
+        else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
+            // AQUI É O PULO DO GATO: PARAR O TIMER
+            if (timerBuscaInterval) { clearInterval(timerBuscaInterval); timerBuscaInterval = null; }
+            if (elTempo) elTempo.style.display = 'none';
+            if (btnCancelBusca) btnCancelBusca.style.display = 'none';
+
+            // Abre modal de pagamento se necessário
+            if (modal && !modal.classList.contains('show')) {
+                modal.classList.add('show');
+            }
+            
+            if (statusTitulo) { statusTitulo.style.color = '#ffd700'; statusTitulo.innerText = "🎯 ESCOLHA COMO PAGAR"; }
+            if (statusDesc) statusDesc.innerText = "Um piloto aceitou! Aguardando pagamento.";
+        }
+
+        // 🟢 EM CORRIDA / LIBERADA
+        else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
+            // Garante que o timer parou
+            if (timerBuscaInterval) { clearInterval(timerBuscaInterval); timerBuscaInterval = null; }
+            if (elTempo) elTempo.style.display = 'none';
+            if (btnCancelBusca) btnCancelBusca.style.display = 'none';
+
+            // Fecha modal pagamento
+            if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
+
+            // Visual Verde
+            if (statusArea) statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.15) !important; border: 1px solid #00e640 !important;');
+            if (statusTitulo) { statusTitulo.style.color = '#00e640'; statusTitulo.innerHTML = '<i class="fas fa-motorcycle"></i> PILOTO A CAMINHO'; }
+            
+            // Mostra dados do piloto
+            if (motoboyBox) motoboyBox.style.display = 'block';
+            document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto";
+            document.getElementById('motoboy-placa').innerText = pedido.placa || "---";
+            document.getElementById('motoboy-modelo').innerText = pedido.modelo_moto || "Moto";
+            document.getElementById('motoboy-cor').innerText = pedido.cor_moto || "";
+
+            // Botão WhatsApp
+            if (pedido.telefone_motoboy && btnWpp) {
+                const fone = pedido.telefone_motoboy.replace(/\D/g, '');
+                btnWpp.href = `https://wa.me/${fone.length === 11 ? '55' + fone : fone}`;
+                btnWpp.style.display = 'inline-flex';
+            }
+
+            if (btnTaxa) btnTaxa.style.display = 'block';
+
+            if (pedido.status === 'em_andamento') {
+                statusTitulo.innerHTML = '<i class="fas fa-route"></i> EM VIAGEM';
+                statusDesc.innerText = "Você está a caminho do destino.";
+                if (btnTaxa) btnTaxa.style.display = 'none';
+            }
+        }
+
+        // ⚪ CONCLUÍDA
+        else if (pedido.status === 'concluida') {
+            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+            if (statusTitulo) { statusTitulo.innerText = "CORRIDA FINALIZADA"; statusTitulo.style.color = "white"; }
+            if (motoboyBox) motoboyBox.style.display = 'none';
+            if(btnFechar) btnFechar.style.display = 'block';
+            
+            // Limpa rascunho
+            if(typeof limparRascunho === 'function') limparRascunho();
+        }
+
+    } catch (e) {
+        console.error("Erro status:", e);
+    }
 }
 </script>
