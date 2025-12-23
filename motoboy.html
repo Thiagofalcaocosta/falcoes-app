@@ -1319,43 +1319,35 @@ function preencherDadosAtiva(c) {
         pararVerificacaoEstado();
         enviarStatusOnline(false);
     });
-    // ============================================================
-// 📡 RADAR DE CANCELAMENTO (Monitora se o cliente cancelou)
-// ============================================================
+    // === RADAR DE CANCELAMENTO (COLE ISSO NO FINAL DO SCRIPT) ===
 let radarIntervalo = null;
 
 function iniciarRadarCancelamento(idCorrida) {
-    // 1. Limpa radar anterior para não duplicar
+    // Evita ligar o radar se já estiver ligado para a mesma corrida
     if (radarIntervalo) clearInterval(radarIntervalo);
     
-    console.log("📡 Radar ligado para a corrida:", idCorrida);
+    console.log("📡 RADAR ATIVADO para a corrida:", idCorrida);
 
-    // 2. Pergunta ao servidor a cada 3 segundos
     radarIntervalo = setInterval(async () => {
         if (!idCorrida) return;
 
         try {
-            // Chama a rota que verifica o status exato dessa corrida
             const response = await fetch(`${MEU_IP}/status-corrida/${idCorrida}`);
             const data = await response.json();
 
-            if (data.success) {
-                // 3. SE O STATUS FOR CANCELADA
-                if (data.status === 'cancelada') {
-                    clearInterval(radarIntervalo); // Desliga o radar
-                    
-                    // Toca o som de alerta para chamar atenção
-                    tocarAlerta();
-                    
-                    // Vibra o celular (se suportado)
-                    if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
+            // Verifica se o status mudou para cancelado
+            if (data.success && (data.status === 'cancelada' || data.status === 'cancelado')) {
+                clearInterval(radarIntervalo);
+                
+                // Toca som e vibra
+                tocarAlerta();
+                if (navigator.vibrate) navigator.vibrate([500, 500, 500]);
 
-                    // Avisa o Motoboy
-                    alert("⚠️ AVISO URGENTE:\n\nO CLIENTE CANCELOU A CORRIDA!\n\nVerifique seu saldo se houve taxa de deslocamento.");
-                    
-                    // Reinicia a tela para voltar para a lista
-                    window.location.reload();
-                }
+                // AVISA O MOTOBOY NA HORA
+                alert("❌ A CORRIDA FOI CANCELADA PELO CLIENTE!\n\nSe você já se deslocou, verifique se a taxa caiu no seu saldo.");
+                
+                // Atualiza a página para sair da tela da corrida
+                window.location.reload();
             }
         } catch (error) {
             console.error("Erro no radar:", error);
