@@ -1354,6 +1354,107 @@ function iniciarRadarCancelamento(idCorrida) {
         }
     }, 3000); // Verifica a cada 3 segundos
 }
+// =========================================================
+// ❌ FUNÇÕES DE CANCELAMENTO (QUE ESTAVAM FALTANDO)
+// =========================================================
+
+// 1. Abre o modal quando clica no botão "CANCELAR CORRIDA"
+function cancelarCorridaMotoboy() {
+    const modal = document.getElementById('modal-cancelamento-motoboy');
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        // Se o modal não existir por algum erro, pergunta direto
+        if(confirm("Deseja realmente cancelar? Uma taxa pode ser aplicada.")) {
+            confirmarCancelamentoMotoboy();
+        }
+    }
+}
+
+// 2. Envia o cancelamento para o servidor (Ação do botão vermelho do modal)
+async function confirmarCancelamentoMotoboy() {
+    const inputMotivo = document.getElementById('justificativa-motoboy');
+    const motivoTexto = inputMotivo ? inputMotivo.value : "Imprevisto do Motoboy";
+    
+    // Validação simples
+    if (motivoTexto.length < 5) {
+        alert("Por favor, digite um motivo (mínimo 5 letras).");
+        return;
+    }
+
+    if (!idCorridaAtual) return;
+
+    try {
+        const res = await fetch(`${MEU_IP}/cancelar-pedido`, { // Usando a mesma rota de cancelamento
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: idCorridaAtual, // ID da corrida
+                motivo: `[PILOTO] Cancelou: ${motivoTexto}`,
+                cancelado_por: 'motoboy',
+                motoboy_id: usuario.id
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("Corrida cancelada.");
+            fecharModal('modal-cancelamento-motoboy');
+            window.location.reload();
+        } else {
+            alert("Erro ao cancelar: " + (data.message || "Tente novamente."));
+        }
+    } catch (err) {
+        console.error("Erro cancelamento:", err);
+        alert("Erro de conexão ao cancelar.");
+    }
+}
+
+// =========================================================
+// 📡 CORREÇÃO DO RADAR (EVITAR REINICIAR TODA HORA)
+// =========================================================
+// Substitua sua função iniciarRadarCancelamento antiga por esta:
+
+function iniciarRadarCancelamento(idCorrida) {
+    // Se já existe um radar rodando PARA A MESMA CORRIDA, não faz nada (evita spam no console)
+    if (radarIntervalo && window.radarIdCorrida === idCorrida) {
+        return; 
+    }
+
+    // Se for uma corrida nova, limpa o anterior e inicia
+    if (radarIntervalo) clearInterval(radarIntervalo);
+    
+    window.radarIdCorrida = idCorrida; // Marca qual corrida estamos vigiando
+    console.log("📡 RADAR INICIADO APENAS UMA VEZ para:", idCorrida);
+
+    radarIntervalo = setInterval(async () => {
+        if (!idCorrida) return;
+
+        try {
+            const res = await fetch(`${MEU_IP}/status-corrida/${idCorrida}`);
+            const data = await res.json();
+
+            // Verifica se cancelou
+            if (data.success && (data.status === 'cancelada' || data.status === 'cancelado')) {
+                clearInterval(radarIntervalo);
+                
+                tocarAlerta();
+                if (navigator.vibrate) navigator.vibrate([500, 500, 500]);
+                
+                // Tenta abrir o modal bonito, senão usa alert
+                const modal = document.getElementById('modal-cancelado-radar');
+                if (modal) modal.style.display = 'flex';
+                else {
+                    alert("❌ A CORRIDA FOI CANCELADA PELO CLIENTE!");
+                    window.location.reload();
+                }
+            }
+        } catch (e) {
+            console.error("Erro radar:", e);
+        }
+    }, 3000);
+}
 
 
 </script>
