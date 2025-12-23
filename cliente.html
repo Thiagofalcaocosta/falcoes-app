@@ -1982,6 +1982,16 @@ async function cancelarComTaxa() {
 document.addEventListener('DOMContentLoaded', async () => {
 
     const idSalvo = localStorage.getItem('idPedidoAtual');
+    // --- 🚨 AQUI ESTÁ A CORREÇÃO DO ID #000 ---
+    // Isso garante que o número apareça na tela IMEDIATAMENTE
+    if (idSalvo) {
+        const elId = document.getElementById('acompanhamento-id');
+        // Se o elemento existir, força o texto ser o ID salvo
+        if (elId) elId.innerText = '#' + idSalvo; 
+        
+        // Também garante que a variável global esteja certa
+        window.idPedidoAtual = idSalvo;
+    }
 
     if (idSalvo) {
         try {
