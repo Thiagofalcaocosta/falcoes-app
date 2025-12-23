@@ -411,36 +411,55 @@
             margin-bottom: 10px;
         }
 
-        /* NOVO ESTILO WHATSAPP */
-        .btn-whatsapp {
-    background-color: #25D366;  /* Fundo Verde Cheio */
-    border: none;
-    color: #000;                /* Texto Preto para contraste */
-    padding: 14px;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 800;
-    text-transform: uppercase;
-    width: 60%;
-    margin-top: 15px;
-    cursor: pointer;
-    text-decoration: none;
+        /* --- ESTILO NOVO: WHATSAPP AZUL NEON COMPACTO --- */
+
+/* Container para centralizar o botão na tela */
+.whatsapp-center-wrapper {
+    text-align: center;
+    width: 100%;
+    margin: 15px 0 5px 0; /* Espaço entre o verde e o vermelho */
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 10px;
-    transition: 0.3s;
-    box-shadow: 0 0 10px rgba(37, 211, 102, 0.5); /* Brilho Neon */
-}
-.btn-whatsapp:hover {
-    background-color: #1ebe57;
-    box-shadow: 0 0 20px rgba(37, 211, 102, 0.8); /* Brilho mais forte */
-    transform: scale(1.02);
 }
 
-        .btn-whatsapp:hover {
-            background-color: #1FAF59;
-        }
+.btn-whatsapp-neon {
+    /* COR: Ciano Neon (Igual ao Badge PEDIDO) */
+    --cyan-neon: #00ffff;
+
+    /* Fundo: Azul muito fraquinho (quase transparente) */
+    background-color: rgba(0, 255, 255, 0.08);
+    
+    /* Borda: Azul neon forte */
+    border: 2px solid var(--cyan-neon);
+    
+    /* Brilho: Efeito neon em volta */
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+
+    /* Texto */
+    color: var(--cyan-neon);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 13px;
+    text-decoration: none;
+
+    /* COMPACTO: Só o tamanho do texto */
+    width: auto !important; 
+    padding: 10px 25px;
+    border-radius: 50px; /* Bem redondo (Pílula) */
+    
+    /* Flex para alinhar icone e texto */
+    display: inline-flex; 
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.btn-whatsapp-neon:hover {
+    background-color: rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+    transform: scale(1.05);
+}
 
         /* --- MODAL DE BUSCA (ATUALIZADO) --- */
         .modal-overlay {
@@ -690,7 +709,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=9949.0">
+    <link rel="stylesheet" href="/style.css?v=9969.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
