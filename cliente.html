@@ -755,7 +755,7 @@
         }
     </script>
 
-    <link rel="stylesheet" href="/style.css?v=5969.0">
+    <link rel="stylesheet" href="/style.css?v=9969.0">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00e640">
 </head>
@@ -1757,7 +1757,7 @@ if (btnWpp) {
             
             if (linkEstorno) {
                 // Gera o link do Zap já com a mensagem pronta
-                const numAdm = "5535999999999"; // <--- COLOQUE O NÚMERO DO ADM AQUI
+                const numAdm = "5535997806080"; // <--- COLOQUE O NÚMERO DO ADM AQUI
                 const texto = `Olá ADM, o pedido #${id} foi cancelado pelo piloto. Gostaria de solicitar o estorno (ciente da taxa de 0,10 centavos).`;
                 linkEstorno.href = `https://wa.me/${numAdm}?text=${encodeURIComponent(texto)}`;
             }
@@ -1964,102 +1964,135 @@ document.getElementById('tempo-restante-busca').style.display = 'none';
 
     // === INICIALIZAÇÃO DE LISTENERS ===
     document.addEventListener('DOMContentLoaded', () => {
-        // CORREÇÃO: Chama a verificação e mudança de tela imediatamente.
-        //checkPersistedOrder(); 
 
-        const campoJust = document.getElementById('campo-justificativa-integrada');
-        const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
-        const erroJust = document.getElementById('erro-just-integrada');
+    // =================================================================
+    // 1. RECUPERAÇÃO DE ESTADO (ISSO RESOLVE O PROBLEMA DE ATUALIZAR)
+    // =================================================================
+    const idSalvo = localStorage.getItem('idPedidoAtual');
 
-        // 🔁 LÓGICA DE RETORNO DO MERCADO PAGO (Não causa erro de DOM)
-        try {
-            const params = new URLSearchParams(window.location.search);
-            const collectionStatus = params.get('collection_status') || params.get('status');
-            const externalRef = params.get('external_reference');
-            const paymentId = params.get('payment_id');
+    if (idSalvo) {
+        // Se achou um ID salvo, restaura a tela de acompanhamento
+        window.idPedidoAtual = idSalvo;
 
-            if (collectionStatus && collectionStatus.toLowerCase() === 'approved') {
-                const corridaId = externalRef || localStorage.getItem('idPedidoAtual');
-                if (corridaId) {
-                    const API = (typeof MEU_IP !== 'undefined') ? MEU_IP : 'https://falcoes-app.onrender.com';
-                    fetch(`${API}/confirmar-pagamento`, {
+        // Preenche os textos visuais (Origem, Destino, Preço)
+        const dados = JSON.parse(localStorage.getItem('pedidoAtual'));
+        if (dados) {
+            const elOrig = document.getElementById('detalhe-origem');
+            const elDest = document.getElementById('detalhe-destino');
+            const elValor = document.getElementById('detalhe-valor');
+            const elId = document.getElementById('acompanhamento-id');
+
+            if (elOrig) elOrig.innerText = dados.origem || '...';
+            if (elDest) elDest.innerText = dados.destino || '...';
+            if (elValor) elValor.innerText = `R$ ${parseFloat(dados.valor || 0).toFixed(2).replace('.', ',')}`;
+            if (elId) elId.innerText = `#${idSalvo}`;
+        }
+
+        // Força a ida para a tela de acompanhamento
+        mudarTela('tela-acompanhamento');
+
+        // Reinicia a checagem de status imediatamente
+        verificarStatus(idSalvo);
+        if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
+        intervaloVerificacao = setInterval(() => verificarStatus(idSalvo), 3000);
+
+    } else {
+        // Se NÃO tem pedido, tenta recuperar o rascunho do endereço (se existir função)
+        if (typeof restaurarRascunhoFormulario === 'function') {
+            restaurarRascunhoFormulario();
+        }
+    }
+
+    // =================================================================
+    // 2. LÓGICA DO MERCADO PAGO E LISTENERS (MANTIDO DO SEU CÓDIGO)
+    // =================================================================
+    const campoJust = document.getElementById('campo-justificativa-integrada');
+    const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
+    const erroJust = document.getElementById('erro-just-integrada');
+
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const collectionStatus = params.get('collection_status') || params.get('status');
+        const externalRef = params.get('external_reference');
+
+        if (collectionStatus && collectionStatus.toLowerCase() === 'approved') {
+            const corridaId = externalRef || localStorage.getItem('idPedidoAtual');
+            if (corridaId) {
+                const API = (typeof MEU_IP !== 'undefined') ? MEU_IP : 'https://falcoes-app.onrender.com';
+                fetch(`${API}/confirmar-pagamento`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ corridaId })
+                })
+                .then(r => r.json())
+                .then(d => {
+                    showToast('Pagamento confirmado! Obrigado.', 'success', 3000);
+                    if (corridaId) verificarStatus(corridaId);
+                })
+                .catch(err => showToast('Não consegui confirmar o pagamento automaticamente.', 'error'))
+                .finally(() => window.history.replaceState({}, document.title, 'cliente.html'));
+            }
+        }
+    } catch (e) {
+        console.error('Erro MP:', e);
+    }
+
+    // Listeners da Justificativa
+    if (campoJust && btnConfirmar) {
+        campoJust.addEventListener('input', () => {
+            const motivo = campoJust.value.trim();
+            btnConfirmar.disabled = motivo.length < 5;
+            if (motivo.length >= 5 && erroJust) erroJust.style.display = 'none';
+        });
+    }
+
+    if (btnConfirmar) {
+        btnConfirmar.addEventListener('click', async () => {
+            const motivo = campoJust.value.trim();
+            if (motivo.length < 5) {
+                if (erroJust) erroJust.style.display = 'block';
+                return;
+            }
+            document.getElementById('area-justificativa-integrada').style.display = 'none';
+            const mb = document.getElementById('modal-busca');
+            if (mb) {
+                mb.style.display = 'flex';
+                const tit = document.getElementById('status-titulo-modal');
+                if (tit) tit.innerText = "PROCESSANDO CANCELAMENTO...";
+            }
+
+            const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
+
+            try {
+                if (id) {
+                    const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : "https://falcoes-app.onrender.com";
+                    const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ corridaId })
-                    })
-                    .then(r => r.json())
-                    .then(d => {
-                        showToast('Pagamento confirmado! Obrigado.', 'success', 3000);
-                        if (corridaId) {
-                            verificarStatus(corridaId);
-                        }
-                    })
-                    .catch(err => {
-                        showToast('Não consegui confirmar o pagamento automaticamente.', 'error');
-                    })
-                    .finally(() => {
-                        window.history.replaceState({}, document.title, 'cliente.html');
+                        body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
                     });
+                    const json = await res.json().catch(() => ({ success: false }));
+
+                    if (json.success) showToast("Pedido cancelado.", "success");
+                    else throw new Error(json.message || 'Falha ao cancelar.');
                 }
+            } catch (e) {
+                showToast("Erro: " + (e.message || e), "error");
+            } finally {
+                if (mb) mb.style.display = 'none';
+                reiniciarApp();
             }
-        } catch (e) {
-            console.error('Erro ao processar retorno do Mercado Pago:', e);
-        }
+        });
+    }
 
-        // Lógica de validação do campo de JUSTIFICATIVA
-        if (campoJust && btnConfirmar) {
-            campoJust.addEventListener('input', () => {
-                const motivo = campoJust.value.trim();
-                btnConfirmar.disabled = motivo.length < 5;
-                if (motivo.length >= 5 && erroJust) erroJust.style.display = 'none';
-            });
-        }
-
-        // Lógica de ENVIO DE CANCELAMENTO (BOTÃO CONFIRMAR)
-        if (btnConfirmar) {
-            btnConfirmar.addEventListener('click', async () => {
-                const motivo = campoJust.value.trim();
-                if (motivo.length < 5) {
-                    if (erroJust) erroJust.style.display = 'block';
-                    return;
-                }
-                document.getElementById('area-justificativa-integrada').style.display = 'none';
-                const mb = document.getElementById('modal-busca');
-                if (mb) {
-                    mb.style.display = 'flex';
-                    document.getElementById('status-titulo-modal').innerText = "PROCESSANDO CANCELAMENTO...";
-                }
-
-                const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
-
-                try {
-                    if (id) {
-                        const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : "https://falcoes-app.onrender.com";
-
-                        const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
-                        });
-                        const json = await res.json().catch(() => ({ success: false }));
-
-                        if (json.success) {
-                            showToast("Pedido cancelado. O piloto foi notificado.", "success");
-                        } else {
-                            throw new Error(json.message || 'Falha ao cancelar no servidor.');
-                        }
-                    } else {
-                        showToast("Busca cancelada.", "info");
-                    }
-                } catch (e) {
-                    showToast("Erro: " + (e.message || e), "error");
-                } finally {
-                    if (mb) mb.style.display = 'none';
-                    reiniciarApp();
-                }
-            });
-        }
+    // Salvar rascunho enquanto digita
+    ['rua-origem', 'num-origem', 'bairro-origem', 
+     'rua-destino', 'num-destino', 'bairro-destino', 
+     'detalhes-entrega'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', salvarRascunhoFormulario);
     });
+});
 
 </script>
 <script>
