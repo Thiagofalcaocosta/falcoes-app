@@ -1889,17 +1889,18 @@ document.getElementById('tempo-restante-busca').style.display = 'none';
     // Lógica de Justificativa Integrada (Validação e Envio) - Mantida no DOMContentLoaded para listeners
 
     // === SUBSTITUA APENAS A FUNÇÃO cancelarComTaxa POR ESTA ===
+    // === SUBSTITUA SÓ A FUNÇÃO cancelarComTaxa POR ESTA ===
 async function cancelarComTaxa() {
-    // 1. Tenta pegar o ID da memória ou do HTML para não falhar
-    let idParaCancelar = idPedidoAtual || localStorage.getItem('idPedidoAtual');
+    // 1. Pega o ID com segurança (Memória ou Tela)
+    let id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
 
-    if (!idParaCancelar) {
+    if (!id) {
         const elId = document.getElementById('acompanhamento-id');
-        if (elId) idParaCancelar = elId.innerText.replace('#', '').trim();
+        if (elId) id = elId.innerText.replace('#', '').trim();
     }
 
-    if (!idParaCancelar) {
-        alert("Erro: Não foi possível identificar o pedido. Atualize a página.");
+    if (!id) {
+        alert("Erro: Não achei o número do pedido. Atualize a página.");
         return;
     }
 
@@ -1910,25 +1911,27 @@ async function cancelarComTaxa() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                id: idParaCancelar, 
-                motivo: '[CLIENTE] Cancelou corrida em andamento (Taxa R$5,00)',
-                cancelado_por: 'cliente' // <--- O MOTOBOY PRECISA DISSO PRO RADAR TOCAR
+                id: id, 
+                motivo: '[CLIENTE] Cancelou após aceito (Ciente da Taxa)',
+                cancelado_por: 'cliente' // <--- O MOTOBOY PRECISA DISSO!
             })
         });
+
         const json = await res.json();
-        
+
         if (json.success) {
-            alert("Corrida cancelada com sucesso.");
+            alert("✅ Corrida cancelada.");
             localStorage.removeItem('idPedidoAtual');
             window.location.reload();
         } else {
-            alert("Erro ao cancelar: " + (json.message || "Tente novamente."));
+            alert("Erro ao cancelar: " + (json.message || "Tente novamente"));
         }
     } catch (e) {
         console.error(e);
         alert("Erro de conexão ao cancelar.");
     }
 }
+
     
     async function confirmarEncerramentoCliente() {
     const observacao = document.getElementById('campo-encerramento').value.trim();
@@ -2480,51 +2483,7 @@ restaurarRascunhoFormulario();
     // Se quiser esconder o card manualmente também:
     document.getElementById('motoboy-info-box').style.display = 'none';
 
-    async function cancelarComTaxa() {
-    if(!confirm("⚠️ ATENÇÃO!\n\nO piloto já está se deslocando.\nAo cancelar agora, será cobrada uma taxa de deslocamento de 5 reais.\n\nDeseja realmente cancelar?")) return;
-
-    const id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
-    if (!id) return;
-
-    // Reaproveita sua lógica de cancelamento existente
-    try {
-        const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: id, motivo: '[CLIENTE] Cancelou após aceito (Ciente da Taxa)' })
-        });
-        const json = await res.json();
-        if (json.success) {
-            alert("Corrida cancelada.");
-            reiniciarApp();
-        }
-    } catch (e) {
-        alert("Erro ao cancelar.");
-    }
-
-    function limparTimersDuplicados() {
-    // Remove todos os elementos que possam ser timers duplicados
-    const todosElementos = document.querySelectorAll('*');
-    todosElementos.forEach(el => {
-        const texto = el.textContent || el.innerText;
-        if (texto.includes('TEMPO ESTIMADO') || 
-            texto.includes('Tempo estimado') || 
-            texto.includes('TIMER') ||
-            el.id?.includes('timer') ||
-            el.className?.includes('timer')) {
-            
-            // Mantém apenas o elemento principal
-            if (el.id !== 'tempo-restante-busca' && 
-                el.id !== 'timer-segundos' &&
-                !el.closest('#tempo-restante-busca')) {
-                
-                console.log('Removendo timer duplicado:', el);
-                el.remove();
-            }
-        }
-    });
-}
-}    
+        
 
 function resetarTimerCompletamente() {
     const containerTimer = document.getElementById('tempo-restante-busca');
