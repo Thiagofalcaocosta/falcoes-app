@@ -764,6 +764,7 @@ app.get('/status-pedido/:id', async (req, res) => {
         c.id,
         c.status,
         c.valor,
+        c.codigo_seguranca,
         u.nome AS nome_motoboy,
         u.telefone AS telefone_motoboy,
         u.modelo_moto,
