@@ -921,30 +921,38 @@
        <div id="tela-acompanhamento" class="tela">
 
     <div class="status-header" id="acompanhamento-status-area">
-    <div id="area-estorno-adm" class="area-estorno" style="display:none;">
+    
+    <div id="area-estorno-adm" class="area-estorno" style="display:none; margin-bottom: 15px;">
         <div class="titulo-estorno">⚠️ CORRIDA CANCELADA?</div>
         <p class="desc-estorno">
-            Houve um imprevisto com o piloto.<br>
-            Solicite o reembolso (Taxa administrativa: R$ 0,10).
+            Houve um imprevisto.<br>
+            Solicite o reembolso (Taxa: R$ 0,10).
         </p>
         <a id="btn-link-estorno" href="#" target="_blank" class="btn-falar-adm">
             <i class="fab fa-whatsapp"></i> FALAR COM O ADM
         </a>
-    </div>    
-        <div class="header-top-row">
-            <div class="status-info">
-                <h2 id="acompanhamento-status-titulo" style="display:flex; align-items:center; gap:8px;">
-                    <i class="fas fa-search-location"></i> BUSCANDO...
-                </h2>
-                <p id="acompanhamento-status-desc">Aguarde, estamos localizando um piloto.</p>
-            </div>
-            <div class="order-badge-group">
-                <span class="badge-label">PEDIDO</span>
-                <span class="badge-value" id="acompanhamento-id">#000</span>
+    </div>
+
+    <div class="header-top-row">
+        <div class="status-info">
+            <h2 id="acompanhamento-status-titulo" style="display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-search-location"></i> BUSCANDO...
+            </h2>
+            <p id="acompanhamento-status-desc">Aguarde, estamos localizando um piloto.</p>
+
+            <div id="area-codigo-seguranca" style="display:none; margin-top: 10px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; width: fit-content;">
+                <span style="font-size: 12px; color: #fff; display: block;">SENHA:</span>
+                <span id="texto-codigo-seguranca" style="font-size: 24px; font-weight: 800; color: #fff; letter-spacing: 3px;">----</span>
             </div>
         </div>
-       <div id="tempo-restante-busca" class="status-timer" style="font-size: 14px; margin-top: 5px; color: #aaa; display: none;">
-    ⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s
+        
+        <div class="order-badge-group">
+            <span class="badge-label">PEDIDO</span>
+            <span class="badge-value" id="acompanhamento-id">#000</span>
+        </div>
+    </div>
+    
+    <div id="tempo-restante-busca" class="status-timer" style="margin-top: 15px; font-size: 14px; color: #ccc; text-align: center; min-height: 20px;"></div>
 </div>
     </div>
     <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp" style="margin-top: 20px;">
@@ -1814,7 +1822,19 @@ document.getElementById('tempo-restante-busca').style.display = 'none';
             if (buscaMotoboyInterval) {
     clearInterval(buscaMotoboyInterval);
     buscaMotoboyInterval = null;
+    
 }
+
+// 2. Lógica do PIN (FORA do if do intervalo, para aparecer sempre)
+    const areaPin = document.getElementById('area-codigo-seguranca');
+    const textoPin = document.getElementById('texto-codigo-seguranca');
+    
+    if (pedido.codigo_seguranca) {
+        if (areaPin) areaPin.style.display = 'block';
+        if (textoPin) textoPin.innerText = pedido.codigo_seguranca;
+    } else {
+        if (areaPin) areaPin.style.display = 'none';
+    }
 
 // Também esconde o timer:
 document.getElementById('tempo-restante-busca').style.display = 'none';
