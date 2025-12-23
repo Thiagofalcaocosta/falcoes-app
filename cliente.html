@@ -423,41 +423,28 @@
 }
 
 .btn-whatsapp-neon {
-    /* COR: Ciano Neon (Igual ao Badge PEDIDO) */
     --cyan-neon: #00ffff;
-
-    /* Fundo: Azul muito fraquinho (quase transparente) */
-    background-color: rgba(0, 255, 255, 0.08);
-    
-    /* Borda: Azul neon forte */
+    background-color: rgba(0, 255, 255, 0.1);
     border: 2px solid var(--cyan-neon);
-    
-    /* Brilho: Efeito neon em volta */
     box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-
-    /* Texto */
-    color: var(--cyan-neon);
+    color: var(--cyan-neon) !important;
     font-weight: 800;
     text-transform: uppercase;
     font-size: 13px;
-    text-decoration: none;
-
-    /* COMPACTO: Só o tamanho do texto */
-    width: auto !important; 
+    text-decoration: none !important; /* Tira o sublinhado */
+    width: auto;
     padding: 10px 25px;
-    border-radius: 50px; /* Bem redondo (Pílula) */
-    
-    /* Flex para alinhar icone e texto */
-    display: inline-flex; 
+    border-radius: 50px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     transition: 0.3s;
 }
-
 .btn-whatsapp-neon:hover {
-    background-color: rgba(0, 255, 255, 0.2);
+    background-color: rgba(0, 255, 255, 0.25);
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+    color: #fff !important;
     transform: scale(1.05);
 }
 
@@ -921,47 +908,57 @@
        <div id="tela-acompanhamento" class="tela">
 
     <div class="status-header" id="acompanhamento-status-area">
-    <div id="area-estorno-adm" class="area-estorno" style="display:none;">
-        <div class="titulo-estorno">⚠️ CORRIDA CANCELADA?</div>
-        <p class="desc-estorno">
-            Houve um imprevisto com o piloto.<br>
-            Solicite o reembolso (Taxa administrativa: R$ 0,10).
-        </p>
-        <a id="btn-link-estorno" href="#" target="_blank" class="btn-falar-adm">
-            <i class="fab fa-whatsapp"></i> FALAR COM O ADM
-        </a>
-    </div>    
+        
+        <div id="area-estorno-adm" class="area-estorno" style="display:none; margin-bottom: 15px;">
+            <div class="titulo-estorno">⚠️ CORRIDA CANCELADA?</div>
+            <p class="desc-estorno">Houve um imprevisto.<br>Solicite o reembolso (Taxa: R$ 0,10).</p>
+            <a id="btn-link-estorno" href="#" target="_blank" class="btn-falar-adm">
+                <i class="fab fa-whatsapp"></i> FALAR COM O ADM
+            </a>
+        </div>
+
         <div class="header-top-row">
             <div class="status-info">
                 <h2 id="acompanhamento-status-titulo" style="display:flex; align-items:center; gap:8px;">
                     <i class="fas fa-search-location"></i> BUSCANDO...
                 </h2>
                 <p id="acompanhamento-status-desc">Aguarde, estamos localizando um piloto.</p>
+
+                <div id="area-codigo-seguranca" style="display:none; margin-top: 10px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; width: fit-content;">
+                    <span style="font-size: 10px; color: #fff; display: block; opacity: 0.8;">INFORME AO PILOTO:</span>
+                    <span id="texto-codigo-seguranca" style="font-size: 24px; font-weight: 800; color: #00ffff; letter-spacing: 3px; text-shadow: 0 0 10px rgba(0,255,255,0.5);">----</span>
+                </div>
             </div>
+            
             <div class="order-badge-group">
                 <span class="badge-label">PEDIDO</span>
                 <span class="badge-value" id="acompanhamento-id">#000</span>
             </div>
         </div>
-       <div id="tempo-restante-busca" class="status-timer" style="font-size: 14px; margin-top: 5px; color: #aaa; display: none;">
-    ⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s
-</div>
+        
+        <div id="tempo-restante-busca" class="status-timer" style="margin-top: 15px; font-size: 14px; color: #ccc; text-align: center; min-height: 20px;"></div>
     </div>
-    <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp" style="margin-top: 20px;">
+
+    <div class="whatsapp-center-wrapper" style="text-align: center; margin: 15px 0;">
+        <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp-neon" style="display:none;">
             <i class="fab fa-whatsapp"></i> FALAR COM O PILOTO
         </a>
+    </div>
 
-    <div id="area-botao-cancelar-taxa" class="area-cancelar-taxa" style="display:none;">
+    <div id="area-botao-cancelar-taxa" class="area-cancelar-taxa" style="display:none; text-align:center;">
         <button onclick="cancelarComTaxa()" class="btn-cancelar-taxa">
             <i class="fas fa-ban"></i> Cancelar Corrida
         </button>
-        <span class="aviso-taxa-texto">
-            <i class="fas fa-exclamation-triangle" style="color:#ffcc00;"></i> 
-            O cancelamento aqui desconta taxa de deslocamento de 5 reais.
+        <span class="aviso-taxa-texto" style="display:block; font-size:11px; color:#888; margin-top:5px;">
+            <i class="fas fa-exclamation-triangle" style="color:#ffcc00;"></i> Taxa de cancelamento pode aplicar.
         </span>
     </div>
 
-    <div id="motoboy-info-box" style="display:none;">
+    <button id="btn-cancelar-busca" onclick="cancelarBuscaMotoboy()" class="btn-cancel-outline" style="width:100%; margin-top:10px;">
+        CANCELAR BUSCA
+    </button>
+
+    <div id="motoboy-info-box" style="display:none; margin-top: 15px;">
         <div class="driver-card">
             <div class="driver-card-header">
                 <img src="https://cdn-icons-png.flaticon.com/512/709/709699.png" class="driver-img-fix" alt="Avatar" id="motoboy-foto">
@@ -971,60 +968,33 @@
                     <div style="color: var(--neon-green); font-size: 12px; font-weight: bold;">⭐ 5.0</div>
                 </div>
             </div>
-            
             <div class="driver-data-grid">
-                <div class="data-item">
-                    <span class="data-label">Veículo</span>
-                    <span class="data-value" id="motoboy-modelo" style="color:#fff;">Moto Falcões</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Cor</span>
-                    <span class="data-value" id="motoboy-cor" style="color:#fff;">--</span>
-                </div>
-                <div class="data-item" style="grid-column: span 2;"> <span class="data-label">Placa</span>
-                    <span class="data-value">
-                        <span class="plate-badge-new" id="motoboy-placa">---</span>
-                    </span>
-                </div>
+                <div class="data-item"><span class="data-label">Veículo</span><span class="data-value" id="motoboy-modelo">--</span></div>
+                <div class="data-item"><span class="data-label">Cor</span><span class="data-value" id="motoboy-cor">--</span></div>
+                <div class="data-item" style="grid-column: span 2;"><span class="data-label">Placa</span><span class="data-value"><span class="plate-badge-new" id="motoboy-placa">---</span></span></div>
             </div>
         </div>
-
-        
     </div>
 
-    <div class="route-container">
-        <div class="route-item">
-            <div class="route-dot origin"></div>
-            <div class="route-content">
-                <label>RETIRADA</label>
-                <span id="detalhe-origem">...</span>
-            </div>
-        </div>
+    <button id="btn-fechar-novo" class="btn-fechar-topo" onclick="fecharTela()" style="display:none;">FECHAR TELA X</button>
+
+    <div class="route-container" style="margin-top:20px;">
+        <div class="route-item"><div class="route-dot origin"></div><div class="route-content"><label>RETIRADA</label><span id="detalhe-origem">...</span></div></div>
         <div class="route-connector"></div>
-        <div class="route-item">
-            <div class="route-dot dest"></div>
-            <div class="route-content">
-                <label>ENTREGA</label>
-                <span id="detalhe-destino">...</span>
-            </div>
-        </div>
+        <div class="route-item"><div class="route-dot dest"></div><div class="route-content"><label>ENTREGA</label><span id="detalhe-destino">...</span></div></div>
     </div>
 
     <div class="price-section">
         <div id="area-pagamento-cliente"></div> 
-        <div class="price-display">
-            <span>Total estimado</span>
-            <h1 id="detalhe-valor">R$ --</h1>
-        </div>
+        <div class="price-display"><span>Total estimado</span><h1 id="detalhe-valor">R$ --</h1></div>
     </div>
 
     <div id="area-justificativa-integrada" class="cancel-area" style="display:none;">
-        <label>Motivo do cancelamento:</label>
+        <label>Motivo:</label>
         <textarea id="campo-justificativa-integrada" placeholder="Digite o motivo..." rows="3"></textarea>
         <div id="erro-just-integrada" class="error-msg">Mínimo 5 caracteres.</div>
-        <button id="btn-confirmar-cancelamento" class="btn-danger-full" disabled>CONFIRMAR CANCELAMENTO</button>
+        <button id="btn-confirmar-cancelamento" class="btn-danger-full" disabled>CONFIRMAR</button>
     </div>
-
 </div>
 
     </div>
