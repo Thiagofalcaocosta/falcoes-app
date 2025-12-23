@@ -1626,21 +1626,30 @@ document.addEventListener('click', (e) => {
 }
 
     // === SUBSTITUA SÓ A FUNÇÃO cancelarComTaxa POR ESTA ===
+// === VERSÃO FINAL: SE NÃO ACHAR O ID, ELE PERGUNTA PRA VOCÊ ===
 async function cancelarComTaxa() {
-    // 1. Pega o ID com segurança (Memória ou Tela)
+    console.log("Iniciando cancelamento...");
+
+    // 1. Tenta achar o ID na memória ou na tela
     let id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
 
-    if (!id) {
+    // Se a memória falhou, tenta ler da tela
+    if (!id || id === '000') {
         const elId = document.getElementById('acompanhamento-id');
         if (elId) id = elId.innerText.replace('#', '').trim();
     }
 
-    if (!id) {
-        alert("Erro: Não achei o número do pedido. Atualize a página.");
-        return;
+    // 2. AQUI ESTÁ A SEGURANÇA MÁXIMA:
+    // Se o ID ainda for 000, -- ou vazio, ele pergunta pra você!
+    if (!id || id === '000' || id === '--') {
+        id = prompt("⚠️ O sistema perdeu o número do pedido.\n\nPor favor, digite o NÚMERO DA CORRIDA (ex: 77) para cancelar:");
     }
 
-    if(!confirm("⚠️ ATENÇÃO!\n\nO piloto já está se deslocando.\nAo cancelar agora, será cobrada uma taxa de R$ 5,00.\n\nDeseja realmente cancelar?")) return;
+    // Se você não digitou nada ou cancelou a pergunta, para tudo.
+    if (!id) return;
+
+    // 3. Confirmação final
+    if(!confirm(`⚠️ ATENÇÃO!\n\nVocê vai cancelar o Pedido #${id}.\nO piloto será avisado e a taxa de R$ 5,00 será aplicada.\n\nConfirmar?`)) return;
 
     try {
         const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
@@ -1656,7 +1665,7 @@ async function cancelarComTaxa() {
         const json = await res.json();
 
         if (json.success) {
-            alert("✅ Corrida cancelada.");
+            alert("✅ Corrida cancelada com sucesso!");
             localStorage.removeItem('idPedidoAtual');
             window.location.reload();
         } else {
@@ -1664,7 +1673,7 @@ async function cancelarComTaxa() {
         }
     } catch (e) {
         console.error(e);
-        alert("Erro de conexão ao cancelar.");
+        alert("Erro de conexão. Verifique sua internet.");
     }
 }
 
@@ -2324,6 +2333,15 @@ async function verificarStatus(id) {
         const elTempo      = document.getElementById('tempo-restante-busca');
         const btnCancelBusca = document.getElementById('btn-cancelar-busca');
         const btnFechar    = document.getElementById('btn-fechar-novo');
+        const areaCodigo = document.getElementById('area-codigo-seguranca');
+const textoCodigo = document.getElementById('texto-codigo-seguranca');
+
+// Se o pedido tem senha e os elementos existem no HTML
+if (pedido.codigo_seguranca && areaCodigo && textoCodigo) {
+    areaCodigo.style.display = 'block'; // Mostra a caixinha
+    textoCodigo.innerText = pedido.codigo_seguranca; // Escreve o número (Ex: 4812)
+}
+
 
         // --- Lógica de Estados ---
 
