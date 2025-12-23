@@ -516,8 +516,21 @@
                 </div>
 
                 <div id="botoes-acao-ativa" style="display: flex; flex-direction: column; gap: 10px;">
-                    <button class="btn-finalizar" id="btn-finalizar-corrida" style="background: var(--neon-green); color: #000; padding: 16px; border: none; border-radius: 10px; font-weight: 900; font-size: 15px; cursor: pointer; text-transform: uppercase;">FINALIZAR CORRIDA</button>
-                    <button class="btn-cancelar-ativa" id="btn-cancelar-ativa" style="background: transparent; color: #666; border: 1px solid #444; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer;">CANCELAR</button>
+                    
+                    <div style="background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; border: 1px solid #444; text-align: center; margin-bottom: 5px;">
+                        <label style="color: #bbb; font-size: 11px; font-weight: bold; display: block; margin-bottom: 8px;">DIGITE A SENHA DO CLIENTE:</label>
+                        <input type="tel" id="input-pin-corrida" maxlength="4" placeholder="----" 
+                               style="background: #000; border: 2px solid #555; color: #fff; 
+                                      font-size: 28px; padding: 12px; width: 100%; text-align: center; 
+                                      border-radius: 8px; letter-spacing: 8px; outline: none; font-weight: 800;">
+                    </div>
+                    <button onclick="finalizarCorrida()" class="btn-finalizar" id="btn-finalizar-corrida" style="background: var(--neon-green); color: #000; padding: 16px; border: none; border-radius: 10px; font-weight: 900; font-size: 15px; cursor: pointer; text-transform: uppercase;">
+                        FINALIZAR CORRIDA
+                    </button>
+                    
+                    <button class="btn-cancelar-ativa" id="btn-cancelar-ativa" style="background: transparent; color: #666; border: 1px solid #444; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer;">
+                        CANCELAR
+                    </button>
                 </div>
             </div>
         </div>
@@ -1221,82 +1234,54 @@ function preencherDadosAtiva(c) {
     
     
     async function finalizarCorrida() {
+        // 1. Pega o valor digitado no campo de senha (PIN)
+        const campoPin = document.getElementById('input-pin-corrida');
+        const pinDigitado = campoPin ? campoPin.value.trim() : '';
+
         if (!idCorridaAtual) {
             alert('Nenhuma corrida ativa para finalizar.');
             return;
         }
 
-        if (!confirm("Tem certeza que deseja finalizar esta corrida?")) return;
+        // 2. Validação: Obriga a digitar 4 números
+        if (pinDigitado.length !== 4) {
+            alert("⚠️ BLOQUEIO DE SEGURANÇA\n\nPeça a SENHA DE 4 DÍGITOS para o cliente.\nEla aparece na tela dele (Cartão Verde).");
+            if(campoPin) campoPin.focus();
+            return; // Para tudo se não tiver senha
+        }
+
+        if (!confirm("Confirmar finalização da corrida?")) return;
 
         try {
+            // Envia para o servidor JUNTO com a senha
             const res = await fetch(`${MEU_IP}/finalizar-corrida`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     corrida_id: idCorridaAtual,
-                    motoboy_id: usuario.id 
+                    motoboy_id: usuario.id,
+                    codigo_seguranca: pinDigitado // <--- AQUI ESTÁ A CHAVE
                 })
             });
 
             const data = await res.json();
 
             if (data.success) {
-                alert('Corrida finalizada com sucesso!');
+                alert(`✅ CORRIDA FINALIZADA COM SUCESSO!\n\n💰 Taxa do App: R$ ${parseFloat(data.taxa).toFixed(2)}`);
+                
                 idCorridaAtual = null;
                 temCorridaAtiva = false;
-                carregarSaldoMotoboy();
-                verificarEstado(); 
+                
+                // Recarrega para atualizar saldo e limpar tela
+                window.location.reload(); 
             } else {
-                alert(data.message || 'Erro ao finalizar corrida.');
+                // Se a senha estiver errada, o servidor manda a mensagem aqui
+                alert("❌ " + (data.message || 'Erro ao finalizar. Verifique a senha.'));
             }
 
         } catch (err) {
             console.error('Erro ao finalizar corrida:', err);
             alert('Erro de conexão. Tente novamente.');
-        }
-    }
-    
-    function cancelarCorridaMotoboy() {
-        if (!idCorridaAtual) return;
-        document.getElementById('modal-cancelamento-motoboy').style.display = 'flex';
-        document.getElementById('justificativa-motoboy').value = '';
-        document.getElementById('justificativa-motoboy').focus();
-    }
-    
-    async function confirmarCancelamentoMotoboy() {
-        const motivo = document.getElementById('justificativa-motoboy').value.trim();
-
-        if (motivo.length < 5) {
-            mostrarErro("A justificativa deve ter pelo menos 5 caracteres.");
-            return;
-        }
-
-        try {
-            const res = await fetch(`${MEU_IP}/motoboy-cancelar-corrida`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    corrida_id: idCorridaAtual,
-                    motoboy_id: usuario.id,
-                    motivo: motivo
-                })
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                alert('Corrida cancelada. O cliente será notificado.');
-                idCorridaAtual = null;
-                temCorridaAtiva = false;
-                fecharModal('modal-cancelamento-motoboy');
-                verificarEstado(); 
-            } else {
-                mostrarErro(data.message || 'Erro ao cancelar corrida.');
-            }
-
-        } catch (err) {
-            console.error('Erro ao cancelar corrida:', err);
-            mostrarErro('Erro de conexão. Tente novamente.');
         }
     }
 

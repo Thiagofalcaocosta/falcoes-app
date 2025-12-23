@@ -676,14 +676,15 @@ app.post('/expirar-corrida', async (req, res) => {
 });
 
 app.post('/finalizar-corrida', async (req, res) => {
-    const { corrida_id, motoboy_id } = req.body;
+    // 1. RECEBE O CÓDIGO (PIN) QUE O MOTOBOY DIGITOU
+    const { corrida_id, motoboy_id, codigo_seguranca } = req.body;
 
     try {
         await pool.query('BEGIN');
 
-        // 1. Busca valor e forma de pagamento da corrida
+        // 2. BUSCA O CÓDIGO REAL DO BANCO PARA COMPARAR
         const dadosCorrida = await pool.query(
-            "SELECT valor, forma_pagamento FROM corridas WHERE id = $1", 
+            "SELECT valor, forma_pagamento, codigo_seguranca FROM corridas WHERE id = $1", 
             [corrida_id]
         );
         
@@ -692,34 +693,44 @@ app.post('/finalizar-corrida', async (req, res) => {
             return res.json({ success: false, message: "Corrida não encontrada." });
         }
 
-        const valorTotal = parseFloat(dadosCorrida.rows[0].valor);
-        const formaPgto = dadosCorrida.rows[0].forma_pagamento; // 'DINHEIRO' ou 'PIX'/'ONLINE'
+        const dados = dadosCorrida.rows[0];
+
+        // === 🛡️ VALIDAÇÃO DE SEGURANÇA (A PARTE NOVA) ===
+        // Se a corrida tem senha gravada, verificamos se o motoboy acertou
+        if (dados.codigo_seguranca) {
+            if (!codigo_seguranca) {
+                await pool.query('ROLLBACK');
+                return res.json({ success: false, message: "⚠️ Digite a senha do cliente!" });
+            }
+            if (dados.codigo_seguranca !== codigo_seguranca) {
+                await pool.query('ROLLBACK');
+                return res.json({ success: false, message: "🚫 SENHA INCORRETA! Peça novamente ao cliente." });
+            }
+        }
+        // =================================================
+
+        const valorTotal = parseFloat(dados.valor);
+        const formaPgto = dados.forma_pagamento; 
         
-        // 2. CONFIGURAÇÃO DA TAXA (Exemplo: 15%)
+        // CONFIGURAÇÃO DA TAXA (Exemplo: 15%)
         const taxaAdmin = 0.15; 
         const valorTaxa = valorTotal * taxaAdmin;
         const valorLiquido = valorTotal - valorTaxa;
 
-        // 3. LÓGICA DE CARTEIRA (Saldo)
+        // LÓGICA DE CARTEIRA (Saldo)
         if (formaPgto === 'DINHEIRO') {
-            // Se foi em dinheiro, o motoboy já está com o valor total. 
-            // Tiramos a taxa da carteira dele.
             await pool.query(
                 "UPDATE usuarios SET saldo = COALESCE(saldo, 0) - $1 WHERE id = $2", 
                 [valorTaxa, motoboy_id]
             );
-            console.log(`💸 Dinheiro: Taxa de R$${valorTaxa.toFixed(2)} descontada do saldo do motoboy.`);
         } else {
-            // Se foi PIX/Online, o sistema recebeu. 
-            // Adicionamos apenas o valor líquido (já com desconto) ao saldo dele.
             await pool.query(
                 "UPDATE usuarios SET saldo = COALESCE(saldo, 0) + $1 WHERE id = $2", 
                 [valorLiquido, motoboy_id]
             );
-            console.log(`💳 PIX: Valor líquido de R$${valorLiquido.toFixed(2)} somado ao saldo do motoboy.`);
         }
 
-        // 4. Atualiza status da corrida
+        // Atualiza status da corrida
         await pool.query("UPDATE corridas SET status = 'concluida' WHERE id = $1", [corrida_id]);
 
         await pool.query('COMMIT');
@@ -728,7 +739,7 @@ app.post('/finalizar-corrida', async (req, res) => {
     } catch (err) {
         await pool.query('ROLLBACK');
         console.error('Erro ao finalizar:', err);
-        res.status(500).json({ success: false });
+        res.status(500).json({ success: false, message: "Erro no servidor" });
     }
 });
 
