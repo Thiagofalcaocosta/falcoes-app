@@ -2477,21 +2477,49 @@ async function cancelarComTaxa() {
         alert("Erro ao cancelar.");
     }
 }
-    // === FUNÇÃO DO TIMER ESTILO BARRA (Pílula) ===
-function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
-    console.log("Iniciando timer barra:", idPedido);
+    /* === BLOCO DE RECUPERAÇÃO (COLE NO FINAL DO SCRIPT) === */
+
+// 1. Função que estava faltando para o LOGIN funcionar
+function salvarRascunhoFormulario() {
+    const origem = document.getElementById('input-origem');
+    const destino = document.getElementById('input-destino');
+    if (origem && destino) {
+        localStorage.setItem('rascunho_corrida', JSON.stringify({
+            origem: origem.value,
+            destino: destino.value
+        }));
+    }
+}
+
+// 2. Função que estava faltando para FECHAR TELA e CANCELAR
+function fecharTela() {
+    const tela = document.getElementById('tela-acompanhamento');
+    const modal = document.getElementById('modal-cancelamento-motoboy'); // se houver
     
-    // 1. Limpa timer anterior
+    if(tela) tela.style.display = 'none';
+    if(modal) modal.style.display = 'none';
+
+    // Para o timer
+    if (window.timerBuscaInterval) clearInterval(window.timerBuscaInterval);
+    
+    // Recarrega para limpar tudo
+    window.location.reload();
+}
+
+function reiniciarApp() {
+    window.location.reload();
+}
+
+// 3. O Timer (Corrigido e estilo Barra)
+function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
     if (window.timerBuscaInterval) clearInterval(window.timerBuscaInterval);
 
-    // 2. Elementos
-    const elNumero = document.getElementById('timer-numeros'); // Onde vai o número
-    const elContainer = document.getElementById('tempo-restante-busca'); // A barra verde
+    const elContainer = document.getElementById('tempo-restante-busca');
     const btnCancelar = document.getElementById('btn-cancelar-busca');
 
     if (!elContainer) return;
 
-    // Reseta visual (caso estivesse vermelho antes)
+    // Visual da Barra Verde
     elContainer.style.display = 'flex';
     elContainer.style.borderColor = 'rgba(0, 255, 0, 0.3)';
     elContainer.innerHTML = '⏳ Tempo estimado: <span id="timer-numeros" style="color: var(--neon-green); font-weight: bold; font-size: 16px; margin-left:5px;">' + segundosIniciais + 's</span>';
@@ -2500,31 +2528,23 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
 
     let restantes = segundosIniciais;
 
-    // 3. Loop do contador
     window.timerBuscaInterval = setInterval(() => {
         restantes--;
-        
-        // Atualiza só o número, se o span ainda existir
         const spanNum = document.getElementById('timer-numeros');
-        if (spanNum) {
-            spanNum.innerText = restantes + "s";
-        }
+        if (spanNum) spanNum.innerText = restantes + "s";
 
-        // Se acabar o tempo
         if (restantes <= 0) {
             clearInterval(window.timerBuscaInterval);
-            
-            // Muda para vermelho
             elContainer.style.borderColor = "red";
-            elContainer.innerHTML = '<span style="color:red; font-weight:bold;">Tempo Esgotado. Tente novamente.</span>';
-            
+            elContainer.innerHTML = '<span style="color:red; font-weight:bold;">Tempo Esgotado.</span>';
             if (btnCancelar) btnCancelar.style.display = 'none';
         }
     }, 1000);
 }
 
-// Mantém esta função simples para atualizações manuais se precisar
 function atualizarTextoTimer(elemento, segundos) {
     const spanNumero = document.getElementById('timer-numeros');
     if (spanNumero) spanNumero.innerText = segundos + "s";
 }
+
+
