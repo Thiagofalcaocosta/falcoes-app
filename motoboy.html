@@ -799,10 +799,8 @@ function renderizarBotoesAtiva(status) {
     // Limpa o conteúdo anterior
     container.innerHTML = ''; 
 
-    // Se a corrida estiver valendo (liberada ou andando)
     if (status === 'liberada' || status === 'em_andamento') {
         
-        // 1. CRIA O CAMPO DE SENHA (PIN)
         const divSenha = document.createElement('div');
         
         divSenha.style.cssText = `
@@ -814,44 +812,62 @@ function renderizarBotoesAtiva(status) {
             margin: 0 auto 15px auto; 
             width: 75%; 
             max-width: 240px;
+            position: relative; /* Para segurar o estilo injetado */
         `;
         
+        // AQUI ESTÁ A SOLUÇÃO "NUCLEAR" 
+        // Injetamos um CSS <style> direto no HTML para bloquear qualquer mudança de cor do Android
         divSenha.innerHTML = `
+            <style>
+                #input-pin-corrida {
+                    color: #00e640 !important;
+                    -webkit-text-fill-color: #00e640 !important; /* FORÇA COR NO ANDROID */
+                    background-color: #000000 !important;
+                    opacity: 1 !important;
+                }
+                /* BLOQUEIA A MUDANÇA DE COR AO DIGITAR/AUTOCOMPLETAR */
+                #input-pin-corrida:-webkit-autofill,
+                #input-pin-corrida:-webkit-autofill:hover, 
+                #input-pin-corrida:-webkit-autofill:focus {
+                    -webkit-text-fill-color: #00e640 !important;
+                    -webkit-box-shadow: 0 0 0px 1000px #000 inset !important;
+                    transition: background-color 5000s ease-in-out 0s;
+                    color: #00e640 !important;
+                }
+            </style>
+
             <label style="color: #bbb; font-size: 11px; font-weight: bold; display: block; margin-bottom: 8px; text-transform: uppercase;">
                 CÓDIGO DO PEDIDO
             </label>
+            
             <input type="tel" id="input-pin-corrida" maxlength="4" placeholder="- - - -" 
                    autocomplete="off"
                    style="
                       background: #000 !important; 
                       border: 2px solid #333 !important; 
                       color: #00e640 !important; 
-                      caret-color: #00e640 !important; /* Cor do cursor piscando */
-                      font-size: 26px !important; 
+                      caret-color: #00e640 !important;
+                      font-size: 28px !important; 
                       font-weight: 800 !important;
-                      padding: 0 !important;
+                      padding: 10px !important;
                       margin: 0 !important;
                       width: 100% !important; 
-                      height: 50px !important; /* Altura fixa para não cortar */
-                      line-height: 50px !important; /* Centraliza verticalmente */
                       text-align: center !important; 
                       border-radius: 8px !important; 
                       letter-spacing: 8px !important; 
                       outline: none !important; 
-                      -webkit-appearance: none !important; /* Remove estilo nativo iPhone/Android */
+                      -webkit-appearance: none !important;
                       box-shadow: none !important;
                    ">
         `;
         container.appendChild(divSenha);
 
-        // 2. CRIA O BOTÃO FINALIZAR
         const btnFinalizar = document.createElement('button');
         btnFinalizar.className = 'btn-acao btn-verde';
         btnFinalizar.innerText = '✅ FINALIZAR CORRIDA';
         btnFinalizar.setAttribute('onclick', 'finalizarCorrida()');
         container.appendChild(btnFinalizar);
 
-        // 3. CRIA O BOTÃO CANCELAR
         const btnCancelar = document.createElement('button');
         btnCancelar.className = 'btn-acao btn-vermelho';
         btnCancelar.innerText = '❌ CANCELAR CORRIDA';
