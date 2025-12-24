@@ -2489,6 +2489,8 @@ async function verificarStatus(id) {
             if (modal && !modal.classList.contains('show')) {
                 modal.classList.add('show');
             }
+            // Pega o valor do pedido e joga no modal
+        document.getElementById('valor-modal-pagamento').innerText = "R$ " + parseFloat(pedido.valor).toFixed(2).replace('.', ',');
             
             if (statusTitulo) { statusTitulo.style.color = '#ffd700'; statusTitulo.innerText = "🎯 ESCOLHA COMO PAGAR"; }
             if (statusDesc) statusDesc.innerText = "Um piloto aceitou! Aguardando pagamento.";
