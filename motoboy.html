@@ -862,74 +862,91 @@ function renderizarBotoesAtiva(status) {
     const container = document.getElementById('botoes-acao-ativa');
     if (!container) return;
 
-    // --- TRAVA DE SEGURANÇA (O PULO DO GATO) ---
-    // Se o campo JÁ EXISTE na tela, o código PARA aqui.
-    // Isso impede que ele apague o que você está digitando a cada 3 segundos.
+    // --- TRAVA DE SEGURANÇA ---
     if (document.getElementById('input-pin-corrida')) {
         return; 
     }
-    // -------------------------------------------
     
     container.innerHTML = ''; 
 
     if (status === 'liberada' || status === 'em_andamento') {
         
+        // 1. CONTAINER DA SENHA (Mais compacto e centralizado)
         const divSenha = document.createElement('div');
-        
-        // Mantive o estilo bonito V3 que criamos antes
         divSenha.style.cssText = `
             background: rgba(255, 255, 255, 0.05); 
-            padding: 15px; 
+            padding: 10px; 
             border-radius: 12px; 
             border: 1px solid #444; 
             text-align: center; 
             margin: 0 auto 15px auto; 
-            width: 80%; 
-            max-width: 250px;
+            width: 70%; 
+            max-width: 220px; /* Largura controlada */
         `;
         
-        // CSS para garantir a cor verde nos tracinhos (Placeholder)
+        // Estilo do placeholder verde
         const stylePlaceholder = document.createElement('style');
         stylePlaceholder.innerHTML = `
-            .input-pin-style::placeholder { color: #00e640 !important; opacity: 0.5; }
+            .input-pin-style::placeholder { color: #00e640 !important; opacity: 0.3; }
             .input-pin-style { color: #00e640 !important; caret-color: #00e640 !important; }
         `;
         container.appendChild(stylePlaceholder);
 
+        // 2. INPUT E LABEL (Label alterada para CÓDIGO DO PEDIDO)
         divSenha.innerHTML += `
-            <label style="color: #bbb; font-size: 11px; font-weight: bold; display: block; margin-bottom: 8px; text-transform: uppercase;">
+            <label style="color: #bbb; font-size: 10px; font-weight: bold; display: block; margin-bottom: 5px; text-transform: uppercase;">
                 CÓDIGO DO PEDIDO
             </label>
             
-            <input type="text" 
+            <input type="tel" 
                    id="input-pin-corrida" 
                    class="input-pin-style"
                    maxlength="4" 
-                   placeholder="- - - -" 
+                   placeholder="• • • •" 
                    inputmode="numeric" 
                    pattern="[0-9]*"
                    autocomplete="off"
                    style="
                       display: block; width: 100%; box-sizing: border-box;
-                      background-color: #000000 !important; 
-                      border: 2px solid #333; border-radius: 8px; 
-                      font-size: 28px; font-weight: bold; letter-spacing: 5px; text-align: center;
-                      padding: 12px 0; margin: 0; outline: none;
+                      background-color: transparent !important; 
+                      border: none; border-bottom: 2px solid #555;
+                      font-size: 26px; font-weight: bold; letter-spacing: 12px; text-align: center;
+                      padding: 5px 0; margin: 0; outline: none; height: 40px;
                    ">
         `;
         container.appendChild(divSenha);
 
+        // 3. BOTÃO FINALIZAR (Grande e Verde)
         const btnFinalizar = document.createElement('button');
         btnFinalizar.className = 'btn-acao btn-verde';
-        btnFinalizar.innerText = '✅ FINALIZAR CORRIDA';
+        btnFinalizar.innerHTML = '✅ FINALIZAR CORRIDA';
         btnFinalizar.setAttribute('onclick', 'finalizarCorrida()');
+        // Garante estilo cheio
+        btnFinalizar.style.width = "100%";
+        btnFinalizar.style.padding = "15px";
+        btnFinalizar.style.fontSize = "16px";
+        btnFinalizar.style.marginBottom = "10px";
         container.appendChild(btnFinalizar);
 
+        // 4. BOTÃO CANCELAR (Vermelho, Funcional, mas NÃO AUMENTADO)
         const btnCancelar = document.createElement('button');
-        btnCancelar.className = 'btn-acao btn-vermelho';
-        btnCancelar.innerText = '❌ CANCELAR CORRIDA';
+        btnCancelar.innerText = 'CANCELAR CORRIDA';
         btnCancelar.setAttribute('onclick', 'cancelarCorridaMotoboy()');
-        btnCancelar.style.marginTop = "10px"; 
+        
+        // Estilo manual para garantir que seja vermelho mas compacto (não gigante)
+        btnCancelar.style.cssText = `
+            background-color: #ff4444; 
+            color: white;
+            border: none;
+            padding: 10px; /* Menor que o finalizar */
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 12px; /* Letra menor */
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        `;
         container.appendChild(btnCancelar); 
     }
 }
