@@ -796,13 +796,13 @@ function renderizarBotoesAtiva(status) {
     const container = document.getElementById('botoes-acao-ativa');
     if (!container) return;
     
-    // Limpa o conteúdo anterior
     container.innerHTML = ''; 
 
     if (status === 'liberada' || status === 'em_andamento') {
         
         const divSenha = document.createElement('div');
         
+        // Estilo do container do input
         divSenha.style.cssText = `
             background: rgba(255, 255, 255, 0.05); 
             padding: 15px; 
@@ -810,58 +810,51 @@ function renderizarBotoesAtiva(status) {
             border: 1px solid #444; 
             text-align: center; 
             margin: 0 auto 15px auto; 
-            width: 75%; 
-            max-width: 240px;
-            position: relative; /* Para segurar o estilo injetado */
+            width: 80%; 
+            max-width: 250px;
         `;
         
-        // AQUI ESTÁ A SOLUÇÃO "NUCLEAR" 
-        // Injetamos um CSS <style> direto no HTML para bloquear qualquer mudança de cor do Android
         divSenha.innerHTML = `
-            <style>
-                #input-pin-corrida {
-                    color: #00e640 !important;
-                    -webkit-text-fill-color: #00e640 !important; /* FORÇA COR NO ANDROID */
-                    background-color: #000000 !important;
-                    opacity: 1 !important;
-                }
-                /* BLOQUEIA A MUDANÇA DE COR AO DIGITAR/AUTOCOMPLETAR */
-                #input-pin-corrida:-webkit-autofill,
-                #input-pin-corrida:-webkit-autofill:hover, 
-                #input-pin-corrida:-webkit-autofill:focus {
-                    -webkit-text-fill-color: #00e640 !important;
-                    -webkit-box-shadow: 0 0 0px 1000px #000 inset !important;
-                    transition: background-color 5000s ease-in-out 0s;
-                    color: #00e640 !important;
-                }
-            </style>
-
             <label style="color: #bbb; font-size: 11px; font-weight: bold; display: block; margin-bottom: 8px; text-transform: uppercase;">
                 CÓDIGO DO PEDIDO
             </label>
             
-            <input type="tel" id="input-pin-corrida" maxlength="4" placeholder="- - - -" 
+            <input type="tel" 
+                   id="input-pin-corrida" 
+                   maxlength="4" 
+                   placeholder="- - - -" 
+                   inputmode="numeric"
+                   pattern="[0-9]*"
                    autocomplete="off"
                    style="
-                      background: #000 !important; 
-                      border: 2px solid #333 !important; 
-                      color: #00e640 !important; 
-                      caret-color: #00e640 !important;
-                      font-size: 28px !important; 
-                      font-weight: 800 !important;
-                      padding: 10px !important;
-                      margin: 0 !important;
-                      width: 100% !important; 
-                      text-align: center !important; 
-                      border-radius: 8px !important; 
-                      letter-spacing: 8px !important; 
-                      outline: none !important; 
-                      -webkit-appearance: none !important;
-                      box-shadow: none !important;
+                      display: block;
+                      width: 100%;
+                      box-sizing: border-box;
+                      background-color: #000000; 
+                      color: #00e640;
+                      caret-color: #00e640;
+                      
+                      border: 2px solid #333; 
+                      border-radius: 8px; 
+                      
+                      font-size: 28px; 
+                      font-weight: bold;
+                      letter-spacing: 8px; 
+                      text-align: center;
+                      
+                      /* O SEGREDO ESTÁ AQUI: */
+                      padding: 15px 0;
+                      margin: 0;
+                      line-height: normal;
+                      color-scheme: dark;
+                      outline: none;
+                      -webkit-appearance: none;
+                      appearance: none;
                    ">
         `;
         container.appendChild(divSenha);
 
+        // Botões continuam iguais
         const btnFinalizar = document.createElement('button');
         btnFinalizar.className = 'btn-acao btn-verde';
         btnFinalizar.innerText = '✅ FINALIZAR CORRIDA';
