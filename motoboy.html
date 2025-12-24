@@ -378,6 +378,71 @@
     gap: 10px;
     margin-top: 20px;
 }
+/* --- NOVO VISUAL DOS ENDEREÇOS (COLE NO SEU CSS) --- */
+
+/* Caixa cinza translúcida para cada endereço */
+.box-endereco {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    position: relative;
+    border-left: 4px solid #555; /* Cor padrão */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Borda vermelha para origem (Pin) */
+.box-endereco.origem {
+    border-left-color: #ff4444; 
+}
+
+/* Borda verde para destino (Bandeira) */
+.box-endereco.destino {
+    border-left-color: var(--neon-green);
+}
+
+/* Label pequena (Origem/Destino) */
+.label-rota {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 900;
+    margin-bottom: 4px;
+    color: #888;
+    letter-spacing: 1px;
+}
+
+/* O texto do endereço em si */
+.texto-end {
+    font-size: 14px;
+    color: #eee;
+    line-height: 1.4;
+}
+
+/* Efeito Neon Azul no Bairro */
+.bairro-neon {
+    color: #00eaff; /* Azul Cyan */
+    font-weight: bold;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(0, 234, 255, 0.4);
+}
+
+/* Texto de Urgência Piscando */
+.aviso-urgencia {
+    font-size: 13px;
+    color: #ffcc00; /* Amarelo Ouro */
+    text-align: center;
+    margin-top: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    animation: pulsarTexto 1.5s infinite alternate;
+}
+
+@keyframes pulsarTexto {
+    from { opacity: 0.7; text-shadow: 0 0 0px #ffcc00; }
+    to { opacity: 1; text-shadow: 0 0 10px #ffcc00; }
+}
 
         
     </style>
@@ -388,6 +453,7 @@
                 .then(() => console.log("SW registrado!"))
                 .catch(err => console.log("Erro SW:", err));
         }
+        
     </script>
 
     <link rel="manifest" href="/manifest.json">
@@ -1101,48 +1167,86 @@ function preencherDadosAtiva(c) {
         intervalosContadores[id] = setInterval(decremento, 1000);
     }
 
-    function criarCardCorrida(corrida) {
+    // --- SUBSTITUA A FUNÇÃO criarCardCorrida POR ESTA ---
+
+function criarCardCorrida(corrida) {
     const container = document.getElementById('lista-corridas');
 
-    // 1. CÁLCULO DO VALOR LÍQUIDO (Desconto de 15%)
+    // 1. Cálculos de valor
     const valorBruto = parseFloat(corrida.valor);
     const taxa = 0.15;
     const ganhoLiquido = valorBruto * (1 - taxa);
     const ganhoFormatado = ganhoLiquido.toFixed(2).replace('.', ',');
 
+    // 2. Funçãozinha para tentar destacar o bairro em Neon
+    // Ela pega tudo depois da primeira vírgula e coloca na classe neon
+    const formatarEndereco = (texto) => {
+        if (!texto) return "--";
+        const partes = texto.split(',');
+        if (partes.length > 1) {
+            // A primeira parte é a rua, o resto pintamos de neon
+            const rua = partes[0];
+            const resto = partes.slice(1).join(','); 
+            return `${rua}, <span class="bairro-neon">${resto}</span>`;
+        }
+        return texto; // Se não tiver vírgula, retorna normal
+    };
+
     const div = document.createElement('div');
     div.className = 'card-corrida';
     div.id = `card-${corrida.corrida_id}`;
 
+    // 3. O HTML NOVO (Visual Melhorado)
     const htmlConteudo = `
         <div class="card-top">
-            <span class="tipo-servico">${corrida.tipo_servico.toUpperCase()}</span>
+            <span class="tipo-servico">${(corrida.tipo_servico || 'MOTO').toUpperCase()}</span>
             <div style="text-align: right;">
-                <span class="valor" style="display: block; color: var(--neon-green); font-size: 1.2em; font-weight: 800;">
-                    GANHO: R$ ${ganhoFormatado}
+                <span class="valor" style="display: block; color: var(--neon-green); font-size: 22px; font-weight: 800; text-shadow: 0 0 10px rgba(0, 230, 64, 0.3);">
+                    R$ ${ganhoFormatado}
                 </span>
+                <span style="font-size: 10px; color: #888; font-weight: bold;">(LÍQUIDO PARA VOCÊ)</span>
             </div>
         </div>
+
         ${corrida.ciclo && corrida.ciclo > 1 ?
-            `<div style="background: #333; color: #ff9900; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 12px; text-align: center;">
-                ⚡ CICLO ${corrida.ciclo}
-            </div>`
-            : ''
+            `<div style="background: rgba(255, 153, 0, 0.2); color: #ff9900; padding: 5px; border-radius: 5px; margin-bottom: 15px; font-size: 12px; text-align: center; border: 1px solid #ff9900;">
+                ⚡ CORRIDA REJEITADA ANTERIORMENTE (CICLO ${corrida.ciclo})
+            </div>` : ''
         }
-        <div class="rota">
-            <div style="color:#ddd; margin-bottom:5px;">📍 ${corrida.origem}</div>
-            <div style="color:#ddd;">🏁 ${corrida.destino}</div>
+
+        <div class="rota" style="margin: 15px 0;">
+            
+            <div class="box-endereco origem">
+                <span class="label-rota" style="color:#ff4444;">📍 RETIRADA (Origem)</span>
+                <div class="texto-end">
+                    ${formatarEndereco(corrida.origem)}
+                </div>
+            </div>
+
+            <div class="box-endereco destino">
+                <span class="label-rota" style="color:var(--neon-green);">🏁 ENTREGA (Destino)</span>
+                <div class="texto-end">
+                    ${formatarEndereco(corrida.destino)}
+                </div>
+            </div>
+
         </div>
-        <div class="contador-tempo" id="contador-${corrida.corrida_id}"></div>
-        <button class="btn-acao btn-verde" onclick="aceitarCorridaWrapper(${corrida.corrida_id})">ACEITAR</button>
-        <div style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">
-            ⚠️ Outros pilotos também estão vendo esta corrida
+
+        <div class="contador-tempo" id="contador-${corrida.corrida_id}" style="text-align: center; margin-bottom: 15px;"></div>
+        
+        <button class="btn-acao btn-verde" onclick="aceitarCorridaWrapper(${corrida.corrida_id})" style="box-shadow: 0 0 15px rgba(0, 230, 64, 0.4);">
+            ACEITAR CORRIDA
+        </button>
+
+        <div class="aviso-urgencia">
+            ⚡ SEJA RÁPIDO! ESSA OFERTA PODE EXPIRAR.
         </div>
     `;
     
     div.innerHTML = htmlConteudo;
     container.appendChild(div);
 
+    // Lógica do tempo (Mantida igual a original)
     const tempoRestante = 60 - Math.ceil(parseFloat(corrida.segundos_passados || 0));
 
     if (tempoRestante > 0) {
