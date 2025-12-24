@@ -443,6 +443,56 @@
     from { opacity: 0.7; text-shadow: 0 0 0px #ffcc00; }
     to { opacity: 1; text-shadow: 0 0 10px #ffcc00; }
 }
+/* --- ESTILO TELA DE ESPERA (AGUARDANDO PAGAMENTO) --- */
+
+/* O Card que pulsa */
+.card-espera-gold {
+    background: rgba(255, 215, 0, 0.05); /* Fundo Dourado Transparente */
+    border: 2px solid #ffd700; /* Borda Dourada */
+    border-radius: 20px;
+    padding: 40px 20px;
+    text-align: center;
+    margin-top: 20px;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+    animation: pulsoDourado 2s infinite;
+}
+
+@keyframes pulsoDourado {
+    0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+}
+
+/* O Spinner Girando */
+.spinner-gold {
+    width: 60px;
+    height: 60px;
+    border: 6px solid rgba(255, 215, 0, 0.3); /* Parte apagada */
+    border-top: 6px solid #ffd700; /* Parte brilhante */
+    border-radius: 50%;
+    margin: 0 auto 20px auto; /* Centraliza */
+    animation: girarSpinner 1s linear infinite;
+}
+
+@keyframes girarSpinner {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.titulo-espera {
+    color: #ffd700;
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.desc-espera {
+    color: #ddd;
+    font-size: 14px;
+    line-height: 1.5;
+}
 
         
     </style>
@@ -1027,113 +1077,114 @@ function preencherDadosAtiva(c) {
     }
     
     async function verificarEstado() {
-        try {
-            // 1. Verifica se há corrida ativa (aceita)
-            const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
-            const dadosAtiva = await resAtiva.json();
+    try {
+        // 1. Verifica se há corrida ativa (aceita)
+        const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
+        const dadosAtiva = await resAtiva.json();
 
-            if (dadosAtiva.tem_corrida) {
-                temCorridaAtiva = true;
-                idCorridaAtual = dadosAtiva.corrida.corrida_id || dadosAtiva.corrida.id;
-                const statusCorrida = dadosAtiva.corrida.status;
+        if (dadosAtiva.tem_corrida) {
+            temCorridaAtiva = true;
+            idCorridaAtual = dadosAtiva.corrida.corrida_id || dadosAtiva.corrida.id;
+            const statusCorrida = dadosAtiva.corrida.status;
 
-                limparContadores();
-                limparMonitoramento();
-                pararVerificacaoEstado(); // Parar o polling de lista
+            limparContadores();
+            limparMonitoramento();
+            pararVerificacaoEstado(); // Parar o polling de lista
 
-                // Se a corrida for liberada ou em andamento, mostra a tela ativa
-                if (statusCorrida === 'liberada' || statusCorrida === 'em_andamento') {
-                    mostrarTela('ativa');
-                    preencherDadosAtiva(dadosAtiva.corrida);
-                    iniciarRadarCancelamento(idCorridaAtual);
-                    // Garante que o monitoramento de corrida ativa está rodando
-                    if (!monitoramentoAtivaInterval) {
-                         pararMonitoramentoAtiva();
-                         monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); // Polling rápido para corrida ativa
-                    }
-                    return;
-                } 
-                // Se a corrida foi aceita mas ainda aguarda pagamento
-                else if (statusCorrida === 'aguardando_pagamento' || statusCorrida === 'aceita') {
-                    // Estado de espera após aceitar
-                    pararMonitoramentoAtiva();
-                    monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); // Polling rápido
+            // Se a corrida for liberada ou em andamento, mostra a tela ativa
+            if (statusCorrida === 'liberada' || statusCorrida === 'em_andamento') {
+                mostrarTela('ativa');
+                preencherDadosAtiva(dadosAtiva.corrida);
+                iniciarRadarCancelamento(idCorridaAtual);
+                
+                if (!monitoramentoAtivaInterval) {
+                     pararMonitoramentoAtiva();
+                     monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); 
+                }
+                return;
+            } 
+            
+            // --- AQUI ESTÁ A MUDANÇA VISUAL (AGUARDANDO PAGAMENTO) ---
+            else if (statusCorrida === 'aguardando_pagamento' || statusCorrida === 'aceita') {
+                pararMonitoramentoAtiva();
+                monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); 
 
-                    mostrarTela('lista'); // Volta para a tela de lista com aviso
-                    const container = document.getElementById('lista-corridas');
-                    if (container) {
-                        container.innerHTML = `
-                            <div style="text-align:center; padding:30px;">
-                                <div style="color:#ffca28; font-size:24px; margin-bottom:10px;">⏳</div>
-                                <div style="color:#ffca28; font-weight:bold; margin-bottom:10px;">
-                                    AGUARDANDO LIBERAÇÃO DA CORRIDA
-                                </div>
-                                <div style="color:#ccc; font-size:14px;">
-                                    Aguardando confirmação de pagamento do cliente.<br>
-                                    Você será notificado assim que for **liberada**.
-                                </div>
+                mostrarTela('lista'); // Usa a tela de lista como base
+                const container = document.getElementById('lista-corridas');
+                
+                if (container) {
+                    // Novo HTML com Spinner Dourado e Card Pulsante
+                    container.innerHTML = `
+                        <div class="card-espera-gold">
+                            <div class="spinner-gold"></div>
+                            
+                            <div class="titulo-espera">
+                                AGUARDANDO LIBERAÇÃO
                             </div>
-                        `;
-                    }
-                    return;
+                            
+                            <div class="desc-espera">
+                                O cliente está finalizando o pagamento.<br>
+                                <span style="font-size:12px; color:#aaa; display:block; margin-top:10px;">
+                                    Não saia desta tela. Você será notificado assim que for 
+                                    <strong style="color:#ffd700">LIBERADA</strong>.
+                                </span>
+                            </div>
+                        </div>
+                    `;
                 }
-                // Se o status for 'cancelada' ou 'finalizada', ele cai para o passo 2
+                return;
             }
+            // ---------------------------------------------------------
+        }
+        
+        // 2. Não há corrida ativa ou foi cancelada/finalizada
+        pararMonitoramentoAtiva();
+        temCorridaAtiva = false;
+        idCorridaAtual = null;
+
+        const resLista = await fetch(`${MEU_IP}/corridas-pendentes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ motoboy_id: usuario.id })
+        });
+        const dadosLista = await resLista.json();
+
+        if (dadosLista.success === false && dadosLista.bloqueado) {
+            limparContadores();
+            limparMonitoramento();
+            mostrarTela('bloqueio');
+            document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
             
-            // 2. Não há corrida ativa ou a corrida ativa foi cancelada/finalizada. Limpa e verifica lista/bloqueio.
-            pararMonitoramentoAtiva();
-            temCorridaAtiva = false;
-            idCorridaAtual = null;
-
-
-            const resLista = await fetch(`${MEU_IP}/corridas-pendentes`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ motoboy_id: usuario.id })
-            });
-            const dadosLista = await resLista.json();
-
-            if (dadosLista.success === false && dadosLista.bloqueado) {
-                limparContadores();
-                limparMonitoramento();
-                mostrarTela('bloqueio');
-                document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
-                
-            } else if (dadosLista.success === false && dadosLista.offline) {
-                document.getElementById('lista-corridas').innerHTML =
-                    '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE</div>';
-                mostrarTela('lista');
-
-            } else {
-                mostrarTela('lista');
-                let corrida = dadosLista.corrida || null;
-
-                // Se a corrida que estávamos monitorando na lista não existe mais, ou não está mais pendente
-                if (corridaSendoExibida && corrida && corridaSendoExibida.corrida_id !== corrida.corrida_id) {
-                    // Uma nova corrida chegou ou a antiga sumiu, forçamos a limpeza
-                    corridaSendoExibida = null;
-                } else if (!corrida && corridaSendoExibida) {
-                     // Corrida anterior sumiu, mas não veio nova
-                    corridaSendoExibida = null;
-                }
-                
-                renderizarLista(corrida);
-            }
-            
-            // Inicia o polling de lista/bloqueio, se ainda não estiver ativo
-            if (!estadoVerificacaoInterval && !temCorridaAtiva) {
-                estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
-            }
-
-        } catch (err) {
-            console.error("Erro ao verificar estado:", err);
-            // Em caso de erro, tenta reiniciar o polling da lista
+        } else if (dadosLista.success === false && dadosLista.offline) {
+            document.getElementById('lista-corridas').innerHTML =
+                '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE</div>';
             mostrarTela('lista');
-            if (!estadoVerificacaoInterval) {
-                 estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
+
+        } else {
+            mostrarTela('lista');
+            let corrida = dadosLista.corrida || null;
+
+            if (corridaSendoExibida && corrida && corridaSendoExibida.corrida_id !== corrida.corrida_id) {
+                corridaSendoExibida = null;
+            } else if (!corrida && corridaSendoExibida) {
+                corridaSendoExibida = null;
             }
+            
+            renderizarLista(corrida);
+        }
+        
+        if (!estadoVerificacaoInterval && !temCorridaAtiva) {
+            estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
+        }
+
+    } catch (err) {
+        console.error("Erro ao verificar estado:", err);
+        mostrarTela('lista');
+        if (!estadoVerificacaoInterval) {
+             estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
         }
     }
+}
 
 
     /***********************
