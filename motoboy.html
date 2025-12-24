@@ -862,16 +862,18 @@ function renderizarBotoesAtiva(status) {
     const container = document.getElementById('botoes-acao-ativa');
     if (!container) return;
 
-    // --- TRAVA DE SEGURANÇA ---
-    if (document.getElementById('input-pin-corrida')) {
+    // --- MUDANÇA: Troquei o ID para forçar a atualização ---
+    // Se ele achar o campo NOVO, ele para. Se achar o VELHO, ele ignora e recria.
+    if (document.getElementById('input-codigo-pedido-v2')) {
         return; 
     }
     
+    // Limpa qualquer coisa que esteja lá (inclusive o antigo)
     container.innerHTML = ''; 
 
     if (status === 'liberada' || status === 'em_andamento') {
         
-        // 1. CONTAINER DA SENHA (Mais compacto e centralizado)
+        // 1. CONTAINER (Centralizado e menor)
         const divSenha = document.createElement('div');
         divSenha.style.cssText = `
             background: rgba(255, 255, 255, 0.05); 
@@ -880,11 +882,10 @@ function renderizarBotoesAtiva(status) {
             border: 1px solid #444; 
             text-align: center; 
             margin: 0 auto 15px auto; 
-            width: 70%; 
-            max-width: 220px; /* Largura controlada */
+            width: 75%; 
+            max-width: 200px; /* Largura bem controlada */
         `;
         
-        // Estilo do placeholder verde
         const stylePlaceholder = document.createElement('style');
         stylePlaceholder.innerHTML = `
             .input-pin-style::placeholder { color: #00e640 !important; opacity: 0.3; }
@@ -892,14 +893,14 @@ function renderizarBotoesAtiva(status) {
         `;
         container.appendChild(stylePlaceholder);
 
-        // 2. INPUT E LABEL (Label alterada para CÓDIGO DO PEDIDO)
+        // 2. INPUT E LABEL (Texto corrigido)
         divSenha.innerHTML += `
             <label style="color: #bbb; font-size: 10px; font-weight: bold; display: block; margin-bottom: 5px; text-transform: uppercase;">
                 CÓDIGO DO PEDIDO
             </label>
             
             <input type="tel" 
-                   id="input-pin-corrida" 
+                   id="input-codigo-pedido-v2" 
                    class="input-pin-style"
                    maxlength="4" 
                    placeholder="• • • •" 
@@ -910,42 +911,37 @@ function renderizarBotoesAtiva(status) {
                       display: block; width: 100%; box-sizing: border-box;
                       background-color: transparent !important; 
                       border: none; border-bottom: 2px solid #555;
-                      font-size: 26px; font-weight: bold; letter-spacing: 12px; text-align: center;
-                      padding: 5px 0; margin: 0; outline: none; height: 40px;
+                      font-size: 24px; font-weight: bold; letter-spacing: 8px; text-align: center;
+                      padding: 5px 0; margin: 0; outline: none; height: 35px; color: white;
                    ">
         `;
         container.appendChild(divSenha);
 
-        // 3. BOTÃO FINALIZAR (Grande e Verde)
+        // 3. BOTÃO FINALIZAR (Mantido)
         const btnFinalizar = document.createElement('button');
         btnFinalizar.className = 'btn-acao btn-verde';
         btnFinalizar.innerHTML = '✅ FINALIZAR CORRIDA';
-        btnFinalizar.setAttribute('onclick', 'finalizarCorrida()');
-        // Garante estilo cheio
+        btnFinalizar.setAttribute('onclick', 'finalizarCorrida()'); // Essa função precisa pegar o ID novo
         btnFinalizar.style.width = "100%";
         btnFinalizar.style.padding = "15px";
-        btnFinalizar.style.fontSize = "16px";
         btnFinalizar.style.marginBottom = "10px";
         container.appendChild(btnFinalizar);
 
-        // 4. BOTÃO CANCELAR (Vermelho, Funcional, mas NÃO AUMENTADO)
+        // 4. BOTÃO CANCELAR (Vermelho e Funcional)
         const btnCancelar = document.createElement('button');
         btnCancelar.innerText = 'CANCELAR CORRIDA';
         btnCancelar.setAttribute('onclick', 'cancelarCorridaMotoboy()');
-        
-        // Estilo manual para garantir que seja vermelho mas compacto (não gigante)
         btnCancelar.style.cssText = `
             background-color: #ff4444; 
             color: white;
             border: none;
-            padding: 10px; /* Menor que o finalizar */
+            padding: 12px; 
             border-radius: 8px;
             font-weight: bold;
-            font-size: 12px; /* Letra menor */
+            font-size: 13px;
             cursor: pointer;
             width: 100%;
             text-transform: uppercase;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         `;
         container.appendChild(btnCancelar); 
     }
