@@ -1421,7 +1421,7 @@ function criarCardCorrida(corrida) {
     
     async function finalizarCorrida() {
         // 1. Pega o valor digitado no campo de senha (PIN)
-        const campoPin = document.getElementById('input-pin-corrida');
+        let campoPin = document.getElementById('input-codigo-pedido-v2');
         const pinDigitado = campoPin ? campoPin.value.trim() : '';
 
         if (!idCorridaAtual) {
