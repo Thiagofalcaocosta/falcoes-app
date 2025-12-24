@@ -802,16 +802,31 @@ function renderizarBotoesAtiva(status) {
     // Se a corrida estiver valendo (liberada ou andando), cria o campo e os botões
     if (status === 'liberada' || status === 'em_andamento') {
         
-        // 1. CRIA O CAMPO DE SENHA (PIN)
+        // 1. CRIA O CAMPO DE SENHA (PIN) - AGORA MENOR E CENTRALIZADO
         const divSenha = document.createElement('div');
-        divSenha.style.cssText = "background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; border: 1px solid #444; text-align: center; margin-bottom: 10px;";
+        
+        // Estilos corrigidos: max-width para ficar pequeno, margin auto para centralizar
+        divSenha.style.cssText = `
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 10px; 
+            border-radius: 10px; 
+            border: 1px solid #444; 
+            text-align: center; 
+            margin: 0 auto 15px auto; /* Centraliza horizontalmente */
+            width: 70%; /* Ocupa 70% da largura disponível */
+            max-width: 220px; /* Trava num tamanho pequeno */
+        `;
         
         divSenha.innerHTML = `
-            <label style="color: #bbb; font-size: 11px; font-weight: bold; display: block; margin-bottom: 8px;">SENHA DO CLIENTE:</label>
-            <input type="tel" id="input-pin-corrida" maxlength="4" placeholder="----" 
-                   style="background: #000; border: 2px solid #555; color: #fff; 
-                          font-size: 28px; padding: 12px; width: 100%; text-align: center; 
-                          border-radius: 8px; letter-spacing: 8px; outline: none; font-weight: 800;">
+            <label style="color: #bbb; font-size: 10px; font-weight: bold; display: block; margin-bottom: 5px; text-transform: uppercase;">
+                CÓDIGO DO PEDIDO
+            </label>
+            <input type="tel" id="input-pin-corrida" maxlength="4" placeholder="- - - -" 
+                   style="background: #111; border: 1px solid #555; 
+                          color: #00e640 !important; /* Texto Verde Neon para não sumir */
+                          font-size: 24px; padding: 8px; width: 100%; text-align: center; 
+                          border-radius: 6px; letter-spacing: 6px; outline: none; font-weight: 800;
+                          box-sizing: border-box;">
         `;
         container.appendChild(divSenha);
 
@@ -822,12 +837,12 @@ function renderizarBotoesAtiva(status) {
         btnFinalizar.setAttribute('onclick', 'finalizarCorrida()');
         container.appendChild(btnFinalizar);
 
-        // 3. CRIA O BOTÃO CANCELAR (com margem no topo para separar)
+        // 3. CRIA O BOTÃO CANCELAR
         const btnCancelar = document.createElement('button');
         btnCancelar.className = 'btn-acao btn-vermelho';
         btnCancelar.innerText = '❌ CANCELAR CORRIDA';
         btnCancelar.setAttribute('onclick', 'cancelarCorridaMotoboy()');
-        btnCancelar.style.marginTop = "10px"; // Separar um pouco
+        btnCancelar.style.marginTop = "10px"; 
         container.appendChild(btnCancelar); 
     }
 }
