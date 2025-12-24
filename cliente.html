@@ -1298,7 +1298,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 id: corridaId, 
-                motivo: 'Cancelado automaticamente por tempo esgotado (90 segundos).' 
+                motivo: 'Cancelado automaticamente por tempo esgotado (10 minutos).' 
             })
         });
         
@@ -1611,7 +1611,7 @@ document.addEventListener('click', (e) => {
             document.getElementById('modal-busca').style.display = 'none';
             
             // Inicia contador e verificação
-            iniciarContadorBusca(idPedidoAtual, 90);
+            iniciarContadorBusca(idPedidoAtual, 600);
             intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
             
             showToast("Solicitação enviada. Buscando piloto...", "info");
@@ -1770,7 +1770,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const inicioBusca = parseInt(localStorage.getItem('inicioBuscaTimestamp') || Date.now());
                 const agora = Date.now();
                 const segundosPassados = Math.floor((agora - inicioBusca) / 1000);
-                const tempoLimiteTotal = 90; // Seu limite original (90s)
+                const tempoLimiteTotal = 600; // Seu limite original (600s)
                 
                 const tempoRestanteReal = tempoLimiteTotal - segundosPassados;
 
@@ -2274,8 +2274,9 @@ function atualizarTextoTimer(elemento, segundos) {
 let timerBuscaInterval = null;   // Controla o relógio visual (90s)
 
 // 2. Função do Timer Visual (Corrigida)
-function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
-    // Limpa qualquer timer anterior para evitar duplicidade
+// 2. Função do Timer Visual (COM FORMATAÇÃO DE MINUTOS)
+function iniciarContadorBusca(idPedido, segundosIniciais = 600) { // <--- MUDADO PARA 600
+    // Limpa qualquer timer anterior
     if (timerBuscaInterval) clearInterval(timerBuscaInterval);
 
     const elContainer = document.getElementById('tempo-restante-busca'); 
@@ -2284,11 +2285,19 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
 
     if (!elContainer) return;
 
-    // Reseta o visual
+    // Função interna para formatar 00:00
+    const formatarTempo = (s) => {
+        const min = Math.floor(s / 60).toString().padStart(2, '0');
+        const seg = (s % 60).toString().padStart(2, '0');
+        return `${min}:${seg}`;
+    };
+
+    // Reseta o visual inicial
     elContainer.style.display = 'flex';
     elContainer.style.borderColor = 'rgba(0, 255, 0, 0.3)';
     elContainer.style.color = '#ccc';
-    elContainer.innerHTML = '⏳ Tempo estimado: <span id="timer-numeros" style="color: var(--neon-green); font-weight: bold; font-size: 16px; margin-left:5px;">' + segundosIniciais + 's</span>';
+    // Aqui já mostramos formatado
+    elContainer.innerHTML = '⏳ Tempo estimado: <span id="timer-numeros" style="color: var(--neon-green); font-weight: bold; font-size: 16px; margin-left:5px;">' + formatarTempo(segundosIniciais) + '</span>';
     
     if (btnCancelar) btnCancelar.style.display = 'block';
 
@@ -2297,13 +2306,14 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 90) {
     timerBuscaInterval = setInterval(() => {
         restantes--;
         
-        // Tenta pegar o elemento novamente (caso o DOM tenha mudado)
         const spanNum = document.getElementById('timer-numeros');
-        if (spanNum) spanNum.innerText = restantes + "s";
+        if (spanNum) {
+            spanNum.innerText = formatarTempo(restantes); // <--- ATUALIZA COM FORMATO 00:00
+        }
 
-        // Cores de alerta
-        if (spanNum && restantes <= 30) spanNum.style.color = "#ff9900"; // Laranja
-        if (spanNum && restantes <= 10) spanNum.style.color = "#ff4444"; // Vermelho
+        // Cores de alerta (quando faltar 1 min e 30 seg)
+        if (spanNum && restantes <= 60) spanNum.style.color = "#ff9900"; // Laranja
+        if (spanNum && restantes <= 15) spanNum.style.color = "#ff4444"; // Vermelho
 
         if (restantes <= 0) {
             clearInterval(timerBuscaInterval);
