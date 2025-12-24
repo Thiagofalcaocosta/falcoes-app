@@ -794,6 +794,34 @@
 .btn-fechar-texto:hover {
     color: #fff;
 }
+/* --- NOVOS ESTADOS NEON (Coloque no seu <style>) --- */
+
+/* ESTADO 1: BUSCANDO (Azul Ciano Neon) */
+/* Remove o fundo verde padrão e aplica o azul */
+#acompanhamento-status-area.status-buscando {
+    border: 2px solid #00ffff !important; /* Azul Neon */
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3) !important;
+    background-color: rgba(0, 255, 255, 0.05) !important; /* Fundo azulzinho muito leve */
+}
+/* Muda a cor do título e ícone */
+#acompanhamento-status-area.status-buscando #acompanhamento-status-titulo {
+    color: #00ffff !important;
+}
+/* Muda a cor do timer para combinar */
+#acompanhamento-status-area.status-buscando #timer-numeros {
+    color: #00ffff !important;
+}
+
+/* ESTADO 2: FINALIZADA (Dourado Neon) */
+#acompanhamento-status-area.status-finalizada {
+    border: 2px solid #ffd700 !important; /* Dourado Neon */
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.4) !important; /* Brilho mais forte */
+    background-color: rgba(255, 215, 0, 0.08) !important; /* Fundo dourado leve */
+}
+/* Muda a cor do título */
+#acompanhamento-status-area.status-finalizada #acompanhamento-status-titulo {
+    color: #ffd700 !important;
+}
 
 
     </style>
@@ -2424,7 +2452,7 @@ async function verificarStatus(id) {
         const statusArea   = document.getElementById('acompanhamento-status-area'); 
         const motoboyBox   = document.getElementById('motoboy-info-box');
         const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
-        const wrapperWpp   = document.querySelector('.whatsapp-center-wrapper'); // Pega o container do zap
+        const wrapperWpp   = document.querySelector('.whatsapp-center-wrapper'); 
         const modal        = document.getElementById('modal-pagamento'); 
         const btnTaxa      = document.getElementById('area-botao-cancelar-taxa');
         const elTempo      = document.getElementById('tempo-restante-busca');
@@ -2433,12 +2461,17 @@ async function verificarStatus(id) {
         const areaCodigo   = document.getElementById('area-codigo-seguranca');
         const textoCodigo  = document.getElementById('texto-codigo-seguranca');
 
-        // Se o pedido tem senha e os elementos existem no HTML
+        // --- LIMPEZA DE CORES NEON (NOVO) ---
+        // Garante que não fique azul e verde ao mesmo tempo
+        if (statusArea) {
+            statusArea.classList.remove('status-buscando', 'status-finalizada');
+        }
+
+        // Lógica do Código de Segurança (Mantida)
         if (pedido.codigo_seguranca && areaCodigo && textoCodigo) {
-            // Só mostra a senha se NÃO estiver concluída
             if (pedido.status !== 'concluida' && pedido.status !== 'cancelada') {
                 areaCodigo.style.display = 'block'; 
-                textoCodigo.innerText = pedido.codigo_seguranca;
+                textoCodigo.innerText = pedido.codigo_seguranca; 
             } else {
                 areaCodigo.style.display = 'none';
             }
@@ -2455,17 +2488,14 @@ async function verificarStatus(id) {
             if (statusTitulo) { statusTitulo.style.color = '#ff4444'; statusTitulo.innerText = "PEDIDO CANCELADO ❌"; }
             if (statusDesc) statusDesc.innerText = "Esta corrida foi cancelada.";
             
-            // Esconde botões de ação
             if (motoboyBox) motoboyBox.style.display = 'none';
             if (btnWpp) btnWpp.style.display = 'none';
             if (btnTaxa) btnTaxa.style.display = 'none';
             if (btnCancelBusca) btnCancelBusca.style.display = 'none';
 
-            // Ativa área de estorno
             const areaEstorno = document.getElementById('area-estorno-adm');
             if(areaEstorno) areaEstorno.style.display = 'block';
             
-            // Botão de fechar (Reiniciar)
             if(btnFechar) {
                 btnFechar.style.display = 'block';
                 btnFechar.innerText = "FAZER NOVO PEDIDO";
@@ -2473,10 +2503,13 @@ async function verificarStatus(id) {
             }
         }
 
-        // 🟡 PENDENTE (BUSCANDO)
+        // 🔵 PENDENTE (BUSCANDO - NOVO VISUAL AZUL)
         else if (pedido.status === 'pendente') {
-            if (statusTitulo) statusTitulo.innerText = "BUSCANDO PILOTO...";
-            // Garante que botão cancelar busca aparece
+            if (statusTitulo) statusTitulo.innerHTML = 'BUSCANDO PILOTO...'; // Mantive seu texto original
+            
+            // APLICA O AZUL NEON
+            if (statusArea) statusArea.classList.add('status-buscando');
+            
             if (btnCancelBusca) btnCancelBusca.style.display = 'block';
         }
 
@@ -2489,8 +2522,10 @@ async function verificarStatus(id) {
             if (modal && !modal.classList.contains('show')) {
                 modal.classList.add('show');
             }
-            // Pega o valor do pedido e joga no modal
-        document.getElementById('valor-modal-pagamento').innerText = "R$ " + parseFloat(pedido.valor).toFixed(2).replace('.', ',');
+            // Mantive sua lógica de mostrar o preço
+            if (document.getElementById('valor-modal-pagamento')) {
+                 document.getElementById('valor-modal-pagamento').innerText = "R$ " + parseFloat(pedido.valor).toFixed(2).replace('.', ',');
+            }
             
             if (statusTitulo) { statusTitulo.style.color = '#ffd700'; statusTitulo.innerText = "🎯 ESCOLHA COMO PAGAR"; }
             if (statusDesc) statusDesc.innerText = "Um piloto aceitou! Aguardando pagamento.";
@@ -2503,6 +2538,7 @@ async function verificarStatus(id) {
             if (btnCancelBusca) btnCancelBusca.style.display = 'none';
             if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
 
+            // Garante o Verde Padrão
             if (statusArea) statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.15) !important; border: 1px solid #00e640 !important;');
             if (statusTitulo) { statusTitulo.style.color = '#00e640'; statusTitulo.innerHTML = '<i class="fas fa-motorcycle"></i> PILOTO A CAMINHO'; }
             
@@ -2528,41 +2564,41 @@ async function verificarStatus(id) {
             }
         }
 
-        // ⚪ CONCLUÍDA (AQUI ESTÁ A CORREÇÃO QUE VOCÊ PEDIU!)
+        // 🟡 CONCLUÍDA (NOVO VISUAL DOURADO)
         else if (pedido.status === 'concluida') {
             if (intervaloVerificacao) clearInterval(intervaloVerificacao);
             
-            // 1. Limpa visualmente o card principal
+            // APLICA O DOURADO NEON
+            if (statusArea) statusArea.classList.add('status-finalizada');
+            // Remove o estilo inline cinza antigo para o CSS novo pegar
+            statusArea.removeAttribute('style'); 
+
             if (statusTitulo) { 
-                statusTitulo.innerText = "CORRIDA FINALIZADA ✅"; 
-                statusTitulo.style.color = "white"; 
+                statusTitulo.innerHTML = "CORRIDA FINALIZADA ✅"; 
+                // A cor do texto agora vem do CSS .status-finalizada
             }
             if (statusDesc) statusDesc.innerText = "Obrigado por viajar conosco!";
-            if (statusArea) statusArea.setAttribute('style', 'background: #222; border: 1px solid #444;');
-
-            // 2. ESCONDE TUDO QUE SOBROU DA CORRIDA
+            
+            // Esconde tudo
             if (motoboyBox) motoboyBox.style.display = 'none';
             if (btnWpp) btnWpp.style.display = 'none';
-            if (wrapperWpp) wrapperWpp.style.display = 'none'; // Some o container do zap
-            if (btnTaxa) btnTaxa.style.display = 'none';       // Some o botão cancelar vermelho
+            if (wrapperWpp) wrapperWpp.style.display = 'none';
+            if (btnTaxa) btnTaxa.style.display = 'none';
             if (btnCancelBusca) btnCancelBusca.style.display = 'none';
             if (areaCodigo) areaCodigo.style.display = 'none';
 
-            // 3. MOSTRA O BOTÃO "NOVO PEDIDO" (Usando o botão fechar antigo, mas com estilo novo)
+            // Mostra botão novo pedido
             if(btnFechar) {
                 btnFechar.style.display = 'block';
                 btnFechar.innerText = "FAZER NOVO PEDIDO";
                 btnFechar.onclick = reiniciarApp;
                 
-                // Aplica a classe nova que criamos no CSS
+                // Aplica a classe do botão bonito que fizemos antes
                 btnFechar.className = 'btn-novo-pedido-neon'; 
-                
-                // Centraliza ele
                 btnFechar.style.margin = "20px auto";
                 btnFechar.style.display = "block";
             }
             
-            // Limpa rascunho
             if(typeof limparRascunho === 'function') limparRascunho();
         }
 
