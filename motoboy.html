@@ -795,6 +795,14 @@ function mostrarTela(idDesejado) {
 function renderizarBotoesAtiva(status) {
     const container = document.getElementById('botoes-acao-ativa');
     if (!container) return;
+
+    // --- TRAVA DE SEGURANÇA (O PULO DO GATO) ---
+    // Se o campo JÁ EXISTE na tela, o código PARA aqui.
+    // Isso impede que ele apague o que você está digitando a cada 3 segundos.
+    if (document.getElementById('input-pin-corrida')) {
+        return; 
+    }
+    // -------------------------------------------
     
     container.innerHTML = ''; 
 
@@ -802,9 +810,9 @@ function renderizarBotoesAtiva(status) {
         
         const divSenha = document.createElement('div');
         
-        // CSS do Container
+        // Mantive o estilo bonito V3 que criamos antes
         divSenha.style.cssText = `
-            background: #1e1e1e; 
+            background: rgba(255, 255, 255, 0.05); 
             padding: 15px; 
             border-radius: 12px; 
             border: 1px solid #444; 
@@ -814,18 +822,11 @@ function renderizarBotoesAtiva(status) {
             max-width: 250px;
         `;
         
-        // CSS Injetado para garantir a cor do Placeholder (os tracinhos)
+        // CSS para garantir a cor verde nos tracinhos (Placeholder)
         const stylePlaceholder = document.createElement('style');
         stylePlaceholder.innerHTML = `
-            .input-pin-style::placeholder {
-                color: #00e640 !important;
-                opacity: 0.5 !important;
-            }
-            .input-pin-style {
-                color: #00e640 !important;
-                text-shadow: 0px 0px 0px #00e640; /* Truque para forçar cor em alguns Androids */
-                -webkit-text-fill-color: #00e640 !important;
-            }
+            .input-pin-style::placeholder { color: #00e640 !important; opacity: 0.5; }
+            .input-pin-style { color: #00e640 !important; caret-color: #00e640 !important; }
         `;
         container.appendChild(stylePlaceholder);
 
@@ -843,27 +844,15 @@ function renderizarBotoesAtiva(status) {
                    pattern="[0-9]*"
                    autocomplete="off"
                    style="
-                      display: block;
-                      width: 100%;
-                      box-sizing: border-box;
+                      display: block; width: 100%; box-sizing: border-box;
                       background-color: #000000 !important; 
-                      
-                      border: 2px solid #333; 
-                      border-radius: 8px; 
-                      
-                      font-size: 28px; 
-                      font-weight: bold;
-                      letter-spacing: 5px; 
-                      text-align: center;
-                      
-                      padding: 12px 0;
-                      margin: 0;
-                      outline: none;
+                      border: 2px solid #333; border-radius: 8px; 
+                      font-size: 28px; font-weight: bold; letter-spacing: 5px; text-align: center;
+                      padding: 12px 0; margin: 0; outline: none;
                    ">
         `;
         container.appendChild(divSenha);
 
-        // Botões
         const btnFinalizar = document.createElement('button');
         btnFinalizar.className = 'btn-acao btn-verde';
         btnFinalizar.innerText = '✅ FINALIZAR CORRIDA';
