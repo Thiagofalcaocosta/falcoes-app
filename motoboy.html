@@ -796,25 +796,38 @@ function renderizarBotoesAtiva(status) {
     const container = document.getElementById('botoes-acao-ativa');
     if (!container) return;
     
-    // Limpa botões anteriores
+    // Limpa o conteúdo anterior
     container.innerHTML = ''; 
 
-    // Botão de Cancelar
-    const btnCancelar = document.createElement('button');
-    btnCancelar.className = 'btn-acao btn-vermelho';
-    btnCancelar.innerText = '❌ CANCELAR CORRIDA';
-    btnCancelar.setAttribute('onclick', 'cancelarCorridaMotoboy()');
-    
-    // Botão Finalizar
-    const btnFinalizar = document.createElement('button');
-    btnFinalizar.className = 'btn-acao btn-verde';
-    btnFinalizar.innerText = '✅ FINALIZAR CORRIDA';
-    btnFinalizar.setAttribute('onclick', 'finalizarCorrida()');
-
-    // Lógica de exibição:
-    // A corrida é considerada "iniciada" assim que está liberada.
+    // Se a corrida estiver valendo (liberada ou andando), cria o campo e os botões
     if (status === 'liberada' || status === 'em_andamento') {
+        
+        // 1. CRIA O CAMPO DE SENHA (PIN)
+        const divSenha = document.createElement('div');
+        divSenha.style.cssText = "background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; border: 1px solid #444; text-align: center; margin-bottom: 10px;";
+        
+        divSenha.innerHTML = `
+            <label style="color: #bbb; font-size: 11px; font-weight: bold; display: block; margin-bottom: 8px;">SENHA DO CLIENTE:</label>
+            <input type="tel" id="input-pin-corrida" maxlength="4" placeholder="----" 
+                   style="background: #000; border: 2px solid #555; color: #fff; 
+                          font-size: 28px; padding: 12px; width: 100%; text-align: center; 
+                          border-radius: 8px; letter-spacing: 8px; outline: none; font-weight: 800;">
+        `;
+        container.appendChild(divSenha);
+
+        // 2. CRIA O BOTÃO FINALIZAR
+        const btnFinalizar = document.createElement('button');
+        btnFinalizar.className = 'btn-acao btn-verde';
+        btnFinalizar.innerText = '✅ FINALIZAR CORRIDA';
+        btnFinalizar.setAttribute('onclick', 'finalizarCorrida()');
         container.appendChild(btnFinalizar);
+
+        // 3. CRIA O BOTÃO CANCELAR (com margem no topo para separar)
+        const btnCancelar = document.createElement('button');
+        btnCancelar.className = 'btn-acao btn-vermelho';
+        btnCancelar.innerText = '❌ CANCELAR CORRIDA';
+        btnCancelar.setAttribute('onclick', 'cancelarCorridaMotoboy()');
+        btnCancelar.style.marginTop = "10px"; // Separar um pouco
         container.appendChild(btnCancelar); 
     }
 }
