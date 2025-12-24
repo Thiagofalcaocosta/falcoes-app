@@ -523,38 +523,41 @@ app.post('/pedir-corrida', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
 app.post('/cancelar-pedido', async (req, res) => {
-  const { id, motivo } = req.body;
+    const { id, motivo, cancelado_por } = req.body; // Adicionei cancelado_por
 
-  try {
-    // 1. Cancela a corrida e desvincula o motoboy
-    await pool.query(
-      `
-      UPDATE corridas
-      SET status = 'cancelada',
-          motivo_cancelamento = $1,
-          motoboy_id = NULL
-      WHERE id = $2
-  AND status IN ('pendente', 'aguardando_pagamento', 'aceita')
+    try {
+        // 1. Cancela a corrida
+        // IMPORTANTE: NÃO removemos o motoboy_id agora. 
+        // Se removermos, o radar do motoboy perde o rastro da corrida e não abre o aviso.
+        await pool.query(
+            `
+            UPDATE corridas
+            SET status = 'cancelada',
+                motivo_cancelamento = $1
+            WHERE id = $2
+            -- AGORA ACEITA CANCELAR EM QUALQUER FASE RELEVANTE:
+            AND status IN ('pendente', 'aguardando_pagamento', 'aceita', 'liberada', 'em_andamento')
+            `,
+            [motivo, id]
+        );
 
-      `,
-      [motivo, id]
-    );
+        // 2. Remove da lista de espera (exposições)
+        await pool.query(
+            "DELETE FROM exposicao_corrida WHERE corrida_id = $1",
+            [id]
+        );
 
-    // 2. Remove TODAS as exposições dessa corrida
-    await pool.query(
-      "DELETE FROM exposicao_corrida WHERE corrida_id = $1",
-      [id]
-    );
+        // 3. Se foi o CLIENTE que cancelou quando o motoboy já estava indo,
+        // podemos dar uma compensação para o motoboy ou apenas registrar.
+        // Por enquanto, apenas logamos.
+        console.log(`🚫 Corrida ${id} cancelada por ${cancelado_por || 'desconhecido'}. Motivo: ${motivo}`);
 
-    console.log(`🚫 Corrida ${id} cancelada e exposições limpas.`);
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Erro em /cancelar-pedido:', err && err.stack ? err.stack : err);
-    res.status(500).json({ success: false });
-  }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro em /cancelar-pedido:', err && err.stack ? err.stack : err);
+        res.status(500).json({ success: false });
+    }
 });
 
 app.post('/corridas-pendentes', async (req, res) => {
@@ -751,11 +754,10 @@ app.get('/minha-corrida-atual/:id', async (req, res) => {
       FROM corridas c
       JOIN usuarios u ON c.cliente_id = u.id
       WHERE c.motoboy_id = $1
-      AND c.status IN ('aguardando_pagamento', 'liberada', 'em_andamento')
-
-  
-
-    `,
+      -- ADICIONEI 'cancelada' AQUI PARA O MOTOBOY RECEBER O DADO ANTES DE SUMIR DA TELA
+      AND c.status IN ('aguardando_pagamento', 'liberada', 'em_andamento', 'cancelada')
+      ORDER BY c.id DESC LIMIT 1
+      `,
       [req.params.id]
     );
     if (result.rows.length > 0)
