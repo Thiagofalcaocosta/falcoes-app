@@ -742,6 +742,58 @@
     box-shadow: 0 0 20px rgba(0, 230, 64, 0.6); /* Brilho forte ao passar mouse */
     transform: scale(1.05);
 }
+/* --- ESTILOS DO MODAL DE PAGAMENTO OTIMIZADO --- */
+
+/* Botão PIX (O Principal) */
+.btn-pagamento-pix {
+    width: 100%;
+    padding: 16px;
+    background-color: #00e640; /* Verde Neon */
+    color: #000; /* Texto Preto para contraste */
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 900;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0, 230, 64, 0.4); /* Brilho Neon */
+    transition: transform 0.2s;
+}
+.btn-pagamento-pix:active {
+    transform: scale(0.98);
+}
+
+/* Botão DINHEIRO (O Secundário) */
+.btn-pagamento-dinheiro {
+    width: 100%;
+    padding: 16px;
+    background-color: transparent; /* Fundo invisível */
+    border: 2px solid #00e640; /* Borda Verde */
+    color: #00e640; /* Texto Verde */
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.btn-pagamento-dinheiro:hover {
+    background-color: rgba(0, 230, 64, 0.1);
+}
+
+/* Botão Fechar (Discreto) */
+.btn-fechar-texto {
+    background: none;
+    border: none;
+    color: #666; /* Cinza escuro para não chamar atenção */
+    margin-top: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    text-decoration: underline;
+}
+.btn-fechar-texto:hover {
+    color: #fff;
+}
 
 
     </style>
@@ -800,26 +852,38 @@
                 style="margin-top:8px;">Fechar</button>
         </div>
     </div>
-    <div id="modal-pagamento">
+   <div id="modal-pagamento">
     <div class="modal-content">
-        <img src="assets/logo.png" style="width: 80px; margin-bottom: 15px;">
-        <h3 style="color: var(--brand-green);">PAGAMENTO</h3>
-        <p>Um piloto aceitou! Como deseja pagar?</p>
+        <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
         
-        <div class="btn-pagamento-opcoes">
-            <button class="btn-pagamento-item" onclick="pagarDinheiro()">
+        <h3 style="color: var(--neon-green); margin: 0; font-size: 22px; font-weight: 800;">PILOTO ENCONTRADO!</h3>
+        <p style="color: #ccc; font-size: 14px; margin-top: 5px;">Como você deseja pagar?</p>
+        
+        <div id="valor-modal-pagamento" style="
+            font-size: 28px; 
+            font-weight: 900; 
+            color: #fff; 
+            margin: 20px 0; 
+            text-shadow: 0 0 10px rgba(255,255,255,0.2);
+        ">
+            R$ --,--
+        </div>
+
+        <div class="btn-pagamento-opcoes" style="display: flex; flex-direction: column; gap: 15px;">
+            
+            <button class="btn-pagamento-pix" onclick="pagarPix()">
+                📱 PAGAR COM PIX
+            </button>
+
+            <button class="btn-pagamento-dinheiro" onclick="pagarDinheiro()">
                 💵 PAGAR EM DINHEIRO
             </button>
-           <button class="btn-pagamento-item" onclick="pagarPix()">
-📱 PAGAR COM PIX
-</button>
-
 
         </div>
         
         <button onclick="document.getElementById('modal-pagamento').classList.remove('show')" 
-                style="background:none; border:none; color:var(--muted); margin-top:15px; cursor:pointer;">
-            Fechar
+                class="btn-fechar-texto">
+            Fechar e decidir depois
         </button>
     </div>
 </div>
