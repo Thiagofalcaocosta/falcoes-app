@@ -70,6 +70,41 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+// ===============================================
+// 🛡️ SEGURANÇA: BLOQUEIO DE ARQUIVOS SENSÍVEIS
+// ===============================================
+app.use((req, res, next) => {
+    // Lista de arquivos que NINGUÉM pode baixar
+    const arquivosProibidos = [
+        '/database.db',
+        '/server.cjs',
+        '/server.fixed.js',
+        '/package.json',
+        '/package-lock.json',
+        '/.env',
+        '/.git',
+        '/.gitignore'
+    ];
+
+    // Se a URL solicitada for exatamente um arquivo proibido
+    if (arquivosProibidos.includes(req.path)) {
+        console.log(`🚨 Tentativa de invasão bloqueada: IP ${req.ip} tentou baixar ${req.path}`);
+        return res.status(403).send('⛔ Acesso Negado: Área Restrita.');
+    }
+
+    // Bloqueia qualquer arquivo que termine com .db ou .sqlite (garantia extra)
+    if (req.path.endsWith('.db') || req.path.endsWith('.sqlite')) {
+        return res.status(403).send('⛔ Acesso Negado.');
+    }
+
+    next(); // Se não for proibido, deixa passar
+});
+
+// ===============================================
+// AGORA SIM: SERVIR ARQUIVOS ESTÁTICOS
+// ===============================================
+app.use(express.static(path.join(__dirname))); // <-- Essa linha já existe no seu código, o bloqueio fica ACIMA dela
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // 1. SERVIR ARQUIVOS ESTÁTICOS (CSS, IMAGENS, JS)
 app.use(express.static(path.join(__dirname)));
