@@ -822,6 +822,77 @@
 #acompanhamento-status-area.status-finalizada #acompanhamento-status-titulo {
     color: #ffd700 !important;
 }
+/* Fundo com desfoque (Blur) */
+.modal-overlay-neon {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85); /* Fundo bem escuro */
+    backdrop-filter: blur(8px); /* Efeito vidro */
+    z-index: 9999;
+    display: none; /* Começa oculto */
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+/* A Caixa do Modal */
+.modal-box-neon {
+    background: #151515;
+    border: 1px solid #ff3b3b; /* Borda vermelha fina */
+    box-shadow: 0 0 20px rgba(255, 59, 59, 0.25); /* Brilho vermelho */
+    border-radius: 16px;
+    padding: 30px;
+    width: 85%;
+    max-width: 320px;
+    text-align: center;
+    color: #fff;
+    transform: scale(0.95);
+    animation: scaleIn 0.2s forwards;
+}
+
+/* Títulos e Textos */
+.modal-titulo-neon {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ff4444;
+    margin: 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.modal-desc-neon {
+    color: #aaa;
+    font-size: 14px;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+/* Botões */
+.btn-modal-voltar {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: transparent;
+    color: #ccc;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-modal-cancelar {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background: #ff3b3b;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(255, 59, 59, 0.3);
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { to { transform: scale(1); } }
 
 
     </style>
