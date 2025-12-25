@@ -671,7 +671,22 @@
         </div>
 
         <div id="tela-bloqueio" style="display: none;">
-            </div>
+    <div class="container" style="margin-top: 50px; text-align: center;">
+        <div class="aviso-bloqueio" style="border: 1px solid #ff4444; padding: 30px; border-radius: 15px; background: rgba(255, 68, 68, 0.1);">
+            <span style="font-size: 60px;">🔒</span>
+            <h2 style="color: #ff4444; margin: 10px 0;">VOCÊ ESTÁ BLOQUEADO</h2>
+            <p style="color: #ccc;">Você cancelou uma corrida recentemente.</p>
+            
+            <span id="tempo-restante" style="font-size: 40px; font-weight: 800; color: #ff4444; display: block; margin: 20px 0;">-- min</span>
+            
+            <p style="font-size: 12px; color: #888;">Aguarde o tempo acabar para voltar a receber chamadas.</p>
+            
+            <button onclick="window.location.reload()" style="background: #333; color: white; padding: 15px; width: 100%; border: none; border-radius: 10px; margin-top: 20px; cursor: pointer;">
+                ATUALIZAR AGORA
+            </button>
+        </div>
+    </div>
+</div>
     <script>
     /***********************
      * VARIÁVEIS GLOBAIS
