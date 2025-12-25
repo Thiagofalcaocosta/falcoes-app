@@ -1571,6 +1571,8 @@ window.cancelarCorridaMotoboy = function() {
 };
 
 // 2. ENVIA O CANCELAMENTO (Ação do botão vermelho dentro do modal)
+// Substitua a função inteira 'window.confirmarCancelamentoMotoboy' por esta:
+
 window.confirmarCancelamentoMotoboy = async function() {
     const inputMotivo = document.getElementById('justificativa-motoboy');
     const motivoTexto = inputMotivo ? inputMotivo.value : "Sem motivo";
@@ -1580,7 +1582,9 @@ window.confirmarCancelamentoMotoboy = async function() {
         return;
     }
 
-    // Tenta pegar o ID global ou o ID salvo no radar
+    // Fecha o modal de digitação para mostrar o loading ou resultado
+    fecharModal('modal-cancelamento-motoboy');
+
     const idParaCancelar = idCorridaAtual || window.radarIdCorrida;
 
     if (!idParaCancelar) {
@@ -1603,16 +1607,36 @@ window.confirmarCancelamentoMotoboy = async function() {
         const data = await res.json();
 
         if (data.success) {
-            alert("✅ Corrida cancelada!");
-            const modal = document.getElementById('modal-cancelamento-motoboy');
-            if(modal) modal.style.display = 'none';
-            window.location.reload();
+            // --- AQUI ESTÁ A MÁGICA VISUAL (SEM ALERT) ---
+            
+            // Cria um modal dinâmico usando seu CSS existente
+            const divAviso = document.createElement('div');
+            divAviso.className = 'modal-overlay';
+            divAviso.style.display = 'flex'; // Já mostra direto
+            divAviso.innerHTML = `
+                <div class="modal-box" style="border-color: #ff4444; box-shadow: 0 0 30px rgba(255, 68, 68, 0.3);">
+                    <span style="font-size: 50px; display: block; margin-bottom: 15px;">🚫</span>
+                    <div class="modal-titulo texto-vermelho">CORRIDA CANCELADA</div>
+                    <p class="modal-desc" style="color: #fff;">
+                        Você cancelou a corrida.<br>
+                        <span style="color: #ff9999; font-size: 13px; margin-top: 10px; display: block;">
+                            ⚠️ Uma restrição de 5 minutos foi aplicada.
+                        </span>
+                    </p>
+                    <button class="btn-modal btn-vermelho" onclick="window.location.reload()">ENTENDIDO</button>
+                </div>
+            `;
+            document.body.appendChild(divAviso);
+
+            // Toca som de erro se tiver
+            if (typeof tocarAlerta === 'function') tocarAlerta();
+
         } else {
-            alert("Erro ao cancelar: " + (data.message || "Tente novamente."));
+            mostrarErro("Erro ao cancelar: " + (data.message || "Tente novamente."));
         }
     } catch (err) {
         console.error("Erro ao cancelar:", err);
-        alert("Erro de conexão.");
+        mostrarErro("Erro de conexão ao cancelar.");
     }
 };
 

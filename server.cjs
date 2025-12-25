@@ -523,41 +523,45 @@ app.post('/pedir-corrida', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-app.post('/cancelar-pedido', async (req, res) => {
-    const { id, motivo, cancelado_por } = req.body; // Adicionei cancelado_por
+app.post('/motoboy-cancelar-corrida', async (req, res) => {
+  const { corrida_id, motoboy_id, motivo } = req.body;
 
-    try {
-        // 1. Cancela a corrida
-        // IMPORTANTE: NÃO removemos o motoboy_id agora. 
-        // Se removermos, o radar do motoboy perde o rastro da corrida e não abre o aviso.
-        await pool.query(
-            `
-            UPDATE corridas
-            SET status = 'cancelada',
-                motivo_cancelamento = $1
-            WHERE id = $2
-            -- AGORA ACEITA CANCELAR EM QUALQUER FASE RELEVANTE:
-            AND status IN ('pendente', 'aguardando_pagamento', 'aceita', 'liberada', 'em_andamento')
-            `,
-            [motivo, id]
-        );
+  if (!corrida_id || !motoboy_id) {
+    return res.status(400).json({ error: 'Dados obrigatórios faltando' });
+  }
 
-        // 2. Remove da lista de espera (exposições)
-        await pool.query(
-            "DELETE FROM exposicao_corrida WHERE corrida_id = $1",
-            [id]
-        );
+  try {
+    // 1️⃣ Cancela a corrida
+    await pool.query(
+      `
+      UPDATE corridas
+      SET status = 'cancelada',
+          motivo_cancelamento = $3,
+          motoboy_id = NULL
+      WHERE id = $1 AND motoboy_id = $2
+      `,
+      [corrida_id, motoboy_id, motivo || 'Cancelada pelo motoboy']
+    );
 
-        // 3. Se foi o CLIENTE que cancelou quando o motoboy já estava indo,
-        // podemos dar uma compensação para o motoboy ou apenas registrar.
-        // Por enquanto, apenas logamos.
-        console.log(`🚫 Corrida ${id} cancelada por ${cancelado_por || 'desconhecido'}. Motivo: ${motivo}`);
+    // 2️⃣ Limpa fila
+    await pool.query(
+      "DELETE FROM exposicao_corrida WHERE corrida_id = $1",
+      [corrida_id]
+    );
 
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Erro em /cancelar-pedido:', err && err.stack ? err.stack : err);
-        res.status(500).json({ success: false });
-    }
+    // 3️⃣ ✅ AQUI SIM PUNE (Atualizado para 5 minutos)
+    await pool.query(
+      "UPDATE usuarios SET bloqueado_ate = NOW() + interval '5 minutes' WHERE id = $1",
+      [motoboy_id]
+    );
+
+    console.log(`⚠️ Motoboy ${motoboy_id} cancelou corrida ${corrida_id} e foi bloqueado por 5 min.`);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erro ao cancelar corrida pelo motoboy:', err);
+    res.status(500).json({ success: false });
+  }
 });
 
 app.post('/corridas-pendentes', async (req, res) => {
