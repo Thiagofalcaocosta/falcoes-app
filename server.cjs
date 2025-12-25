@@ -1,13 +1,14 @@
-/* server.fixed.js
+/* 
    Versão completa com Mercado Pago e correção de ordem
 */
+require('dotenv').config();
 
 const express = require('express');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
 const path = require('path');
 const cors = require('cors');
-require('dotenv').config();
+
 
 const PUBLIC_BASE_URL = 'https://falcoes-app.onrender.com';
 const FRONT_URL = 'https://falcoes.site';
