@@ -1048,44 +1048,50 @@ app.post('/iniciar-corrida', async (req, res) => {
 });
 
 
-app.post('/motoboy-cancelar-corrida', async (req, res) => {
-  const { corrida_id, motoboy_id, motivo } = req.body;
+// --- ROTA CORRIGIDA PARA CANCELAMENTO (COM PUNIÇÃO DE 5 MIN) ---
+app.post('/cancelar-pedido', async (req, res) => {
+  // O Frontend envia 'id', então precisamos ler 'id' aqui, não 'corrida_id'
+  const { id, motoboy_id, motivo, cancelado_por } = req.body;
 
-  if (!corrida_id || !motoboy_id) {
-    return res.status(400).json({ error: 'Dados obrigatórios faltando' });
+  // Verificação de segurança
+  if (!id) {
+    return res.status(400).json({ error: 'ID da corrida obrigatório' });
   }
 
   try {
     // 1️⃣ Cancela a corrida
+    // Mantemos o motoboy_id na corrida (sem setar NULL) para manter registro de quem cancelou
     await pool.query(
       `
       UPDATE corridas
       SET status = 'cancelada',
-          motivo_cancelamento = $3,
-          motoboy_id = NULL
-      WHERE id = $1 AND motoboy_id = $2
+          motivo_cancelamento = $1
+      WHERE id = $2
       `,
-      [corrida_id, motoboy_id, motivo || 'Cancelada pelo motoboy']
+      [motivo || 'Cancelada pelo motoboy', id]
     );
 
-    // 2️⃣ Limpa fila
+    // 2️⃣ Limpa fila de exposição (tira a corrida da tela dos outros)
     await pool.query(
       "DELETE FROM exposicao_corrida WHERE corrida_id = $1",
-      [corrida_id]
+      [id]
     );
 
-    // 3️⃣ ✅ AQUI SIM PUNE (leve)
-    await pool.query(
-      "UPDATE usuarios SET bloqueado_ate = NOW() + interval '2 minutes' WHERE id = $1",
-      [motoboy_id]
-    );
+    // 3️⃣ ✅ PUNIÇÃO DE 5 MINUTOS (Correção aplicada aqui)
+    if (motoboy_id) {
+        await pool.query(
+          "UPDATE usuarios SET bloqueado_ate = NOW() + interval '5 minutes' WHERE id = $1",
+          [motoboy_id]
+        );
+        console.log(`🔒 Motoboy ${motoboy_id} bloqueado por 5 min após cancelar corrida ${id}`);
+    }
 
-    console.log(`⚠️ Motoboy ${motoboy_id} cancelou corrida ${corrida_id}`);
+    console.log(`🚫 Corrida ${id} cancelada com sucesso.`);
 
     res.json({ success: true });
   } catch (err) {
-    console.error('Erro ao cancelar corrida pelo motoboy:', err);
-    res.status(500).json({ success: false });
+    console.error('Erro ao cancelar corrida:', err);
+    res.status(500).json({ success: false, message: "Erro no servidor" });
   }
 });
 
