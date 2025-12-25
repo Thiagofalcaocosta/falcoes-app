@@ -6,3 +6,7 @@
 
 # 2. Impedir listagem de pastas (Para ninguém ver a lista de arquivos do site)
 Options -Indexes
+
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
