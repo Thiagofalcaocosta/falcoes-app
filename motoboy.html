@@ -725,6 +725,65 @@
     // Monitoramento da corrida ACEITA
     let monitoramentoAtivaInterval = null;
 
+    // --- NOVO: FUNCIONALIDADE PARA MANTER A TELA ACESA (WAKE LOCK) ---
+let wakeLock = null;
+
+// Função que pede permissão ao sistema para manter a tela ligada
+async function ativarWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('💡 TELA MANTIDA ACESA (Wake Lock ativado com sucesso!)');
+
+            // Se o sistema soltar o bloqueio (ex: bateria fraca), avisa no console
+            wakeLock.addEventListener('release', () => {
+                console.log('💡 Wake Lock foi solto pelo sistema.');
+            });
+        } catch (err) {
+            // Erros comuns: bateria muito baixa ou navegador não permitiu
+            console.warn(`⚠️ Não foi possível manter a tela acesa: ${err.name}, ${err.message}`);
+        }
+    } else {
+        console.log('ℹ️ Seu navegador não suporta manter a tela acesa nativamente.');
+    }
+}
+
+// Se o motoboy minimizar o app e voltar, o navegador solta o bloqueio.
+// Esse código detecta quando ele volta e pede o bloqueio de novo.
+document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+        console.log('🔄 Voltando ao app: Reativando Wake Lock...');
+        await ativarWakeLock();
+    }
+});
+
+// --- IMPORTANTE: GATILHO INICIAL ---
+// Navegadores (principalmente Chrome no Android) SÓ permitem tocar som e 
+// manter a tela acesa se o usuário interagir com a página pelo menos uma vez.
+// Adicionamos este "ouvinte" no corpo inteiro da página. No primeiro toque em 
+// qualquer lugar, ele ativa tudo.
+document.body.addEventListener('click', async function liberarRecursos() {
+    console.log('👆 Primeiro toque detectado: Liberando som e tela...');
+    
+    // 1. Tenta ativar o Wake Lock
+    await ativarWakeLock();
+    
+    // 2. Toca e pausa o som rapidamente só para "destravar" o áudio no navegador
+    const audio = document.getElementById('som-alerta');
+    if(audio) {
+        audio.muted = true; // Toca mudo para não assustar
+        audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            audio.muted = false; // Deixa pronto para tocar com som
+        }).catch(()=>{});
+    }
+    
+    // Remove este ouvinte para não ficar executando a cada clique
+    document.body.removeEventListener('click', liberarRecursos);
+}, { once: true });
+// ------------------------------------------------------------------
+
 
     /***********************
      *  FUNÇÕES DE UTILIDADE
@@ -791,18 +850,30 @@ function abrirConversaZap() {
         }
     }
 
-    function tocarAlerta() {
-        const audio = document.getElementById('som-alerta');
-        if (!audio) return;
+    // --- SUBSTITUA A FUNÇÃO tocarAlerta ANTIGA POR ESTA ---
+function tocarAlerta() {
+    const audio = document.getElementById('som-alerta');
+    
+    // 1. Toca o som (código original melhorado)
+    if (audio) {
         try {
             audio.pause();
             audio.currentTime = 0;
-            audio.play().catch(err => console.log("Som bloqueado até interação do usuário"));
+            // Usamos .catch para evitar erro vermelho no console se o navegador bloquear
+            audio.play().catch(err => console.warn("⚠️ Som bloqueado pelo navegador. Toque na tela para liberar."));
         } catch (e) {
-            console.log("Erro ao tocar som:", e);
+            console.error("Erro no elemento de áudio:", e);
         }
     }
 
+    // 2. VIBRAÇÃO (NOVO!)
+    // Verifica se o celular suporta vibração
+    if ("vibrate" in navigator) {
+        // Padrão: Vibra 1s, Pausa 0.5s, Vibra 1s, Pausa 0.5s, Vibra 2s (bem forte)
+        navigator.vibrate([1000, 500, 1000, 500, 2000]);
+        console.log("📳 Comando de vibração enviado.");
+    }
+}
     async function carregarSaldoMotoboy() {
     try {
         const res = await fetch(`${MEU_IP}/admin/motoboys`);
