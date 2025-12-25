@@ -125,8 +125,7 @@ if (!fetchFn) {
   }
 }
 
-const connectionString =
-  process.env.DATABASE_URL || 'postgresql://postgres:123456@localhost:5432/falcoes_app';
+const connectionString = process.env.DATABASE_URL;
 
 const pool = new Pool({
   connectionString: connectionString,
