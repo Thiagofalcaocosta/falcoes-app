@@ -1,0 +1,8 @@
+# 1. Bloquear acesso direto a arquivos sensíveis (Banco de dados, Backups, Configurações)
+<FilesMatch "\.(db|sqlite|sqlite3|log|bak|git|env|cjs|json)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# 2. Impedir listagem de pastas (Para ninguém ver a lista de arquivos do site)
+Options -Indexes

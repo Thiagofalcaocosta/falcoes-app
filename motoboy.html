@@ -851,29 +851,37 @@ function abrirConversaZap() {
     }
 
     // --- SUBSTITUA A FUNÇÃO tocarAlerta ANTIGA POR ESTA ---
+// Variável para controlar o loop da vibração
+let loopVibracao = null;
+
 function tocarAlerta() {
+    // 1. O SOM (Colocamos em Loop nativo do HTML)
     const audio = document.getElementById('som-alerta');
-    
-    // 1. Toca o som (código original melhorado)
     if (audio) {
-        try {
-            audio.pause();
-            audio.currentTime = 0;
-            // Usamos .catch para evitar erro vermelho no console se o navegador bloquear
-            audio.play().catch(err => console.warn("⚠️ Som bloqueado pelo navegador. Toque na tela para liberar."));
-        } catch (e) {
-            console.error("Erro no elemento de áudio:", e);
-        }
+        audio.loop = true; // <--- MÁGICA: O som repete sozinho
+        audio.currentTime = 0;
+        audio.play().catch(e => console.warn("Som precisa de interação prévia"));
     }
 
-    // 2. VIBRAÇÃO (NOVO!)
-    // Verifica se o celular suporta vibração
+    // 2. A VIBRAÇÃO (Precisamos forçar o Loop com setInterval)
     if ("vibrate" in navigator) {
-        // Padrão: Vibra 1s, Pausa 0.5s, Vibra 1s, Pausa 0.5s, Vibra 2s (bem forte)
-        navigator.vibrate([1000, 500, 1000, 500, 2000]);
-        console.log("📳 Comando de vibração enviado.");
+        // Padrão: Vibra 1s, Para 1s
+        const padrao = [1000, 1000]; 
+        
+        // Vibra a primeira vez imediatamente
+        navigator.vibrate(padrao);
+
+        // Limpa anterior se existir para não acumular
+        if (loopVibracao) clearInterval(loopVibracao);
+
+        // Repete a vibração a cada 2 segundos (1s vibrando + 1s pausa)
+        loopVibracao = setInterval(() => {
+            navigator.vibrate(padrao);
+            console.log("📳 Vibrando...");
+        }, 2000); 
     }
 }
+
     async function carregarSaldoMotoboy() {
     try {
         const res = await fetch(`${MEU_IP}/admin/motoboys`);
@@ -1277,6 +1285,25 @@ function preencherDadosAtiva(c) {
      *  CRIAÇÃO E RENDERIZAÇÃO DA LISTA
      ***********************/
      function iniciarContador(id, tempoInicial, onTimeout) {
+        function pararAlerta() {
+    // 1. Para o Som
+    const audio = document.getElementById('som-alerta');
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.loop = false; // Tira do loop
+    }
+
+    // 2. Para a Vibração
+    if (loopVibracao) {
+        clearInterval(loopVibracao);
+        loopVibracao = null;
+    }
+    // Força parar a vibração atual instantaneamente
+    if ("vibrate" in navigator) {
+        navigator.vibrate(0);
+    }
+}
         limparContadores();
 
         let tempoRestante = tempoInicial;
@@ -1504,6 +1531,25 @@ function criarCardCorrida(corrida) {
     }
 
     async function confirmarAceitarCorrida() {
+        function pararAlerta() {
+    // 1. Para o Som
+    const audio = document.getElementById('som-alerta');
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.loop = false; // Tira do loop
+    }
+
+    // 2. Para a Vibração
+    if (loopVibracao) {
+        clearInterval(loopVibracao);
+        loopVibracao = null;
+    }
+    // Força parar a vibração atual instantaneamente
+    if ("vibrate" in navigator) {
+        navigator.vibrate(0);
+    }
+}
         if (!idCorridaSelecionada) {
             alert('Nenhuma corrida selecionada.');
             return;
@@ -1660,6 +1706,25 @@ window.cancelarCorridaMotoboy = function() {
 // Substitua a função inteira 'window.confirmarCancelamentoMotoboy' por esta:
 
 window.confirmarCancelamentoMotoboy = async function() {
+    function pararAlerta() {
+    // 1. Para o Som
+    const audio = document.getElementById('som-alerta');
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.loop = false; // Tira do loop
+    }
+
+    // 2. Para a Vibração
+    if (loopVibracao) {
+        clearInterval(loopVibracao);
+        loopVibracao = null;
+    }
+    // Força parar a vibração atual instantaneamente
+    if ("vibrate" in navigator) {
+        navigator.vibrate(0);
+    }
+}
     const inputMotivo = document.getElementById('justificativa-motoboy');
     const motivoTexto = inputMotivo ? inputMotivo.value : "Sem motivo";
 
