@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Bloquear acesso ao Painel Administrativo
+Disallow: /admin.html
+
+# Bloquear Banco de Dados e Backups
+Disallow: /database.db
+Disallow: /*.bak
+
+# Bloquear Arquivos de Servidor e Configuração
+Disallow: /server.cjs
+Disallow: /package.json
+Disallow: /package-lock.json
+Disallow: /.gitignore
+
+# Indicar o Sitemap
+Sitemap: https://falcoes.site/sitemap.xml
