@@ -125,16 +125,21 @@ if (!fetchFn) {
     console.warn('node-fetch não instalado — instale com: npm install node-fetch@2');
   }
 }
+// --- COPIE DAQUI ---
 
+// 1. Primeiro definimos a variável (Isso é o que estava faltando!)
 const connectionString = process.env.DATABASE_URL;
 
+// 2. Depois criamos a conexão usando ela
 const pool = new Pool({
   connectionString: connectionString,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+  ssl: false, 
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
+
+// --- ATÉ AQUI ---
 
 pool.on('error', (err) => {
   console.error('❌ Pool Postgres: erro não tratado', err && err.stack ? err.stack : err);

@@ -1252,49 +1252,59 @@
         if(modal) modal.style.display = 'none';
     }
 
-    // 4. EXECUTA O CANCELAMENTO (Botão SIM)
-    async function confirmarCancelamentoBusca() {
-        fecharModal('modal-confirmar-cancelamento-busca');
-        
-        const idParaCancelar = obterIdCorrida();
+    // --- FUNÇÃO DE CANCELAMENTO BLINDADA ---
+async function executarCancelamentoReal() {
+    // 1. Fecha o modal visualmente
+    fecharModalCancelamento();
 
-        // SE NÃO TIVER ID (O caso do "Modal Feio"):
-        if (!idParaCancelar) {
-            console.warn("Nenhum ID encontrado. Resetando a tela...");
-            // Remove dados e recarrega silenciosamente (SEM ALERT)
-            localStorage.removeItem('corrida_atual_id');
-            window.location.reload();
-            return;
-        }
+    // 2. PAUSA TUDO IMEDIATAMENTE (Mata os robôs de verificação)
+    // Isso impede que o app te puxe de volta pra tela de busca
+    if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
+    if (typeof buscaMotoboyInterval !== 'undefined') clearInterval(buscaMotoboyInterval);
+    if (typeof timeoutBusca !== 'undefined') clearTimeout(timeoutBusca);
 
-        try {
-            const MEU_IP = 'https://falcoes-app.onrender.com'; 
-
-            const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: idParaCancelar,
-                    motivo: 'Cliente desistiu da busca',
-                    cancelado_por: 'cliente'
-                })
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                localStorage.removeItem('corrida_atual_id');
-                window.location.reload(); 
-            } else {
-                // Se der erro, força reload para limpar a tela
-                console.error("Erro servidor, recarregando...");
-                window.location.reload();
-            }
-        } catch (err) {
-            // Se cair a net, força reload
-            window.location.reload();
-        }
+    // 3. Muda o texto do botão para dar feedback (Visual)
+    const btnCancel = document.getElementById('btn-cancelar-busca');
+    if(btnCancel) {
+        btnCancel.innerText = "CANCELANDO...";
+        btnCancel.disabled = true;
     }
+
+    // 4. Pega o ID antes de limpar
+    let idParaCancelar = typeof idCorridaAtual !== 'undefined' ? idCorridaAtual : localStorage.getItem('corrida_atual_id');
+
+    // 5. LIMPEZA PREVENTIVA (Nuclear)
+    // Removemos o ID da memória AGORA. Se a internet cair ou o servidor der erro,
+    // o app NÃO vai voltar pra tela de busca no reload. O usuário quer sair, então tiramos ele.
+    localStorage.removeItem('corrida_atual_id');
+    localStorage.removeItem('idPedidoAtual');
+
+    // Se não tinha ID, só recarrega
+    if (!idParaCancelar) {
+        window.location.reload();
+        return;
+    }
+
+    try {
+        // 6. Avisa o servidor (Silent Request)
+        // Não esperamos o resultado para liberar o usuário, apenas enviamos.
+        await fetch(`${MEU_IP}/cancelar-pedido`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: idParaCancelar,
+                motivo: 'Cancelado pelo cliente (Botão Cancelar)',
+                cancelado_por: 'cliente'
+            })
+        });
+
+    } catch (err) {
+        console.log("Aviso: Erro de conexão ao cancelar, mas app foi resetado localmente.");
+    } finally {
+        // 7. Recarrega a página limpa
+        window.location.reload();
+    }
+}
 
     // === CONFIGURAÇÃO E DADOS ===
     const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtaW5sYnRtdDB1ZGIzZnB1OXhid2p4ZXQifQ.uAw7CNaemwsun4RGsyOOIQ'; // SEU TOKEN AQUI!
