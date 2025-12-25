@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>https://falcoes.site/</loc>
+    <lastmod>2025-12-25</lastmod>
+    <priority>1.00</priority>
+  </url>
+
+  <url>
+    <loc>https://falcoes.site/cadastro.html</loc>
+    <priority>0.80</priority>
+  </url>
+
+  <url>
+    <loc>https://falcoes.site/cliente.html</loc>
+    <priority>0.80</priority>
+  </url>
+
+  <url>
+    <loc>https://falcoes.site/motoboy.html</loc>
+    <priority>0.80</priority>
+  </url>
+
+  <url>
+    <loc>https://falcoes.site/app.html</loc>
+    <priority>0.80</priority>
+  </url>
+
+  <url>
+    <loc>https://falcoes.site/install.html</loc>
+    <priority>0.60</priority>
+  </url>
+
+</urlset>
