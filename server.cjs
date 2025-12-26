@@ -742,18 +742,20 @@ app.post('/finalizar-corrida', async (req, res) => {
         const dados = dadosCorrida.rows[0];
 
         // 🛡️ VALIDAÇÃO DE PROPRIEDADE: O motoboy da requisição é o mesmo da corrida?
-        if (dados.motoboy_id !== Number(motoboy_id)) {
-            await pool.query('ROLLBACK');
-            return res.status(403).json({ success: false, message: "🚫 Esta corrida não pertence a você!" });
-        }
+        if (Number(dados.motoboy_id) !== Number(motoboy_id)) {
+    await pool.query('ROLLBACK');
+    return res.status(403).json({ success: false, message: "🚫 Esta corrida não pertence a você!" });
+}
+
 
         // 🛡️ VALIDAÇÃO DE SENHA (CÓDIGO PIN)
         if (dados.codigo_seguranca) {
-            if (!codigo_seguranca || dados.codigo_seguranca !== codigo_seguranca) {
-                await pool.query('ROLLBACK');
-                return res.json({ success: false, message: "🚫 SENHA INCORRETA! Peça novamente ao cliente." });
-            }
-        }
+    if (!codigo_seguranca || String(dados.codigo_seguranca) !== String(codigo_seguranca)) {
+        await pool.query('ROLLBACK');
+        // Importante manter o status 403 aqui para o log do navegador te avisar
+        return res.status(403).json({ success: false, message: "🚫 SENHA INCORRETA! Peça novamente ao cliente." });
+    }
+}
 
         const valorTotal = parseFloat(dados.valor);
         const formaPgto = dados.forma_pagamento; 
