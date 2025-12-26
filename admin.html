@@ -91,6 +91,22 @@
             color: var(--danger-color); font-size: 11px; font-weight: bold; margin-top: 8px; 
             padding: 6px; background: rgba(255, 68, 68, 0.05); border-radius: 4px; border: 1px dashed rgba(255, 68, 68, 0.3);
         }
+        .search-box {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    background: #000;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    box-sizing: border-box; /* Garante que não passe da largura da coluna */
+}
+
+.search-box:focus {
+    border-color: var(--neon-green);
+    outline: none;
+}
     </style>
 </head>
 
@@ -168,20 +184,46 @@
                 <h3><i class="fas fa-user-shield"></i> PILOTOS ATIVOS</h3>
                 <div id="container-motoboys-ativos"></div>
             </div>
-            <div class="coluna">
-                <h3><i class="fas fa-users"></i> CLIENTES ATIVOS</h3>
-                <div id="container-clientes-ativos"></div>
-            </div>
+            <div id="gerenciar" class="conteudo-aba">
+    <div class="painel-grid">
+        <div class="coluna">
+            <h3><i class="fas fa-user-shield"></i> PILOTOS ATIVOS</h3>
+            <input type="text" placeholder="🔎 Buscar piloto..." class="search-box" 
+                   onkeyup="filtrarLista('container-motoboys-ativos', this.value)">
+            <div id="container-motoboys-ativos"></div>
+        </div>
+        
+        <div class="coluna">
+            <h3><i class="fas fa-users"></i> CLIENTES CADASTRADOS</h3>
+            <input type="text" placeholder="🔎 Buscar cliente..." class="search-box" 
+                   onkeyup="filtrarLista('container-clientes-ativos', this.value)">
+            <div id="container-clientes-ativos"></div>
         </div>
     </div>
+</div>
 
 </div>
 
-<script>
+
     const MEU_IP = 'https://falcoes-app.onrender.com';
     const usuarioLogado = JSON.parse(localStorage.getItem('usuario'));
 
     if (!usuarioLogado || usuarioLogado.tipo !== 'admin') window.location.href = 'index.html';
+<script> 
+    // --- COLE AQUI A FUNÇÃO DE BUSCA ---
+    function filtrarLista(containerId, termo) {
+        const container = document.getElementById(containerId);
+        const cards = container.getElementsByClassName('card-user-gestao');
+        const busca = termo.toLowerCase();
+
+        for (let card of cards) {
+            const texto = card.innerText.toLowerCase();
+            // Se o texto do card contém o que foi digitado, ele fica visível
+            card.style.display = texto.includes(busca) ? 'block' : 'none';
+        }
+    }
+
+    // ... (suas outras funções como mudarAba, carregarDashboard, etc.)
 
     function mudarAba(aba, event) {
         document.querySelectorAll('.conteudo-aba').forEach(el => el.style.display = 'none');
