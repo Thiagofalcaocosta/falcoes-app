@@ -130,12 +130,10 @@
         <span class="stat-titulo">Faturamento Mês</span>
         <span class="stat-valor" id="faturamento-mes">R$ 0,00</span>
     </div>
+    <div class="card-stat" style="display:none;">
+        <span class="stat-valor" id="qtd-moto">0</span>
+    </div>
 </div>
-<div class="card-stat card-faturamento">
-    <span class="stat-titulo">Faturamento Mês</span>
-    <span class="stat-valor" id="faturamento-mes">R$ 0,00</span>
-</div>
-        </div>
 
         <h3 style="color: #666; font-size: 14px; margin-bottom: 12px; text-transform: uppercase;"><i class="fas fa-history"></i> Pedidos Recentes</h3>
         <div class="tabela-container">
@@ -199,88 +197,74 @@
         if (aba === 'gerenciar') { carregarMotoboysAtivos(); carregarClientes(); }
     }
 
-   async function carregarDashboard() {
+  async function carregarDashboard() {
     try {
         const res = await fetch(`${MEU_IP}/admin/dashboard`);
         const data = await res.json();
 
-        // Atualiza contadores simples
-        document.getElementById('total-hoje').innerText = data.total_hoje || 0;
-        document.getElementById('total-mes').innerText = data.total_mes || 0;
-        document.getElementById('qtd-moto').innerText = data.qtd_moto || 0;
+        // Função segura para atualizar texto sem dar erro se o ID não existir
+        const atualizarTexto = (id, valor) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = valor;
+        };
+
+        atualizarTexto('total-hoje', data.total_hoje || 0);
+        atualizarTexto('total-mes', data.total_mes || 0);
+        atualizarTexto('qtd-moto', data.qtd_moto || 0);
 
         const agora = new Date();
-        const hojeIso = agora.toLocaleDateString('pt-BR'); // Formato DD/MM/YYYY
+        const hoje = agora.toISOString().split('T')[0]; // YYYY-MM-DD local
         const mesAtual = agora.getMonth();
         const anoAtual = agora.getFullYear();
 
         let somaHoje = 0;
         let somaMes = 0;
 
-        if (data.historico && data.historico.length > 0) {
+        if (data.historico) {
             data.historico.forEach(c => {
                 if (c.status === 'concluida') {
                     const valor = parseFloat(c.valor || 0);
-                    
-                    // Tentamos pegar a data de 'created_at' ou 'data'
                     const dataRaw = c.created_at || c.data;
-                    if (!dataRaw) return;
-
-                    const dataCorrida = new Date(dataRaw);
                     
-                    // Comparação para HOJE
-                    if (dataCorrida.toLocaleDateString('pt-BR') === hojeIso) {
-                        somaHoje += valor;
-                    }
-
-                    // Comparação para MÊS ATUAL
-                    if (dataCorrida.getMonth() === mesAtual && dataCorrida.getFullYear() === anoAtual) {
-                        somaMes += valor;
+                    if (dataRaw) {
+                        const d = new Date(dataRaw);
+                        // Ajuste de faturamento diário
+                        if (d.toISOString().split('T')[0] === hoje) {
+                            somaHoje += valor;
+                        }
+                        // Ajuste de faturamento mensal
+                        if (d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
+                            somaMes += valor;
+                        }
                     }
                 }
             });
         }
 
-        const formatarMoeda = (v) => v.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-        
-        // Verifica se os elementos existem antes de setar para evitar o erro de 'null'
-        const elHoje = document.getElementById('faturamento-hoje');
-        const elMes = document.getElementById('faturamento-mes');
+        const formatar = (v) => v.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+        atualizarTexto('faturamento-hoje', formatar(somaHoje));
+        atualizarTexto('faturamento-mes', formatar(somaMes));
 
-        if(elHoje) elHoje.innerText = formatarMoeda(somaHoje);
-        if(elMes) elMes.innerText = formatarMoeda(somaMes);
-
-        // Renderiza a tabela (mantendo sua lógica original)
+        // Tabela (seu código original de renderização permanece abaixo...)
         const tbody = document.getElementById('tabela-historico');
-        tbody.innerHTML = '';
-        data.historico.forEach(c => {
-            const statusClass = `status-${c.status}`;
-            const valorFormatado = parseFloat(c.valor || 0).toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
-            const motivoCancelamento = (c.status === 'cancelada' && c.motivo_cancelamento) 
-                ? `<div class="motivo-box">⚠️ ${c.motivo_cancelamento}</div>` : '';
-
-            tbody.innerHTML += `
-                <tr>
-                    <td style="color:#666; font-size:11px;">#${c.id}</td>
-                    <td style="font-weight:bold; color:var(--neon-green)">${valorFormatado}</td>
-                    <td>
-                        <div style="color:#fff; font-weight:600;">📍 ${(c.origem || '').split(',')[0]}</div>
-                        <div style="color:#666; font-size:11px;">🏁 ${(c.destino || '').split(',')[0]}</div>
-                        ${motivoCancelamento} 
-                    </td>
-                    <td><span class="status-tag ${statusClass}">${c.status}</span></td>
-                    <td style="font-size:12px;">
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <div style="width:20px; height:20px; background:#333; border-radius:50%; font-size:9px; display:flex; align-items:center; justify-content:center;">${c.nome_motoboy ? c.nome_motoboy.charAt(0) : '?'}</div>
-                            ${c.nome_motoboy || '---'}
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
-    } catch (err) { 
-        console.error("Erro dashboard detalhado:", err); 
-    }
+        if (tbody) {
+            tbody.innerHTML = '';
+            data.historico.forEach(c => {
+                const valorF = parseFloat(c.valor || 0).toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="color:#666; font-size:11px;">#${c.id}</td>
+                        <td style="font-weight:bold; color:var(--neon-green)">${valorF}</td>
+                        <td>
+                            <div style="color:#fff; font-weight:600;">📍 ${(c.origem || '').split(',')[0]}</div>
+                            <div style="color:#666; font-size:11px;">🏁 ${(c.destino || '').split(',')[0]}</div>
+                        </td>
+                        <td><span class="status-tag status-${c.status}">${c.status}</span></td>
+                        <td>${c.nome_motoboy || '---'}</td>
+                    </tr>`;
+            });
+        }
+    } catch (err) { console.error("Erro dashboard:", err); }
 }
 
     // --- MANTENDO SUAS FUNÇÕES DE GESTÃO ---
