@@ -25,12 +25,14 @@
         }
         .logo-pequeno { height: 35px; filter: drop-shadow(0 0 5px var(--neon-green)); }
         
-        /* MENU TABS */
+        /* MENU TABS - RESPONSIVO */
         .menu-tabs { 
             display: flex; background: #000; padding: 8px 15px; gap: 8px;
             overflow-x: auto; border-bottom: 1px solid var(--border-color);
-            scrollbar-width: none;
+            scrollbar-width: none; /* Firefox */
         }
+        .menu-tabs::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
         .tab-btn {
             background: transparent; border: 1px solid #222; color: #666;
             padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; 
@@ -40,44 +42,65 @@
 
         .container-principal { padding: 15px; flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
 
-        /* BUSCA */
-        .search-box {
-            width: 100%; padding: 10px; background: #000; border: 1px solid var(--border-color);
-            border-radius: 8px; color: #fff; margin-bottom: 15px; font-size: 13px;
+        /* CARDS ESTATÍSTICAS - RESPONSIVO */
+        .cards-resumo { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); /* 2 por linha no mobile */
+            gap: 12px; 
+            margin-bottom: 25px; 
         }
-        .search-box:focus { border-color: var(--neon-green); outline: none; }
+        @media (min-width: 768px) { .cards-resumo { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
 
-        /* CARDS ESTATÍSTICAS */
-        .cards-resumo { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 25px; }
-        @media (min-width: 768px) { .cards-resumo { grid-template-columns: repeat(4, 1fr); gap: 15px; } }
-
-        .card-stat { background: var(--card-color); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; }
-        .stat-valor { font-size: 20px; font-weight: 800; color: var(--neon-green); display: block; margin-top: 5px; }
-        .stat-titulo { color: #888; font-size: 10px; text-transform: uppercase; font-weight: bold; }
-        .card-faturamento { border-color: var(--money-color); }
+        .card-stat { 
+            background: var(--card-color); padding: 15px; border-radius: 12px; 
+            border: 1px solid var(--border-color); text-align: center; position: relative;
+        }
+        .stat-valor { font-size: 24px; font-weight: 800; color: var(--neon-green); display: block; margin-top: 5px; }
+        .stat-titulo { color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; }
+        .card-faturamento { border-color: var(--money-color); background: rgba(0, 212, 255, 0.05); }
         .card-faturamento .stat-valor { color: var(--money-color); }
 
-        /* TABELA */
-        .tabela-container { background: var(--card-color); border-radius: 12px; border: 1px solid var(--border-color); overflow-x: auto; }
+        /* TABELAS RESPONSIVAS */
+        .tabela-container { 
+            background: var(--card-color); border-radius: 12px; border: 1px solid var(--border-color); 
+            overflow-x: auto; /* Scroll lateral no celular */
+        }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th { background-color: #000; color: var(--neon-green); font-size: 11px; padding: 12px; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
 
-        /* GESTÃO */
+        /* STATUS TAGS */
+        .status-tag { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .status-concluida { background: rgba(0, 123, 255, 0.1); color: var(--info-color); border: 1px solid var(--info-color); }
+        .status-cancelada { background: rgba(255, 68, 68, 0.1); color: var(--danger-color); border: 1px solid var(--danger-color); }
+        .status-aceita { background: rgba(0, 230, 64, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); }
+
+        /* GESTÃO DE USUÁRIOS */
         .painel-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
         @media (min-width: 900px) { .painel-grid { grid-template-columns: 1fr 1fr; } }
+        
         .coluna { background: var(--card-color); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); }
-        .card-user-gestao { background: #1f1f1f; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 3px solid var(--neon-green); }
+        .card-user-gestao { background: #1f1f1f; padding: 12px; border-radius: 10px; margin-bottom: 12px; border-left: 3px solid var(--neon-green); position: relative; }
         .user-name { font-weight: bold; font-size: 14px; color: #fff; display: block; }
+        .user-sub { font-size: 12px; color: #777; display: block; margin-top: 3px; }
+
+        .vazio { text-align: center; color: #444; padding: 20px; font-size: 13px; }
+
+        /* MOTIVO CANCELAMENTO */
+        .motivo-box {
+            color: var(--danger-color); font-size: 11px; font-weight: bold; margin-top: 8px; 
+            padding: 6px; background: rgba(255, 68, 68, 0.05); border-radius: 4px; border: 1px dashed rgba(255, 68, 68, 0.3);
+        }
     </style>
 </head>
+
 <body>
 
 <div class="header">
     <img src="assets/logo.png" class="logo-pequeno">
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <input type="month" id="filtro-data" class="search-box" style="margin-bottom: 0; width: auto; height: 35px;">
-        <a href="index.html" style="color: var(--danger-color); text-decoration: none; font-weight: bold; font-size: 12px;">SAIR</a>
+    <div style="text-align: right;">
+        <span style="display: block; font-size: 10px; color: #666;">ADM ONLINE</span>
+        <a href="index.html" style="color: var(--danger-color); text-decoration: none; font-weight: bold; font-size: 12px;">SAIR <i class="fas fa-sign-out-alt"></i></a>
     </div>
 </div>
 
@@ -91,98 +114,203 @@
     
     <div id="dashboard" class="conteudo-aba ativo">
         <div class="cards-resumo">
+            <div class="card-stat">
+                <span class="stat-titulo">Corridas Hoje</span>
+                <span class="stat-valor" id="total-hoje">0</span>
+            </div>
+            <div class="card-stat">
+                <span class="stat-titulo">Corridas Mês</span>
+                <span class="stat-valor" id="total-mes">0</span>
+            </div>
             <div class="card-stat card-faturamento">
-                <span class="stat-titulo">Faturamento Total</span>
-                <span class="stat-valor" id="fat-total">R$ 0,00</span>
+                <span class="stat-titulo">Faturamento</span>
+                <span class="stat-valor" id="faturamento-total">R$ 0,00</span>
             </div>
             <div class="card-stat">
                 <span class="stat-titulo">Moto Táxi</span>
-                <span class="stat-valor" id="fat-moto">R$ 0,00</span>
-            </div>
-            <div class="card-stat">
-                <span class="stat-titulo">Entregas</span>
-                <span class="stat-valor" id="fat-entrega">R$ 0,00</span>
-            </div>
-            <div class="card-stat">
-                <span class="stat-titulo">Corridas</span>
-                <span class="stat-valor" id="total-mes">0</span>
+                <span class="stat-valor" id="qtd-moto" style="color:#fff">0</span>
             </div>
         </div>
+
+        <h3 style="color: #666; font-size: 14px; margin-bottom: 12px; text-transform: uppercase;"><i class="fas fa-history"></i> Pedidos Recentes</h3>
         <div class="tabela-container">
             <table>
-                <thead><tr><th>ID</th><th>VALOR</th><th>LOCALIZAÇÃO</th><th>STATUS</th><th>PILOTO</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>VALOR</th>
+                        <th>LOCALIZAÇÃO</th>
+                        <th>STATUS</th>
+                        <th>PILOTO</th>
+                    </tr>
+                </thead>
                 <tbody id="tabela-historico"></tbody>
             </table>
+        </div>
+    </div>
+
+    <div id="aprovacoes" style="display:none;" class="conteudo-aba">
+        <div class="painel-grid">
+            <div class="coluna">
+                <h3><i class="fas fa-user-check"></i> CLIENTES PENDENTES</h3>
+                <div id="lista-clientes"><div class="vazio">Aprovação automática.</div></div>
+            </div>
+            <div class="coluna">
+                <h3><i class="fas fa-motorcycle"></i> PILOTOS PENDENTES</h3>
+                <div id="lista-motoboys">Carregando...</div>
+            </div>
         </div>
     </div>
 
     <div id="gerenciar" style="display:none;" class="conteudo-aba">
         <div class="painel-grid">
             <div class="coluna">
-                <h3><i class="fas fa-motorcycle"></i> PILOTOS ATIVOS</h3>
-                <input type="text" placeholder="Buscar piloto..." class="search-box" onkeyup="filtrarLista('container-motoboys-ativos', this.value)">
+                <h3><i class="fas fa-user-shield"></i> PILOTOS ATIVOS</h3>
                 <div id="container-motoboys-ativos"></div>
             </div>
             <div class="coluna">
                 <h3><i class="fas fa-users"></i> CLIENTES ATIVOS</h3>
-                <input type="text" placeholder="Buscar cliente..." class="search-box" onkeyup="filtrarLista('container-clientes-ativos', this.value)">
                 <div id="container-clientes-ativos"></div>
             </div>
         </div>
     </div>
 
-    </div>
+</div>
 
 <script>
     const MEU_IP = 'https://falcoes-app.onrender.com';
-    let dadosDashboard = [];
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuario'));
 
-    // Filtro de Busca
-    function filtrarLista(containerId, termo) {
-        const cards = document.getElementById(containerId).getElementsByClassName('card-user-gestao');
-        const busca = termo.toLowerCase();
-        for (let card of cards) {
-            const nome = card.innerText.toLowerCase();
-            card.style.display = nome.includes(busca) ? 'block' : 'none';
-        }
+    if (!usuarioLogado || usuarioLogado.tipo !== 'admin') window.location.href = 'index.html';
+
+    function mudarAba(aba, event) {
+        document.querySelectorAll('.conteudo-aba').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('ativo'));
+        document.getElementById(aba).style.display = 'block';
+        event.currentTarget.classList.add('ativo');
+
+        if (aba === 'dashboard') carregarDashboard();
+        if (aba === 'aprovacoes') carregarPendentes();
+        if (aba === 'gerenciar') { carregarMotoboysAtivos(); carregarClientes(); }
     }
 
     async function carregarDashboard() {
         try {
             const res = await fetch(`${MEU_IP}/admin/dashboard`);
             const data = await res.json();
-            dadosDashboard = data.historico;
 
-            // Cálculos
-            const concluida = data.historico.filter(c => c.status === 'concluida');
-            const total = concluida.reduce((acc, c) => acc + parseFloat(c.valor), 0);
-            const moto = concluida.filter(c => c.tipo_servico === 'moto-taxi').reduce((acc, c) => acc + parseFloat(c.valor), 0);
-            const entrega = concluida.filter(c => c.tipo_servico === 'entrega').reduce((acc, c) => acc + parseFloat(c.valor), 0);
-
-            document.getElementById('fat-total').innerText = total.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
-            document.getElementById('fat-moto').innerText = moto.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
-            document.getElementById('fat-entrega').innerText = entrega.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
+            document.getElementById('total-hoje').innerText = data.total_hoje;
             document.getElementById('total-mes').innerText = data.total_mes;
+            document.getElementById('qtd-moto').innerText = data.qtd_moto;
+
+            // --- LÓGICA DE FATURAMENTO ---
+            // Soma o valor de todas as corridas 'concluida'
+            const somaFaturamento = data.historico
+                .filter(c => c.status === 'concluida')
+                .reduce((acc, c) => acc + parseFloat(c.valor || 0), 0);
+            
+            document.getElementById('faturamento-total').innerText = somaFaturamento.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
 
             const tbody = document.getElementById('tabela-historico');
-            tbody.innerHTML = data.historico.map(c => `
-                <tr>
-                    <td style="color:#666">#${c.id}</td>
-                    <td style="font-weight:bold; color:var(--neon-green)">R$ ${parseFloat(c.valor).toFixed(2)}</td>
-                    <td>📍 ${c.origem.split(',')[0]}<br><small style="color:#666">🏁 ${c.destino.split(',')[0]}</small></td>
-                    <td><span class="status-tag status-${c.status}">${c.status}</span></td>
-                    <td>${c.nome_motoboy || '---'}</td>
-                </tr>
-            `).join('');
-        } catch (err) { console.error(err); }
+            tbody.innerHTML = '';
+
+            data.historico.forEach(c => {
+                const statusClass = `status-${c.status}`;
+                const valorFormatado = parseFloat(c.valor).toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
+                
+                const motivoCancelamento = (c.status === 'cancelada' && c.motivo_cancelamento) 
+                    ? `<div class="motivo-box">⚠️ ${c.motivo_cancelamento}</div>` : '';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="color:#666; font-size:11px;">#${c.id}</td>
+                        <td style="font-weight:bold; color:var(--neon-green)">${valorFormatado}</td>
+                        <td>
+                            <div style="color:#fff; font-weight:600;">📍 ${c.origem.split(',')[0]}</div>
+                            <div style="color:#666; font-size:11px;">🏁 ${c.destino.split(',')[0]}</div>
+                            ${motivoCancelamento} 
+                        </td>
+                        <td><span class="status-tag ${statusClass}">${c.status}</span></td>
+                        <td style="font-size:12px;">
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <div style="width:20px; height:20px; background:#333; border-radius:50%; font-size:9px; display:flex; align-items:center; justify-content:center;">${c.nome_motoboy ? c.nome_motoboy.charAt(0) : '?'}</div>
+                                ${c.nome_motoboy || '---'}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (err) { console.error("Erro dashboard:", err); }
     }
 
-    // Funções de gestão (motoboys/clientes) permanecem as mesmas, chamando as rotas da API
-    // ... (inclua as funções carregarMotoboysAtivos, carregarClientes e mudarAba do código anterior)
+    // --- MANTENDO SUAS FUNÇÕES DE GESTÃO ---
+    async function carregarPendentes() {
+        try {
+            const res = await fetch(`${MEU_IP}/admin/pendentes`);
+            const users = await res.json();
+            const divMoto = document.getElementById('lista-motoboys');
+            divMoto.innerHTML = '';
+            const pendentes = users.filter(u => u.tipo === 'motoboy');
+            if(pendentes.length === 0) divMoto.innerHTML = '<div class="vazio">Nenhum piloto aguardando.</div>';
+            pendentes.forEach(u => {
+                divMoto.innerHTML += `
+                    <div class="card-user-gestao">
+                        <span class="user-name">${u.nome}</span>
+                        <span class="user-sub"><i class="fas fa-phone"></i> ${u.telefone}</span>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button class="btn-acao btn-aprove" style="background:var(--neon-green); border:none; padding:5px 10px; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="decisao(${u.id}, 'aprovar')">APROVAR</button>
+                            <button class="btn-acao btn-deny" style="background:none; border:1px solid var(--danger-color); color:var(--danger-color); padding:5px 10px; border-radius:5px; cursor:pointer;" onclick="decisao(${u.id}, 'rejeitar')">REJEITAR</button>
+                        </div>
+                    </div>`;
+            });
+        } catch (e) { console.error(e); }
+    }
 
-    // Define mês atual no filtro ao carregar
-    document.getElementById('filtro-data').value = new Date().toISOString().slice(0, 7);
+    async function carregarMotoboysAtivos() {
+        const div = document.getElementById('container-motoboys-ativos');
+        try {
+            const res = await fetch(`${MEU_IP}/admin/motoboys`);
+            const data = await res.json();
+            div.innerHTML = data.map(m => `
+                <div class="card-user-gestao">
+                    <button style="float:right; background:none; border:none; color:#444;" onclick="removerUsuario(${m.id})"><i class="fas fa-trash"></i></button>
+                    <span class="user-name">${m.nome}</span>
+                    <span class="user-sub">${m.email}</span>
+                </div>`).join('');
+        } catch (e) { div.innerHTML = "Erro ao carregar."; }
+    }
+
+    async function carregarClientes() {
+        const div = document.getElementById('container-clientes-ativos');
+        try {
+            const res = await fetch(`${MEU_IP}/admin/clientes`);
+            const data = await res.json();
+            div.innerHTML = data.map(c => `
+                <div class="card-user-gestao" style="border-left-color: #555;">
+                    <button style="float:right; background:none; border:none; color:#444;" onclick="removerUsuario(${c.id})"><i class="fas fa-trash"></i></button>
+                    <span class="user-name">${c.nome}</span>
+                    <span class="user-sub">${c.telefone}</span>
+                </div>`).join('');
+        } catch (e) { div.innerHTML = "Erro ao carregar."; }
+    }
+
+    async function decisao(id, acao) {
+        if(!confirm(`Confirma ${acao}?`)) return;
+        const res = await fetch(`${MEU_IP}/admin/${acao === 'aprovar' ? 'aprovar' : 'rejeitar'}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+        });
+        if((await res.json()).success) carregarPendentes();
+    }
+
+    async function removerUsuario(id) {
+        if(!confirm("REMOVER?")) return;
+        const res = await fetch(`${MEU_IP}/admin/remover/${id}`, { method: 'DELETE' });
+        if((await res.json()).success) { carregarMotoboysAtivos(); carregarClientes(); }
+    }
+
+    // Inicialização
     carregarDashboard();
 </script>
+
 </body>
 </html>
