@@ -774,11 +774,11 @@ app.post('/finalizar-corrida', async (req, res) => {
             );
         }
 
-        // 3. FINALIZA A CORRIDA GARANTINDO QUE ELA AINDA ESTAVA 'em_andamento'
-        const finaliza = await pool.query(
-            "UPDATE corridas SET status = 'concluida' WHERE id = $1 AND status = 'em_andamento' AND motoboy_id = $2", 
-            [corrida_id, motoboy_id]
-        );
+        // 3. FINALIZA A CORRIDA ACEITANDO 'liberada' OU 'em_andamento'
+const finaliza = await pool.query(
+    "UPDATE corridas SET status = 'concluida' WHERE id = $1 AND (status = 'em_andamento' OR status = 'liberada') AND motoboy_id = $2", 
+    [corrida_id, motoboy_id]
+);
 
         if (finaliza.rowCount === 0) {
             await pool.query('ROLLBACK');
