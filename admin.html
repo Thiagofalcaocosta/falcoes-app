@@ -123,13 +123,13 @@
                 <span class="stat-valor" id="total-mes">0</span>
             </div>
             <div class="card-stat card-faturamento">
-                <span class="stat-titulo">Faturamento</span>
-                <span class="stat-valor" id="faturamento-total">R$ 0,00</span>
-            </div>
-            <div class="card-stat">
-                <span class="stat-titulo">Moto Táxi</span>
-                <span class="stat-valor" id="qtd-moto" style="color:#fff">0</span>
-            </div>
+    <span class="stat-titulo">Faturamento Hoje</span>
+    <span class="stat-valor" id="faturamento-hoje">R$ 0,00</span>
+</div>
+<div class="card-stat card-faturamento">
+    <span class="stat-titulo">Faturamento Mês</span>
+    <span class="stat-valor" id="faturamento-mes">R$ 0,00</span>
+</div>
         </div>
 
         <h3 style="color: #666; font-size: 14px; margin-bottom: 12px; text-transform: uppercase;"><i class="fas fa-history"></i> Pedidos Recentes</h3>
@@ -195,53 +195,79 @@
     }
 
     async function carregarDashboard() {
-        try {
-            const res = await fetch(`${MEU_IP}/admin/dashboard`);
-            const data = await res.json();
+    try {
+        const res = await fetch(`${MEU_IP}/admin/dashboard`);
+        const data = await res.json();
 
-            document.getElementById('total-hoje').innerText = data.total_hoje;
-            document.getElementById('total-mes').innerText = data.total_mes;
-            document.getElementById('qtd-moto').innerText = data.qtd_moto;
+        document.getElementById('total-hoje').innerText = data.total_hoje;
+        document.getElementById('total-mes').innerText = data.total_mes;
+        document.getElementById('qtd-moto').innerText = data.qtd_moto;
 
-            // --- LÓGICA DE FATURAMENTO ---
-            // Soma o valor de todas as corridas 'concluida'
-            const somaFaturamento = data.historico
-                .filter(c => c.status === 'concluida')
-                .reduce((acc, c) => acc + parseFloat(c.valor || 0), 0);
-            
-            document.getElementById('faturamento-total').innerText = somaFaturamento.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
+        // --- NOVA LÓGICA DE FATURAMENTO FILTRADA ---
+        const agora = new Date();
+        const hojeIso = agora.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        const mesAtual = agora.getMonth();
+        const anoAtual = agora.getFullYear();
 
-            const tbody = document.getElementById('tabela-historico');
-            tbody.innerHTML = '';
+        let somaHoje = 0;
+        let somaMes = 0;
 
-            data.historico.forEach(c => {
-                const statusClass = `status-${c.status}`;
-                const valorFormatado = parseFloat(c.valor).toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
+        data.historico.forEach(c => {
+            if (c.status === 'concluida') {
+                const valor = parseFloat(c.valor || 0);
+                const dataCorrida = new Date(c.created_at); // Certifique-se que o banco envia created_at ou data
                 
-                const motivoCancelamento = (c.status === 'cancelada' && c.motivo_cancelamento) 
-                    ? `<div class="motivo-box">⚠️ ${c.motivo_cancelamento}</div>` : '';
+                const dataCorridaIso = dataCorrida.toISOString().split('T')[0];
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="color:#666; font-size:11px;">#${c.id}</td>
-                        <td style="font-weight:bold; color:var(--neon-green)">${valorFormatado}</td>
-                        <td>
-                            <div style="color:#fff; font-weight:600;">📍 ${c.origem.split(',')[0]}</div>
-                            <div style="color:#666; font-size:11px;">🏁 ${c.destino.split(',')[0]}</div>
-                            ${motivoCancelamento} 
-                        </td>
-                        <td><span class="status-tag ${statusClass}">${c.status}</span></td>
-                        <td style="font-size:12px;">
-                            <div style="display:flex; align-items:center; gap:5px;">
-                                <div style="width:20px; height:20px; background:#333; border-radius:50%; font-size:9px; display:flex; align-items:center; justify-content:center;">${c.nome_motoboy ? c.nome_motoboy.charAt(0) : '?'}</div>
-                                ${c.nome_motoboy || '---'}
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-        } catch (err) { console.error("Erro dashboard:", err); }
-    }
+                // Soma se for hoje
+                if (dataCorridaIso === hojeIso) {
+                    somaHoje += valor;
+                }
+
+                // Soma se for do mês e ano atual
+                if (dataCorrida.getMonth() === mesAtual && dataCorrida.getFullYear() === anoAtual) {
+                    somaMes += valor;
+                }
+            }
+        });
+
+        // Atualiza os campos na tela
+        const formatarMoeda = (v) => v.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+        
+        document.getElementById('faturamento-hoje').innerText = formatarMoeda(somaHoje);
+        document.getElementById('faturamento-mes').innerText = formatarMoeda(somaMes);
+
+        // --- RENDERIZAÇÃO DA TABELA (Mantida igual) ---
+        const tbody = document.getElementById('tabela-historico');
+        tbody.innerHTML = '';
+
+        data.historico.forEach(c => {
+            const statusClass = `status-${c.status}`;
+            const valorFormatado = parseFloat(c.valor).toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
+            const motivoCancelamento = (c.status === 'cancelada' && c.motivo_cancelamento) 
+                ? `<div class="motivo-box">⚠️ ${c.motivo_cancelamento}</div>` : '';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="color:#666; font-size:11px;">#${c.id}</td>
+                    <td style="font-weight:bold; color:var(--neon-green)">${valorFormatado}</td>
+                    <td>
+                        <div style="color:#fff; font-weight:600;">📍 ${c.origem.split(',')[0]}</div>
+                        <div style="color:#666; font-size:11px;">🏁 ${c.destino.split(',')[0]}</div>
+                        ${motivoCancelamento} 
+                    </td>
+                    <td><span class="status-tag ${statusClass}">${c.status}</span></td>
+                    <td style="font-size:12px;">
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <div style="width:20px; height:20px; background:#333; border-radius:50%; font-size:9px; display:flex; align-items:center; justify-content:center;">${c.nome_motoboy ? c.nome_motoboy.charAt(0) : '?'}</div>
+                            ${c.nome_motoboy || '---'}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) { console.error("Erro dashboard:", err); }
+}
 
     // --- MANTENDO SUAS FUNÇÕES DE GESTÃO ---
     async function carregarPendentes() {
