@@ -8,89 +8,89 @@
     
     <style>
         :root {
-            --bg-color: #0f0f0f; --card-color: #1a1a1a; --neon-green: #00e640;
-            --text-color: #ffffff; --border-color: #2a2a2a; --danger-color: #ff4444;
-            --warning-color: #ffaa00; --info-color: #007bff;
+            --bg-color: #0a0a0a; --card-color: #141414; --neon-green: #00e640;
+            --text-color: #e0e0e0; --border-color: #222; --danger-color: #ff4444;
+            --warning-color: #ffaa00; --info-color: #007bff; --money-color: #00d4ff;
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color);
+            font-family: 'Inter', 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color);
             margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh;
         }
 
         /* HEADER */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
-            background: #000; padding: 15px 25px; border-bottom: 1px solid var(--border-color);
+            background: #000; padding: 12px 20px; border-bottom: 1px solid var(--border-color);
         }
-        .logo-pequeno { height: 45px; filter: drop-shadow(0 0 5px var(--neon-green)); }
+        .logo-pequeno { height: 35px; filter: drop-shadow(0 0 5px var(--neon-green)); }
         
-        /* MENU TABS */
+        /* MENU TABS - RESPONSIVO */
         .menu-tabs { 
-            display: flex; background: #000; padding: 10px 20px; gap: 10px;
+            display: flex; background: #000; padding: 8px 15px; gap: 8px;
             overflow-x: auto; border-bottom: 1px solid var(--border-color);
+            scrollbar-width: none; /* Firefox */
         }
+        .menu-tabs::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
         .tab-btn {
-            background: transparent; border: 1px solid #333; color: #888;
-            padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; 
-            transition: 0.3s; white-space: nowrap; display: flex; align-items: center; gap: 8px;
+            background: transparent; border: 1px solid #222; color: #666;
+            padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; 
+            transition: 0.3s; white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 13px;
         }
-        .tab-btn i { font-size: 16px; }
-        .tab-btn.ativo { background: var(--neon-green); color: black; border-color: var(--neon-green); }
-        .tab-btn:hover:not(.ativo) { border-color: var(--neon-green); color: var(--neon-green); }
+        .tab-btn.ativo { background: var(--neon-green); color: black; border-color: var(--neon-green); box-shadow: 0 0 15px rgba(0, 230, 64, 0.2); }
 
-        .container-principal { padding: 25px; flex: 1; }
-        .conteudo-aba { display: none; animation: fadeIn 0.4s ease; }
-        .conteudo-aba.ativo { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .container-principal { padding: 15px; flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
 
-        /* CARDS ESTATÍSTICAS */
-        .cards-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        /* CARDS ESTATÍSTICAS - RESPONSIVO */
+        .cards-resumo { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); /* 2 por linha no mobile */
+            gap: 12px; 
+            margin-bottom: 25px; 
+        }
+        @media (min-width: 768px) { .cards-resumo { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
+
         .card-stat { 
-            background: var(--card-color); padding: 25px; border-radius: 15px; 
-            border: 1px solid var(--border-color); text-align: center; transition: 0.3s;
+            background: var(--card-color); padding: 15px; border-radius: 12px; 
+            border: 1px solid var(--border-color); text-align: center; position: relative;
         }
-        .card-stat:hover { border-color: var(--neon-green); transform: translateY(-5px); }
-        .stat-valor { font-size: 36px; font-weight: 800; color: var(--neon-green); display: block; margin-top: 10px; }
-        .stat-titulo { color: #888; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        .stat-valor { font-size: 24px; font-weight: 800; color: var(--neon-green); display: block; margin-top: 5px; }
+        .stat-titulo { color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; }
+        .card-faturamento { border-color: var(--money-color); background: rgba(0, 212, 255, 0.05); }
+        .card-faturamento .stat-valor { color: var(--money-color); }
 
-        /* TABELAS */
-        .tabela-container { background: var(--card-color); border-radius: 15px; border: 1px solid var(--border-color); overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { background-color: #000; color: var(--neon-green); text-transform: uppercase; padding: 15px; text-align: left; border-bottom: 2px solid var(--border-color); }
-        td { padding: 15px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
-        tr:hover { background-color: rgba(255, 255, 255, 0.03); }
+        /* TABELAS RESPONSIVAS */
+        .tabela-container { 
+            background: var(--card-color); border-radius: 12px; border: 1px solid var(--border-color); 
+            overflow-x: auto; /* Scroll lateral no celular */
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { background-color: #000; color: var(--neon-green); font-size: 11px; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
 
-        /* TAGS DE STATUS */
-        .status-tag { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-        .status-pendente { background: rgba(255, 170, 0, 0.15); color: var(--warning-color); border: 1px solid var(--warning-color); }
-        .status-concluida { background: rgba(0, 123, 255, 0.15); color: var(--info-color); border: 1px solid var(--info-color); }
-        .status-cancelada { background: rgba(255, 68, 68, 0.15); color: var(--danger-color); border: 1px solid var(--danger-color); }
-        .status-aceita { background: rgba(0, 230, 64, 0.15); color: var(--neon-green); border: 1px solid var(--neon-green); }
+        /* STATUS TAGS */
+        .status-tag { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .status-concluida { background: rgba(0, 123, 255, 0.1); color: var(--info-color); border: 1px solid var(--info-color); }
+        .status-cancelada { background: rgba(255, 68, 68, 0.1); color: var(--danger-color); border: 1px solid var(--danger-color); }
+        .status-aceita { background: rgba(0, 230, 64, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); }
 
         /* GESTÃO DE USUÁRIOS */
-        .painel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; }
-        .coluna { background: var(--card-color); padding: 25px; border-radius: 20px; border: 1px solid var(--border-color); }
-        .coluna h3 { color: var(--neon-green); margin-top: 0; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+        .painel-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 900px) { .painel-grid { grid-template-columns: 1fr 1fr; } }
         
-        .card-user-gestao { 
-            background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 15px; 
-            border-left: 4px solid var(--neon-green); position: relative;
-        }
-        .user-info { margin-bottom: 10px; }
-        .user-name { font-weight: bold; font-size: 16px; color: #fff; display: block; }
-        .user-sub { font-size: 13px; color: #888; display: block; margin-top: 4px; }
-        
-        .btn-acao { 
-            padding: 8px 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s;
-            display: flex; align-items: center; gap: 5px;
-        }
-        .btn-aprove { background: var(--neon-green); color: #000; }
-        .btn-deny { background: transparent; border: 1px solid var(--danger-color); color: var(--danger-color); }
-        .btn-del { position: absolute; right: 15px; top: 15px; color: #555; background: none; border: none; cursor: pointer; }
-        .btn-del:hover { color: var(--danger-color); }
+        .coluna { background: var(--card-color); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); }
+        .card-user-gestao { background: #1f1f1f; padding: 12px; border-radius: 10px; margin-bottom: 12px; border-left: 3px solid var(--neon-green); position: relative; }
+        .user-name { font-weight: bold; font-size: 14px; color: #fff; display: block; }
+        .user-sub { font-size: 12px; color: #777; display: block; margin-top: 3px; }
 
-        .vazio { text-align: center; color: #555; padding: 40px; font-style: italic; }
+        .vazio { text-align: center; color: #444; padding: 20px; font-size: 13px; }
+
+        /* MOTIVO CANCELAMENTO */
+        .motivo-box {
+            color: var(--danger-color); font-size: 11px; font-weight: bold; margin-top: 8px; 
+            padding: 6px; background: rgba(255, 68, 68, 0.05); border-radius: 4px; border: 1px dashed rgba(255, 68, 68, 0.3);
+        }
     </style>
 </head>
 
@@ -99,15 +99,15 @@
 <div class="header">
     <img src="assets/logo.png" class="logo-pequeno">
     <div style="text-align: right;">
-        <span style="display: block; font-size: 12px; color: #666;">LOGADO COMO ADM</span>
-        <a href="index.html" style="color: var(--danger-color); text-decoration: none; font-weight: bold; font-size: 14px;">SAIR <i class="fas fa-sign-out-alt"></i></a>
+        <span style="display: block; font-size: 10px; color: #666;">ADM ONLINE</span>
+        <a href="index.html" style="color: var(--danger-color); text-decoration: none; font-weight: bold; font-size: 12px;">SAIR <i class="fas fa-sign-out-alt"></i></a>
     </div>
 </div>
 
 <div class="menu-tabs">
     <button class="tab-btn ativo" onclick="mudarAba('dashboard', event)"><i class="fas fa-chart-line"></i> DASHBOARD</button>
     <button class="tab-btn" onclick="mudarAba('aprovacoes', event)"><i class="fas fa-user-clock"></i> APROVAÇÕES</button>
-    <button class="tab-btn" onclick="mudarAba('gerenciar', event)"><i class="fas fa-users-cog"></i> GESTÃO DE USUÁRIOS</button>
+    <button class="tab-btn" onclick="mudarAba('gerenciar', event)"><i class="fas fa-users-cog"></i> GESTÃO</button>
 </div>
 
 <div class="container-principal">
@@ -122,25 +122,24 @@
                 <span class="stat-titulo">Corridas Mês</span>
                 <span class="stat-valor" id="total-mes">0</span>
             </div>
-            <div class="card-stat">
-                <span class="stat-titulo">Total Entregas</span>
-                <span class="stat-valor" id="qtd-entrega" style="color:#fff">0</span>
+            <div class="card-stat card-faturamento">
+                <span class="stat-titulo">Faturamento</span>
+                <span class="stat-valor" id="faturamento-total">R$ 0,00</span>
             </div>
             <div class="card-stat">
-                <span class="stat-titulo">Total Moto Táxi</span>
+                <span class="stat-titulo">Moto Táxi</span>
                 <span class="stat-valor" id="qtd-moto" style="color:#fff">0</span>
             </div>
         </div>
 
-        <h3 style="color: #ddd; margin-bottom: 15px;"><i class="fas fa-history"></i> ÚLTIMOS PEDIDOS</h3>
+        <h3 style="color: #666; font-size: 14px; margin-bottom: 12px; text-transform: uppercase;"><i class="fas fa-history"></i> Pedidos Recentes</h3>
         <div class="tabela-container">
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>TIPO</th>
                         <th>VALOR</th>
-                        <th>LOCALIZAÇÃO (ORIGEM > DESTINO)</th>
+                        <th>LOCALIZAÇÃO</th>
                         <th>STATUS</th>
                         <th>PILOTO</th>
                     </tr>
@@ -150,11 +149,11 @@
         </div>
     </div>
 
-    <div id="aprovacoes" class="conteudo-aba">
+    <div id="aprovacoes" style="display:none;" class="conteudo-aba">
         <div class="painel-grid">
             <div class="coluna">
                 <h3><i class="fas fa-user-check"></i> CLIENTES PENDENTES</h3>
-                <div id="lista-clientes"><div class="vazio">Aprovação automática ativada.</div></div>
+                <div id="lista-clientes"><div class="vazio">Aprovação automática.</div></div>
             </div>
             <div class="coluna">
                 <h3><i class="fas fa-motorcycle"></i> PILOTOS PENDENTES</h3>
@@ -163,14 +162,14 @@
         </div>
     </div>
 
-    <div id="gerenciar" class="conteudo-aba">
+    <div id="gerenciar" style="display:none;" class="conteudo-aba">
         <div class="painel-grid">
             <div class="coluna">
                 <h3><i class="fas fa-user-shield"></i> PILOTOS ATIVOS</h3>
                 <div id="container-motoboys-ativos"></div>
             </div>
             <div class="coluna">
-                <h3><i class="fas fa-users"></i> CLIENTES CADASTRADOS</h3>
+                <h3><i class="fas fa-users"></i> CLIENTES ATIVOS</h3>
                 <div id="container-clientes-ativos"></div>
             </div>
         </div>
@@ -185,10 +184,10 @@
     if (!usuarioLogado || usuarioLogado.tipo !== 'admin') window.location.href = 'index.html';
 
     function mudarAba(aba, event) {
-        document.querySelectorAll('.conteudo-aba').forEach(el => el.classList.remove('ativo'));
+        document.querySelectorAll('.conteudo-aba').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('ativo'));
-        document.getElementById(aba).classList.add('ativo');
-        event.target.closest('.tab-btn').classList.add('ativo');
+        document.getElementById(aba).style.display = 'block';
+        event.currentTarget.classList.add('ativo');
 
         if (aba === 'dashboard') carregarDashboard();
         if (aba === 'aprovacoes') carregarPendentes();
@@ -196,71 +195,73 @@
     }
 
     async function carregarDashboard() {
-    try {
-        const res = await fetch(`${MEU_IP}/admin/dashboard`);
-        const data = await res.json();
+        try {
+            const res = await fetch(`${MEU_IP}/admin/dashboard`);
+            const data = await res.json();
 
-        document.getElementById('total-hoje').innerText = data.total_hoje;
-        document.getElementById('total-mes').innerText = data.total_mes;
-        document.getElementById('qtd-entrega').innerText = data.qtd_entrega;
-        document.getElementById('qtd-moto').innerText = data.qtd_moto;
+            document.getElementById('total-hoje').innerText = data.total_hoje;
+            document.getElementById('total-mes').innerText = data.total_mes;
+            document.getElementById('qtd-moto').innerText = data.qtd_moto;
 
-        const tbody = document.getElementById('tabela-historico');
-        tbody.innerHTML = '';
-
-        data.historico.forEach(c => {
-            let statusClass = `status-${c.status}`;
+            // --- LÓGICA DE FATURAMENTO ---
+            // Soma o valor de todas as corridas 'concluida'
+            const somaFaturamento = data.historico
+                .filter(c => c.status === 'concluida')
+                .reduce((acc, c) => acc + parseFloat(c.valor || 0), 0);
             
-            // --- LÓGICA DO MOTIVO DO CANCELAMENTO ---
-            // Se a corrida for cancelada e tiver um motivo, cria um alerta vermelho
-            const motivoCancelamento = (c.status === 'cancelada' && c.motivo_cancelamento) 
-                ? `<div style="color: #ff4444; font-size: 11px; font-weight: bold; margin-top: 8px; padding-top: 5px; border-top: 1px dashed #444;">
-                    ⚠️ MOTIVO: ${c.motivo_cancelamento}
-                   </div>` 
-                : '';
+            document.getElementById('faturamento-total').innerText = somaFaturamento.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
 
-            tbody.innerHTML += `
-                <tr>
-                    <td style="font-weight:bold; color:#888;">#${c.id}</td>
-                    <td><span style="font-size:11px; font-weight:bold; color:var(--neon-green)">${c.tipo_servico.toUpperCase()}</span></td>
-                    <td style="color:var(--neon-green); font-weight:bold;">R$ ${c.valor}</td>
-                    <td>
-                        <div style="font-size:12px; color:#fff">📍 ${c.origem.split(',')[0]}</div>
-                        <div style="font-size:12px; color:#888">🏁 ${c.destino.split(',')[0]}</div>
-                        ${motivoCancelamento} 
-                    </td>
-                    <td><span class="status-tag ${statusClass}">${c.status}</span></td>
-                    <td style="font-size:13px;">${c.nome_motoboy || '<span style="color:#444">Aguardando...</span>'}</td>
-                </tr>
-            `;
-        });
-    } catch (err) { 
-        console.error("Erro ao carregar dashboard:", err); 
+            const tbody = document.getElementById('tabela-historico');
+            tbody.innerHTML = '';
+
+            data.historico.forEach(c => {
+                const statusClass = `status-${c.status}`;
+                const valorFormatado = parseFloat(c.valor).toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
+                
+                const motivoCancelamento = (c.status === 'cancelada' && c.motivo_cancelamento) 
+                    ? `<div class="motivo-box">⚠️ ${c.motivo_cancelamento}</div>` : '';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="color:#666; font-size:11px;">#${c.id}</td>
+                        <td style="font-weight:bold; color:var(--neon-green)">${valorFormatado}</td>
+                        <td>
+                            <div style="color:#fff; font-weight:600;">📍 ${c.origem.split(',')[0]}</div>
+                            <div style="color:#666; font-size:11px;">🏁 ${c.destino.split(',')[0]}</div>
+                            ${motivoCancelamento} 
+                        </td>
+                        <td><span class="status-tag ${statusClass}">${c.status}</span></td>
+                        <td style="font-size:12px;">
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <div style="width:20px; height:20px; background:#333; border-radius:50%; font-size:9px; display:flex; align-items:center; justify-content:center;">${c.nome_motoboy ? c.nome_motoboy.charAt(0) : '?'}</div>
+                                ${c.nome_motoboy || '---'}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (err) { console.error("Erro dashboard:", err); }
     }
-}
 
+    // --- MANTENDO SUAS FUNÇÕES DE GESTÃO ---
     async function carregarPendentes() {
         try {
             const res = await fetch(`${MEU_IP}/admin/pendentes`);
             const users = await res.json();
             const divMoto = document.getElementById('lista-motoboys');
             divMoto.innerHTML = '';
-            
             const pendentes = users.filter(u => u.tipo === 'motoboy');
             if(pendentes.length === 0) divMoto.innerHTML = '<div class="vazio">Nenhum piloto aguardando.</div>';
-            
             pendentes.forEach(u => {
                 divMoto.innerHTML += `
                     <div class="card-user-gestao">
                         <span class="user-name">${u.nome}</span>
                         <span class="user-sub"><i class="fas fa-phone"></i> ${u.telefone}</span>
-                        <span class="user-sub"><i class="fas fa-motorcycle"></i> ${u.modelo_moto} (${u.placa})</span>
-                        <div style="display:flex; gap:10px; margin-top:15px;">
-                            <button class="btn-acao btn-aprove" onclick="decisao(${u.id}, 'aprovar')">APROVAR</button>
-                            <button class="btn-acao btn-deny" onclick="decisao(${u.id}, 'rejeitar')">REJEITAR</button>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button class="btn-acao btn-aprove" style="background:var(--neon-green); border:none; padding:5px 10px; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="decisao(${u.id}, 'aprovar')">APROVAR</button>
+                            <button class="btn-acao btn-deny" style="background:none; border:1px solid var(--danger-color); color:var(--danger-color); padding:5px 10px; border-radius:5px; cursor:pointer;" onclick="decisao(${u.id}, 'rejeitar')">REJEITAR</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         } catch (e) { console.error(e); }
     }
@@ -272,12 +273,10 @@
             const data = await res.json();
             div.innerHTML = data.map(m => `
                 <div class="card-user-gestao">
-                    <button class="btn-del" onclick="removerUsuario(${m.id})"><i class="fas fa-trash"></i></button>
-                    <span class="user-name">${m.nome} (#${m.id})</span>
+                    <button style="float:right; background:none; border:none; color:#444;" onclick="removerUsuario(${m.id})"><i class="fas fa-trash"></i></button>
+                    <span class="user-name">${m.nome}</span>
                     <span class="user-sub">${m.email}</span>
-                    <span class="user-sub" style="color:var(--neon-green)">Cat: ${m.categoria}</span>
-                </div>
-            `).join('');
+                </div>`).join('');
         } catch (e) { div.innerHTML = "Erro ao carregar."; }
     }
 
@@ -287,12 +286,11 @@
             const res = await fetch(`${MEU_IP}/admin/clientes`);
             const data = await res.json();
             div.innerHTML = data.map(c => `
-                <div class="card-user-gestao" style="border-left-color: #888;">
-                    <button class="btn-del" onclick="removerUsuario(${c.id})"><i class="fas fa-trash"></i></button>
-                    <span class="user-name">${c.nome} (#${c.id})</span>
+                <div class="card-user-gestao" style="border-left-color: #555;">
+                    <button style="float:right; background:none; border:none; color:#444;" onclick="removerUsuario(${c.id})"><i class="fas fa-trash"></i></button>
+                    <span class="user-name">${c.nome}</span>
                     <span class="user-sub">${c.telefone}</span>
-                </div>
-            `).join('');
+                </div>`).join('');
         } catch (e) { div.innerHTML = "Erro ao carregar."; }
     }
 
@@ -305,11 +303,12 @@
     }
 
     async function removerUsuario(id) {
-        if(!confirm("⚠️ REMOVER PERMANENTEMENTE?")) return;
+        if(!confirm("REMOVER?")) return;
         const res = await fetch(`${MEU_IP}/admin/remover/${id}`, { method: 'DELETE' });
         if((await res.json()).success) { carregarMotoboysAtivos(); carregarClientes(); }
     }
 
+    // Inicialização
     carregarDashboard();
 </script>
 
