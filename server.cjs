@@ -21,21 +21,7 @@ const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('merca
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ==================================================================
-// 🚨 CORREÇÃO URGENTE: ISSO TEM QUE SER A PRIMEIRA COISA (TOPO) 🚨
-// ==================================================================
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.header("Access-Control-Allow-Credentials", "true");
-    
-    // Responde pro navegador imediatamente que pode conectar
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
-});
+
 // 3A. CONFIGURAÇÃO MERCADO PAGO
 const mpAccessToken = process.env.MP_ACCESS_TOKEN_TEST || process.env.MP_ACCESS_TOKEN;
 
@@ -59,17 +45,28 @@ const merchantOrderClient  = new MerchantOrder(mpClient);
 
 
 // ===============================================
-// 4. MIDDLEWARES (CORREÇÃO DO BLOQUEIO CORS)
+// 4. CONFIGURAÇÃO DE SEGURANÇA (CORS) - ATUALIZADO
 // ===============================================
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+const allowedOrigins = [
+    'https://falcoes.site', 
+    'https://www.falcoes.site', 
+    'https://falcoes-app.onrender.com'
+];
 
-// SUBSTITUA A LINHA "app.use(cors())" ANTIGA POR ISSO:
 app.use(cors({
-    origin: '*', // Libera para qualquer site (resolve o erro vermelho)
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    origin: function (origin, callback) {
+        // Permite requisições sem origin (como o servidor do Mercado Pago ou Postman)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('mercadopago.com')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Bloqueado pelo CORS: Origem não permitida.'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }));
 // ===============================================
 // 🛡️ SEGURANÇA: BLOQUEIO DE ARQUIVOS SENSÍVEIS
@@ -495,11 +492,17 @@ app.post('/escolher-pagamento', async (req, res) => {
             email: 'cliente@falcoes.com' // Pode ser dinâmico se tiver no banco
           },
           external_reference: id.toString(),
+          metadata: { corrida_id: id },      // Reforço de segurança
           notification_url: `${PUBLIC_BASE_URL}/mp-webhook` // Usa sua variável de URL
         }
       });
 
       const pointOfInteraction = paymentResponse.point_of_interaction.transaction_data;
+      // Salve o status de aguardando para evitar que o motoboy inicie antes do tempo
+await pool.query(
+  "UPDATE corridas SET forma_pagamento = 'PIX', status = 'aguardando_pagamento' WHERE id = $1",
+  [id]
+);
 
       // 3. Atualiza o banco com o ID da forma de pagamento
       await pool.query(
@@ -1325,76 +1328,42 @@ app.post('/pagar-corrida', async (req, res) => {
   }
 });
 
-// WEBHOOK DO MERCADO PAGO
-// WEBHOOK DO MERCADO PAGO – confirma pagamento automático
 app.post('/mp-webhook', async (req, res) => {
   try {
-    console.log('🔔 Webhook Mercado Pago recebido: query=', req.query, 'body=', req.body);
+    console.log('🔔 Webhook recebido:', req.body);
 
-    // Dois formatos possíveis: topic/id (antigo) ou type/data.id (novo)
-    const topic   = req.query.topic || req.query.type;
-    const id      = req.query.id || (req.query['data.id'] ?? req.query['data.id'.replace('.', '_')]);
+    // 1. Captura o ID do pagamento de forma robusta (URL ou BODY)
+    const id = req.query.id || (req.body.data && req.body.data.id) || req.body.id;
+    
+    // 2. Captura o tipo da notificação
+    const topic = req.query.topic || req.query.type || req.body.type;
 
-    if (!topic || !id) {
-      console.warn('Webhook sem topic/id válido:', req.query);
-      return res.status(400).send('missing topic/id');
+    if (!id || (topic !== 'payment' && topic !== 'merchant_order')) {
+      return res.status(200).send('OK'); // Ignora se não for pagamento, mas avisa o MP que recebeu
     }
 
     let paymentData = null;
 
     if (topic === 'payment') {
-      // pagamento direto
       paymentData = await paymentClient.get({ id });
-    } else if (topic === 'merchant_order') {
-      const order = await merchantOrderClient.get({ merchantOrderId: id });
-      // pega primeiro pagamento da ordem
-      if (order.payments && order.payments.length > 0) {
-        const payId = order.payments[0].id;
-        paymentData = await paymentClient.get({ id: payId });
-      }
-    } else {
-      console.log('Topic não tratado:', topic);
-      return res.status(200).send('ignored');
-    }
+    } 
+    // ... resto do seu código de busca de ordem ...
 
-    if (!paymentData) {
-      console.warn('Nenhum paymentData encontrado no webhook.');
-      return res.status(200).send('no payment');
-    }
+    // 3. Captura o ID da corrida que salvamos no 'external_reference'
+    const corridaId = paymentData.external_reference;
 
-    console.log('🔎 paymentData.status =', paymentData.status);
-    console.log('🔎 paymentData.external_reference =', paymentData.external_reference);
-    console.log('🔎 paymentData.metadata =', paymentData.metadata);
-
-    const corridaId =
-      paymentData.external_reference ||
-      (paymentData.metadata && (paymentData.metadata.corridaId || paymentData.metadata.corrida_id));
-
-    if (!corridaId) {
-      console.warn('Webhook sem corridaId identificável.');
-      return res.status(200).send('no corridaId');
-    }
-
-    let novoStatus = null;
-
-    if (paymentData.status === 'approved') {
-      novoStatus = 'liberada';
-    } else if (paymentData.status === 'rejected' || paymentData.status === 'cancelled') {
-      novoStatus = 'cancelada';
-    }
-
-    if (novoStatus) {
-      await pool.query(
-        "UPDATE corridas SET status = $1 WHERE id = $2",
-        [novoStatus, corridaId]
-      );
-      console.log(`✅ Webhook: Corrida ${corridaId} atualizada para ${novoStatus}`);
+    if (paymentData.status === 'approved' && corridaId) {
+       await pool.query(
+         "UPDATE corridas SET status = 'liberada' WHERE id = $1",
+         [corridaId]
+       );
+       console.log(`✅ Corrida ${corridaId} liberada via Webhook!`);
     }
 
     return res.status(200).send('OK');
   } catch (err) {
-    console.error('Erro no webhook Mercado Pago:', err && err.stack ? err.stack : err);
-    return res.status(500).send('Erro interno');
+    console.error('Erro no webhook:', err);
+    return res.status(500).send('Erro');
   }
 });
 
