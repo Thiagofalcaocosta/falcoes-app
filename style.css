@@ -1347,70 +1347,53 @@ textarea#campo-encerramento {
 #tempo-restante-busca::after {
     content: "" !important;
 }
-/* --- ESTILO NEON PREMIUM PARA O SALDO --- */
-.user-area {
+/* Container principal do Header */
+.header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    margin-top: 10px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #333;
 }
 
-.saldo-container {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    padding: 12px 25px;
-    margin: 15px 0;
-    min-width: 160px;
-    text-align: center;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.saldo-label {
-    font-size: 10px;
-    color: #666;
-    text-transform: uppercase;
-    font-weight: 900;
-    letter-spacing: 1.5px;
-    margin-bottom: 4px;
-    display: block;
-}
-
-.saldo-valor {
-    font-size: 24px;
-    font-weight: 900;
-    color: var(--neon-green);
-    text-shadow: 0 0 15px rgba(0, 230, 64, 0.4);
-    font-family: 'Courier New', monospace; /* Estilo digital */
-}
-
-/* Status e Sair em linha única */
-.controles-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-#status-online-indicator {
-    padding: 6px 15px;
-    font-size: 11px;
-    box-shadow: 0 0 15px rgba(0, 230, 64, 0.2);
-}
-
-.btn-sair-topo {
-    border: 1px solid #ff4444;
-    color: #ff4444;
-    padding: 5px 15px;
+/* O CARD NEON - Visual de App Premium */
+.saldo-wrapper {
+    background: linear-gradient(145deg, #1e1e1e, #121212);
+    border: 2px solid #333;
     border-radius: 20px;
-    text-decoration: none;
+    padding: 15px 40px;
+    margin: 20px 0;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efeito de brilho na borda quando o saldo muda */
+.saldo-wrapper.brilho-verde { border-color: var(--neon-green); box-shadow: 0 0 15px rgba(0, 230, 64, 0.3); }
+.saldo-wrapper.brilho-vermelho { border-color: #ff4444; box-shadow: 0 0 15px rgba(255, 68, 68, 0.3); }
+
+.label-mini {
     font-size: 11px;
-    font-weight: 800;
+    color: #888;
     text-transform: uppercase;
+    font-weight: 900;
+    letter-spacing: 2px;
+    display: block;
+    margin-bottom: 5px;
+}
+
+#saldo-piloto {
+    font-size: 28px;
+    font-weight: 900;
+    font-family: 'Arial Black', sans-serif;
     transition: 0.3s;
 }
 
-.btn-sair-topo:hover {
-    background: #ff4444;
-    color: white;
+/* Estilo dos Botões Inline */
+.controles-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-top: 5px;
 }

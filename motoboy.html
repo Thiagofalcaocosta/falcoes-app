@@ -580,21 +580,19 @@
 
 
     <div class="container">
-    <div class="header">
+   <div class="header">
     <img src="assets/logo.png" alt="Logo" class="logo-pequeno">
     
-    <div class="user-area">
-        <span id="msg-ola" class="moto-saudacao">OLÁ, PILOTO</span>
-        
-        <div class="saldo-container">
-            <span class="saldo-label">Saldo em Conta</span>
-            <div id="saldo-piloto" class="saldo-valor">R$ 0,00</div>
-        </div>
+    <span id="msg-ola" class="moto-saudacao">OLÁ, ROBERTO</span>
 
-        <div class="controles-header">
-            <span id="status-online-indicator" class="status-moto">● ONLINE</span>
-            <a href="index.html" class="btn-sair-topo" onclick="deslogar()">SAIR</a>
-        </div>
+    <div class="saldo-wrapper" id="card-saldo-neon">
+        <span class="label-mini">Saldo Atual</span>
+        <div id="saldo-piloto">R$ 0,00</div>
+    </div>
+
+    <div class="controles-row">
+        <span id="status-online-indicator" class="status-moto">● ONLINE</span>
+        <a href="index.html" class="logout" onclick="deslogar()">SAIR</a>
     </div>
 </div>
 
@@ -891,17 +889,30 @@ function tocarAlerta() {
         const eu = motoboys.find(m => m.id === usuario.id);
         
         if (eu && eu.saldo !== undefined) {
-            // Se o saldo no banco já for o líquido (atualizado pela rota de finalizar), 
-            // basta exibir. Se você quer calcular algo na hora, seria aqui:
             const valorNumerico = parseFloat(eu.saldo);
+            const saldoElement = document.getElementById('saldo-piloto');
+            const cardWrapper = document.getElementById('card-saldo-neon');
             
-            // Formata o valor para o padrão brasileiro
+            // 1. Formata o valor para o padrão brasileiro
             const valorFormatado = valorNumerico.toFixed(2).replace('.', ',');
+            saldoElement.innerText = `R$ ${valorFormatado}`;
             
-            document.getElementById('saldo-piloto').innerText = `SALDO: R$ ${valorFormatado}`;
-            
-            // Cor do saldo: Vermelho se estiver devendo (negativo), Verde se tiver crédito
-            document.getElementById('saldo-piloto').style.color = valorNumerico < 0 ? "#ff4444" : "#25d366";
+            // 2. Aplica as cores e o brilho neon no card inteiro
+            if (valorNumerico < 0) {
+                // Estilo para quando está devendo taxas
+                saldoElement.style.color = "#ff4444";
+                if(cardWrapper) {
+                    cardWrapper.style.borderColor = "#ff4444";
+                    cardWrapper.style.boxShadow = "0 0 20px rgba(255, 68, 68, 0.4)";
+                }
+            } else {
+                // Estilo para quando tem saldo positivo
+                saldoElement.style.color = "var(--neon-green)";
+                if(cardWrapper) {
+                    cardWrapper.style.borderColor = "var(--neon-green)";
+                    cardWrapper.style.boxShadow = "0 0 20px rgba(0, 230, 64, 0.4)";
+                }
+            }
         }
     } catch (err) {
         console.error("Erro ao carregar saldo:", err);
