@@ -580,19 +580,19 @@
 
 
     <div class="container">
-   <div class="header">
+  <div class="header">
     <img src="assets/logo.png" alt="Logo" class="logo-pequeno">
     
     <span id="msg-ola" class="moto-saudacao">OLÁ, ROBERTO</span>
 
-    <div class="saldo-wrapper" id="card-saldo-neon">
-        <span class="label-mini">Saldo Atual</span>
+    <div class="saldo-wrapper card-verde" id="card-saldo-neon">
+        <span class="label-mini">Saldo em Conta</span>
         <div id="saldo-piloto">R$ 0,00</div>
     </div>
 
-    <div class="controles-row">
+    <div class="botoes-row">
         <span id="status-online-indicator" class="status-moto">● ONLINE</span>
-        <a href="index.html" class="logout" onclick="deslogar()">SAIR</a>
+        <a href="index.html" class="logout" onclick="deslogar()" style="margin:0; padding: 5px 15px; border-radius: 20px;">SAIR</a>
     </div>
 </div>
 
@@ -893,25 +893,17 @@ function tocarAlerta() {
             const saldoElement = document.getElementById('saldo-piloto');
             const cardWrapper = document.getElementById('card-saldo-neon');
             
-            // 1. Formata o valor para o padrão brasileiro
+            // Formata o valor
             const valorFormatado = valorNumerico.toFixed(2).replace('.', ',');
             saldoElement.innerText = `R$ ${valorFormatado}`;
             
-            // 2. Aplica as cores e o brilho neon no card inteiro
+            // Troca o estilo do card conforme o saldo
             if (valorNumerico < 0) {
-                // Estilo para quando está devendo taxas
                 saldoElement.style.color = "#ff4444";
-                if(cardWrapper) {
-                    cardWrapper.style.borderColor = "#ff4444";
-                    cardWrapper.style.boxShadow = "0 0 20px rgba(255, 68, 68, 0.4)";
-                }
+                if(cardWrapper) cardWrapper.className = "saldo-wrapper card-vermelho";
             } else {
-                // Estilo para quando tem saldo positivo
-                saldoElement.style.color = "var(--neon-green)";
-                if(cardWrapper) {
-                    cardWrapper.style.borderColor = "var(--neon-green)";
-                    cardWrapper.style.boxShadow = "0 0 20px rgba(0, 230, 64, 0.4)";
-                }
+                saldoElement.style.color = "#00e640";
+                if(cardWrapper) cardWrapper.className = "saldo-wrapper card-verde";
             }
         }
     } catch (err) {
