@@ -964,7 +964,7 @@ function mostrarTela(idDesejado) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    motoboy_id: usuario.id,
+                    motoboy_id: usuario?.id || JSON.parse(localStorage.getItem('usuario'))?.id,
                     online: online,
                     latitude: null,
                     longitude: null

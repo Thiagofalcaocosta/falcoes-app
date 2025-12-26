@@ -213,7 +213,9 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    localStorage.setItem('usuario', JSON.stringify(data.user));
+    // Salva o objeto completo e também o ID isolado para garantir a leitura
+    localStorage.setItem('usuario', JSON.stringify(data.user));
+    localStorage.setItem('usuario_id', data.user.id);
                     if(data.user.tipo === 'motoboy') {
                         window.location.href = 'motoboy.html';
                     } else if (data.user.tipo === 'admin') {
