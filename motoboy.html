@@ -581,20 +581,22 @@
 
     <div class="container">
     <div class="header">
-        <img src="assets/logo.png" alt="Logo" class="logo-pequeno">
-        <div class="user-area">
-            <span id="msg-ola" class="moto-saudacao">OLÁ, PILOTO</span>
-            
-            <div id="saldo-piloto" style="color: var(--neon-green); font-weight: 800; font-size: 14px; margin-top: 5px;">SALDO: R$ 0,00</div>
-            
-            
-</div>
-                <div class="status-wrapper">
-                    <span id="status-online-indicator" class="status-moto">● ONLINE</span>
-                    <a href="index.html" class="logout" onclick="deslogar()">SAIR</a>
-                </div>
-            </div>
+    <img src="assets/logo.png" alt="Logo" class="logo-pequeno">
+    
+    <div class="user-area">
+        <span id="msg-ola" class="moto-saudacao">OLÁ, PILOTO</span>
+        
+        <div class="saldo-container">
+            <span class="saldo-label">Saldo em Conta</span>
+            <div id="saldo-piloto" class="saldo-valor">R$ 0,00</div>
         </div>
+
+        <div class="controles-header">
+            <span id="status-online-indicator" class="status-moto">● ONLINE</span>
+            <a href="index.html" class="btn-sair-topo" onclick="deslogar()">SAIR</a>
+        </div>
+    </div>
+</div>
 
         <span id="label-categoria" class="categoria-badge">CATEGORIA: --</span>
 
