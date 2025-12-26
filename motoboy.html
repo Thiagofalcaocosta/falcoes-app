@@ -493,6 +493,53 @@
     font-size: 14px;
     line-height: 1.5;
 }
+/* --- ESTILO NEON LIMPO E PROFISSIONAL --- */
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centraliza tudo no meio */
+    padding-bottom: 20px;
+    border-bottom: 1px solid #333;
+}
+
+.saldo-wrapper {
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 15px;
+    padding: 12px 30px;
+    margin: 15px 0;
+    text-align: center;
+    min-width: 180px;
+    transition: all 0.3s ease;
+}
+
+/* Classes de brilho controladas pelo JavaScript */
+.card-verde { border-color: #00e640; box-shadow: 0 0 15px rgba(0, 230, 64, 0.3); }
+.card-vermelho { border-color: #ff4444; box-shadow: 0 0 15px rgba(255, 68, 68, 0.3); }
+
+.label-mini {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 900;
+    letter-spacing: 2px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+#saldo-piloto {
+    font-size: 26px;
+    font-weight: 900;
+    font-family: 'Arial Black', sans-serif;
+    color: #fff; /* Cor base antes do JS carregar */
+}
+
+.botoes-row {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+}
 
         
     </style>
