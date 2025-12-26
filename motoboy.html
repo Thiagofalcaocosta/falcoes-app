@@ -1677,10 +1677,12 @@ function criarCardCorrida(corrida) {
 
         // 2. Validação: Obriga a digitar 4 números
         if (pinDigitado.length !== 4) {
-            alert("⚠️ BLOQUEIO DE SEGURANÇA\n\nPeça a SENHA DE 4 DÍGITOS para o cliente.\nEla aparece na tela dele (Cartão Verde).");
-            if(campoPin) campoPin.focus();
-            return; // Para tudo se não tiver senha
-        }
+            document.getElementById('msg-erro-texto').innerHTML = "⚠️ <b>BLOQUEIO DE SEGURANÇA</b><br><br>Peça a SENHA DE 4 DÍGITOS para o cliente.<br>Ela aparece na tela dele (Cartão Verde).";
+    document.getElementById('modal-erro').style.display = 'flex';
+    
+    if(campoPin) campoPin.focus();
+    return; 
+}
 if (!confirm("Confirmar finalização da corrida?")) return;
         try {
             // Envia para o servidor JUNTO com a senha
