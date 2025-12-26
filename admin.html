@@ -203,13 +203,13 @@
 </div>
 
 </div>
-
+<script> 
 
     const MEU_IP = 'https://falcoes-app.onrender.com';
     const usuarioLogado = JSON.parse(localStorage.getItem('usuario'));
 
     if (!usuarioLogado || usuarioLogado.tipo !== 'admin') window.location.href = 'index.html';
-<script> 
+ 
     // --- COLE AQUI A FUNÇÃO DE BUSCA ---
     function filtrarLista(containerId, termo) {
         const container = document.getElementById(containerId);
