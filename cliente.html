@@ -1,4 +1,4 @@
-<html lang="pt-br">
+ml lang="pt-br">
 
 <head>
     <meta charset="UTF-8" />
@@ -1153,7 +1153,10 @@
     // 1. Abre o modal quando clica no botão
     function abrirModalCancelamentoBusca() {
         const modal = document.getElementById('modal-confirmar-cancelamento-busca');
-        if (modal) modal.style.display = 'flex';
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.style.zIndex = '999999';
+        }
     }
 
     // 2. Fecha qualquer modal
@@ -1166,20 +1169,15 @@
     async function confirmarCancelamentoBusca() {
         fecharModal('modal-confirmar-cancelamento-busca');
         
-        // Tenta pegar o ID da corrida (ajuste conforme seu código salva o ID)
-        // Se você usa uma variável global chamada 'idCorridaAtual', use ela.
-        // Se usa localStorage, use o localStorage.
         const idParaCancelar = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
         
        if (!idParaCancelar || idParaCancelar === '000') {
             showToast("Nenhuma busca ativa encontrada para cancelar.", "error");
-            // Se o ID sumiu mas a tela está aberta, apenas reinicia o app
             setTimeout(() => reiniciarApp(), 1000);
             return;
         }
 
         try {
-            // Endereço do seu backend
             const MEU_IP = 'https://falcoes-app.onrender.com'; 
 
             const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
@@ -1196,12 +1194,10 @@
 
             if (data.success) {
                 showToast("Busca cancelada!", "success");
-                // Limpa as memórias da corrida atual
                 localStorage.removeItem('idPedidoAtual');
                 localStorage.removeItem('pedidoAtual');
                 localStorage.removeItem('inicioBuscaTimestamp');
                 
-                // Pequeno delay para o usuário ver o aviso e reinicia
                 setTimeout(() => {
                     window.location.reload(); 
                 }, 1000);
@@ -1214,17 +1210,17 @@
         }
     }
 
-
     // === CONFIGURAÇÃO E DADOS ===
-    // O correto é com aspas no começo e no fim:
-const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBvdGEzZ3B2NzBkajE3NmUifQ.qTGPzR6IIc2-JetrQnB-yQ';// SEU TOKEN AQUI!
+    const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBvdGEzZ3B2NzBkajE3NmUifQ.qTGPzR6IIc2-JetrQnB-yQ';
     const MEU_IP = 'https://falcoes-app.onrender.com';
     const LAT_TC = -21.6975;
     const LON_TC = -45.25; 
 
     // Mock de usuário
     const usuario = JSON.parse(localStorage.getItem("usuario"));
-    document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
+    if (usuario && usuario.nome) {
+        document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
+    }
 
     // Variáveis de Estado
     let servicoSelecionado = null;
@@ -1236,7 +1232,7 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
     let markerDestino = null;
     let idPedidoAtual = localStorage.getItem('idPedidoAtual');
     let intervaloVerificacao = null;
-    let buscaMotoboyInterval = null; // Para controlar o tempo limite da busca
+    let buscaMotoboyInterval = null;
     let tempoBuscaRestante = 0; 
 
     const precos = {
@@ -1296,42 +1292,29 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
         if (persistedId) {
             idPedidoAtual = persistedId;
             
-            // 1. Preenche os detalhes (chama a função auxiliar)
             preencherDetalhesAcompanhamento();
             
-            // 2. MUDAR PARA A TELA DE ACOMPANHAMENTO (Isto resolve a sobreposição!)
             mudarTela('tela-acompanhamento');
-            // --- 4. CONFIGURAÇÃO DO BOTÃO FALAR COM ADM ---
-    // Esta função deve ser chamada dentro do verificarStatus ou no carregar da página
-    function configurarBotaoAdm() {
-        const btnAdm = document.getElementById('btn-link-estorno');
-        if (btnAdm) {
-            // AJUSTE O NÚMERO ABAIXO PARA O SEU WHATSAPP DE SUPORTE
-            const numeroSuporte = "5535997806080"; 
-            const mensagem = encodeURIComponent("Olá ADM, preciso de suporte com meu pedido no Falcões App.");
-            btnAdm.href = `https://wa.me/${numeroSuporte}?text=${mensagem}`;
             
-            // Garante que abra em nova aba/app externo
-            btnAdm.setAttribute('target', '_blank');
-        }
-    }
-
-    // Chame a configuração do ADM ao carregar a página
-    document.addEventListener('DOMContentLoaded', () => {
-        configurarBotaoAdm();
-    });
-
-            // 3. Iniciar a verificação de status (Polling)
             verificarStatus(idPedidoAtual);
             
             if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
             intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
         } else {
-            // Se não houver pedido, garante que a tela inicial esteja ativa
             mudarTela('tela-pedido');
         }
     }
 
+    // === FUNÇÃO PARA CONFIGURAR BOTÃO ADM ===
+    function configurarBotaoAdm() {
+        const btnAdm = document.getElementById('btn-link-estorno');
+        if (btnAdm) {
+            const numeroSuporte = "5535997806080"; // SUBSTITUA PELO SEU NÚMERO REAL
+            const mensagem = encodeURIComponent("Olá ADM, preciso de suporte com meu pedido no Falcões App.");
+            btnAdm.href = `https://wa.me/${numeroSuporte}?text=${mensagem}`;
+            btnAdm.setAttribute('target', '_blank');
+        }
+    }
 
     // === FUNÇÕES MAPA E CÁLCULO ===
     const map = L.map('map').setView([LAT_TC, LON_TC], 14);
@@ -1508,7 +1491,6 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
 
     async function encerrarBuscaPorTimeout(corridaId) {
     try {
-        // Chama o backend para cancelar
         await fetch(`${MEU_IP}/cancelar-pedido`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1518,19 +1500,16 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
             })
         });
         
-        // PARA o timer
         if (buscaMotoboyInterval) {
             clearInterval(buscaMotoboyInterval);
             buscaMotoboyInterval = null;
         }
         
-        // Atualiza a interface
         const statusTitulo = document.getElementById('acompanhamento-status-titulo');
         const statusDesc = document.getElementById('acompanhamento-status-desc');
         const timerElement = document.getElementById('timer-segundos');
         const containerTimer = document.getElementById('tempo-restante-busca');
         
-        // 1. Atualiza o título e descrição
         if (statusTitulo) {
             statusTitulo.innerHTML = '<i class="fas fa-clock"></i> TEMPO ESGOTADO';
             statusTitulo.style.color = "#ff4444";
@@ -1541,40 +1520,32 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
             statusDesc.style.color = "#aaa";
         }
         
-        // 2. CORREÇÃO: NÃO remove o timerElement, apenas atualiza
         if (timerElement) {
             timerElement.textContent = "0";
             timerElement.style.color = "#ff4444";
         }
         
-        // 3. CORREÇÃO: Atualiza APENAS o conteúdo de texto, mantendo a estrutura
         if (containerTimer) {
-            // Encontra o texto "Tempo estimado:" e substitui
             const elementos = containerTimer.childNodes;
             
             for (let node of elementos) {
                 if (node.nodeType === Node.TEXT_NODE && 
                     node.textContent.includes('Tempo estimado:')) {
-                    // Substitui APENAS o texto "Tempo estimado:" por "⏰"
                     node.textContent = '⏰ ';
                     break;
                 }
             }
             
-            // Muda a cor do container
             containerTimer.style.color = '#ff4444';
         }
         
-        // Para a verificação contínua
         clearInterval(intervaloVerificacao);
         
-        // Esconde o botão de cancelamento com taxa
         const areaCancelar = document.getElementById('area-botao-cancelar-taxa');
         if (areaCancelar) {
             areaCancelar.style.display = 'none';
         }
         
-        // Mostra opções para o usuário
         mostrarOpcoesTempoEsgotado();
         
         showToast('Tempo limite de busca esgotado. Nenhum piloto encontrado.', 'error');
@@ -1589,11 +1560,9 @@ function mostrarOpcoesTempoEsgotado() {
     
     if (!container) return;
     
-    // Remove opções anteriores
     const opcoesAntigas = document.getElementById('opcoes-tempo-esgotado');
     if (opcoesAntigas) opcoesAntigas.remove();
     
-    // Cria as opções
     const opcoesDiv = document.createElement('div');
     opcoesDiv.id = 'opcoes-tempo-esgotado';
     opcoesDiv.style.cssText = `
@@ -1626,18 +1595,14 @@ function mostrarOpcoesTempoEsgotado() {
 
 
 function voltarParaNovaCorrida() {
-    // Limpa os dados atuais
     clearInterval(intervaloVerificacao);
     clearInterval(buscaMotoboyInterval);
     
-    // Mantém o rascunho do formulário, mas remove o pedido atual
     localStorage.removeItem('idPedidoAtual');
     localStorage.removeItem('pedidoAtual');
     
-    // Volta para a tela de pedido
     mudarTela('tela-pedido');
     
-    // Restaura o formulário com os dados salvos (se existirem)
     restaurarRascunhoFormulario();
     
     showToast('Preencha os dados para um novo pedido', 'info');
@@ -1653,7 +1618,6 @@ async function buscarEndereco(query, listaId, modo) {
         return;
     }
 
-    // Coordenadas de Três Corações
     const proximidade = `-45.2581,-21.6931`; 
 
     try {
@@ -1679,31 +1643,24 @@ async function buscarEndereco(query, listaId, modo) {
         data.features.forEach(f => {
             const item = document.createElement('div');
             item.className = 'sugestao-item';
-            // Limpa o visual
             item.innerText = f.place_name
                 .replace(', Minas Gerais', '')
                 .replace(', Brasil', '')
                 .replace('Três Corações,', ''); 
             
             item.onclick = () => {
-                // 1. Pega apenas o nome da rua
                 const nomeRua = f.text; 
                 
-                // 2. Preenche SÓ A RUA
                 document.getElementById(`rua-${modo}`).value = nomeRua;
                 
-                // 3. LIMPA o Bairro (para obrigar ele a digitar o certo)
                 document.getElementById(`bairro-${modo}`).value = "";
                 
-                // 4. Salva coordenadas
                 if (modo === 'origem') coordsOrigem = { lat: f.center[1], lon: f.center[0] };
                 else coordsDestino = { lat: f.center[1], lon: f.center[0] };
 
-                // 5. Esconde lista
                 lista.innerHTML = '';
                 lista.style.display = 'none';
 
-                // 6. Foca no NÚMERO (Fluxo natural: Rua -> Nº -> Bairro)
                 document.getElementById(`num-${modo}`).focus();
                 
                 calcularRota();
@@ -1728,7 +1685,6 @@ document.addEventListener('click', (e) => {
         return; 
     }
     
-    // Limpeza dos dados
     const ruaOrigemPura = document.getElementById('rua-origem').value.split(',')[0].trim();
     const ruaDestinoPura = document.getElementById('rua-destino').value.split(',')[0].trim();
     
@@ -1741,7 +1697,6 @@ document.addEventListener('click', (e) => {
 
     let erro = false;
 
-    // --- VALIDAÇÃO DE ORIGEM ---
     if (!numOrigem) { 
         document.getElementById('num-origem').classList.add('erro'); 
         erro = true; 
@@ -1751,7 +1706,6 @@ document.addEventListener('click', (e) => {
         erro = true; 
     }
 
-    // --- VALIDAÇÃO DE DESTINO ---
     if (!numDestino) { 
         document.getElementById('num-destino').classList.add('erro'); 
         erro = true; 
@@ -1766,7 +1720,6 @@ document.addEventListener('click', (e) => {
         return; 
     }
 
-    // --- SE PASSOU, MONTA O ENDEREÇO ---
     const strOrigem = `${ruaOrigemPura}, Nº ${numOrigem}, ${bairroOrigem}`;
     const strDestino = `${ruaDestinoPura}, Nº ${numDestino}, ${bairroDestino}`;
     
@@ -1797,7 +1750,6 @@ document.addEventListener('click', (e) => {
         if (json.success) {
             idPedidoAtual = json.id;
             
-            // SALVA DADOS COMPLETOS PARA POSSÍVEL REUSO
             const dadosParaSalvar = {
                 origem: strOrigem,
                 destino: strDestino,
@@ -1819,14 +1771,11 @@ document.addEventListener('click', (e) => {
             localStorage.setItem('inicioBuscaTimestamp', Date.now());
             localStorage.setItem('pedidoAtual', JSON.stringify(dadosParaSalvar));
             
-            // Preenche a tela de acompanhamento
             preencherDetalhesAcompanhamento();
             
-            // Troca para a tela de Acompanhamento
             mudarTela('tela-acompanhamento');
             document.getElementById('modal-busca').style.display = 'none';
             
-            // Inicia contador e verificação
             iniciarContadorBusca(idPedidoAtual, 600);
             intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
             
@@ -1842,29 +1791,22 @@ document.addEventListener('click', (e) => {
 }
 
     // === SUBSTITUA SÓ A FUNÇÃO cancelarComTaxa POR ESTA ===
-// === VERSÃO FINAL: SE NÃO ACHAR O ID, ELE PERGUNTA PRA VOCÊ ===
 async function cancelarComTaxa() {
     console.log("Iniciando cancelamento...");
 
-    // 1. Tenta achar o ID na memória ou na tela
     let id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
 
-    // Se a memória falhou, tenta ler da tela
     if (!id || id === '000') {
         const elId = document.getElementById('acompanhamento-id');
         if (elId) id = elId.innerText.replace('#', '').trim();
     }
 
-    // 2. AQUI ESTÁ A SEGURANÇA MÁXIMA:
-    // Se o ID ainda for 000, -- ou vazio, ele pergunta pra você!
     if (!id || id === '000' || id === '--') {
         id = prompt("⚠️ O sistema perdeu o número do pedido.\n\nPor favor, digite o NÚMERO DA CORRIDA (ex: 77) para cancelar:");
     }
 
-    // Se você não digitou nada ou cancelou a pergunta, para tudo.
     if (!id) return;
 
-    // 3. Confirmação final
     if(!confirm(`⚠️ ATENÇÃO!\n\nVocê vai cancelar o Pedido #${id}.\nO piloto será avisado e a taxa de R$ 5,00 será aplicada.\n\nConfirmar?`)) return;
 
     try {
@@ -1874,7 +1816,7 @@ async function cancelarComTaxa() {
             body: JSON.stringify({ 
                 id: id, 
                 motivo: '[CLIENTE] Cancelou após aceito (Ciente da Taxa)',
-                cancelado_por: 'cliente' // <--- O MOTOBOY PRECISA DISSO!
+                cancelado_por: 'cliente'
             })
         });
 
@@ -1918,9 +1860,7 @@ async function cancelarComTaxa() {
         document.getElementById('modal-busca').style.display = 'none';
         showToast("Finalização registrada. Obrigado!", "success", 3000);
 
-        // --- AQUI É O LUGAR CERTO ---
-        limparRascunho(); // Limpa os campos salvos para a próxima vez
-        // -----------------------------
+        limparRascunho();
 
         clearInterval(intervaloVerificacao);
         localStorage.removeItem('idPedidoAtual');
@@ -1939,18 +1879,13 @@ async function cancelarComTaxa() {
     
 
     // === INICIALIZAÇÃO DE LISTENERS ===
-    // === INICIALIZAÇÃO COM MEMÓRIA DE TEMPO (COLE NO FINAL DO SCRIPT) ===
-document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', async () => {
 
     const idSalvo = localStorage.getItem('idPedidoAtual');
-    // --- 🚨 AQUI ESTÁ A CORREÇÃO DO ID #000 ---
-    // Isso garante que o número apareça na tela IMEDIATAMENTE
     if (idSalvo) {
         const elId = document.getElementById('acompanhamento-id');
-        // Se o elemento existir, força o texto ser o ID salvo
         if (elId) elId.innerText = '#' + idSalvo; 
         
-        // Também garante que a variável global esteja certa
         window.idPedidoAtual = idSalvo;
     }
 
@@ -1958,12 +1893,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const API = (typeof MEU_IP !== 'undefined') ? MEU_IP : 'https://falcoes-app.onrender.com';
             
-            // 1. Checa o status real no servidor
             const res = await fetch(`${API}/status-pedido/${idSalvo}`);
             const data = await res.json();
             const statusReal = data.pedido ? data.pedido.status : null;
 
-            // Preenche dados visuais (Endereço, Preço)
             const dados = JSON.parse(localStorage.getItem('pedidoAtual'));
             if (dados) {
                 const elOrig = document.getElementById('detalhe-origem');
@@ -1976,50 +1909,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (elId) elId.innerText = `#${idSalvo}`;
             }
             
-            // Vai para a tela certa
             mudarTela('tela-acompanhamento');
             window.idPedidoAtual = idSalvo;
 
-            // === LÓGICA DO TIMER (AQUI ESTÁ A MÁGICA) ===
             if (statusReal === 'pendente') {
-                // Recupera quando a busca começou
                 const inicioBusca = parseInt(localStorage.getItem('inicioBuscaTimestamp') || Date.now());
                 const agora = Date.now();
                 const segundosPassados = Math.floor((agora - inicioBusca) / 1000);
-                const tempoLimiteTotal = 600; // Seu limite original (600s)
+                const tempoLimiteTotal = 600;
                 
                 const tempoRestanteReal = tempoLimiteTotal - segundosPassados;
 
                 if (tempoRestanteReal > 0) {
-                    // AINDA ESTÁ NO PRAZO: Restaura o timer e o botão
                     console.log(`Restaurando busca: faltam ${tempoRestanteReal}s`);
                     
-                    // Força o botão de cancelar busca aparecer
                     const btnCancelBusca = document.getElementById('btn-cancelar-busca');
                     if(btnCancelBusca) btnCancelBusca.style.display = 'block';
 
-                    // Inicia o contador com o tempo que sobrou
                     iniciarContadorBusca(idSalvo, tempoRestanteReal);
                 } else {
-                    // JÁ ESTOUROU O TEMPO ENQUANTO ESTAVA FECHADO
                     document.getElementById('tempo-restante-busca').innerHTML = '<span style="color:#ff4444">⏰ Tempo esgotado (Offline).</span>';
                     const btnCancelBusca = document.getElementById('btn-cancelar-busca');
                     if(btnCancelBusca) btnCancelBusca.style.display = 'none';
-                    
-                    // Opcional: Cancelar automatico se quiser
-                    // encerrarBuscaPorTimeout(idSalvo);
                 }
             }
-            // =============================================
 
-            // Continua monitorando
             verificarStatus(idSalvo);
             if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
             intervaloVerificacao = setInterval(() => verificarStatus(idSalvo), 3000);
 
         } catch (e) {
             console.error("Erro ao restaurar:", e);
-            // Se der erro (sem net), tenta restaurar visualmente pelo menos
             mudarTela('tela-acompanhamento');
         }
 
@@ -2027,16 +1947,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (typeof restaurarRascunhoFormulario === 'function') restaurarRascunhoFormulario();
     }
 
-    // --- MANTENHA O RESTO DOS SEUS LISTENERS ABAIXO DAQUI (Igual antes) ---
-    // (Justificativa, Mercado Pago, Inputs, etc.)
     const campoJust = document.getElementById('campo-justificativa-integrada');
     const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
     const erroJust = document.getElementById('erro-just-integrada');
 
-    // ... (Cole aqui o restante dos códigos de listener que você já tinha) ...
-    // Se quiser, posso mandar o bloco completo, mas é só manter o final igual.
-    
-    // REPETINDO O FINAL PARA GARANTIR QUE NÃO FALTE NADA:
     if (campoJust && btnConfirmar) {
         campoJust.addEventListener('input', () => {
             const motivo = campoJust.value.trim();
@@ -2082,6 +1996,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', salvarRascunhoFormulario);
     });
+
+    // CONFIGURA O BOTÃO ADM AO CARREGAR
+    configurarBotaoAdm();
 });
 
 </script>
@@ -2121,7 +2038,6 @@ async function pagarPix() {
         return;
     }
 
-    // Feedback visual de carregamento
     const btnPix = document.querySelector('button[onclick="pagarPix()"]');
     const originalText = btnPix.innerHTML;
     btnPix.innerText = "GERANDO CÓDIGO...";
@@ -2142,7 +2058,6 @@ async function pagarPix() {
         if (data.success && data.pix_qr_64) {
             const modalContent = document.querySelector('#modal-pagamento .modal-content');
             
-            // Substitui o conteúdo do modal pelos dados do PIX
             modalContent.innerHTML = `
                 <h3 style="color: var(--brand-green);">PAGAMENTO PIX</h3>
                 <p>Aponte a câmera ou copie o código:</p>
@@ -2155,7 +2070,6 @@ async function pagarPix() {
                 <button onclick="location.reload()" style="background:none; border:none; color:#aaa; margin-top:15px; cursor:pointer;">Cancelar e Voltar</button>
             `;
             
-            // O seu loop de 'verificarStatus' que já roda no fundo vai detectar a mudança para 'liberada'
             showToast("Pix gerado com sucesso!", "success");
         } else {
             throw new Error("Dados do Pix não retornados");
@@ -2171,7 +2085,7 @@ async function pagarPix() {
 function copiarCodigoPix() {
     const copyText = document.getElementById("pixCode");
     copyText.select();
-    copyText.setSelectionRange(0, 99999); // Para dispositivos móveis
+    copyText.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(copyText.value);
     
     const btn = document.querySelector('button[onclick="copiarCodigoPix()"]');
@@ -2184,24 +2098,20 @@ function copiarCodigoPix() {
 // SISTEMA DE MEMÓRIA AUTOMÁTICA (PERSISTÊNCIA DE DADOS)
 // ============================================================
 
-// 1. Lista dos campos que queremos salvar
 const camposParaSalvar = [
     'rua-origem', 'num-origem', 'bairro-origem',
     'rua-destino', 'num-destino', 'bairro-destino',
     'detalhes-entrega'
 ];
 
-// 2. Função que salva tudo no navegador
 function salvarRascunhoFormulario() {
     const rascunho = {};
     
-    // Salva o texto dos inputs
     camposParaSalvar.forEach(id => {
         const el = document.getElementById(id);
         if (el) rascunho[id] = el.value;
     });
 
-    // IMPORTANTE: Salva também as coordenadas (para o mapa não quebrar)
     if (typeof coordsOrigem !== 'undefined') rascunho.coordsOrigem = coordsOrigem;
     if (typeof coordsDestino !== 'undefined') rascunho.coordsDestino = coordsDestino;
     if (typeof servicoSelecionado !== 'undefined') rascunho.servico = servicoSelecionado;
@@ -2209,36 +2119,29 @@ function salvarRascunhoFormulario() {
     localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
 }
 
-// 3. Função que recupera os dados quando a tela abre
 function restaurarRascunhoFormulario() {
     const dados = JSON.parse(localStorage.getItem('rascunho_cliente'));
-    if (!dados) return; // Se não tem nada salvo, não faz nada
+    if (!dados) return;
 
-    // Preenche os textos
     camposParaSalvar.forEach(id => {
         const el = document.getElementById(id);
         if (el && dados[id]) el.value = dados[id];
     });
 
-    // Recupera as coordenadas e o serviço
     if (dados.coordsOrigem) coordsOrigem = dados.coordsOrigem;
     if (dados.coordsDestino) coordsDestino = dados.coordsDestino;
     
-    // Se tinha um serviço selecionado, marca ele de novo
     if (dados.servico) {
         selecionarServico(dados.servico, dados.servico === 'moto-taxi' ? 10.0 : 8.50);
     }
 
-    // Se tiver os dois endereços completos, já tenta recalcular a rota/preço
     if (dados.coordsOrigem && dados.coordsDestino) {
         calcularRota();
     }
 }
 
-// 4. Função para limpar (Usar apenas quando a corrida for FINALIZADA com sucesso)
 function limparRascunho() {
     localStorage.removeItem('rascunho_cliente');
-    // Limpa os campos visuais também
     camposParaSalvar.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
@@ -2248,12 +2151,9 @@ function limparRascunho() {
     document.getElementById('resumo').innerHTML = '';
 }
 
-// 5. ATIVAÇÃO AUTOMÁTICA
 document.addEventListener('DOMContentLoaded', () => {
-    // Tenta restaurar assim que abre
     restaurarRascunhoFormulario();
 
-    // Adiciona o "espião" que salva a cada letra digitada
     camposParaSalvar.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -2270,7 +2170,7 @@ function usarMeuLocal() {
     }
 
     const btn = document.querySelector('.btn-my-location');
-    btn.classList.add('gps-loading'); // Ativa animação
+    btn.classList.add('gps-loading');
     showToast("Obtendo sua localização...", "info");
 
     navigator.geolocation.getCurrentPosition(async (pos) => {
@@ -2278,39 +2178,32 @@ function usarMeuLocal() {
         const lon = pos.coords.longitude;
 
         try {
-            // Usa o Mapbox para descobrir o endereço (Reverse Geocoding)
             const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lon},${lat}.json?types=address&access_token=${MAPBOX_ACCESS_TOKEN}`;
             const res = await fetch(url);
             const data = await res.json();
 
             if (data.features && data.features.length > 0) {
                 const feature = data.features[0];
-                const rua = feature.text; // Nome da rua
-                const numero = feature.address || ""; // Número aproximado (se houver)
+                const rua = feature.text;
+                const numero = feature.address || "";
                 
-                // Tenta achar o bairro no contexto
                 const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
                 const bairro = (neighborhood && neighborhood.text) ? neighborhood.text : "Três Corações";
 
-                // Preenche os campos
                 document.getElementById('rua-origem').value = rua;
-                document.getElementById('num-origem').value = numero; // Mapa as vezes erra o número, mas ajuda
+                document.getElementById('num-origem').value = numero;
                 document.getElementById('bairro-origem').value = bairro;
 
-                // Salva coordenadas globais
                 coordsOrigem = { lat, lon };
                 
-                // Coloca marcador no mapa
                 if (markerOrigem) map.removeLayer(markerOrigem);
                 markerOrigem = L.marker([lat, lon]).addTo(map);
                 map.setView([lat, lon], 16);
 
                 showToast("Localização encontrada!", "success");
                 
-                // Recalcula rota se já tiver destino
                 calcularRota();
                 
-                // Salva no rascunho
                 salvarRascunhoFormulario();
             } else {
                 showToast("Não consegui identificar o endereço exato.", "error");
@@ -2337,16 +2230,12 @@ function usarMeuLocal() {
 // 🧠 MEGA BLOCO: LIMPEZA INTELIGENTE, MEMÓRIA E SAIR
 // ============================================================
 
-// 1. FUNÇÃO SAIR CORRIGIDA (Redireciona para o login real)
 function logout() {
     localStorage.clear(); 
-    // Manda o usuário para a tela inicial/login em vez de recarregar a tela atual quebrada
     window.location.href = 'index.html'; 
 }
 
-// 2. FUNÇÃO DO BOTÃO "LIMPAR" (A Lixeira)
 function limparFormularioManual() {
-    // Limpa visualmente os campos
     document.getElementById('rua-origem').value = '';
     document.getElementById('num-origem').value = '';
     document.getElementById('bairro-origem').value = '';
@@ -2355,28 +2244,23 @@ function limparFormularioManual() {
     document.getElementById('bairro-destino').value = '';
     document.getElementById('detalhes-entrega').value = '';
     
-    // Zera variáveis internas do sistema
     coordsOrigem = null;
     coordsDestino = null;
     servicoSelecionado = null;
     
-    // Remove marcadores do mapa se existirem
     if(typeof map !== 'undefined') {
         if(typeof markerOrigem !== 'undefined' && markerOrigem) map.removeLayer(markerOrigem);
         if(typeof markerDestino !== 'undefined' && markerDestino) map.removeLayer(markerDestino);
     }
     
-    // Esconde o resumo de preço
     const resumo = document.getElementById('resumo');
     if(resumo) resumo.style.display = 'none';
 
-    // Apaga a memória do navegador
     localStorage.removeItem('rascunho_cliente');
     
     showToast("Campos limpos com sucesso!", "info");
 }
 
-// 3. SALVAR TUDO AUTOMATICAMENTE (Com Data e Hora)
 function salvarRascunhoFormulario() {
     const rascunho = {};
     
@@ -2391,32 +2275,26 @@ function salvarRascunhoFormulario() {
     if (typeof coordsDestino !== 'undefined') rascunho.coordsDestino = coordsDestino;
     if (typeof servicoSelecionado !== 'undefined') rascunho.servico = servicoSelecionado;
 
-    // IMPORTANTE: Salva a hora exata (Timestamp) para saber se está velho depois
     rascunho.timestamp = new Date().getTime();
 
     localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
 }
 
-// 4. RESTAURAR (Só se foi salvo há menos de 2 horas)
 function restaurarRascunhoFormulario() {
     const dadosString = localStorage.getItem('rascunho_cliente');
     if (!dadosString) return;
 
     const dados = JSON.parse(dadosString);
 
-    // --- REGRA DE VALIDADE (2 HORAS) ---
     const AGORA = new Date().getTime();
-    const DUAS_HORAS = 2 * 60 * 60 * 1000; // 7200000 milissegundos
+    const DUAS_HORAS = 2 * 60 * 60 * 1000;
 
-    // Se o rascunho for velho, apaga e não preenche nada
     if (dados.timestamp && (AGORA - dados.timestamp > DUAS_HORAS)) {
         console.log("Rascunho expirado (mais de 2h). Limpando...");
         localStorage.removeItem('rascunho_cliente');
         return; 
     }
-    // -------------------------
 
-    // Se estiver novo, preenche tudo
     ['rua-origem', 'num-origem', 'bairro-origem', 
      'rua-destino', 'num-destino', 'bairro-destino', 
      'detalhes-entrega'].forEach(id => {
@@ -2428,21 +2306,16 @@ function restaurarRascunhoFormulario() {
     if (dados.coordsDestino) coordsDestino = dados.coordsDestino;
     
     if (dados.servico) {
-        // Seleciona o botão certo visualmente
         selecionarServico(dados.servico, dados.servico === 'moto-taxi' ? 10.0 : 8.50);
     }
 
-    // Se tiver os dois endereços, já calcula o preço
     if (dados.coordsOrigem && dados.coordsDestino) {
         calcularRota();
     }
 }
 
-// 5. ATIVAR OS ESPIÕES (Start)
-// Tenta restaurar assim que carrega o script
 restaurarRascunhoFormulario();
 
-// Adiciona o evento de salvar a cada letra digitada
 ['rua-origem', 'num-origem', 'bairro-origem', 
  'rua-destino', 'num-destino', 'bairro-destino', 
  'detalhes-entrega'].forEach(id => {
@@ -2459,22 +2332,16 @@ restaurarRascunhoFormulario();
 function resetarTimerCompletamente() {
     const containerTimer = document.getElementById('tempo-restante-busca');
     if (containerTimer) {
-        // Volta ao HTML original
         containerTimer.innerHTML = '⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s';
         containerTimer.style.color = '#aaa';
         containerTimer.style.display = 'none';
     }
     
-    // Para qualquer timer ativo
     if (buscaMotoboyInterval) {
         clearInterval(buscaMotoboyInterval);
         buscaMotoboyInterval = null;
     }
 }
-
-/* === COLE ISSO NO FINAL PARA TER O TIMER DE BARRA CORRETO === */
-
-
 
 function atualizarTextoTimer(elemento, segundos) {
     const spanNumero = document.getElementById('timer-numeros');
@@ -2483,16 +2350,11 @@ function atualizarTextoTimer(elemento, segundos) {
 
 // ============================================================
 // ✅ BLOCO CORRIGIDO (TIMER + STATUS UNIFICADOS)
-// Cole isso no final do seu script, substituindo as funções antigas
 // ============================================================
 
-// 1. Variáveis Globais de Controle
-let timerBuscaInterval = null;   // Controla o relógio visual (90s)
+let timerBuscaInterval = null;
 
-// 2. Função do Timer Visual (Corrigida)
-// 2. Função do Timer Visual (COM FORMATAÇÃO DE MINUTOS)
-function iniciarContadorBusca(idPedido, segundosIniciais = 600) { // <--- MUDADO PARA 600
-    // Limpa qualquer timer anterior
+function iniciarContadorBusca(idPedido, segundosIniciais = 600) {
     if (timerBuscaInterval) clearInterval(timerBuscaInterval);
 
     const elContainer = document.getElementById('tempo-restante-busca'); 
@@ -2501,18 +2363,15 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 600) { // <--- MUDADO
 
     if (!elContainer) return;
 
-    // Função interna para formatar 00:00
     const formatarTempo = (s) => {
         const min = Math.floor(s / 60).toString().padStart(2, '0');
         const seg = (s % 60).toString().padStart(2, '0');
         return `${min}:${seg}`;
     };
 
-    // Reseta o visual inicial
     elContainer.style.display = 'flex';
     elContainer.style.borderColor = 'rgba(0, 255, 0, 0.3)';
     elContainer.style.color = '#ccc';
-    // Aqui já mostramos formatado
     elContainer.innerHTML = '⏳ Tempo estimado: <span id="timer-numeros" style="color: var(--neon-green); font-weight: bold; font-size: 16px; margin-left:5px;">' + formatarTempo(segundosIniciais) + '</span>';
     
     if (btnCancelar) btnCancelar.style.display = 'block';
@@ -2524,12 +2383,11 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 600) { // <--- MUDADO
         
         const spanNum = document.getElementById('timer-numeros');
         if (spanNum) {
-            spanNum.innerText = formatarTempo(restantes); // <--- ATUALIZA COM FORMATO 00:00
+            spanNum.innerText = formatarTempo(restantes);
         }
 
-        // Cores de alerta (quando faltar 1 min e 30 seg)
-        if (spanNum && restantes <= 60) spanNum.style.color = "#ff9900"; // Laranja
-        if (spanNum && restantes <= 15) spanNum.style.color = "#ff4444"; // Vermelho
+        if (spanNum && restantes <= 60) spanNum.style.color = "#ff9900";
+        if (spanNum && restantes <= 15) spanNum.style.color = "#ff4444";
 
         if (restantes <= 0) {
             clearInterval(timerBuscaInterval);
@@ -2539,7 +2397,6 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 600) { // <--- MUDADO
     }, 1000);
 }
 
-// 3. Função de Verificação de Status (Que sabe parar o timer acima)
 async function verificarStatus(id) {
     try {
         const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
@@ -2548,7 +2405,6 @@ async function verificarStatus(id) {
 
         if (!data.success || !pedido) return;
 
-        // Elementos da Interface
         const statusTitulo = document.getElementById('acompanhamento-status-titulo');
         const statusDesc   = document.getElementById('acompanhamento-status-desc');
         const statusArea   = document.getElementById('acompanhamento-status-area'); 
@@ -2563,13 +2419,10 @@ async function verificarStatus(id) {
         const areaCodigo   = document.getElementById('area-codigo-seguranca');
         const textoCodigo  = document.getElementById('texto-codigo-seguranca');
 
-        // --- LIMPEZA DE CORES NEON (NOVO) ---
-        // Garante que não fique azul e verde ao mesmo tempo
         if (statusArea) {
             statusArea.classList.remove('status-buscando', 'status-finalizada');
         }
 
-        // Lógica do Código de Segurança (Mantida)
         if (pedido.codigo_seguranca && areaCodigo && textoCodigo) {
             if (pedido.status !== 'concluida' && pedido.status !== 'cancelada') {
                 areaCodigo.style.display = 'block'; 
@@ -2579,9 +2432,6 @@ async function verificarStatus(id) {
             }
         }
 
-        // --- Lógica de Estados ---
-
-        // 🔴 CANCELADA
         if (pedido.status === 'cancelada') {
             if (intervaloVerificacao) clearInterval(intervaloVerificacao);
             if (timerBuscaInterval) clearInterval(timerBuscaInterval);
@@ -2596,7 +2446,10 @@ async function verificarStatus(id) {
             if (btnCancelBusca) btnCancelBusca.style.display = 'none';
 
             const areaEstorno = document.getElementById('area-estorno-adm');
-            if(areaEstorno) areaEstorno.style.display = 'block';
+            if(areaEstorno) {
+                areaEstorno.style.display = 'block';
+                configurarBotaoAdm(); // CONFIGURA O BOTÃO ADM QUANDO STATUS É CANCELADA
+            }
             
             if(btnFechar) {
                 btnFechar.style.display = 'block';
@@ -2605,17 +2458,14 @@ async function verificarStatus(id) {
             }
         }
 
-        // 🔵 PENDENTE (BUSCANDO - NOVO VISUAL AZUL)
         else if (pedido.status === 'pendente') {
-            if (statusTitulo) statusTitulo.innerHTML = 'BUSCANDO PILOTO...'; // Mantive seu texto original
+            if (statusTitulo) statusTitulo.innerHTML = 'BUSCANDO PILOTO...';
             
-            // APLICA O AZUL NEON
             if (statusArea) statusArea.classList.add('status-buscando');
             
             if (btnCancelBusca) btnCancelBusca.style.display = 'block';
         }
 
-        // 🟡 AGUARDANDO PAGAMENTO / ACEITA
         else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
             if (timerBuscaInterval) { clearInterval(timerBuscaInterval); timerBuscaInterval = null; }
             if (elTempo) elTempo.style.display = 'none';
@@ -2624,7 +2474,6 @@ async function verificarStatus(id) {
             if (modal && !modal.classList.contains('show')) {
                 modal.classList.add('show');
             }
-            // Mantive sua lógica de mostrar o preço
             if (document.getElementById('valor-modal-pagamento')) {
                  document.getElementById('valor-modal-pagamento').innerText = "R$ " + parseFloat(pedido.valor).toFixed(2).replace('.', ',');
             }
@@ -2633,14 +2482,12 @@ async function verificarStatus(id) {
             if (statusDesc) statusDesc.innerText = "Um piloto aceitou! Aguardando pagamento.";
         }
 
-        // 🟢 EM CORRIDA / LIBERADA
         else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
             if (timerBuscaInterval) { clearInterval(timerBuscaInterval); timerBuscaInterval = null; }
             if (elTempo) elTempo.style.display = 'none';
             if (btnCancelBusca) btnCancelBusca.style.display = 'none';
             if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
 
-            // Garante o Verde Padrão
             if (statusArea) statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.15) !important; border: 1px solid #00e640 !important;');
             if (statusTitulo) { statusTitulo.style.color = '#00e640'; statusTitulo.innerHTML = '<i class="fas fa-motorcycle"></i> PILOTO A CAMINHO'; }
             
@@ -2666,22 +2513,17 @@ async function verificarStatus(id) {
             }
         }
 
-        // 🟡 CONCLUÍDA (NOVO VISUAL DOURADO)
         else if (pedido.status === 'concluida') {
             if (intervaloVerificacao) clearInterval(intervaloVerificacao);
             
-            // APLICA O DOURADO NEON
             if (statusArea) statusArea.classList.add('status-finalizada');
-            // Remove o estilo inline cinza antigo para o CSS novo pegar
-            statusArea.removeAttribute('style'); 
+            statusArea.removeAttribute('style');
 
             if (statusTitulo) { 
                 statusTitulo.innerHTML = "CORRIDA FINALIZADA ✅"; 
-                // A cor do texto agora vem do CSS .status-finalizada
             }
             if (statusDesc) statusDesc.innerText = "Obrigado por viajar conosco!";
             
-            // Esconde tudo
             if (motoboyBox) motoboyBox.style.display = 'none';
             if (btnWpp) btnWpp.style.display = 'none';
             if (wrapperWpp) wrapperWpp.style.display = 'none';
@@ -2689,13 +2531,11 @@ async function verificarStatus(id) {
             if (btnCancelBusca) btnCancelBusca.style.display = 'none';
             if (areaCodigo) areaCodigo.style.display = 'none';
 
-            // Mostra botão novo pedido
             if(btnFechar) {
                 btnFechar.style.display = 'block';
                 btnFechar.innerText = "FAZER NOVO PEDIDO";
                 btnFechar.onclick = reiniciarApp;
                 
-                // Aplica a classe do botão bonito que fizemos antes
                 btnFechar.className = 'btn-novo-pedido-neon'; 
                 btnFechar.style.margin = "20px auto";
                 btnFechar.style.display = "block";
