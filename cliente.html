@@ -1169,10 +1169,12 @@
         // Tenta pegar o ID da corrida (ajuste conforme seu código salva o ID)
         // Se você usa uma variável global chamada 'idCorridaAtual', use ela.
         // Se usa localStorage, use o localStorage.
-        const idParaCancelar = typeof idCorridaAtual !== 'undefined' ? idCorridaAtual : localStorage.getItem('corrida_atual_id');
-
-        if (!idParaCancelar) {
-            alert("Nenhuma busca ativa encontrada para cancelar.");
+        const idParaCancelar = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
+        
+       if (!idParaCancelar || idParaCancelar === '000') {
+            showToast("Nenhuma busca ativa encontrada para cancelar.", "error");
+            // Se o ID sumiu mas a tela está aberta, apenas reinicia o app
+            setTimeout(() => reiniciarApp(), 1000);
             return;
         }
 
@@ -1193,15 +1195,22 @@
             const data = await res.json();
 
             if (data.success) {
-                // Limpa e recarrega
-                localStorage.removeItem('corrida_atual_id');
-                window.location.reload(); 
+                showToast("Busca cancelada!", "success");
+                // Limpa as memórias da corrida atual
+                localStorage.removeItem('idPedidoAtual');
+                localStorage.removeItem('pedidoAtual');
+                localStorage.removeItem('inicioBuscaTimestamp');
+                
+                // Pequeno delay para o usuário ver o aviso e reinicia
+                setTimeout(() => {
+                    window.location.reload(); 
+                }, 1000);
             } else {
-                alert("Erro ao cancelar: " + (data.message || "Tente novamente."));
+                showToast("Erro: " + (data.message || "Não foi possível cancelar."), "error");
             }
         } catch (err) {
-            console.error("Erro:", err);
-            alert("Erro de conexão.");
+            console.error("Erro ao cancelar:", err);
+            showToast("Erro de conexão com o servidor.", "error");
         }
     }
 
@@ -1292,6 +1301,25 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
             
             // 2. MUDAR PARA A TELA DE ACOMPANHAMENTO (Isto resolve a sobreposição!)
             mudarTela('tela-acompanhamento');
+            // --- 4. CONFIGURAÇÃO DO BOTÃO FALAR COM ADM ---
+    // Esta função deve ser chamada dentro do verificarStatus ou no carregar da página
+    function configurarBotaoAdm() {
+        const btnAdm = document.getElementById('btn-link-estorno');
+        if (btnAdm) {
+            // AJUSTE O NÚMERO ABAIXO PARA O SEU WHATSAPP DE SUPORTE
+            const numeroSuporte = "5535997806080"; 
+            const mensagem = encodeURIComponent("Olá ADM, preciso de suporte com meu pedido no Falcões App.");
+            btnAdm.href = `https://wa.me/${numeroSuporte}?text=${mensagem}`;
+            
+            // Garante que abra em nova aba/app externo
+            btnAdm.setAttribute('target', '_blank');
+        }
+    }
+
+    // Chame a configuração do ADM ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+        configurarBotaoAdm();
+    });
 
             // 3. Iniciar a verificação de status (Polling)
             verificarStatus(idPedidoAtual);
