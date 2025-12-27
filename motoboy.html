@@ -1699,7 +1699,9 @@ if (!confirm("Confirmar finalização da corrida?")) return;
             const data = await res.json();
 
             if (data.success) {
-                alert(`✅ CORRIDA FINALIZADA COM SUCESSO!\n\n💰 Taxa do App: R$ ${parseFloat(data.taxa).toFixed(2)}`);
+                if (data.success) {
+    alert(`✅ CORRIDA FINALIZADA COM SUCESSO!`);
+}
                 
                 idCorridaAtual = null;
                 temCorridaAtiva = false;

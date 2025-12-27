@@ -822,6 +822,10 @@
 #acompanhamento-status-area.status-finalizada #acompanhamento-status-titulo {
     color: #ffd700 !important;
 }
+.erro {
+    border: 2px solid #ff4d4d !important;
+    background-color: #fff5f5;
+}
 
 
     </style>
@@ -1789,7 +1793,7 @@ document.addEventListener('click', (e) => {
     
     const numDestino = document.getElementById('num-destino').value.trim();
     const bairroDestino = document.getElementById('bairro-destino').value.trim();
-    const detalhes = document.getElementById('detalhes-entrega').value;
+    const detalhes = document.getElementById('detalhes-entrega').value.trim(); // Adicionado .trim()
 
     let erro = false;
 
@@ -1811,6 +1815,14 @@ document.addEventListener('click', (e) => {
     if (!bairroDestino) { 
         document.getElementById('bairro-destino').classList.add('erro'); 
         erro = true; 
+    }
+
+    // --- NOVA VALIDAÇÃO: OBRIGATÓRIO PARA ENTREGA ---
+    if (servicoSelecionado === 'entrega' && !detalhes) {
+        document.getElementById('detalhes-entrega').classList.add('erro');
+        showToast("⚠️ Descreva o que vamos levar!", "error");
+        document.getElementById('detalhes-entrega').focus();
+        return; // Para a execução aqui
     }
     
     if (erro) { 
