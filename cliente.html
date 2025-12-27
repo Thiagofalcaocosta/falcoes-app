@@ -1,5 +1,5 @@
-ml lang="pt-br">
-
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -797,32 +797,27 @@ ml lang="pt-br">
 /* --- NOVOS ESTADOS NEON (Coloque no seu <style>) --- */
 
 /* ESTADO 1: BUSCANDO (Azul Ciano Neon) */
-/* Remove o fundo verde padrão e aplica o azul */
 #acompanhamento-status-area.status-buscando {
-    border: 2px solid #00ffff !important; /* Azul Neon */
+    border: 2px solid #00ffff !important;
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.3) !important;
-    background-color: rgba(0, 255, 255, 0.05) !important; /* Fundo azulzinho muito leve */
+    background-color: rgba(0, 255, 255, 0.05) !important;
 }
-/* Muda a cor do título e ícone */
 #acompanhamento-status-area.status-buscando #acompanhamento-status-titulo {
     color: #00ffff !important;
 }
-/* Muda a cor do timer para combinar */
 #acompanhamento-status-area.status-buscando #timer-numeros {
     color: #00ffff !important;
 }
 
 /* ESTADO 2: FINALIZADA (Dourado Neon) */
 #acompanhamento-status-area.status-finalizada {
-    border: 2px solid #ffd700 !important; /* Dourado Neon */
-    box-shadow: 0 0 25px rgba(255, 215, 0, 0.4) !important; /* Brilho mais forte */
-    background-color: rgba(255, 215, 0, 0.08) !important; /* Fundo dourado leve */
+    border: 2px solid #ffd700 !important;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.4) !important;
+    background-color: rgba(255, 215, 0, 0.08) !important;
 }
-/* Muda a cor do título */
 #acompanhamento-status-area.status-finalizada #acompanhamento-status-titulo {
     color: #ffd700 !important;
 }
-
 
     </style>
    
@@ -871,44 +866,70 @@ ml lang="pt-br">
                 style="margin-top:8px;">Fechar</button>
         </div>
     </div>
-   <div id="modal-pagamento">
-    <div class="modal-content">
-        <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
-        
-        <h3 style="color: var(--neon-green); margin: 0; font-size: 22px; font-weight: 800;">PILOTO ENCONTRADO!</h3>
-        <p style="color: #ccc; font-size: 14px; margin-top: 5px;">Como você deseja pagar?</p>
-        
-        <div id="valor-modal-pagamento" style="
-            font-size: 28px; 
-            font-weight: 900; 
-            color: #fff; 
-            margin: 20px 0; 
-            text-shadow: 0 0 10px rgba(255,255,255,0.2);
-        ">
-            R$ --,--
-        </div>
-
-        <div class="btn-pagamento-opcoes" style="display: flex; flex-direction: column; gap: 15px;">
+   
+    <div id="modal-pagamento">
+        <div class="modal-content">
+            <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
             
-            <button class="btn-pagamento-pix" onclick="pagarPix()">
-                📱 PAGAR COM PIX
-            </button>
+            <h3 style="color: var(--neon-green); margin: 0; font-size: 22px; font-weight: 800;">PILOTO ENCONTRADO!</h3>
+            <p style="color: #ccc; font-size: 14px; margin-top: 5px;">Como você deseja pagar?</p>
+            
+            <div id="valor-modal-pagamento" style="
+                font-size: 28px; 
+                font-weight: 900; 
+                color: #fff; 
+                margin: 20px 0; 
+                text-shadow: 0 0 10px rgba(255,255,255,0.2);
+            ">
+                R$ --,--
+            </div>
 
-            <button class="btn-pagamento-dinheiro" onclick="pagarDinheiro()">
-                💵 PAGAR EM DINHEIRO
-            </button>
+            <div class="btn-pagamento-opcoes" style="display: flex; flex-direction: column; gap: 15px;">
+                
+                <button class="btn-pagamento-pix" onclick="pagarPix()">
+                    📱 PAGAR COM PIX
+                </button>
 
+                <button class="btn-pagamento-dinheiro" onclick="pagarDinheiro()">
+                    💵 PAGAR EM DINHEIRO
+                </button>
+
+            </div>
+            
+            <button onclick="document.getElementById('modal-pagamento').classList.remove('show')" 
+                    class="btn-fechar-texto">
+                Fechar e decidir depois
+            </button>
         </div>
-        
-        <button onclick="document.getElementById('modal-pagamento').classList.remove('show')" 
-                class="btn-fechar-texto">
-            Fechar e decidir depois
-        </button>
     </div>
-</div>
 
+    <div id="modal-confirmar-cancelamento-busca" class="modal-overlay" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999;">
+        <div class="modal-box" style="background: #1e1e1e; border: 1px solid #333; padding: 30px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 0 30px rgba(255, 68, 68, 0.2);">
+            
+            <div style="font-size: 50px; margin-bottom: 15px;">⚠️</div>
+            
+            <div class="modal-titulo" style="font-size: 20px; font-weight: 800; color: #ff4444; margin-bottom: 10px; text-transform: uppercase;">
+                CANCELAR BUSCA?
+            </div>
+            
+            <p class="modal-desc" style="color: #aaa; margin-bottom: 25px; font-size: 15px;">
+                Tem certeza que deseja parar de procurar um motoboy?
+            </p>
+            
+            <div class="modal-botoes" style="display: flex; gap: 10px;">
+                <button onclick="fecharModal('modal-confirmar-cancelamento-busca')" 
+                        style="flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; background-color: #333; color: white;">
+                    NÃO, VOLTAR
+                </button>
+                <button onclick="confirmarCancelamentoBusca()" 
+                        style="flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; background-color: #ff4444; color: white;">
+                    SIM, CANCELAR
+                </button>
+            </div>
+        </div>
+    </div>
 
-        <div class="container"></div>
+    <div class="container">
         <div class="logo-area"><img src="assets/logo.png" alt="Logo"
                 onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
         </div>
@@ -921,15 +942,15 @@ ml lang="pt-br">
         <div id="tela-pedido" class="tela ativa">
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h2 style="margin: 0;">NOVA SOLICITAÇÃO</h2>
-    <button onclick="limparFormularioManual()" class="btn-limpar-discreto">
-        🗑️ Limpar
-    </button>
-</div>
+                <h2 style="margin: 0;">NOVA SOLICITAÇÃO</h2>
+                <button onclick="limparFormularioManual()" class="btn-limpar-discreto">
+                    🗑️ Limpar
+                </button>
+            </div>
 
             <div class="opcoes-servico">
                 <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
-                     <span class="icon">🏍️</span>
+                    <span class="icon">🏍️</span>
                     <div class="card-title">MOTO TÁXI</div>
                     <div class="preco">R$ 10,00 + Km</div>
                 </div>
@@ -941,1611 +962,1478 @@ ml lang="pt-br">
             </div>
 
             <div id="form-endereco">
+                <label>📍 Onde vamos buscar? (Origem)</label>
+                <div class="address-container">
+                    <div class="row-rua">
+                        <div class="input-rua-wrapper">
+                            <input type="text" id="rua-origem" placeholder="Busque a rua..."
+                                oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
+                            <div id="lista-origem" class="sugestoes-lista"></div>
+                        </div>
+                        
+                        <button class="btn-map-icon btn-my-location" onclick="usarMeuLocal()" title="Usar minha localização">
+                            📍 <span class="gps-text">MEU LOCAL</span>
+                        </button>
 
-    <label>📍 Onde vamos buscar? (Origem)</label>
-    <div class="address-container">
-        <div class="row-rua">
-            <div class="input-rua-wrapper">
-                <input type="text" id="rua-origem" placeholder="Busque a rua..."
-                    oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
-                <div id="lista-origem" class="sugestoes-lista"></div>
-            </div>
-            
-            <button class="btn-map-icon btn-my-location" onclick="usarMeuLocal()" title="Usar minha localização">
-    📍 <span class="gps-text">MEU LOCAL</span>
-</button>
+                        <button class="btn-map-icon" onclick="ativarMapa('origem')" title="Marcar no mapa">
+                            🗺️
+                        </button>
+                    </div>
+                    
+                    <div class="row-details">
+                        <div class="input-num-wrapper">
+                            <input type="text" id="num-origem" placeholder="Nº" oninput="removerErro(this)">
+                            <span class="erro-msg">Obrigatório</span>
+                        </div>
+                        <div class="input-bairro-wrapper">
+                            <input type="text" id="bairro-origem" placeholder="Bairro">
+                        </div>
+                    </div>
+                </div>
 
-            <button class="btn-map-icon" onclick="ativarMapa('origem')" title="Marcar no mapa">
-                🗺️
-            </button>
-        </div>
-        
-        <div class="row-details">
-            <div class="input-num-wrapper">
-                <input type="text" id="num-origem" placeholder="Nº" oninput="removerErro(this)">
-                <span class="erro-msg">Obrigatório</span>
-            </div>
-            <div class="input-bairro-wrapper">
-                <input type="text" id="bairro-origem" placeholder="Bairro">
-            </div>
-        </div>
-    </div>
+                <label>🏁 Onde vamos levar? (Destino)</label>
+                <div class="address-container">
+                    <div class="row-rua">
+                        <div class="input-rua-wrapper">
+                            <input type="text" id="rua-destino" placeholder="Busque a rua..."
+                                oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
+                            <div id="lista-destino" class="sugestoes-lista"></div>
+                        </div>
+                        <button class="btn-map-icon" onclick="ativarMapa('destino')" title="Marcar no mapa">🗺️</button>
+                    </div>
+                    <div class="row-details">
+                        <div class="input-num-wrapper">
+                            <input type="text" id="num-destino" placeholder="Nº" oninput="removerErro(this)">
+                            <span class="erro-msg">Obrigatório</span>
+                        </div>
+                        <div class="input-bairro-wrapper">
+                            <input type="text" id="bairro-destino" placeholder="Bairro">
+                        </div>
+                    </div>
+                </div>
 
-    <label>🏁 Onde vamos levar? (Destino)</label>
-    <div class="address-container">
-        <div class="row-rua">
-            <div class="input-rua-wrapper">
-                <input type="text" id="rua-destino" placeholder="Busque a rua..."
-                    oninput="buscarEndereco(this.value, 'lista-destino', 'destino')" autocomplete="off">
-                <div id="lista-destino" class="sugestoes-lista"></div>
+                <div id="detalhes-entrega-container">
+                    <label>📦 O que vamos levar?</label>
+                    <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..."
+                        oninput="removerErro(this)">
+                    <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
+                </div>
             </div>
-            <button class="btn-map-icon" onclick="ativarMapa('destino')" title="Marcar no mapa">🗺️</button>
-        </div>
-        <div class="row-details">
-            <div class="input-num-wrapper">
-                <input type="text" id="num-destino" placeholder="Nº" oninput="removerErro(this)">
-                <span class="erro-msg">Obrigatório</span>
-            </div>
-            <div class="input-bairro-wrapper">
-                <input type="text" id="bairro-destino" placeholder="Bairro">
-            </div>
-        </div>
-    </div>
-
-    <div id="detalhes-entrega-container">
-        <label>📦 O que vamos levar?</label>
-        <input type="text" id="detalhes-entrega" placeholder="Ex: Chaves, Marmita, Documento..."
-            oninput="removerErro(this)">
-        <span class="erro-msg" style="position:relative; bottom:0;">Descreva o item</span>
-    </div>
-
-</div>
 
             <div id="map"></div>
-            <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no
-                mapa</p>
+            <p style="font-size:12px; color:#666; text-align:center; margin-top:5px;">Toque no botão 🗺️ para marcar no mapa</p>
 
             <div class="resumo-final" id="resumo"></div>
 
             <button onclick="pedir()" id="btn-pedir" class="btn" disabled>SELECIONE O SERVIÇO</button>
         </div>
 
-       <div id="tela-acompanhamento" class="tela">
+        <div id="tela-acompanhamento" class="tela">
+            <div class="status-header" id="acompanhamento-status-area">
+                
+                <div id="area-estorno-adm" class="area-estorno" style="display:none; margin-bottom: 15px;">
+                    <div class="titulo-estorno">⚠️ CORRIDA CANCELADA?</div>
+                    <p class="desc-estorno">Houve um imprevisto.<br>Solicite o reembolso (Taxa: R$ 0,10).</p>
+                    <a id="btn-link-estorno" href="#" target="_blank" class="btn-falar-adm">
+                        <i class="fab fa-whatsapp"></i> FALAR COM O ADM
+                    </a>
+                </div>
 
-    <div class="status-header" id="acompanhamento-status-area">
-        
-        <div id="area-estorno-adm" class="area-estorno" style="display:none; margin-bottom: 15px;">
-            <div class="titulo-estorno">⚠️ CORRIDA CANCELADA?</div>
-            <p class="desc-estorno">Houve um imprevisto.<br>Solicite o reembolso (Taxa: R$ 0,10).</p>
-            <a id="btn-link-estorno" href="#" target="_blank" class="btn-falar-adm">
-                <i class="fab fa-whatsapp"></i> FALAR COM O ADM
-            </a>
-        </div>
+                <div class="header-top-row">
+                    <div class="status-info">
+                        <h2 id="acompanhamento-status-titulo" style="display:flex; align-items:center; gap:8px;">
+                            <i class="fas fa-search-location"></i> BUSCANDO...
+                        </h2>
+                        <p id="acompanhamento-status-desc">Aguarde, estamos localizando um piloto.</p>
 
-        <div class="header-top-row">
-            <div class="status-info">
-                <h2 id="acompanhamento-status-titulo" style="display:flex; align-items:center; gap:8px;">
-                    <i class="fas fa-search-location"></i> BUSCANDO...
-                </h2>
-                <p id="acompanhamento-status-desc">Aguarde, estamos localizando um piloto.</p>
-
-                <div id="area-codigo-seguranca" style="display:none; margin-top: 10px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; width: fit-content;">
-                    <span style="font-size: 10px; color: #fff; display: block; opacity: 0.8;">INFORME AO PILOTO:</span>
-                    <span id="texto-codigo-seguranca" style="font-size: 24px; font-weight: 800; color: #00ffff; letter-spacing: 3px; text-shadow: 0 0 10px rgba(0,255,255,0.5);">----</span>
+                        <div id="area-codigo-seguranca" style="display:none; margin-top: 10px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; width: fit-content;">
+                            <span style="font-size: 10px; color: #fff; display: block; opacity: 0.8;">INFORME AO PILOTO:</span>
+                            <span id="texto-codigo-seguranca" style="font-size: 24px; font-weight: 800; color: #00ffff; letter-spacing: 3px; text-shadow: 0 0 10px rgba(0,255,255,0.5);">----</span>
+                        </div>
+                    </div>
+                    
+                    <div class="order-badge-group">
+                        <span class="badge-label">PEDIDO</span>
+                        <span class="badge-value" id="acompanhamento-id">#000</span>
+                    </div>
+                </div>
+                
+                <div id="tempo-restante-busca" style="
+                    margin-top: 15px;
+                    font-size: 14px;
+                    color: #ccc;
+                    text-align: center;
+                    padding: 10px;
+                    background: rgba(0, 255, 0, 0.1);
+                    border-radius: 20px;
+                    border: 1px solid rgba(0, 255, 0, 0.3);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                ">
+                    ⏳ Tempo estimado: 
+                    <span id="timer-numeros" style="color: var(--neon-green); font-weight: bold; font-size: 16px;">--s</span>
                 </div>
             </div>
-            
-            <div class="order-badge-group">
-                <span class="badge-label">PEDIDO</span>
-                <span class="badge-value" id="acompanhamento-id">#000</span>
+
+            <div class="whatsapp-center-wrapper" style="text-align: center; margin: 15px 0;">
+                <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp-neon" style="display:none;">
+                    <i class="fab fa-whatsapp"></i> FALAR COM O PILOTO
+                </a>
             </div>
-        </div>
-        
-        <div id="tempo-restante-busca" style="
-    margin-top: 15px;
-    font-size: 14px;
-    color: #ccc;
-    text-align: center;
-    padding: 10px;
-    background: rgba(0, 255, 0, 0.1); /* Fundo verde bem suave */
-    border-radius: 20px; /* Bordas arredondadas tipo pílula */
-    border: 1px solid rgba(0, 255, 0, 0.3); /* Borda verde sutil */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px; /* Espaço entre o emoji e o texto */
-">
-    ⏳ Tempo estimado: 
-    <span id="timer-numeros" style="color: var(--neon-green); font-weight: bold; font-size: 16px;">--s</span>
-</div>
-    </div>
 
-    <div class="whatsapp-center-wrapper" style="text-align: center; margin: 15px 0;">
-        <a id="btn-whatsapp-motoboy" href="#" target="_blank" class="btn-whatsapp-neon" style="display:none;">
-            <i class="fab fa-whatsapp"></i> FALAR COM O PILOTO
-        </a>
-    </div>
+            <div id="area-botao-cancelar-taxa" class="area-cancelar-taxa" style="display:none; text-align:center;">
+                <button onclick="cancelarComTaxa()" class="btn-cancelar-taxa">
+                    <i class="fas fa-ban"></i> Cancelar Corrida
+                </button>
+                <span class="aviso-taxa-texto" style="display:block; font-size:11px; color:#888; margin-top:5px;">
+                    <i class="fas fa-exclamation-triangle" style="color:#ffcc00;"></i> ⚠️ Uma taxa de cancelamento de R$ 5,00 pode ser aplicada (deslocamento motoboy).
+                </span>
+            </div>
 
-    <div id="area-botao-cancelar-taxa" class="area-cancelar-taxa" style="display:none; text-align:center;">
-        <button onclick="cancelarComTaxa()" class="btn-cancelar-taxa">
-            <i class="fas fa-ban"></i> Cancelar Corrida
-        </button>
-        <span class="aviso-taxa-texto" style="display:block; font-size:11px; color:#888; margin-top:5px;">
-            <i class="fas fa-exclamation-triangle" style="color:#ffcc00;"></i> ⚠️ Uma taxa de cancelamento de R$ 5,00 pode ser aplicada (deslocamento motoboy).
-        </span>
-    </div>
+            <button id="btn-cancelar-busca" onclick="abrirModalCancelamentoBusca()" class="btn-cancel-outline" style="width:100%; margin-top:10px;">
+                CANCELAR BUSCA
+            </button>
 
-    <button id="btn-cancelar-busca" onclick="abrirModalCancelamentoBusca()" class="btn-cancel-outline" style="width:100%; margin-top:10px;">
-        CANCELAR BUSCA
-    </button>
-
-    <div id="motoboy-info-box" style="display:none; margin-top: 15px;">
-        <div class="driver-card">
-            <div class="driver-card-header">
-                <img src="https://cdn-icons-png.flaticon.com/512/709/709699.png" class="driver-img-fix" alt="Avatar" id="motoboy-foto">
-                <div class="driver-title-box">
-                    <span class="driver-subtitle">SEU PILOTO</span>
-                    <h3 class="driver-name-main" id="motoboy-nome">--</h3>
-                    <div style="color: var(--neon-green); font-size: 12px; font-weight: bold;">⭐ 5.0</div>
+            <div id="motoboy-info-box" style="display:none; margin-top: 15px;">
+                <div class="driver-card">
+                    <div class="driver-card-header">
+                        <img src="https://cdn-icons-png.flaticon.com/512/709/709699.png" class="driver-img-fix" alt="Avatar" id="motoboy-foto">
+                        <div class="driver-title-box">
+                            <span class="driver-subtitle">SEU PILOTO</span>
+                            <h3 class="driver-name-main" id="motoboy-nome">--</h3>
+                            <div style="color: var(--neon-green); font-size: 12px; font-weight: bold;">⭐ 5.0</div>
+                        </div>
+                    </div>
+                    <div class="driver-data-grid">
+                        <div class="data-item"><span class="data-label">Veículo</span><span class="data-value" id="motoboy-modelo">--</span></div>
+                        <div class="data-item"><span class="data-label">Cor</span><span class="data-value" id="motoboy-cor">--</span></div>
+                        <div class="data-item" style="grid-column: span 2;"><span class="data-label">Placa</span><span class="data-value"><span class="plate-badge-new" id="motoboy-placa">---</span></span></div>
+                    </div>
                 </div>
             </div>
-            <div class="driver-data-grid">
-                <div class="data-item"><span class="data-label">Veículo</span><span class="data-value" id="motoboy-modelo">--</span></div>
-                <div class="data-item"><span class="data-label">Cor</span><span class="data-value" id="motoboy-cor">--</span></div>
-                <div class="data-item" style="grid-column: span 2;"><span class="data-label">Placa</span><span class="data-value"><span class="plate-badge-new" id="motoboy-placa">---</span></span></div>
+
+            <button id="btn-fechar-novo" class="btn-fechar-topo" onclick="fecharTela()" style="display:none;">FECHAR TELA X</button>
+
+            <div class="route-container" style="margin-top:20px;">
+                <div class="route-item"><div class="route-dot origin"></div><div class="route-content"><label>RETIRADA</label><span id="detalhe-origem">...</span></div></div>
+                <div class="route-connector"></div>
+                <div class="route-item"><div class="route-dot dest"></div><div class="route-content"><label>ENTREGA</label><span id="detalhe-destino">...</span></div></div>
+            </div>
+
+            <div class="price-section">
+                <div id="area-pagamento-cliente"></div> 
+                <div class="price-display"><span>Total estimado</span><h1 id="detalhe-valor">R$ --</h1></div>
+            </div>
+
+            <div id="area-justificativa-integrada" class="cancel-area" style="display:none;">
+                <label>Motivo:</label>
+                <textarea id="campo-justificativa-integrada" placeholder="Digite o motivo..." rows="3"></textarea>
+                <div id="erro-just-integrada" class="error-msg">Mínimo 5 caracteres.</div>
+                <button id="btn-confirmar-cancelamento" class="btn-danger-full" disabled>CONFIRMAR</button>
             </div>
         </div>
     </div>
-
-    <button id="btn-fechar-novo" class="btn-fechar-topo" onclick="fecharTela()" style="display:none;">FECHAR TELA X</button>
-
-    <div class="route-container" style="margin-top:20px;">
-        <div class="route-item"><div class="route-dot origin"></div><div class="route-content"><label>RETIRADA</label><span id="detalhe-origem">...</span></div></div>
-        <div class="route-connector"></div>
-        <div class="route-item"><div class="route-dot dest"></div><div class="route-content"><label>ENTREGA</label><span id="detalhe-destino">...</span></div></div>
-    </div>
-
-    <div class="price-section">
-        <div id="area-pagamento-cliente"></div> 
-        <div class="price-display"><span>Total estimado</span><h1 id="detalhe-valor">R$ --</h1></div>
-    </div>
-
-    <div id="area-justificativa-integrada" class="cancel-area" style="display:none;">
-        <label>Motivo:</label>
-        <textarea id="campo-justificativa-integrada" placeholder="Digite o motivo..." rows="3"></textarea>
-        <div id="erro-just-integrada" class="error-msg">Mínimo 5 caracteres.</div>
-        <button id="btn-confirmar-cancelamento" class="btn-danger-full" disabled>CONFIRMAR</button>
-    </div>
-</div>
-
-    </div>
-    </div> <div id="modal-confirmar-cancelamento-busca" class="modal-overlay" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999;">
-    <div class="modal-box" style="background: #1e1e1e; border: 1px solid #333; padding: 30px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 0 30px rgba(255, 68, 68, 0.2);">
-        
-        <div style="font-size: 50px; margin-bottom: 15px;">⚠️</div>
-        
-        <div class="modal-titulo" style="font-size: 20px; font-weight: 800; color: #ff4444; margin-bottom: 10px; text-transform: uppercase;">
-            CANCELAR BUSCA?
-        </div>
-        
-        <p class="modal-desc" style="color: #aaa; margin-bottom: 25px; font-size: 15px;">
-            Tem certeza que deseja parar de procurar um motoboy?
-        </p>
-        
-        <div class="modal-botoes" style="display: flex; gap: 10px;">
-            <button onclick="fecharModal('modal-confirmar-cancelamento-busca')" 
-                    style="flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; background-color: #333; color: white;">
-                NÃO, VOLTAR
-            </button>
-            <button onclick="confirmarCancelamentoBusca()" 
-                    style="flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; background-color: #ff4444; color: white;">
-                SIM, CANCELAR
-            </button>
-        </div>
-    </div>
-</div>
-<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
 
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
+    
     <script>
-    // --- COLE ISSO DENTRO DA TAG SCRIPT ---
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBvdGEzZ3B2NzBkajE3NmUifQ.qTGPzR6IIc2-JetrQnB-yQ';
+        const MEU_IP = 'https://falcoes-app.onrender.com';
+        const LAT_TC = -21.6975;
+        const LON_TC = -45.25;
 
-    // 1. Abre o modal quando clica no botão
-    function abrirModalCancelamentoBusca() {
-        const modal = document.getElementById('modal-confirmar-cancelamento-busca');
-        if (modal) {
-            modal.style.display = 'flex';
-            modal.style.zIndex = '999999';
+        let servicoSelecionado = null;
+        let coordsOrigem = null;
+        let coordsDestino = null;
+        let timeoutBusca = null;
+        let mapMode = null;
+        let markerOrigem = null;
+        let markerDestino = null;
+        let idPedidoAtual = localStorage.getItem('idPedidoAtual');
+        let intervaloVerificacao = null;
+        let buscaMotoboyInterval = null;
+        let tempoBuscaRestante = 0;
+        let timerBuscaInterval = null;
+
+        const precos = {
+            'moto-taxi': { base: 10.0, kmExtra: 3.15, franquia: 3 },
+            'entrega': { base: 8.50, kmExtra: 2.0, franquia: 3 }
+        };
+
+        // ==================== FUNÇÕES CORRIGIDAS DOS BOTÕES ====================
+
+        // 1. FUNÇÃO PARA CONFIGURAR BOTÃO ADM (CORRIGIDA)
+        function configurarBotaoAdm() {
+            const btnAdm = document.getElementById('btn-link-estorno');
+            if (btnAdm) {
+                // SUBSTITUA PELO SEU NÚMERO REAL DO WHATSAPP
+                const numeroSuporte = "5535997806080";
+                const mensagem = encodeURIComponent("Olá ADM, preciso de suporte com meu pedido no Falcões App.");
+                
+                // CORREÇÃO: Link correto do WhatsApp
+                btnAdm.href = `https://wa.me/${numeroSuporte}?text=${mensagem}`;
+                btnAdm.setAttribute('target', '_blank');
+                
+                // Previne comportamento padrão e garante abertura externa
+                btnAdm.onclick = function(e) {
+                    e.preventDefault();
+                    window.open(this.href, '_blank');
+                };
+                
+                console.log("Botão ADM configurado com link:", btnAdm.href);
+            }
         }
-    }
 
-    // 2. Fecha qualquer modal
-    function fecharModal(idModal) {
-        const modal = document.getElementById(idModal);
-        if(modal) modal.style.display = 'none';
-    }
-
-    // 3. Executa o cancelamento real (Quando clica em SIM)
-    async function confirmarCancelamentoBusca() {
-        fecharModal('modal-confirmar-cancelamento-busca');
-        
-        const idParaCancelar = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
-        
-       if (!idParaCancelar || idParaCancelar === '000') {
-            showToast("Nenhuma busca ativa encontrada para cancelar.", "error");
-            setTimeout(() => reiniciarApp(), 1000);
-            return;
+        // 2. FUNÇÃO PARA ABRIR MODAL DE CANCELAMENTO DE BUSCA (CORRIGIDA)
+        function abrirModalCancelamentoBusca() {
+            console.log("Abrindo modal de cancelamento de busca...");
+            const modal = document.getElementById('modal-confirmar-cancelamento-busca');
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.style.zIndex = '999999';
+            } else {
+                console.error("Modal de cancelamento de busca não encontrado!");
+                showToast("Erro ao abrir modal de cancelamento", "error");
+            }
         }
 
-        try {
-            const MEU_IP = 'https://falcoes-app.onrender.com'; 
+        // 3. FUNÇÃO PARA FECHAR MODAL
+        function fecharModal(idModal) {
+            const modal = document.getElementById(idModal);
+            if(modal) modal.style.display = 'none';
+        }
 
-            const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+        // 4. FUNÇÃO PARA CONFIRMAR CANCELAMENTO DE BUSCA
+        async function confirmarCancelamentoBusca() {
+            fecharModal('modal-confirmar-cancelamento-busca');
+            
+            const idParaCancelar = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
+            
+            if (!idParaCancelar || idParaCancelar === '000') {
+                showToast("Nenhuma busca ativa encontrada para cancelar.", "error");
+                setTimeout(() => reiniciarApp(), 1000);
+                return;
+            }
+
+            try {
+                const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: idParaCancelar,
+                        motivo: 'Cliente desistiu da busca',
+                        cancelado_por: 'cliente'
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast("Busca cancelada!", "success");
+                    localStorage.removeItem('idPedidoAtual');
+                    localStorage.removeItem('pedidoAtual');
+                    localStorage.removeItem('inicioBuscaTimestamp');
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast("Erro: " + (data.message || "Não foi possível cancelar."), "error");
+                }
+            } catch (err) {
+                console.error("Erro ao cancelar:", err);
+                showToast("Erro de conexão com o servidor.", "error");
+            }
+        }
+
+        // ==================== FUNÇÕES EXISTENTES (TODAS PRESERVADAS) ====================
+
+        // Funções de gerenciamento de tela
+        function mudarTela(novaTelaId) {
+            document.querySelectorAll('.tela').forEach(tela => {
+                tela.classList.remove('ativa');
+            });
+            document.getElementById(novaTelaId).classList.add('ativa');
+        }
+
+        function reiniciarApp() {
+            localStorage.removeItem('idPedidoAtual');
+            localStorage.removeItem('pedidoAtual');
+            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+            if (buscaMotoboyInterval) clearInterval(buscaMotoboyInterval);
+            if (timerBuscaInterval) clearInterval(timerBuscaInterval);
+            window.location.reload();
+        }
+
+        function removerErro(input) {
+            input.classList.remove('erro');
+        }
+
+        // Toast Helper
+        function showToast(msg, type, duration = 3000) {
+            const container = document.getElementById('toast-container');
+            const div = document.createElement('div');
+            div.className = `toast ${type}`;
+            div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
+            container.appendChild(div);
+            while (container.children.length > 3) {
+                container.firstChild.remove();
+            }
+            setTimeout(() => div.remove(), duration);
+        }
+
+        // Persistência de dados
+        function preencherDetalhesAcompanhamento() {
+            const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
+            if (pedidoSalvo) {
+                document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
+                document.getElementById('detalhe-origem').innerText = pedidoSalvo.origem;
+                document.getElementById('detalhe-destino').innerText = pedidoSalvo.destino;
+                document.getElementById('detalhe-valor').innerText = `R$ ${pedidoSalvo.valor.toFixed(2).replace('.', ',')}`;
+                return true;
+            }
+            return false;
+        }
+
+        function checkPersistedOrder() {
+            const persistedId = localStorage.getItem('idPedidoAtual');
+            if (persistedId) {
+                idPedidoAtual = persistedId;
+                preencherDetalhesAcompanhamento();
+                mudarTela('tela-acompanhamento');
+                verificarStatus(idPedidoAtual);
+                if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+                intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+            } else {
+                mudarTela('tela-pedido');
+            }
+        }
+
+        // Mapa
+        const map = L.map('map').setView([LAT_TC, LON_TC], 14);
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Mapa &copy; <a href="https://www.mapbox.com/">Mapbox</a> | Dados &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+            maxZoom: 19,
+            id: 'mapbox/streets-v11',
+            tileSize: 512,
+            zoomOffset: -1,
+            accessToken: MAPBOX_ACCESS_TOKEN
+        }).addTo(map);
+
+        map.on('click', async (e) => {
+            if (!mapMode) {
+                showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
+                return;
+            }
+            const { lat, lng } = e.latlng;
+            showToast("Buscando endereço com Mapbox...", "info", 1000);
+            try {
+                const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
+                const res = await fetch(urlMapbox);
+                const data = await res.json();
+                let rua, bairro;
+
+                if (data.features && data.features.length > 0) {
+                    const feature = data.features[0];
+                    rua = feature.place_name.split(',')[0] || "Local Marcado";
+                    const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
+                    bairro = (neighborhood && neighborhood.text) || "Três Corações";
+                } else {
+                    rua = "Local Marcado";
+                    bairro = "Três Corações";
+                }
+                if (mapMode === 'origem') {
+                    document.getElementById('rua-origem').value = rua;
+                    document.getElementById('bairro-origem').value = bairro;
+                    document.getElementById('num-origem').focus();
+                    coordsOrigem = { lat, lon: lng };
+                    if (markerOrigem) map.removeLayer(markerOrigem);
+                    markerOrigem = L.marker([lat, lng]).addTo(map);
+                } else {
+                    document.getElementById('rua-destino').value = rua;
+                    document.getElementById('bairro-destino').value = bairro;
+                    document.getElementById('num-destino').focus();
+                    coordsDestino = { lat, lon: lng };
+                    if (markerDestino) map.removeLayer(markerDestino);
+                    markerDestino = L.marker([lat, lng]).addTo(map);
+                }
+
+                showToast("Endereço preenchido! Digite o número.", "success");
+                mapMode = null;
+                calcularRota();
+            } catch (error) {
+                showToast("Erro ao obter endereço do mapa.", "error");
+            }
+        });
+
+        function ativarMapa(modo) {
+            mapMode = modo;
+            showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
+            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function selecionarServico(tipo, valorBase) {
+            servicoSelecionado = tipo;
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selecionado'));
+            if (tipo === 'moto-taxi') document.getElementById('card-moto').classList.add('selecionado');
+            else document.getElementById('card-entrega').classList.add('selecionado');
+
+            const detailsDiv = document.getElementById('detalhes-entrega-container');
+            if (tipo === 'entrega') {
+                detailsDiv.style.display = 'block';
+            } else {
+                detailsDiv.style.display = 'none';
+            }
+
+            document.getElementById('btn-pedir').disabled = false;
+            document.getElementById('btn-pedir').innerText = tipo === 'entrega' ? "SOLICITAR ENTREGA" : "CHAMAR MOTO TÁXI";
+            calcularRota();
+        }
+
+        function calcDistanciaReta(c1, c2) {
+            const R = 6371;
+            const dLat = (c2.lat - c1.lat) * Math.PI / 180;
+            const dLon = (c2.lon - c1.lon) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        async function calcularRota() {
+            if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
+            const resumo = document.getElementById('resumo');
+            resumo.style.display = 'block';
+            resumo.innerText = "Calculando rota com Mapbox...";
+
+            try {
+                const coordenadas = `${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}`;
+                const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordenadas}?geometries=geojson&steps=false&access_token=${MAPBOX_ACCESS_TOKEN}`;
+                const res = await fetch(url);
+                const json = await res.json();
+
+                let distanciaKm = 0;
+                let tempoSegundos = 0;
+
+                if (json.routes && json.routes.length > 0) {
+                    distanciaKm = json.routes[0].distance / 1000;
+                    tempoSegundos = json.routes[0].duration;
+                } else {
+                    distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
+                    tempoSegundos = (distanciaKm / 0.3) * 60;
+                }
+
+                const regra = precos[servicoSelecionado];
+                const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
+                const total = regra.base + (kmCobrado * regra.kmExtra);
+                const tempoMinutos = Math.ceil(tempoSegundos / 60);
+
+                resumo.innerHTML = `
+                    <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km &nbsp; | &nbsp; Tempo: ${tempoMinutos} min</div>
+                    <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
+                `;
+                window.valorCalculado = total;
+            } catch (e) {
+                console.error("Erro rota Mapbox", e);
+                resumo.innerText = "Erro ao calcular rota.";
+            }
+        }
+
+        async function buscarEndereco(query, listaId, modo) {
+            const lista = document.getElementById(listaId);
+            
+            if (!query || query.length < 3) {
+                lista.innerHTML = '';
+                lista.style.display = 'none';
+                return;
+            }
+
+            const proximidade = `-45.2581,-21.6931`;
+
+            try {
+                const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?` +
+                            `access_token=${MAPBOX_ACCESS_TOKEN}&` +
+                            `proximity=${proximidade}&` +
+                            `types=address,poi&` +
+                            `language=pt&` +
+                            `country=br&` +
+                            `limit=5`;
+
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                lista.innerHTML = '';
+                lista.style.display = 'block';
+
+                if (data.features.length === 0) {
+                    lista.style.display = 'none';
+                    return;
+                }
+
+                data.features.forEach(f => {
+                    const item = document.createElement('div');
+                    item.className = 'sugestao-item';
+                    item.innerText = f.place_name
+                        .replace(', Minas Gerais', '')
+                        .replace(', Brasil', '')
+                        .replace('Três Corações,', '');
+                    
+                    item.onclick = () => {
+                        const nomeRua = f.text;
+                        
+                        document.getElementById(`rua-${modo}`).value = nomeRua;
+                        document.getElementById(`bairro-${modo}`).value = "";
+                        
+                        if (modo === 'origem') coordsOrigem = { lat: f.center[1], lon: f.center[0] };
+                        else coordsDestino = { lat: f.center[1], lon: f.center[0] };
+
+                        lista.innerHTML = '';
+                        lista.style.display = 'none';
+
+                        document.getElementById(`num-${modo}`).focus();
+                        calcularRota();
+                    };
+                    lista.appendChild(item);
+                });
+            } catch (e) {
+                console.error("Erro na busca:", e);
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.address-container')) {
+                document.querySelectorAll('.sugestoes-lista').forEach(el => el.style.display = 'none');
+            }
+        });
+
+        async function pedir() {
+            if (!servicoSelecionado) {
+                showToast("Selecione Moto Táxi ou Entrega", "error");
+                return;
+            }
+            
+            const ruaOrigemPura = document.getElementById('rua-origem').value.split(',')[0].trim();
+            const ruaDestinoPura = document.getElementById('rua-destino').value.split(',')[0].trim();
+            
+            const numOrigem = document.getElementById('num-origem').value.trim();
+            const bairroOrigem = document.getElementById('bairro-origem').value.trim();
+            
+            const numDestino = document.getElementById('num-destino').value.trim();
+            const bairroDestino = document.getElementById('bairro-destino').value.trim();
+            const detalhes = document.getElementById('detalhes-entrega').value;
+
+            let erro = false;
+
+            if (!numOrigem) {
+                document.getElementById('num-origem').classList.add('erro');
+                erro = true;
+            }
+            if (!bairroOrigem) {
+                document.getElementById('bairro-origem').classList.add('erro');
+                erro = true;
+            }
+
+            if (!numDestino) {
+                document.getElementById('num-destino').classList.add('erro');
+                erro = true;
+            }
+            if (!bairroDestino) {
+                document.getElementById('bairro-destino').classList.add('erro');
+                erro = true;
+            }
+            
+            if (erro) {
+                showToast("⚠️ Preencha NÚMERO e BAIRRO corretamente!", "error");
+                return;
+            }
+
+            const strOrigem = `${ruaOrigemPura}, Nº ${numOrigem}, ${bairroOrigem}`;
+            const strDestino = `${ruaDestinoPura}, Nº ${numDestino}, ${bairroDestino}`;
+            
+            const strDestinoFinal = servicoSelecionado === 'entrega'
+                ? `${strDestino} (ITEM: ${detalhes})`
+                : strDestino;
+            
+            document.getElementById('modal-busca').style.display = 'flex';
+            document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
+            document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
+
+            try {
+                const usuario = JSON.parse(localStorage.getItem("usuario"));
+                const body = {
+                    cliente_id: usuario.id,
+                    origem: strOrigem,
+                    destino: strDestinoFinal,
+                    valor: window.valorCalculado || 10.0,
+                    tipo_servico: servicoSelecionado
+                };
+
+                const res = await fetch(`${MEU_IP}/pedir-corrida`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const json = await res.json();
+
+                if (json.success) {
+                    idPedidoAtual = json.id;
+                    
+                    const dadosParaSalvar = {
+                        origem: strOrigem,
+                        destino: strDestino,
+                        valor: window.valorCalculado || 10.0,
+                        tipo_servico: servicoSelecionado,
+                        detalhes: servicoSelecionado === 'entrega' ? detalhes : null,
+                        campos: {
+                            ruaOrigem: document.getElementById('rua-origem').value,
+                            numOrigem: numOrigem,
+                            bairroOrigem: bairroOrigem,
+                            ruaDestino: document.getElementById('rua-destino').value,
+                            numDestino: numDestino,
+                            bairroDestino: bairroDestino,
+                            detalhesEntrega: servicoSelecionado === 'entrega' ? detalhes : ''
+                        }
+                    };
+                    
+                    localStorage.setItem('idPedidoAtual', idPedidoAtual);
+                    localStorage.setItem('inicioBuscaTimestamp', Date.now());
+                    localStorage.setItem('pedidoAtual', JSON.stringify(dadosParaSalvar));
+                    
+                    preencherDetalhesAcompanhamento();
+                    mudarTela('tela-acompanhamento');
+                    document.getElementById('modal-busca').style.display = 'none';
+                    
+                    iniciarContadorBusca(idPedidoAtual, 600);
+                    intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+                    
+                    showToast("Solicitação enviada. Buscando piloto...", "info");
+
+                } else {
+                    throw new Error(json.message);
+                }
+            } catch (e) {
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Erro ao enviar pedido: " + e.message, "error");
+            }
+        }
+
+        async function cancelarComTaxa() {
+            console.log("Iniciando cancelamento...");
+
+            let id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
+
+            if (!id || id === '000') {
+                const elId = document.getElementById('acompanhamento-id');
+                if (elId) id = elId.innerText.replace('#', '').trim();
+            }
+
+            if (!id || id === '000' || id === '--') {
+                id = prompt("⚠️ O sistema perdeu o número do pedido.\n\nPor favor, digite o NÚMERO DA CORRIDA (ex: 77) para cancelar:");
+            }
+
+            if (!id) return;
+
+            if(!confirm(`⚠️ ATENÇÃO!\n\nVocê vai cancelar o Pedido #${id}.\nO piloto será avisado e a taxa de R$ 5,00 será aplicada.\n\nConfirmar?`)) return;
+
+            try {
+                const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: id,
+                        motivo: '[CLIENTE] Cancelou após aceito (Ciente da Taxa)',
+                        cancelado_por: 'cliente'
+                    })
+                });
+
+                const json = await res.json();
+
+                if (json.success) {
+                    alert("✅ Corrida cancelada com sucesso!");
+                    localStorage.removeItem('idPedidoAtual');
+                    window.location.reload();
+                } else {
+                    alert("Erro ao cancelar: " + (json.message || "Tente novamente"));
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Erro de conexão. Verifique sua internet.");
+            }
+        }
+
+        async function confirmarEncerramentoCliente() {
+            const observacao = document.getElementById('campo-encerramento').value.trim();
+
+            document.getElementById('modal-encerramento').style.display = 'none';
+            document.getElementById('modal-busca').style.display = 'flex';
+            document.getElementById('status-titulo-modal').innerText = "Registrando finalização...";
+            document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
+
+            try {
+                if (observacao && idPedidoAtual) {
+                    await fetch(`${MEU_IP}/enviar-mensagem`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            corrida_id: idPedidoAtual,
+                            remetente: 'cliente',
+                            texto: observacao
+                        })
+                    }).catch(err => console.warn('Falha ao enviar observacao:', err));
+                }
+
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Finalização registrada. Obrigado!", "success", 3000);
+
+                limparRascunho();
+
+                clearInterval(intervaloVerificacao);
+                localStorage.removeItem('idPedidoAtual');
+                idPedidoAtual = null;
+
+                document.getElementById('acompanhamento-status-titulo').innerText = "PEDIDO CONCLUÍDO!";
+                document.getElementById('acompanhamento-status-desc').innerText = "Obrigado por usar Falcões.";
+                
+                setTimeout(() => reiniciarApp(), 1400);
+
+            } catch (e) {
+                document.getElementById('modal-busca').style.display = 'none';
+                showToast("Falha ao registrar finalização: " + e.message, "error");
+            }
+        }
+
+        // Funções de timer e busca
+        function iniciarContadorBusca(idPedido, segundosIniciais = 600) {
+            if (timerBuscaInterval) clearInterval(timerBuscaInterval);
+
+            const elContainer = document.getElementById('tempo-restante-busca');
+            const elNumero = document.getElementById('timer-numeros');
+            const btnCancelar = document.getElementById('btn-cancelar-busca');
+
+            if (!elContainer) return;
+
+            const formatarTempo = (s) => {
+                const min = Math.floor(s / 60).toString().padStart(2, '0');
+                const seg = (s % 60).toString().padStart(2, '0');
+                return `${min}:${seg}`;
+            };
+
+            elContainer.style.display = 'flex';
+            elContainer.style.borderColor = 'rgba(0, 255, 0, 0.3)';
+            elContainer.style.color = '#ccc';
+            elContainer.innerHTML = '⏳ Tempo estimado: <span id="timer-numeros" style="color: var(--neon-green); font-weight: bold; font-size: 16px; margin-left:5px;">' + formatarTempo(segundosIniciais) + '</span>';
+            
+            if (btnCancelar) btnCancelar.style.display = 'block';
+
+            let restantes = segundosIniciais;
+
+            timerBuscaInterval = setInterval(() => {
+                restantes--;
+                
+                const spanNum = document.getElementById('timer-numeros');
+                if (spanNum) {
+                    spanNum.innerText = formatarTempo(restantes);
+                }
+
+                if (spanNum && restantes <= 60) spanNum.style.color = "#ff9900";
+                if (spanNum && restantes <= 15) spanNum.style.color = "#ff4444";
+
+                if (restantes <= 0) {
+                    clearInterval(timerBuscaInterval);
+                    timerBuscaInterval = null;
+                    encerrarBuscaPorTimeout(idPedido);
+                }
+            }, 1000);
+        }
+
+        async function encerrarBuscaPorTimeout(corridaId) {
+            try {
+                await fetch(`${MEU_IP}/cancelar-pedido`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: corridaId,
+                        motivo: 'Cancelado automaticamente por tempo esgotado (10 minutos).'
+                    })
+                });
+                
+                if (buscaMotoboyInterval) {
+                    clearInterval(buscaMotoboyInterval);
+                    buscaMotoboyInterval = null;
+                }
+                
+                const statusTitulo = document.getElementById('acompanhamento-status-titulo');
+                const statusDesc = document.getElementById('acompanhamento-status-desc');
+                const timerElement = document.getElementById('timer-segundos');
+                const containerTimer = document.getElementById('tempo-restante-busca');
+                
+                if (statusTitulo) {
+                    statusTitulo.innerHTML = '<i class="fas fa-clock"></i> TEMPO ESGOTADO';
+                    statusTitulo.style.color = "#ff4444";
+                }
+                
+                if (statusDesc) {
+                    statusDesc.textContent = "Não encontramos um piloto disponível no momento.";
+                    statusDesc.style.color = "#aaa";
+                }
+                
+                if (timerElement) {
+                    timerElement.textContent = "0";
+                    timerElement.style.color = "#ff4444";
+                }
+                
+                if (containerTimer) {
+                    const elementos = containerTimer.childNodes;
+                    
+                    for (let node of elementos) {
+                        if (node.nodeType === Node.TEXT_NODE &&
+                            node.textContent.includes('Tempo estimado:')) {
+                            node.textContent = '⏰ ';
+                            break;
+                        }
+                    }
+                    
+                    containerTimer.style.color = '#ff4444';
+                }
+                
+                clearInterval(intervaloVerificacao);
+                
+                const areaCancelar = document.getElementById('area-botao-cancelar-taxa');
+                if (areaCancelar) {
+                    areaCancelar.style.display = 'none';
+                }
+                
+                mostrarOpcoesTempoEsgotado();
+                
+                showToast('Tempo limite de busca esgotado. Nenhum piloto encontrado.', 'error');
+                
+            } catch (err) {
+                console.error('Erro ao encerrar busca por timeout:', err);
+                showToast('Erro ao processar tempo esgotado.', 'error');
+            }
+        }
+
+        function mostrarOpcoesTempoEsgotado() {
+            const container = document.getElementById('acompanhamento-status-area');
+            
+            if (!container) return;
+            
+            const opcoesAntigas = document.getElementById('opcoes-tempo-esgotado');
+            if (opcoesAntigas) opcoesAntigas.remove();
+            
+            const opcoesDiv = document.createElement('div');
+            opcoesDiv.id = 'opcoes-tempo-esgotado';
+            opcoesDiv.style.cssText = `
+                margin-top: 20px;
+                padding: 15px;
+                background: rgba(255, 68, 68, 0.1);
+                border-radius: 8px;
+                border-left: 4px solid #ff4444;
+            `;
+            
+            opcoesDiv.innerHTML = `
+                <p style="margin-bottom: 10px; color: #fff; font-size: 14px;">
+                    Nenhum piloto disponível. O que deseja fazer?
+                </p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="tentarNovamente()" class="btn-primary" style="flex: 1; min-width: 120px;">
+                        <i class="fas fa-redo"></i> Nova Busca
+                    </button>
+                    <button onclick="voltarParaNovaCorrida()" class="btn-secondary" style="flex: 1; min-width: 120px;">
+                        <i class="fas fa-plus-circle"></i> Outro Pedido
+                    </button>
+                </div>
+                <p style="margin-top: 10px; color: #888; font-size: 11px;">
+                    "Nova Busca" recria o pedido. "Outro Pedido" volta ao início.
+                </p>
+            `;
+            
+            container.appendChild(opcoesDiv);
+        }
+
+        function voltarParaNovaCorrida() {
+            clearInterval(intervaloVerificacao);
+            clearInterval(buscaMotoboyInterval);
+            if (timerBuscaInterval) clearInterval(timerBuscaInterval);
+            
+            localStorage.removeItem('idPedidoAtual');
+            localStorage.removeItem('pedidoAtual');
+            
+            mudarTela('tela-pedido');
+            
+            restaurarRascunhoFormulario();
+            
+            showToast('Preencha os dados para um novo pedido', 'info');
+        }
+
+        // Sistema de memória automática
+        const camposParaSalvar = [
+            'rua-origem', 'num-origem', 'bairro-origem',
+            'rua-destino', 'num-destino', 'bairro-destino',
+            'detalhes-entrega'
+        ];
+
+        function salvarRascunhoFormulario() {
+            const rascunho = {};
+            
+            camposParaSalvar.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) rascunho[id] = el.value;
+            });
+
+            if (typeof coordsOrigem !== 'undefined') rascunho.coordsOrigem = coordsOrigem;
+            if (typeof coordsDestino !== 'undefined') rascunho.coordsDestino = coordsDestino;
+            if (typeof servicoSelecionado !== 'undefined') rascunho.servico = servicoSelecionado;
+
+            localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
+        }
+
+        function restaurarRascunhoFormulario() {
+            const dados = JSON.parse(localStorage.getItem('rascunho_cliente'));
+            if (!dados) return;
+
+            camposParaSalvar.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && dados[id]) el.value = dados[id];
+            });
+
+            if (dados.coordsOrigem) coordsOrigem = dados.coordsOrigem;
+            if (dados.coordsDestino) coordsDestino = dados.coordsDestino;
+            
+            if (dados.servico) {
+                selecionarServico(dados.servico, dados.servico === 'moto-taxi' ? 10.0 : 8.50);
+            }
+
+            if (dados.coordsOrigem && dados.coordsDestino) {
+                calcularRota();
+            }
+        }
+
+        function limparRascunho() {
+            localStorage.removeItem('rascunho_cliente');
+            camposParaSalvar.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            coordsOrigem = null;
+            coordsDestino = null;
+            document.getElementById('resumo').innerHTML = '';
+        }
+
+        // Funções de pagamento
+        async function pagarDinheiro() {
+            if (!idPedidoAtual) {
+                alert('Pedido inválido');
+                return;
+            }
+
+            const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id: idParaCancelar,
-                    motivo: 'Cliente desistiu da busca',
-                    cancelado_por: 'cliente'
+                    id: idPedidoAtual,
+                    forma_pagamento: 'DINHEIRO'
                 })
             });
 
             const data = await res.json();
 
             if (data.success) {
-                showToast("Busca cancelada!", "success");
+                document.getElementById('modal-pagamento').style.display = 'none';
+                showToast('Pagamento em dinheiro selecionado', 'success');
+            } else {
+                alert(data.message || 'Erro ao confirmar pagamento');
+            }
+        }
+
+        let monitorandoPix = null;
+
+        async function pagarPix() {
+            if (!idPedidoAtual) {
+                showToast('Pedido inválido', 'error');
+                return;
+            }
+
+            const btnPix = document.querySelector('button[onclick="pagarPix()"]');
+            const originalText = btnPix.innerHTML;
+            btnPix.innerText = "GERANDO CÓDIGO...";
+            btnPix.disabled = true;
+
+            try {
+                const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: idPedidoAtual,
+                        forma_pagamento: 'PIX'
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success && data.pix_qr_64) {
+                    const modalContent = document.querySelector('#modal-pagamento .modal-content');
+                    
+                    modalContent.innerHTML = `
+                        <h3 style="color: var(--brand-green);">PAGAMENTO PIX</h3>
+                        <p>Aponte a câmera ou copie o código:</p>
+                        <img src="data:image/jpeg;base64,${data.pix_qr_64}" style="width: 200px; border-radius: 12px; margin: 10px 0; border: 4px solid white;">
+                        <textarea id="pixCode" readonly style="width:100%; height:60px; font-size:11px; background:#222; color:#fff; border:1px solid #444; border-radius:8px; padding:8px; margin-bottom:10px; resize:none;">${data.pix_copia_cola}</textarea>
+                        <button class="btn" onclick="copiarCodigoPix()" style="background:#00e640; color:black; font-weight:800;">COPIAR CÓDIGO PIX</button>
+                        <div style="margin-top:15px; color:#ffd700; font-weight:bold; font-size:14px;">
+                            <span class="spinner-small"></span> Aguardando confirmação...
+                        </div>
+                        <button onclick="location.reload()" style="background:none; border:none; color:#aaa; margin-top:15px; cursor:pointer;">Cancelar e Voltar</button>
+                    `;
+                    
+                    showToast("Pix gerado com sucesso!", "success");
+                } else {
+                    throw new Error("Dados do Pix não retornados");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao gerar PIX. Tente novamente.', 'error');
+                btnPix.innerHTML = originalText;
+                btnPix.disabled = false;
+            }
+        }
+
+        function copiarCodigoPix() {
+            const copyText = document.getElementById("pixCode");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            
+            const btn = document.querySelector('button[onclick="copiarCodigoPix()"]');
+            btn.innerText = "✅ COPIADO!";
+            setTimeout(() => { btn.innerText = "COPIAR CÓDIGO PIX"; }, 2000);
+        }
+
+        // Função meu local (GPS)
+        function usarMeuLocal() {
+            if (!navigator.geolocation) {
+                showToast("Seu navegador não suporta geolocalização.", "error");
+                return;
+            }
+
+            const btn = document.querySelector('.btn-my-location');
+            btn.classList.add('gps-loading');
+            showToast("Obtendo sua localização...", "info");
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+
+                try {
+                    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lon},${lat}.json?types=address&access_token=${MAPBOX_ACCESS_TOKEN}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+
+                    if (data.features && data.features.length > 0) {
+                        const feature = data.features[0];
+                        const rua = feature.text;
+                        const numero = feature.address || "";
+                        
+                        const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
+                        const bairro = (neighborhood && neighborhood.text) ? neighborhood.text : "Três Corações";
+
+                        document.getElementById('rua-origem').value = rua;
+                        document.getElementById('num-origem').value = numero;
+                        document.getElementById('bairro-origem').value = bairro;
+
+                        coordsOrigem = { lat, lon };
+                        
+                        if (markerOrigem) map.removeLayer(markerOrigem);
+                        markerOrigem = L.marker([lat, lon]).addTo(map);
+                        map.setView([lat, lon], 16);
+
+                        showToast("Localização encontrada!", "success");
+                        calcularRota();
+                        salvarRascunhoFormulario();
+                    } else {
+                        showToast("Não consegui identificar o endereço exato.", "error");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("Erro ao converter GPS em endereço.", "error");
+                } finally {
+                    btn.classList.remove('gps-loading');
+                }
+
+            }, (err) => {
+                btn.classList.remove('gps-loading');
+                if(err.code === 1) showToast("Permissão de localização negada.", "error");
+                else showToast("Erro ao buscar GPS. Verifique se está ligado.", "error");
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        }
+
+        // Funções de limpeza e logout
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        function limparFormularioManual() {
+            document.getElementById('rua-origem').value = '';
+            document.getElementById('num-origem').value = '';
+            document.getElementById('bairro-origem').value = '';
+            document.getElementById('rua-destino').value = '';
+            document.getElementById('num-destino').value = '';
+            document.getElementById('bairro-destino').value = '';
+            document.getElementById('detalhes-entrega').value = '';
+            
+            coordsOrigem = null;
+            coordsDestino = null;
+            servicoSelecionado = null;
+            
+            if(typeof map !== 'undefined') {
+                if(typeof markerOrigem !== 'undefined' && markerOrigem) map.removeLayer(markerOrigem);
+                if(typeof markerDestino !== 'undefined' && markerDestino) map.removeLayer(markerDestino);
+            }
+            
+            const resumo = document.getElementById('resumo');
+            if(resumo) resumo.style.display = 'none';
+
+            localStorage.removeItem('rascunho_cliente');
+            
+            showToast("Campos limpos com sucesso!", "info");
+        }
+
+        // Função principal de verificação de status (ATUALIZADA com chamada para configurar botão ADM)
+        async function verificarStatus(id) {
+            try {
+                const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+                const data = await res.json();
+                const pedido = data.pedido;
+
+                if (!data.success || !pedido) return;
+
+                const statusTitulo = document.getElementById('acompanhamento-status-titulo');
+                const statusDesc   = document.getElementById('acompanhamento-status-desc');
+                const statusArea   = document.getElementById('acompanhamento-status-area');
+                const motoboyBox   = document.getElementById('motoboy-info-box');
+                const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
+                const wrapperWpp   = document.querySelector('.whatsapp-center-wrapper');
+                const modal        = document.getElementById('modal-pagamento');
+                const btnTaxa      = document.getElementById('area-botao-cancelar-taxa');
+                const elTempo      = document.getElementById('tempo-restante-busca');
+                const btnCancelBusca = document.getElementById('btn-cancelar-busca');
+                const btnFechar    = document.getElementById('btn-fechar-novo');
+                const areaCodigo   = document.getElementById('area-codigo-seguranca');
+                const textoCodigo  = document.getElementById('texto-codigo-seguranca');
+
+                if (statusArea) {
+                    statusArea.classList.remove('status-buscando', 'status-finalizada');
+                }
+
+                if (pedido.codigo_seguranca && areaCodigo && textoCodigo) {
+                    if (pedido.status !== 'concluida' && pedido.status !== 'cancelada') {
+                        areaCodigo.style.display = 'block';
+                        textoCodigo.innerText = pedido.codigo_seguranca;
+                    } else {
+                        areaCodigo.style.display = 'none';
+                    }
+                }
+
+                // 🔴 CANCELADA (ADICIONADO CONFIGURAÇÃO DO BOTÃO ADM)
+                if (pedido.status === 'cancelada') {
+                    if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+                    if (timerBuscaInterval) clearInterval(timerBuscaInterval);
+                    
+                    if (statusArea) statusArea.setAttribute('style', 'background: rgba(255, 68, 68, 0.15) !important; border: 1px solid #ff4444 !important;');
+                    if (statusTitulo) { statusTitulo.style.color = '#ff4444'; statusTitulo.innerText = "PEDIDO CANCELADO ❌"; }
+                    if (statusDesc) statusDesc.innerText = "Esta corrida foi cancelada.";
+                    
+                    if (motoboyBox) motoboyBox.style.display = 'none';
+                    if (btnWpp) btnWpp.style.display = 'none';
+                    if (btnTaxa) btnTaxa.style.display = 'none';
+                    if (btnCancelBusca) btnCancelBusca.style.display = 'none';
+
+                    const areaEstorno = document.getElementById('area-estorno-adm');
+                    if(areaEstorno) {
+                        areaEstorno.style.display = 'block';
+                        configurarBotaoAdm(); // CONFIGURA O BOTÃO ADM QUANDO STATUS É CANCELADA
+                    }
+                    
+                    if(btnFechar) {
+                        btnFechar.style.display = 'block';
+                        btnFechar.innerText = "FAZER NOVO PEDIDO";
+                        btnFechar.onclick = reiniciarApp;
+                    }
+                }
+
+                // 🔵 PENDENTE (BUSCANDO)
+                else if (pedido.status === 'pendente') {
+                    if (statusTitulo) statusTitulo.innerHTML = 'BUSCANDO PILOTO...';
+                    if (statusArea) statusArea.classList.add('status-buscando');
+                    if (btnCancelBusca) btnCancelBusca.style.display = 'block';
+                }
+
+                // 🟡 AGUARDANDO PAGAMENTO / ACEITA
+                else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
+                    if (timerBuscaInterval) { clearInterval(timerBuscaInterval); timerBuscaInterval = null; }
+                    if (elTempo) elTempo.style.display = 'none';
+                    if (btnCancelBusca) btnCancelBusca.style.display = 'none';
+
+                    if (modal && !modal.classList.contains('show')) {
+                        modal.classList.add('show');
+                    }
+                    if (document.getElementById('valor-modal-pagamento')) {
+                        document.getElementById('valor-modal-pagamento').innerText = "R$ " + parseFloat(pedido.valor).toFixed(2).replace('.', ',');
+                    }
+                    
+                    if (statusTitulo) { statusTitulo.style.color = '#ffd700'; statusTitulo.innerText = "🎯 ESCOLHA COMO PAGAR"; }
+                    if (statusDesc) statusDesc.innerText = "Um piloto aceitou! Aguardando pagamento.";
+                }
+
+                // 🟢 EM CORRIDA / LIBERADA
+                else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
+                    if (timerBuscaInterval) { clearInterval(timerBuscaInterval); timerBuscaInterval = null; }
+                    if (elTempo) elTempo.style.display = 'none';
+                    if (btnCancelBusca) btnCancelBusca.style.display = 'none';
+                    if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
+
+                    if (statusArea) statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.15) !important; border: 1px solid #00e640 !important;');
+                    if (statusTitulo) { statusTitulo.style.color = '#00e640'; statusTitulo.innerHTML = '<i class="fas fa-motorcycle"></i> PILOTO A CAMINHO'; }
+                    
+                    if (motoboyBox) motoboyBox.style.display = 'block';
+                    document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto";
+                    document.getElementById('motoboy-placa').innerText = pedido.placa || "---";
+                    document.getElementById('motoboy-modelo').innerText = pedido.modelo_moto || "Moto";
+                    document.getElementById('motoboy-cor').innerText = pedido.cor_moto || "";
+
+                    if (pedido.telefone_motoboy && btnWpp) {
+                        const fone = pedido.telefone_motoboy.replace(/\D/g, '');
+                        btnWpp.href = `https://wa.me/${fone.length === 11 ? '55' + fone : fone}`;
+                        btnWpp.style.display = 'inline-flex';
+                        if(wrapperWpp) wrapperWpp.style.display = 'flex';
+                    }
+
+                    if (btnTaxa) btnTaxa.style.display = 'block';
+
+                    if (pedido.status === 'em_andamento') {
+                        statusTitulo.innerHTML = '<i class="fas fa-route"></i> EM VIAGEM';
+                        statusDesc.innerText = "Você está a caminho do destino.";
+                        if (btnTaxa) btnTaxa.style.display = 'none';
+                    }
+                }
+
+                // 🟡 CONCLUÍDA
+                else if (pedido.status === 'concluida') {
+                    if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+                    
+                    if (statusArea) statusArea.classList.add('status-finalizada');
+                    statusArea.removeAttribute('style');
+
+                    if (statusTitulo) {
+                        statusTitulo.innerHTML = "CORRIDA FINALIZADA ✅";
+                    }
+                    if (statusDesc) statusDesc.innerText = "Obrigado por viajar conosco!";
+                    
+                    if (motoboyBox) motoboyBox.style.display = 'none';
+                    if (btnWpp) btnWpp.style.display = 'none';
+                    if (wrapperWpp) wrapperWpp.style.display = 'none';
+                    if (btnTaxa) btnTaxa.style.display = 'none';
+                    if (btnCancelBusca) btnCancelBusca.style.display = 'none';
+                    if (areaCodigo) areaCodigo.style.display = 'none';
+
+                    if(btnFechar) {
+                        btnFechar.style.display = 'block';
+                        btnFechar.innerText = "FAZER NOVO PEDIDO";
+                        btnFechar.onclick = reiniciarApp;
+                        
+                        btnFechar.className = 'btn-novo-pedido-neon';
+                        btnFechar.style.margin = "20px auto";
+                        btnFechar.style.display = "block";
+                    }
+                    
+                    if(typeof limparRascunho === 'function') limparRascunho();
+                }
+
+            } catch (e) {
+                console.error("Erro status:", e);
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Configura usuário
+            const usuario = JSON.parse(localStorage.getItem("usuario"));
+            if (usuario && usuario.nome) {
+                document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
+            }
+
+            // Verifica pedido persistido
+            const idSalvo = localStorage.getItem('idPedidoAtual');
+            if (idSalvo) {
+                const elId = document.getElementById('acompanhamento-id');
+                if (elId) elId.innerText = '#' + idSalvo;
+                window.idPedidoAtual = idSalvo;
+            }
+
+            if (idSalvo) {
+                try {
+                    const API = (typeof MEU_IP !== 'undefined') ? MEU_IP : 'https://falcoes-app.onrender.com';
+                    
+                    const res = await fetch(`${API}/status-pedido/${idSalvo}`);
+                    const data = await res.json();
+                    const statusReal = data.pedido ? data.pedido.status : null;
+
+                    const dados = JSON.parse(localStorage.getItem('pedidoAtual'));
+                    if (dados) {
+                        const elOrig = document.getElementById('detalhe-origem');
+                        const elDest = document.getElementById('detalhe-destino');
+                        const elValor = document.getElementById('detalhe-valor');
+                        const elId = document.getElementById('acompanhamento-id');
+                        if (elOrig) elOrig.innerText = dados.origem || '...';
+                        if (elDest) elDest.innerText = dados.destino || '...';
+                        if (elValor) elValor.innerText = `R$ ${parseFloat(dados.valor || 0).toFixed(2).replace('.', ',')}`;
+                        if (elId) elId.innerText = `#${idSalvo}`;
+                    }
+                    
+                    mudarTela('tela-acompanhamento');
+                    window.idPedidoAtual = idSalvo;
+
+                    if (statusReal === 'pendente') {
+                        const inicioBusca = parseInt(localStorage.getItem('inicioBuscaTimestamp') || Date.now());
+                        const agora = Date.now();
+                        const segundosPassados = Math.floor((agora - inicioBusca) / 1000);
+                        const tempoLimiteTotal = 600;
+                        
+                        const tempoRestanteReal = tempoLimiteTotal - segundosPassados;
+
+                        if (tempoRestanteReal > 0) {
+                            console.log(`Restaurando busca: faltam ${tempoRestanteReal}s`);
+                            
+                            const btnCancelBusca = document.getElementById('btn-cancelar-busca');
+                            if(btnCancelBusca) btnCancelBusca.style.display = 'block';
+
+                            iniciarContadorBusca(idSalvo, tempoRestanteReal);
+                        } else {
+                            document.getElementById('tempo-restante-busca').innerHTML = '<span style="color:#ff4444">⏰ Tempo esgotado (Offline).</span>';
+                            const btnCancelBusca = document.getElementById('btn-cancelar-busca');
+                            if(btnCancelBusca) btnCancelBusca.style.display = 'none';
+                        }
+                    }
+
+                    verificarStatus(idSalvo);
+                    if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
+                    intervaloVerificacao = setInterval(() => verificarStatus(idSalvo), 3000);
+
+                } catch (e) {
+                    console.error("Erro ao restaurar:", e);
+                    mudarTela('tela-acompanhamento');
+                }
+
+            } else {
+                if (typeof restaurarRascunhoFormulario === 'function') restaurarRascunhoFormulario();
+            }
+
+            // Listeners para justificativa
+            const campoJust = document.getElementById('campo-justificativa-integrada');
+            const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
+            const erroJust = document.getElementById('erro-just-integrada');
+
+            if (campoJust && btnConfirmar) {
+                campoJust.addEventListener('input', () => {
+                    const motivo = campoJust.value.trim();
+                    btnConfirmar.disabled = motivo.length < 5;
+                    if (motivo.length >= 5 && erroJust) erroJust.style.display = 'none';
+                });
+
+                btnConfirmar.addEventListener('click', async () => {
+                    const motivo = campoJust.value.trim();
+                    if (motivo.length < 5) {
+                        if (erroJust) erroJust.style.display = 'block';
+                        return;
+                    }
+                    document.getElementById('area-justificativa-integrada').style.display = 'none';
+                    const mb = document.getElementById('modal-busca');
+                    if (mb) { mb.style.display = 'flex'; document.getElementById('status-titulo-modal').innerText = "CANCELANDO..."; }
+
+                    const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
+
+                    try {
+                        if (id) {
+                            const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : "https://falcoes-app.onrender.com";
+                            const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
+                            });
+                            const json = await res.json().catch(() => ({ success: false }));
+
+                            if (json.success) showToast("Pedido cancelado.", "success");
+                            else throw new Error('Falha ao cancelar.');
+                        }
+                    } catch (e) {
+                        showToast("Erro: " + e.message, "error");
+                    } finally {
+                        if (mb) mb.style.display = 'none';
+                        reiniciarApp();
+                    }
+                });
+            }
+
+            // Listeners para salvar rascunho
+            ['rua-origem', 'num-origem', 'bairro-origem', 'rua-destino', 'num-destino', 'bairro-destino', 'detalhes-entrega'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', salvarRascunhoFormulario);
+            });
+
+            // CONFIGURA O BOTÃO ADM AO CARREGAR
+            configurarBotaoAdm();
+        });
+
+        // Funções auxiliares faltantes
+        function abrirJustificativaCliente() {
+            // Função para abrir modal de justificativa (se necessário)
+            console.log("Abrir justificativa cliente");
+        }
+
+        function fecharTela() {
+            reiniciarApp();
+        }
+
+        function tentarNovamente() {
+            const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
+            if (pedidoSalvo) {
                 localStorage.removeItem('idPedidoAtual');
-                localStorage.removeItem('pedidoAtual');
                 localStorage.removeItem('inicioBuscaTimestamp');
                 
                 setTimeout(() => {
-                    window.location.reload(); 
-                }, 1000);
-            } else {
-                showToast("Erro: " + (data.message || "Não foi possível cancelar."), "error");
-            }
-        } catch (err) {
-            console.error("Erro ao cancelar:", err);
-            showToast("Erro de conexão com o servidor.", "error");
-        }
-    }
-
-    // === CONFIGURAÇÃO E DADOS ===
-    const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBvdGEzZ3B2NzBkajE3NmUifQ.qTGPzR6IIc2-JetrQnB-yQ';
-    const MEU_IP = 'https://falcoes-app.onrender.com';
-    const LAT_TC = -21.6975;
-    const LON_TC = -45.25; 
-
-    // Mock de usuário
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
-    if (usuario && usuario.nome) {
-        document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
-    }
-
-    // Variáveis de Estado
-    let servicoSelecionado = null;
-    let coordsOrigem = null;
-    let coordsDestino = null;
-    let timeoutBusca = null;
-    let mapMode = null;
-    let markerOrigem = null;
-    let markerDestino = null;
-    let idPedidoAtual = localStorage.getItem('idPedidoAtual');
-    let intervaloVerificacao = null;
-    let buscaMotoboyInterval = null;
-    let tempoBuscaRestante = 0; 
-
-    const precos = {
-        'moto-taxi': { base: 10.0, kmExtra: 3.15, franquia: 3 },
-        'entrega': { base: 8.50, kmExtra: 2.0, franquia: 3 }
-    };
-
-    // === FUNÇÕES DE GERENCIAMENTO DE TELA E UTILIDADES ===
-    function mudarTela(novaTelaId) {
-        document.querySelectorAll('.tela').forEach(tela => {
-            tela.classList.remove('ativa');
-        });
-        document.getElementById(novaTelaId).classList.add('ativa');
-    }
-
-    function reiniciarApp() {
-        localStorage.removeItem('idPedidoAtual');
-        localStorage.removeItem('pedidoAtual');
-        if (intervaloVerificacao) clearInterval(intervaloVerificacao);
-        if (buscaMotoboyInterval) clearInterval(buscaMotoboyInterval);
-        window.location.reload();
-    }
-    
-    function removerErro(input) {
-        input.classList.remove('erro');
-    }
-
-    // Toast Helper
-    function showToast(msg, type, duration = 3000) {
-        const container = document.getElementById('toast-container');
-        const div = document.createElement('div');
-        div.className = `toast ${type}`;
-        div.innerHTML = `<span class="msg">${msg}</span><button class="close" onclick="this.parentElement.remove()">✕</button>`;
-        container.appendChild(div);
-        while (container.children.length > 3) {
-            container.firstChild.remove();
-        }
-        setTimeout(() => div.remove(), duration);
-    }
-    
-    // === FUNÇÕES AUXILIARES DE PERSISTÊNCIA ===
-    function preencherDetalhesAcompanhamento() {
-        const pedidoSalvo = JSON.parse(localStorage.getItem('pedidoAtual'));
-        if (pedidoSalvo) {
-            document.getElementById('acompanhamento-id').innerText = `#${idPedidoAtual}`;
-            document.getElementById('detalhe-origem').innerText = pedidoSalvo.origem;
-            document.getElementById('detalhe-destino').innerText = pedidoSalvo.destino;
-            document.getElementById('detalhe-valor').innerText = `R$ ${pedidoSalvo.valor.toFixed(2).replace('.', ',')}`;
-            return true;
-        }
-        return false;
-    }
-    
-    // === FUNÇÃO PRINCIPAL DE PERSISTÊNCIA (Ao recarregar a página) ===
-    function checkPersistedOrder() {
-        const persistedId = localStorage.getItem('idPedidoAtual');
-        if (persistedId) {
-            idPedidoAtual = persistedId;
-            
-            preencherDetalhesAcompanhamento();
-            
-            mudarTela('tela-acompanhamento');
-            
-            verificarStatus(idPedidoAtual);
-            
-            if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
-            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-        } else {
-            mudarTela('tela-pedido');
-        }
-    }
-
-    // === FUNÇÃO PARA CONFIGURAR BOTÃO ADM ===
-    function configurarBotaoAdm() {
-        const btnAdm = document.getElementById('btn-link-estorno');
-        if (btnAdm) {
-            const numeroSuporte = "5535997806080"; // SUBSTITUA PELO SEU NÚMERO REAL
-            const mensagem = encodeURIComponent("Olá ADM, preciso de suporte com meu pedido no Falcões App.");
-            btnAdm.href = `https://wa.me/${numeroSuporte}?text=${mensagem}`;
-            btnAdm.setAttribute('target', '_blank');
-        }
-    }
-
-    // === FUNÇÕES MAPA E CÁLCULO ===
-    const map = L.map('map').setView([LAT_TC, LON_TC], 14);
-    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-        attribution: 'Mapa &copy; <a href="https://www.mapbox.com/">Mapbox</a> | Dados &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-        maxZoom: 19,
-        id: 'mapbox/streets-v11',
-        tileSize: 512,
-        zoomOffset: -1,
-        accessToken: MAPBOX_ACCESS_TOKEN
-    }).addTo(map);
-
-    map.on('click', async (e) => {
-        if (!mapMode) {
-            showToast("Clique no botão 🗺️ ao lado do endereço primeiro.", "info");
-            return;
-        }
-        const { lat, lng } = e.latlng;
-        showToast("Buscando endereço com Mapbox...", "info", 1000);
-        try {
-            const urlMapbox = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address,place&access_token=${MAPBOX_ACCESS_TOKEN}`;
-            const res = await fetch(urlMapbox);
-            const data = await res.json();
-            let rua, bairro;
-
-            if (data.features && data.features.length > 0) {
-                const feature = data.features[0];
-                rua = feature.place_name.split(',')[0] || "Local Marcado";
-                const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
-                bairro = (neighborhood && neighborhood.text) || "Três Corações";
-            } else {
-                rua = "Local Marcado";
-                bairro = "Três Corações";
-            }
-            if (mapMode === 'origem') {
-                document.getElementById('rua-origem').value = rua;
-                document.getElementById('bairro-origem').value = bairro;
-                document.getElementById('num-origem').focus();
-                coordsOrigem = { lat, lon: lng };
-                if (markerOrigem) map.removeLayer(markerOrigem);
-                markerOrigem = L.marker([lat, lng]).addTo(map);
-            } else {
-                document.getElementById('rua-destino').value = rua;
-                document.getElementById('bairro-destino').value = bairro;
-                document.getElementById('num-destino').focus();
-                coordsDestino = { lat, lon: lng };
-                if (markerDestino) map.removeLayer(markerDestino);
-                markerDestino = L.marker([lat, lng]).addTo(map);
-            }
-
-            showToast("Endereço preenchido! Digite o número.", "success");
-            mapMode = null; 
-            calcularRota();
-        } catch (error) {
-            showToast("Erro ao obter endereço do mapa.", "error");
-        }
-    });
-
-    function ativarMapa(modo) {
-        mapMode = modo;
-        showToast(`Toque no mapa para definir a ${modo.toUpperCase()}`, "info");
-        document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function selecionarServico(tipo, valorBase) {
-        servicoSelecionado = tipo;
-        document.querySelectorAll('.card').forEach(c => c.classList.remove('selecionado'));
-        if (tipo === 'moto-taxi') document.getElementById('card-moto').classList.add('selecionado');
-        else document.getElementById('card-entrega').classList.add('selecionado');
-
-        const detailsDiv = document.getElementById('detalhes-entrega-container');
-        if (tipo === 'entrega') {
-            detailsDiv.style.display = 'block';
-        } else {
-            detailsDiv.style.display = 'none';
-        }
-
-        document.getElementById('btn-pedir').disabled = false;
-        document.getElementById('btn-pedir').innerText = tipo === 'entrega' ? "SOLICITAR ENTREGA" : "CHAMAR MOTO TÁXI";
-        calcularRota();
-    }
-
-    
-
-    function calcDistanciaReta(c1, c2) {
-        const R = 6371;
-        const dLat = (c2.lat - c1.lat) * Math.PI / 180;
-        const dLon = (c2.lon - c1.lon) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    }
-
-    async function calcularRota() {
-        if (!coordsOrigem || !coordsDestino || !servicoSelecionado) return;
-        const resumo = document.getElementById('resumo');
-        resumo.style.display = 'block';
-        resumo.innerText = "Calculando rota com Mapbox...";
-
-        try {
-            const coordenadas = `${coordsOrigem.lon},${coordsOrigem.lat};${coordsDestino.lon},${coordsDestino.lat}`;
-            const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordenadas}?geometries=geojson&steps=false&access_token=${MAPBOX_ACCESS_TOKEN}`;
-            const res = await fetch(url);
-            const json = await res.json();
-
-            let distanciaKm = 0;
-            let tempoSegundos = 0;
-
-            if (json.routes && json.routes.length > 0) {
-                distanciaKm = json.routes[0].distance / 1000;
-                tempoSegundos = json.routes[0].duration;
-            } else {
-                distanciaKm = calcDistanciaReta(coordsOrigem, coordsDestino) * 1.3;
-                tempoSegundos = (distanciaKm / 0.3) * 60; 
-            }
-
-            const regra = precos[servicoSelecionado];
-            const kmCobrado = Math.max(0, distanciaKm - regra.franquia);
-            const total = regra.base + (kmCobrado * regra.kmExtra);
-            const tempoMinutos = Math.ceil(tempoSegundos / 60);
-
-            resumo.innerHTML = `
-                <div style="font-size:14px; font-weight:normal; color:#ccc;">Distância: ${distanciaKm.toFixed(1)} km &nbsp; | &nbsp; Tempo: ${tempoMinutos} min</div>
-                <div>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
-            `;
-            window.valorCalculado = total;
-        } catch (e) {
-            console.error("Erro rota Mapbox", e);
-            resumo.innerText = "Erro ao calcular rota.";
-        }
-    }
-
-
-    // === FUNÇÕES DE BUSCA/TIMEOUT ===
-    
-
-    async function cancelarBuscaMotoboy() {
-        const id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
-        if (!id) {
-            showToast('Nenhum pedido ativo para cancelar.', 'error');
-            return;
-        }
-        if (!confirm("Tem certeza que deseja cancelar a busca por um motoboy?")) return;
-
-        document.getElementById('modal-busca').style.display = 'flex';
-        if (buscaMotoboyInterval) {
-            clearInterval(buscaMotoboyInterval);
-            buscaMotoboyInterval = null;
-        }
-
-        try {
-            const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: id, motivo: 'Cancelado pelo cliente durante a busca.' })
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                showToast('Busca cancelada com sucesso!', 'success');
-                reiniciarApp(); 
-            } else {
-                showToast('Erro ao cancelar busca: ' + (data.message || 'Erro desconhecido.'), 'error');
-            }
-        } catch (err) {
-            console.error('Erro ao cancelar busca:', err);
-            showToast('Erro de conexão. Tente novamente.', 'error');
-        } finally {
-            document.getElementById('modal-busca').style.display = 'none';
-        }
-    }
-
-    async function encerrarBuscaPorTimeout(corridaId) {
-    try {
-        await fetch(`${MEU_IP}/cancelar-pedido`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                id: corridaId, 
-                motivo: 'Cancelado automaticamente por tempo esgotado (10 minutos).' 
-            })
-        });
-        
-        if (buscaMotoboyInterval) {
-            clearInterval(buscaMotoboyInterval);
-            buscaMotoboyInterval = null;
-        }
-        
-        const statusTitulo = document.getElementById('acompanhamento-status-titulo');
-        const statusDesc = document.getElementById('acompanhamento-status-desc');
-        const timerElement = document.getElementById('timer-segundos');
-        const containerTimer = document.getElementById('tempo-restante-busca');
-        
-        if (statusTitulo) {
-            statusTitulo.innerHTML = '<i class="fas fa-clock"></i> TEMPO ESGOTADO';
-            statusTitulo.style.color = "#ff4444";
-        }
-        
-        if (statusDesc) {
-            statusDesc.textContent = "Não encontramos um piloto disponível no momento.";
-            statusDesc.style.color = "#aaa";
-        }
-        
-        if (timerElement) {
-            timerElement.textContent = "0";
-            timerElement.style.color = "#ff4444";
-        }
-        
-        if (containerTimer) {
-            const elementos = containerTimer.childNodes;
-            
-            for (let node of elementos) {
-                if (node.nodeType === Node.TEXT_NODE && 
-                    node.textContent.includes('Tempo estimado:')) {
-                    node.textContent = '⏰ ';
-                    break;
-                }
-            }
-            
-            containerTimer.style.color = '#ff4444';
-        }
-        
-        clearInterval(intervaloVerificacao);
-        
-        const areaCancelar = document.getElementById('area-botao-cancelar-taxa');
-        if (areaCancelar) {
-            areaCancelar.style.display = 'none';
-        }
-        
-        mostrarOpcoesTempoEsgotado();
-        
-        showToast('Tempo limite de busca esgotado. Nenhum piloto encontrado.', 'error');
-        
-    } catch (err) {
-        console.error('Erro ao encerrar busca por timeout:', err);
-        showToast('Erro ao processar tempo esgotado.', 'error');
-    }
-}
-function mostrarOpcoesTempoEsgotado() {
-    const container = document.getElementById('acompanhamento-status-area');
-    
-    if (!container) return;
-    
-    const opcoesAntigas = document.getElementById('opcoes-tempo-esgotado');
-    if (opcoesAntigas) opcoesAntigas.remove();
-    
-    const opcoesDiv = document.createElement('div');
-    opcoesDiv.id = 'opcoes-tempo-esgotado';
-    opcoesDiv.style.cssText = `
-        margin-top: 20px;
-        padding: 15px;
-        background: rgba(255, 68, 68, 0.1);
-        border-radius: 8px;
-        border-left: 4px solid #ff4444;
-    `;
-    
-    opcoesDiv.innerHTML = `
-        <p style="margin-bottom: 10px; color: #fff; font-size: 14px;">
-            Nenhum piloto disponível. O que deseja fazer?
-        </p>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button onclick="tentarNovamente()" class="btn-primary" style="flex: 1; min-width: 120px;">
-                <i class="fas fa-redo"></i> Nova Busca
-            </button>
-            <button onclick="voltarParaNovaCorrida()" class="btn-secondary" style="flex: 1; min-width: 120px;">
-                <i class="fas fa-plus-circle"></i> Outro Pedido
-            </button>
-        </div>
-        <p style="margin-top: 10px; color: #888; font-size: 11px;">
-            "Nova Busca" recria o pedido. "Outro Pedido" volta ao início.
-        </p>
-    `;
-    
-    container.appendChild(opcoesDiv);
-}
-
-
-function voltarParaNovaCorrida() {
-    clearInterval(intervaloVerificacao);
-    clearInterval(buscaMotoboyInterval);
-    
-    localStorage.removeItem('idPedidoAtual');
-    localStorage.removeItem('pedidoAtual');
-    
-    mudarTela('tela-pedido');
-    
-    restaurarRascunhoFormulario();
-    
-    showToast('Preencha os dados para um novo pedido', 'info');
-}
-
-    // === FUNÇÃO DE BUSCA (LIMPA E MANUAL) ===
-async function buscarEndereco(query, listaId, modo) {
-    const lista = document.getElementById(listaId);
-    
-    if (!query || query.length < 3) {
-        lista.innerHTML = '';
-        lista.style.display = 'none';
-        return;
-    }
-
-    const proximidade = `-45.2581,-21.6931`; 
-
-    try {
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?` +
-                    `access_token=${MAPBOX_ACCESS_TOKEN}&` +
-                    `proximity=${proximidade}&` +
-                    `types=address,poi&` +
-                    `language=pt&` +
-                    `country=br&` +
-                    `limit=5`;
-
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        lista.innerHTML = '';
-        lista.style.display = 'block';
-
-        if (data.features.length === 0) {
-            lista.style.display = 'none';
-            return;
-        }
-
-        data.features.forEach(f => {
-            const item = document.createElement('div');
-            item.className = 'sugestao-item';
-            item.innerText = f.place_name
-                .replace(', Minas Gerais', '')
-                .replace(', Brasil', '')
-                .replace('Três Corações,', ''); 
-            
-            item.onclick = () => {
-                const nomeRua = f.text; 
-                
-                document.getElementById(`rua-${modo}`).value = nomeRua;
-                
-                document.getElementById(`bairro-${modo}`).value = "";
-                
-                if (modo === 'origem') coordsOrigem = { lat: f.center[1], lon: f.center[0] };
-                else coordsDestino = { lat: f.center[1], lon: f.center[0] };
-
-                lista.innerHTML = '';
-                lista.style.display = 'none';
-
-                document.getElementById(`num-${modo}`).focus();
-                
-                calcularRota();
-            };
-            lista.appendChild(item);
-        });
-    } catch (e) {
-        console.error("Erro na busca:", e);
-    }
-}
-
-// Fecha a lista se clicar fora dela
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.address-container')) {
-        document.querySelectorAll('.sugestoes-lista').forEach(el => el.style.display = 'none');
-    }
-});
-    // === ENVIO DE PEDIDO ===
-    async function pedir() {
-    if (!servicoSelecionado) { 
-        showToast("Selecione Moto Táxi ou Entrega", "error"); 
-        return; 
-    }
-    
-    const ruaOrigemPura = document.getElementById('rua-origem').value.split(',')[0].trim();
-    const ruaDestinoPura = document.getElementById('rua-destino').value.split(',')[0].trim();
-    
-    const numOrigem = document.getElementById('num-origem').value.trim();
-    const bairroOrigem = document.getElementById('bairro-origem').value.trim();
-    
-    const numDestino = document.getElementById('num-destino').value.trim();
-    const bairroDestino = document.getElementById('bairro-destino').value.trim();
-    const detalhes = document.getElementById('detalhes-entrega').value;
-
-    let erro = false;
-
-    if (!numOrigem) { 
-        document.getElementById('num-origem').classList.add('erro'); 
-        erro = true; 
-    }
-    if (!bairroOrigem) { 
-        document.getElementById('bairro-origem').classList.add('erro'); 
-        erro = true; 
-    }
-
-    if (!numDestino) { 
-        document.getElementById('num-destino').classList.add('erro'); 
-        erro = true; 
-    }
-    if (!bairroDestino) { 
-        document.getElementById('bairro-destino').classList.add('erro'); 
-        erro = true; 
-    }
-    
-    if (erro) { 
-        showToast("⚠️ Preencha NÚMERO e BAIRRO corretamente!", "error"); 
-        return; 
-    }
-
-    const strOrigem = `${ruaOrigemPura}, Nº ${numOrigem}, ${bairroOrigem}`;
-    const strDestino = `${ruaDestinoPura}, Nº ${numDestino}, ${bairroDestino}`;
-    
-    const strDestinoFinal = servicoSelecionado === 'entrega'
-        ? `${strDestino} (ITEM: ${detalhes})`
-        : strDestino;
-    
-    document.getElementById('modal-busca').style.display = 'flex';
-    document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
-    document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
-
-    try {
-        const body = {
-            cliente_id: usuario.id,
-            origem: strOrigem,
-            destino: strDestinoFinal,
-            valor: window.valorCalculado || 10.0,
-            tipo_servico: servicoSelecionado
-        };
-
-        const res = await fetch(`${MEU_IP}/pedir-corrida`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        const json = await res.json();
-
-        if (json.success) {
-            idPedidoAtual = json.id;
-            
-            const dadosParaSalvar = {
-                origem: strOrigem,
-                destino: strDestino,
-                valor: window.valorCalculado || 10.0,
-                tipo_servico: servicoSelecionado,
-                detalhes: servicoSelecionado === 'entrega' ? detalhes : null,
-                campos: {
-                    ruaOrigem: document.getElementById('rua-origem').value,
-                    numOrigem: numOrigem,
-                    bairroOrigem: bairroOrigem,
-                    ruaDestino: document.getElementById('rua-destino').value,
-                    numDestino: numDestino,
-                    bairroDestino: bairroDestino,
-                    detalhesEntrega: servicoSelecionado === 'entrega' ? detalhes : ''
-                }
-            };
-            
-            localStorage.setItem('idPedidoAtual', idPedidoAtual);
-            localStorage.setItem('inicioBuscaTimestamp', Date.now());
-            localStorage.setItem('pedidoAtual', JSON.stringify(dadosParaSalvar));
-            
-            preencherDetalhesAcompanhamento();
-            
-            mudarTela('tela-acompanhamento');
-            document.getElementById('modal-busca').style.display = 'none';
-            
-            iniciarContadorBusca(idPedidoAtual, 600);
-            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-            
-            showToast("Solicitação enviada. Buscando piloto...", "info");
-
-        } else {
-            throw new Error(json.message);
-        }
-    } catch (e) {
-        document.getElementById('modal-busca').style.display = 'none';
-        showToast("Erro ao enviar pedido: " + e.message, "error");
-    }
-}
-
-    // === SUBSTITUA SÓ A FUNÇÃO cancelarComTaxa POR ESTA ===
-async function cancelarComTaxa() {
-    console.log("Iniciando cancelamento...");
-
-    let id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
-
-    if (!id || id === '000') {
-        const elId = document.getElementById('acompanhamento-id');
-        if (elId) id = elId.innerText.replace('#', '').trim();
-    }
-
-    if (!id || id === '000' || id === '--') {
-        id = prompt("⚠️ O sistema perdeu o número do pedido.\n\nPor favor, digite o NÚMERO DA CORRIDA (ex: 77) para cancelar:");
-    }
-
-    if (!id) return;
-
-    if(!confirm(`⚠️ ATENÇÃO!\n\nVocê vai cancelar o Pedido #${id}.\nO piloto será avisado e a taxa de R$ 5,00 será aplicada.\n\nConfirmar?`)) return;
-
-    try {
-        const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                id: id, 
-                motivo: '[CLIENTE] Cancelou após aceito (Ciente da Taxa)',
-                cancelado_por: 'cliente'
-            })
-        });
-
-        const json = await res.json();
-
-        if (json.success) {
-            alert("✅ Corrida cancelada com sucesso!");
-            localStorage.removeItem('idPedidoAtual');
-            window.location.reload();
-        } else {
-            alert("Erro ao cancelar: " + (json.message || "Tente novamente"));
-        }
-    } catch (e) {
-        console.error(e);
-        alert("Erro de conexão. Verifique sua internet.");
-    }
-}
-
-    
-    async function confirmarEncerramentoCliente() {
-    const observacao = document.getElementById('campo-encerramento').value.trim();
-
-    document.getElementById('modal-encerramento').style.display = 'none';
-    document.getElementById('modal-busca').style.display = 'flex';
-    document.getElementById('status-titulo-modal').innerText = "Registrando finalização...";
-    document.getElementById('status-desc-modal').innerText = "Enviando confirmação..."; 
-
-    try {
-        if (observacao && idPedidoAtual) {
-            await fetch(`${MEU_IP}/enviar-mensagem`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    corrida_id: idPedidoAtual,
-                    remetente: 'cliente',
-                    texto: observacao
-                })
-            }).catch(err => console.warn('Falha ao enviar observacao:', err));
-        }
-
-        document.getElementById('modal-busca').style.display = 'none';
-        showToast("Finalização registrada. Obrigado!", "success", 3000);
-
-        limparRascunho();
-
-        clearInterval(intervaloVerificacao);
-        localStorage.removeItem('idPedidoAtual');
-        idPedidoAtual = null;
-
-        document.getElementById('acompanhamento-status-titulo').innerText = "PEDIDO CONCLUÍDO!";
-        document.getElementById('acompanhamento-status-desc').innerText = "Obrigado por usar Falcões.";
-        
-        setTimeout(() => reiniciarApp(), 1400);
-
-    } catch (e) {
-        document.getElementById('modal-busca').style.display = 'none';
-        showToast("Falha ao registrar finalização: " + e.message, "error");
-    }
-}
-    
-
-    // === INICIALIZAÇÃO DE LISTENERS ===
-    document.addEventListener('DOMContentLoaded', async () => {
-
-    const idSalvo = localStorage.getItem('idPedidoAtual');
-    if (idSalvo) {
-        const elId = document.getElementById('acompanhamento-id');
-        if (elId) elId.innerText = '#' + idSalvo; 
-        
-        window.idPedidoAtual = idSalvo;
-    }
-
-    if (idSalvo) {
-        try {
-            const API = (typeof MEU_IP !== 'undefined') ? MEU_IP : 'https://falcoes-app.onrender.com';
-            
-            const res = await fetch(`${API}/status-pedido/${idSalvo}`);
-            const data = await res.json();
-            const statusReal = data.pedido ? data.pedido.status : null;
-
-            const dados = JSON.parse(localStorage.getItem('pedidoAtual'));
-            if (dados) {
-                const elOrig = document.getElementById('detalhe-origem');
-                const elDest = document.getElementById('detalhe-destino');
-                const elValor = document.getElementById('detalhe-valor');
-                const elId = document.getElementById('acompanhamento-id');
-                if (elOrig) elOrig.innerText = dados.origem || '...';
-                if (elDest) elDest.innerText = dados.destino || '...';
-                if (elValor) elValor.innerText = `R$ ${parseFloat(dados.valor || 0).toFixed(2).replace('.', ',')}`;
-                if (elId) elId.innerText = `#${idSalvo}`;
-            }
-            
-            mudarTela('tela-acompanhamento');
-            window.idPedidoAtual = idSalvo;
-
-            if (statusReal === 'pendente') {
-                const inicioBusca = parseInt(localStorage.getItem('inicioBuscaTimestamp') || Date.now());
-                const agora = Date.now();
-                const segundosPassados = Math.floor((agora - inicioBusca) / 1000);
-                const tempoLimiteTotal = 600;
-                
-                const tempoRestanteReal = tempoLimiteTotal - segundosPassados;
-
-                if (tempoRestanteReal > 0) {
-                    console.log(`Restaurando busca: faltam ${tempoRestanteReal}s`);
-                    
-                    const btnCancelBusca = document.getElementById('btn-cancelar-busca');
-                    if(btnCancelBusca) btnCancelBusca.style.display = 'block';
-
-                    iniciarContadorBusca(idSalvo, tempoRestanteReal);
-                } else {
-                    document.getElementById('tempo-restante-busca').innerHTML = '<span style="color:#ff4444">⏰ Tempo esgotado (Offline).</span>';
-                    const btnCancelBusca = document.getElementById('btn-cancelar-busca');
-                    if(btnCancelBusca) btnCancelBusca.style.display = 'none';
-                }
-            }
-
-            verificarStatus(idSalvo);
-            if (typeof intervaloVerificacao !== 'undefined') clearInterval(intervaloVerificacao);
-            intervaloVerificacao = setInterval(() => verificarStatus(idSalvo), 3000);
-
-        } catch (e) {
-            console.error("Erro ao restaurar:", e);
-            mudarTela('tela-acompanhamento');
-        }
-
-    } else {
-        if (typeof restaurarRascunhoFormulario === 'function') restaurarRascunhoFormulario();
-    }
-
-    const campoJust = document.getElementById('campo-justificativa-integrada');
-    const btnConfirmar = document.getElementById('btn-confirmar-cancelamento');
-    const erroJust = document.getElementById('erro-just-integrada');
-
-    if (campoJust && btnConfirmar) {
-        campoJust.addEventListener('input', () => {
-            const motivo = campoJust.value.trim();
-            btnConfirmar.disabled = motivo.length < 5;
-            if (motivo.length >= 5 && erroJust) erroJust.style.display = 'none';
-        });
-
-        btnConfirmar.addEventListener('click', async () => {
-            const motivo = campoJust.value.trim();
-            if (motivo.length < 5) {
-                if (erroJust) erroJust.style.display = 'block';
-                return;
-            }
-            document.getElementById('area-justificativa-integrada').style.display = 'none';
-            const mb = document.getElementById('modal-busca');
-            if (mb) { mb.style.display = 'flex'; document.getElementById('status-titulo-modal').innerText = "CANCELANDO..."; }
-
-            const id = window.idPedidoAtual || localStorage.getItem('idPedidoAtual');
-
-            try {
-                if (id) {
-                    const MEU_IP_GLOBAL = (typeof MEU_IP !== 'undefined') ? MEU_IP : "https://falcoes-app.onrender.com";
-                    const res = await fetch(`${MEU_IP_GLOBAL}/cancelar-pedido`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: id, motivo: `[CLIENTE] ${motivo}` })
-                    });
-                    const json = await res.json().catch(() => ({ success: false }));
-
-                    if (json.success) showToast("Pedido cancelado.", "success");
-                    else throw new Error('Falha ao cancelar.');
-                }
-            } catch (e) {
-                showToast("Erro: " + e.message, "error");
-            } finally {
-                if (mb) mb.style.display = 'none';
-                reiniciarApp();
-            }
-        });
-    }
-
-    ['rua-origem', 'num-origem', 'bairro-origem', 'rua-destino', 'num-destino', 'bairro-destino', 'detalhes-entrega'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('input', salvarRascunhoFormulario);
-    });
-
-    // CONFIGURA O BOTÃO ADM AO CARREGAR
-    configurarBotaoAdm();
-});
-
-</script>
-<script>
-// pagamento em dinheiro
-async function pagarDinheiro() {
-    if (!idPedidoAtual) {
-        alert('Pedido inválido');
-        return;
-    }
-
-    const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            id: idPedidoAtual,
-            forma_pagamento: 'DINHEIRO'
-        })
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-        document.getElementById('modal-pagamento').style.display = 'none';
-        showToast('Pagamento em dinheiro selecionado', 'success');
-    } else {
-        alert(data.message || 'Erro ao confirmar pagamento');
-    }
-}
-
-// pagamento pix
-let monitorandoPix = null;
-
-async function pagarPix() {
-    if (!idPedidoAtual) {
-        showToast('Pedido inválido', 'error');
-        return;
-    }
-
-    const btnPix = document.querySelector('button[onclick="pagarPix()"]');
-    const originalText = btnPix.innerHTML;
-    btnPix.innerText = "GERANDO CÓDIGO...";
-    btnPix.disabled = true;
-
-    try {
-        const res = await fetch(`${MEU_IP}/escolher-pagamento`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: idPedidoAtual,
-                forma_pagamento: 'PIX'
-            })
-        });
-
-        const data = await res.json();
-
-        if (data.success && data.pix_qr_64) {
-            const modalContent = document.querySelector('#modal-pagamento .modal-content');
-            
-            modalContent.innerHTML = `
-                <h3 style="color: var(--brand-green);">PAGAMENTO PIX</h3>
-                <p>Aponte a câmera ou copie o código:</p>
-                <img src="data:image/jpeg;base64,${data.pix_qr_64}" style="width: 200px; border-radius: 12px; margin: 10px 0; border: 4px solid white;">
-                <textarea id="pixCode" readonly style="width:100%; height:60px; font-size:11px; background:#222; color:#fff; border:1px solid #444; border-radius:8px; padding:8px; margin-bottom:10px; resize:none;">${data.pix_copia_cola}</textarea>
-                <button class="btn" onclick="copiarCodigoPix()" style="background:#00e640; color:black; font-weight:800;">COPIAR CÓDIGO PIX</button>
-                <div style="margin-top:15px; color:#ffd700; font-weight:bold; font-size:14px;">
-                    <span class="spinner-small"></span> Aguardando confirmação...
-                </div>
-                <button onclick="location.reload()" style="background:none; border:none; color:#aaa; margin-top:15px; cursor:pointer;">Cancelar e Voltar</button>
-            `;
-            
-            showToast("Pix gerado com sucesso!", "success");
-        } else {
-            throw new Error("Dados do Pix não retornados");
-        }
-    } catch (err) {
-        console.error(err);
-        showToast('Erro ao gerar PIX. Tente novamente.', 'error');
-        btnPix.innerHTML = originalText;
-        btnPix.disabled = false;
-    }
-}
-
-function copiarCodigoPix() {
-    const copyText = document.getElementById("pixCode");
-    copyText.select();
-    copyText.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(copyText.value);
-    
-    const btn = document.querySelector('button[onclick="copiarCodigoPix()"]');
-    btn.innerText = "✅ COPIADO!";
-    setTimeout(() => { btn.innerText = "COPIAR CÓDIGO PIX"; }, 2000);
-
-}
-
-// ============================================================
-// SISTEMA DE MEMÓRIA AUTOMÁTICA (PERSISTÊNCIA DE DADOS)
-// ============================================================
-
-const camposParaSalvar = [
-    'rua-origem', 'num-origem', 'bairro-origem',
-    'rua-destino', 'num-destino', 'bairro-destino',
-    'detalhes-entrega'
-];
-
-function salvarRascunhoFormulario() {
-    const rascunho = {};
-    
-    camposParaSalvar.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) rascunho[id] = el.value;
-    });
-
-    if (typeof coordsOrigem !== 'undefined') rascunho.coordsOrigem = coordsOrigem;
-    if (typeof coordsDestino !== 'undefined') rascunho.coordsDestino = coordsDestino;
-    if (typeof servicoSelecionado !== 'undefined') rascunho.servico = servicoSelecionado;
-
-    localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
-}
-
-function restaurarRascunhoFormulario() {
-    const dados = JSON.parse(localStorage.getItem('rascunho_cliente'));
-    if (!dados) return;
-
-    camposParaSalvar.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && dados[id]) el.value = dados[id];
-    });
-
-    if (dados.coordsOrigem) coordsOrigem = dados.coordsOrigem;
-    if (dados.coordsDestino) coordsDestino = dados.coordsDestino;
-    
-    if (dados.servico) {
-        selecionarServico(dados.servico, dados.servico === 'moto-taxi' ? 10.0 : 8.50);
-    }
-
-    if (dados.coordsOrigem && dados.coordsDestino) {
-        calcularRota();
-    }
-}
-
-function limparRascunho() {
-    localStorage.removeItem('rascunho_cliente');
-    camposParaSalvar.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
-    coordsOrigem = null;
-    coordsDestino = null;
-    document.getElementById('resumo').innerHTML = '';
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    restaurarRascunhoFormulario();
-
-    camposParaSalvar.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('input', salvarRascunhoFormulario);
-        }
-    });
-});
-
-// === FUNÇÃO MEU LOCAL (GPS) ===
-function usarMeuLocal() {
-    if (!navigator.geolocation) {
-        showToast("Seu navegador não suporta geolocalização.", "error");
-        return;
-    }
-
-    const btn = document.querySelector('.btn-my-location');
-    btn.classList.add('gps-loading');
-    showToast("Obtendo sua localização...", "info");
-
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-
-        try {
-            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lon},${lat}.json?types=address&access_token=${MAPBOX_ACCESS_TOKEN}`;
-            const res = await fetch(url);
-            const data = await res.json();
-
-            if (data.features && data.features.length > 0) {
-                const feature = data.features[0];
-                const rua = feature.text;
-                const numero = feature.address || "";
-                
-                const neighborhood = feature.context.find(c => c.id.startsWith('neighborhood'));
-                const bairro = (neighborhood && neighborhood.text) ? neighborhood.text : "Três Corações";
-
-                document.getElementById('rua-origem').value = rua;
-                document.getElementById('num-origem').value = numero;
-                document.getElementById('bairro-origem').value = bairro;
-
-                coordsOrigem = { lat, lon };
-                
-                if (markerOrigem) map.removeLayer(markerOrigem);
-                markerOrigem = L.marker([lat, lon]).addTo(map);
-                map.setView([lat, lon], 16);
-
-                showToast("Localização encontrada!", "success");
-                
-                calcularRota();
-                
-                salvarRascunhoFormulario();
-            } else {
-                showToast("Não consegui identificar o endereço exato.", "error");
-            }
-        } catch (err) {
-            console.error(err);
-            showToast("Erro ao converter GPS em endereço.", "error");
-        } finally {
-            btn.classList.remove('gps-loading');
-        }
-
-    }, (err) => {
-        btn.classList.remove('gps-loading');
-        if(err.code === 1) showToast("Permissão de localização negada.", "error");
-        else showToast("Erro ao buscar GPS. Verifique se está ligado.", "error");
-    }, {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-    });
-}
-
-// ============================================================
-// 🧠 MEGA BLOCO: LIMPEZA INTELIGENTE, MEMÓRIA E SAIR
-// ============================================================
-
-function logout() {
-    localStorage.clear(); 
-    window.location.href = 'index.html'; 
-}
-
-function limparFormularioManual() {
-    document.getElementById('rua-origem').value = '';
-    document.getElementById('num-origem').value = '';
-    document.getElementById('bairro-origem').value = '';
-    document.getElementById('rua-destino').value = '';
-    document.getElementById('num-destino').value = '';
-    document.getElementById('bairro-destino').value = '';
-    document.getElementById('detalhes-entrega').value = '';
-    
-    coordsOrigem = null;
-    coordsDestino = null;
-    servicoSelecionado = null;
-    
-    if(typeof map !== 'undefined') {
-        if(typeof markerOrigem !== 'undefined' && markerOrigem) map.removeLayer(markerOrigem);
-        if(typeof markerDestino !== 'undefined' && markerDestino) map.removeLayer(markerDestino);
-    }
-    
-    const resumo = document.getElementById('resumo');
-    if(resumo) resumo.style.display = 'none';
-
-    localStorage.removeItem('rascunho_cliente');
-    
-    showToast("Campos limpos com sucesso!", "info");
-}
-
-function salvarRascunhoFormulario() {
-    const rascunho = {};
-    
-    ['rua-origem', 'num-origem', 'bairro-origem', 
-     'rua-destino', 'num-destino', 'bairro-destino', 
-     'detalhes-entrega'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) rascunho[id] = el.value;
-    });
-
-    if (typeof coordsOrigem !== 'undefined') rascunho.coordsOrigem = coordsOrigem;
-    if (typeof coordsDestino !== 'undefined') rascunho.coordsDestino = coordsDestino;
-    if (typeof servicoSelecionado !== 'undefined') rascunho.servico = servicoSelecionado;
-
-    rascunho.timestamp = new Date().getTime();
-
-    localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
-}
-
-function restaurarRascunhoFormulario() {
-    const dadosString = localStorage.getItem('rascunho_cliente');
-    if (!dadosString) return;
-
-    const dados = JSON.parse(dadosString);
-
-    const AGORA = new Date().getTime();
-    const DUAS_HORAS = 2 * 60 * 60 * 1000;
-
-    if (dados.timestamp && (AGORA - dados.timestamp > DUAS_HORAS)) {
-        console.log("Rascunho expirado (mais de 2h). Limpando...");
-        localStorage.removeItem('rascunho_cliente');
-        return; 
-    }
-
-    ['rua-origem', 'num-origem', 'bairro-origem', 
-     'rua-destino', 'num-destino', 'bairro-destino', 
-     'detalhes-entrega'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el && dados[id]) el.value = dados[id];
-    });
-
-    if (dados.coordsOrigem) coordsOrigem = dados.coordsOrigem;
-    if (dados.coordsDestino) coordsDestino = dados.coordsDestino;
-    
-    if (dados.servico) {
-        selecionarServico(dados.servico, dados.servico === 'moto-taxi' ? 10.0 : 8.50);
-    }
-
-    if (dados.coordsOrigem && dados.coordsDestino) {
-        calcularRota();
-    }
-}
-
-restaurarRascunhoFormulario();
-
-['rua-origem', 'num-origem', 'bairro-origem', 
- 'rua-destino', 'num-destino', 'bairro-destino', 
- 'detalhes-entrega'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-        el.addEventListener('input', salvarRascunhoFormulario);
-    }
-});
-    // Se quiser esconder o card manualmente também:
-    document.getElementById('motoboy-info-box').style.display = 'none';
-
-        
-
-function resetarTimerCompletamente() {
-    const containerTimer = document.getElementById('tempo-restante-busca');
-    if (containerTimer) {
-        containerTimer.innerHTML = '⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s';
-        containerTimer.style.color = '#aaa';
-        containerTimer.style.display = 'none';
-    }
-    
-    if (buscaMotoboyInterval) {
-        clearInterval(buscaMotoboyInterval);
-        buscaMotoboyInterval = null;
-    }
-}
-
-function atualizarTextoTimer(elemento, segundos) {
-    const spanNumero = document.getElementById('timer-numeros');
-    if (spanNumero) spanNumero.innerText = segundos + "s";
-}
-
-// ============================================================
-// ✅ BLOCO CORRIGIDO (TIMER + STATUS UNIFICADOS)
-// ============================================================
-
-let timerBuscaInterval = null;
-
-function iniciarContadorBusca(idPedido, segundosIniciais = 600) {
-    if (timerBuscaInterval) clearInterval(timerBuscaInterval);
-
-    const elContainer = document.getElementById('tempo-restante-busca'); 
-    const elNumero = document.getElementById('timer-numeros');
-    const btnCancelar = document.getElementById('btn-cancelar-busca');
-
-    if (!elContainer) return;
-
-    const formatarTempo = (s) => {
-        const min = Math.floor(s / 60).toString().padStart(2, '0');
-        const seg = (s % 60).toString().padStart(2, '0');
-        return `${min}:${seg}`;
-    };
-
-    elContainer.style.display = 'flex';
-    elContainer.style.borderColor = 'rgba(0, 255, 0, 0.3)';
-    elContainer.style.color = '#ccc';
-    elContainer.innerHTML = '⏳ Tempo estimado: <span id="timer-numeros" style="color: var(--neon-green); font-weight: bold; font-size: 16px; margin-left:5px;">' + formatarTempo(segundosIniciais) + '</span>';
-    
-    if (btnCancelar) btnCancelar.style.display = 'block';
-
-    let restantes = segundosIniciais;
-
-    timerBuscaInterval = setInterval(() => {
-        restantes--;
-        
-        const spanNum = document.getElementById('timer-numeros');
-        if (spanNum) {
-            spanNum.innerText = formatarTempo(restantes);
-        }
-
-        if (spanNum && restantes <= 60) spanNum.style.color = "#ff9900";
-        if (spanNum && restantes <= 15) spanNum.style.color = "#ff4444";
-
-        if (restantes <= 0) {
-            clearInterval(timerBuscaInterval);
-            timerBuscaInterval = null;
-            encerrarBuscaPorTimeout(idPedido);
-        }
-    }, 1000);
-}
-
-async function verificarStatus(id) {
-    try {
-        const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
-        const data = await res.json();
-        const pedido = data.pedido;
-
-        if (!data.success || !pedido) return;
-
-        const statusTitulo = document.getElementById('acompanhamento-status-titulo');
-        const statusDesc   = document.getElementById('acompanhamento-status-desc');
-        const statusArea   = document.getElementById('acompanhamento-status-area'); 
-        const motoboyBox   = document.getElementById('motoboy-info-box');
-        const btnWpp       = document.getElementById('btn-whatsapp-motoboy');
-        const wrapperWpp   = document.querySelector('.whatsapp-center-wrapper'); 
-        const modal        = document.getElementById('modal-pagamento'); 
-        const btnTaxa      = document.getElementById('area-botao-cancelar-taxa');
-        const elTempo      = document.getElementById('tempo-restante-busca');
-        const btnCancelBusca = document.getElementById('btn-cancelar-busca');
-        const btnFechar    = document.getElementById('btn-fechar-novo');
-        const areaCodigo   = document.getElementById('area-codigo-seguranca');
-        const textoCodigo  = document.getElementById('texto-codigo-seguranca');
-
-        if (statusArea) {
-            statusArea.classList.remove('status-buscando', 'status-finalizada');
-        }
-
-        if (pedido.codigo_seguranca && areaCodigo && textoCodigo) {
-            if (pedido.status !== 'concluida' && pedido.status !== 'cancelada') {
-                areaCodigo.style.display = 'block'; 
-                textoCodigo.innerText = pedido.codigo_seguranca; 
-            } else {
-                areaCodigo.style.display = 'none';
+                    pedir(); // Reenvia o pedido
+                }, 500);
             }
         }
 
-        if (pedido.status === 'cancelada') {
-            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
-            if (timerBuscaInterval) clearInterval(timerBuscaInterval);
-            
-            if (statusArea) statusArea.setAttribute('style', 'background: rgba(255, 68, 68, 0.15) !important; border: 1px solid #ff4444 !important;');
-            if (statusTitulo) { statusTitulo.style.color = '#ff4444'; statusTitulo.innerText = "PEDIDO CANCELADO ❌"; }
-            if (statusDesc) statusDesc.innerText = "Esta corrida foi cancelada.";
-            
-            if (motoboyBox) motoboyBox.style.display = 'none';
-            if (btnWpp) btnWpp.style.display = 'none';
-            if (btnTaxa) btnTaxa.style.display = 'none';
-            if (btnCancelBusca) btnCancelBusca.style.display = 'none';
-
-            const areaEstorno = document.getElementById('area-estorno-adm');
-            if(areaEstorno) {
-                areaEstorno.style.display = 'block';
-                configurarBotaoAdm(); // CONFIGURA O BOTÃO ADM QUANDO STATUS É CANCELADA
+        function resetarTimerCompletamente() {
+            const containerTimer = document.getElementById('tempo-restante-busca');
+            if (containerTimer) {
+                containerTimer.innerHTML = '⏳ Tempo estimado: <span id="timer-segundos" style="color: var(--neon-green); font-weight: bold;">90</span>s';
+                containerTimer.style.color = '#aaa';
+                containerTimer.style.display = 'none';
             }
             
-            if(btnFechar) {
-                btnFechar.style.display = 'block';
-                btnFechar.innerText = "FAZER NOVO PEDIDO";
-                btnFechar.onclick = reiniciarApp;
+            if (buscaMotoboyInterval) {
+                clearInterval(buscaMotoboyInterval);
+                buscaMotoboyInterval = null;
             }
         }
 
-        else if (pedido.status === 'pendente') {
-            if (statusTitulo) statusTitulo.innerHTML = 'BUSCANDO PILOTO...';
-            
-            if (statusArea) statusArea.classList.add('status-buscando');
-            
-            if (btnCancelBusca) btnCancelBusca.style.display = 'block';
+        function atualizarTextoTimer(elemento, segundos) {
+            const spanNumero = document.getElementById('timer-numeros');
+            if (spanNumero) spanNumero.innerText = segundos + "s";
         }
 
-        else if (pedido.status === 'aguardando_pagamento' || pedido.status === 'aceita') {
-            if (timerBuscaInterval) { clearInterval(timerBuscaInterval); timerBuscaInterval = null; }
-            if (elTempo) elTempo.style.display = 'none';
-            if (btnCancelBusca) btnCancelBusca.style.display = 'none';
-
-            if (modal && !modal.classList.contains('show')) {
-                modal.classList.add('show');
-            }
-            if (document.getElementById('valor-modal-pagamento')) {
-                 document.getElementById('valor-modal-pagamento').innerText = "R$ " + parseFloat(pedido.valor).toFixed(2).replace('.', ',');
-            }
-            
-            if (statusTitulo) { statusTitulo.style.color = '#ffd700'; statusTitulo.innerText = "🎯 ESCOLHA COMO PAGAR"; }
-            if (statusDesc) statusDesc.innerText = "Um piloto aceitou! Aguardando pagamento.";
-        }
-
-        else if (pedido.status === 'liberada' || pedido.status === 'em_andamento') {
-            if (timerBuscaInterval) { clearInterval(timerBuscaInterval); timerBuscaInterval = null; }
-            if (elTempo) elTempo.style.display = 'none';
-            if (btnCancelBusca) btnCancelBusca.style.display = 'none';
-            if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
-
-            if (statusArea) statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.15) !important; border: 1px solid #00e640 !important;');
-            if (statusTitulo) { statusTitulo.style.color = '#00e640'; statusTitulo.innerHTML = '<i class="fas fa-motorcycle"></i> PILOTO A CAMINHO'; }
-            
-            if (motoboyBox) motoboyBox.style.display = 'block';
-            document.getElementById('motoboy-nome').innerText = pedido.nome_motoboy || "Piloto";
-            document.getElementById('motoboy-placa').innerText = pedido.placa || "---";
-            document.getElementById('motoboy-modelo').innerText = pedido.modelo_moto || "Moto";
-            document.getElementById('motoboy-cor').innerText = pedido.cor_moto || "";
-
-            if (pedido.telefone_motoboy && btnWpp) {
-                const fone = pedido.telefone_motoboy.replace(/\D/g, '');
-                btnWpp.href = `https://wa.me/${fone.length === 11 ? '55' + fone : fone}`;
-                btnWpp.style.display = 'inline-flex';
-                if(wrapperWpp) wrapperWpp.style.display = 'flex';
-            }
-
-            if (btnTaxa) btnTaxa.style.display = 'block';
-
-            if (pedido.status === 'em_andamento') {
-                statusTitulo.innerHTML = '<i class="fas fa-route"></i> EM VIAGEM';
-                statusDesc.innerText = "Você está a caminho do destino.";
-                if (btnTaxa) btnTaxa.style.display = 'none';
-            }
-        }
-
-        else if (pedido.status === 'concluida') {
-            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
-            
-            if (statusArea) statusArea.classList.add('status-finalizada');
-            statusArea.removeAttribute('style');
-
-            if (statusTitulo) { 
-                statusTitulo.innerHTML = "CORRIDA FINALIZADA ✅"; 
-            }
-            if (statusDesc) statusDesc.innerText = "Obrigado por viajar conosco!";
-            
-            if (motoboyBox) motoboyBox.style.display = 'none';
-            if (btnWpp) btnWpp.style.display = 'none';
-            if (wrapperWpp) wrapperWpp.style.display = 'none';
-            if (btnTaxa) btnTaxa.style.display = 'none';
-            if (btnCancelBusca) btnCancelBusca.style.display = 'none';
-            if (areaCodigo) areaCodigo.style.display = 'none';
-
-            if(btnFechar) {
-                btnFechar.style.display = 'block';
-                btnFechar.innerText = "FAZER NOVO PEDIDO";
-                btnFechar.onclick = reiniciarApp;
-                
-                btnFechar.className = 'btn-novo-pedido-neon'; 
-                btnFechar.style.margin = "20px auto";
-                btnFechar.style.display = "block";
-            }
-            
-            if(typeof limparRascunho === 'function') limparRascunho();
-        }
-
-    } catch (e) {
-        console.error("Erro status:", e);
-    }
-}
-</script>
+    </script>
+</body>
+</html>
