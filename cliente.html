@@ -603,7 +603,8 @@
         #modal-justificativa .modal-content,
         #modal-encerramento .modal-content,
         #modal-pagamento .modal-content,
-        #modal-justificativa-cliente .modal-box {
+        #modal-justificativa-cliente .modal-box,
+        #modal-confirmar-cancelamento-busca .modal-content {    
             /* Ajustado para modal-box */
             z-index: 2147483647 !important;
             position: relative !important;
@@ -1156,9 +1157,16 @@
 
     // 1. Abre o modal quando clica no botão
     function abrirModalCancelamentoBusca() {
-        const modal = document.getElementById('modal-confirmar-cancelamento-busca');
-        if (modal) modal.style.display = 'flex';
+    const modal = document.getElementById('modal-confirmar-cancelamento-busca');
+    if (modal) {
+        // Usa flex para centralizar e !important para vencer bloqueios do CSS
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.opacity = '1';
+        modal.style.visibility = 'visible';
+    } else {
+        console.error("Erro: O modal 'modal-confirmar-cancelamento-busca' não foi encontrado no HTML.");
     }
+}
 
     // 2. Fecha qualquer modal
     function fecharModal(idModal) {
