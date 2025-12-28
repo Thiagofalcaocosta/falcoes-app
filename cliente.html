@@ -1076,7 +1076,7 @@
             <i class="fas fa-ban"></i> Cancelar Corrida
         </button>
         <span class="aviso-taxa-texto" style="display:block; font-size:11px; color:#888; margin-top:5px;">
-            <i class="fas fa-exclamation-triangle" style="color:#ffcc00;"></i> ⚠️ Uma taxa de cancelamento de R$ 5,00 pode ser aplicada (deslocamento motoboy).
+            <i class="fas fa-exclamation-triangle" style="color:#ffcc00;"></i> ⚠️ Uma taxa de cancelamento de R$ 5,00 pode ser aplicada na devulução.(deslocamento motoboy).
         </span>
     </div>
 
@@ -1916,20 +1916,18 @@ document.addEventListener('click', (e) => {
     // === SUBSTITUA SÓ A FUNÇÃO cancelarComTaxa POR ESTA ===
 // === VERSÃO FINAL: SE NÃO ACHAR O ID, ELE PERGUNTA PRA VOCÊ ===
 async function cancelarComTaxa() {
-    console.log("Abrindo justificativa de cancelamento...");
-
-    // 1. Localiza o modal de justificativa que já existe no seu código
-    const modalJustificativa = document.getElementById('modal-justificativa-cliente');
+    // Tenta encontrar o modal pelo ID que aparece no seu console
+    const modal = document.getElementById('modal-justificativa');
     
-    if (modalJustificativa) {
-        // Exibe o modal profissional em vez do confirm feio
-        modalJustificativa.style.setProperty('display', 'flex', 'important');
-        modalJustificativa.style.opacity = '1';
-        modalJustificativa.style.visibility = 'visible';
+    if (modal) {
+        // Força a exibição do modal bonito
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.opacity = '1';
+        modal.style.visibility = 'visible';
     } else {
-        // Caso o modal não exista, ele avisa no console para você criar
-        console.error("ID modal-justificativa-cliente não encontrado no HTML");
-        alert("Erro técnico: Modal de justificativa não localizado.");
+        // Se ainda falhar, use o ID alternativo
+        const modalAlt = document.getElementById('modal-justificativa-cliente');
+        if(modalAlt) modalAlt.style.display = 'flex';
     }
 }
 
