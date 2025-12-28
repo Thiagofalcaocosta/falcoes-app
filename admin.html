@@ -153,17 +153,23 @@
     </div>
 
     <div id="aprovacoes" style="display:none;" class="conteudo-aba">
-        <div class="painel-grid">
-            <div class="coluna">
-                <h3><i class="fas fa-user-check"></i> CLIENTES PENDENTES</h3>
-                <div id="lista-clientes"><div class="vazio">Aprovação automática.</div></div>
-            </div>
-            <div class="coluna">
-                <h3><i class="fas fa-motorcycle"></i> PILOTOS PENDENTES</h3>
-                <div id="lista-motoboys">Carregando...</div>
-            </div>
+    <div class="painel-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+        <div class="coluna" style="border-top: 3px solid var(--warning-color);">
+            <h3><i class="fas fa-building"></i> EMPRESAS PENDENTES</h3>
+            <div id="lista-empresas">Carregando...</div>
+        </div>
+
+        <div class="coluna" style="border-top: 3px solid var(--neon-green);">
+            <h3><i class="fas fa-motorcycle"></i> PILOTOS PENDENTES</h3>
+            <div id="lista-motoboys">Carregando...</div>
+        </div>
+
+        <div class="coluna" style="border-top: 3px solid #666;">
+            <h3><i class="fas fa-user-check"></i> CLIENTES</h3>
+            <div id="lista-clientes"><div class="vazio">Aprovação automática.</div></div>
         </div>
     </div>
+</div>
 
     <div id="gerenciar" style="display:none;" class="conteudo-aba">
         <div class="painel-grid">
@@ -269,26 +275,51 @@
 
     // --- MANTENDO SUAS FUNÇÕES DE GESTÃO ---
     async function carregarPendentes() {
-        try {
-            const res = await fetch(`${MEU_IP}/admin/pendentes`);
-            const users = await res.json();
-            const divMoto = document.getElementById('lista-motoboys');
-            divMoto.innerHTML = '';
-            const pendentes = users.filter(u => u.tipo === 'motoboy');
-            if(pendentes.length === 0) divMoto.innerHTML = '<div class="vazio">Nenhum piloto aguardando.</div>';
-            pendentes.forEach(u => {
-                divMoto.innerHTML += `
-                    <div class="card-user-gestao">
-                        <span class="user-name">${u.nome}</span>
-                        <span class="user-sub"><i class="fas fa-phone"></i> ${u.telefone}</span>
-                        <div style="display:flex; gap:10px; margin-top:10px;">
-                            <button class="btn-acao btn-aprove" style="background:var(--neon-green); border:none; padding:5px 10px; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="decisao(${u.id}, 'aprovar')">APROVAR</button>
-                            <button class="btn-acao btn-deny" style="background:none; border:1px solid var(--danger-color); color:var(--danger-color); padding:5px 10px; border-radius:5px; cursor:pointer;" onclick="decisao(${u.id}, 'rejeitar')">REJEITAR</button>
-                        </div>
-                    </div>`;
-            });
-        } catch (e) { console.error(e); }
-    }
+    try {
+        const res = await fetch(`${MEU_IP}/admin/pendentes`);
+        const users = await res.json();
+        
+        const divMoto = document.getElementById('lista-motoboys');
+        const divEmpresa = document.getElementById('lista-empresas');
+        
+        divMoto.innerHTML = '';
+        divEmpresa.innerHTML = '';
+
+        // Filtra Pilotos
+        const pendentesMoto = users.filter(u => u.tipo === 'motoboy');
+        if(pendentesMoto.length === 0) divMoto.innerHTML = '<div class="vazio">Nenhum piloto aguardando.</div>';
+        
+        // Filtra Empresas
+        const pendentesEmpresa = users.filter(u => u.tipo === 'empresa');
+        if(pendentesEmpresa.length === 0) divEmpresa.innerHTML = '<div class="vazio">Nenhuma empresa aguardando.</div>';
+
+        // Renderiza Pilotos
+        pendentesMoto.forEach(u => {
+            divMoto.innerHTML += criarCardAprovacao(u, 'PILOTO');
+        });
+
+        // Renderiza Empresas
+        pendentesEmpresa.forEach(u => {
+            divEmpresa.innerHTML += criarCardAprovacao(u, 'EMPRESA');
+        });
+
+    } catch (e) { console.error("Erro ao carregar pendentes:", e); }
+}
+
+// Função auxiliar para não repetir código de criação de card
+function criarCardAprovacao(u, label) {
+    const cor = label === 'EMPRESA' ? 'var(--warning-color)' : 'var(--neon-green)';
+    return `
+        <div class="card-user-gestao" style="border-left-color: ${cor}">
+            <span class="user-name">${u.nome} <small style="color:${cor}">[${label}]</small></span>
+            <span class="user-sub"><i class="fas fa-phone"></i> ${u.telefone}</span>
+            <span class="user-sub"><i class="fas fa-envelope"></i> ${u.email}</span>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn-acao" style="background:${cor}; border:none; padding:7px 12px; border-radius:5px; font-weight:bold; cursor:pointer; color:#000;" onclick="decisao(${u.id}, 'aprovar')">LIBERAR ACESSO</button>
+                <button class="btn-acao" style="background:none; border:1px solid var(--danger-color); color:var(--danger-color); padding:7px 12px; border-radius:5px; cursor:pointer;" onclick="decisao(${u.id}, 'rejeitar')">RECUSAR</button>
+            </div>
+        </div>`;
+}
 
     async function carregarMotoboysAtivos() {
         const div = document.getElementById('container-motoboys-ativos');
@@ -305,18 +336,26 @@
     }
 
     async function carregarClientes() {
-        const div = document.getElementById('container-clientes-ativos');
-        try {
-            const res = await fetch(`${MEU_IP}/admin/clientes`);
-            const data = await res.json();
-            div.innerHTML = data.map(c => `
-                <div class="card-user-gestao" style="border-left-color: #555;">
-                    <button style="float:right; background:none; border:none; color:#444;" onclick="removerUsuario(${c.id})"><i class="fas fa-trash"></i></button>
-                    <span class="user-name">${c.nome}</span>
-                    <span class="user-sub">${c.telefone}</span>
-                </div>`).join('');
-        } catch (e) { div.innerHTML = "Erro ao carregar."; }
-    }
+    const div = document.getElementById('container-clientes-ativos');
+    try {
+        const res = await fetch(`${MEU_IP}/admin/clientes`);
+        const data = await res.json();
+        
+        // Vamos mostrar Clientes e Empresas aqui, mas com cores diferentes
+        div.innerHTML = data.map(c => {
+            const ehEmpresa = c.tipo === 'empresa';
+            const borda = ehEmpresa ? 'var(--warning-color)' : '#555';
+            const tag = ehEmpresa ? '<small style="color:var(--warning-color)">[EMPRESA]</small>' : '';
+            
+            return `
+                <div class="card-user-gestao" style="border-left-color: ${borda};">
+                    <button style="float:right; background:none; border:none; color:#444; cursor:pointer;" onclick="removerUsuario(${c.id})"><i class="fas fa-trash"></i></button>
+                    <span class="user-name">${c.nome} ${tag}</span>
+                    <span class="user-sub">${c.telefone} | ${c.email}</span>
+                </div>`;
+        }).join('');
+    } catch (e) { div.innerHTML = "Erro ao carregar."; }
+}
 
     async function decisao(id, acao) {
         if(!confirm(`Confirma ${acao}?`)) return;
