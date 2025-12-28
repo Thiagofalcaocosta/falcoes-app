@@ -898,16 +898,19 @@
     </div>
 </div>
 
-<div id="modal-aviso" class="modal-dark" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <span style="font-size: 30px;">📢</span>
-            <h3 style="color: #fff; margin: 10px 0;">AVISO IMPORTANTE</h3>
-        </div>
-        <p id="texto-alerta" style="color: #ccc; line-height: 1.5;">
-            Atenção: Estamos com alta demanda em Três Corações. Fiquem atentos às novas corridas!
+<div id="modal-aviso" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: #1a1a1a; padding: 25px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; border: 1px solid #333; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        
+        <div style="font-size: 40px; margin-bottom: 10px;">📢</div>
+        <h3 style="color: #fff; margin: 0 0 10px 0; font-family: sans-serif;">AVISO IMPORTANTE</h3>
+        
+        <p id="texto-alerta" style="color: #ccc; line-height: 1.5; font-family: sans-serif; margin-bottom: 20px;">
+            Atenção: Área com alta demanda! Fiquem atentos às novas corridas.
         </p>
-        <button class="btn-entendido" onclick="fecharAviso()">ENTENDIDO</button>
+        
+        <button onclick="fecharAviso()" style="background: #00ff00; color: #000; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px;">
+            ENTENDIDO
+        </button>
     </div>
 </div>
 
