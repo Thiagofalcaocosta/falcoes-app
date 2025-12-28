@@ -1916,52 +1916,20 @@ document.addEventListener('click', (e) => {
     // === SUBSTITUA SÓ A FUNÇÃO cancelarComTaxa POR ESTA ===
 // === VERSÃO FINAL: SE NÃO ACHAR O ID, ELE PERGUNTA PRA VOCÊ ===
 async function cancelarComTaxa() {
-    console.log("Iniciando cancelamento...");
+    console.log("Abrindo justificativa de cancelamento...");
 
-    // 1. Tenta achar o ID na memória ou na tela
-    let id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
-
-    // Se a memória falhou, tenta ler da tela
-    if (!id || id === '000') {
-        const elId = document.getElementById('acompanhamento-id');
-        if (elId) id = elId.innerText.replace('#', '').trim();
-    }
-
-    // 2. AQUI ESTÁ A SEGURANÇA MÁXIMA:
-    // Se o ID ainda for 000, -- ou vazio, ele pergunta pra você!
-    if (!id || id === '000' || id === '--') {
-        id = prompt("⚠️ O sistema perdeu o número do pedido.\n\nPor favor, digite o NÚMERO DA CORRIDA (ex: 77) para cancelar:");
-    }
-
-    // Se você não digitou nada ou cancelou a pergunta, para tudo.
-    if (!id) return;
-
-    // 3. Confirmação final
-    if(!confirm(`⚠️ ATENÇÃO!\n\nVocê vai cancelar o Pedido #${id}.\nO piloto será avisado e a taxa de R$ 5,00 será aplicada.\n\nConfirmar?`)) return;
-
-    try {
-        const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                id: id, 
-                motivo: '[CLIENTE] Cancelou após aceito (Ciente da Taxa)',
-                cancelado_por: 'cliente' // <--- O MOTOBOY PRECISA DISSO!
-            })
-        });
-
-        const json = await res.json();
-
-        if (json.success) {
-            alert("✅ Corrida cancelada com sucesso!");
-            localStorage.removeItem('idPedidoAtual');
-            window.location.reload();
-        } else {
-            alert("Erro ao cancelar: " + (json.message || "Tente novamente"));
-        }
-    } catch (e) {
-        console.error(e);
-        alert("Erro de conexão. Verifique sua internet.");
+    // 1. Localiza o modal de justificativa que já existe no seu código
+    const modalJustificativa = document.getElementById('modal-justificativa-cliente');
+    
+    if (modalJustificativa) {
+        // Exibe o modal profissional em vez do confirm feio
+        modalJustificativa.style.setProperty('display', 'flex', 'important');
+        modalJustificativa.style.opacity = '1';
+        modalJustificativa.style.visibility = 'visible';
+    } else {
+        // Caso o modal não exista, ele avisa no console para você criar
+        console.error("ID modal-justificativa-cliente não encontrado no HTML");
+        alert("Erro técnico: Modal de justificativa não localizado.");
     }
 }
 
@@ -2778,6 +2746,40 @@ async function verificarStatus(id) {
 
     } catch (e) {
         console.error("Erro status:", e);
+    }
+}
+async function enviarCancelamentoComJustificativa() {
+    // Pega o ID do pedido
+    let id = idPedidoAtual || localStorage.getItem('idPedidoAtual');
+    
+    // Pega o texto que o cliente digitou no campo de justificativa
+    // Certifique-se que o ID do seu campo de texto seja 'justificativa-texto'
+    const campoTexto = document.getElementById('justificativa-texto');
+    const motivoCliente = campoTexto ? campoTexto.value : "Cliente cancelou (sem justificativa)";
+
+    if (!motivoCliente.trim()) {
+        alert("Por favor, escreva o motivo do cancelamento.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                id: id, 
+                motivo: `[CLIENTE] ${motivoCliente}`,
+                cancelado_por: 'cliente' 
+            })
+        });
+
+        const json = await res.json();
+        if (json.success) {
+            alert("✅ Corrida cancelada!");
+            window.location.reload();
+        }
+    } catch (e) {
+        alert("Erro de conexão.");
     }
 }
 </script>
