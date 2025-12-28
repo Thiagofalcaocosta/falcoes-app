@@ -827,10 +827,69 @@
     border: 2px solid #ff4d4d !important;
     background-color: #fff5f5;
 }
-@keyframes pulse {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 204, 0, 0.7); }
-    70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(255, 204, 0, 0); }
-    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 204, 0, 0); }
+/* Estilo do Sino Flutuante */
+.notification-wrapper {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 9999;
+    cursor: pointer;
+}
+
+.bell-icon {
+    font-size: 22px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px); /* Efeito de vidro */
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff3b30;
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+/* Modal Estilo Dark */
+.modal-dark {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index: 10000;
+    display: none; /* Escondido por padrão */
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: #1a1a1a;
+    padding: 25px;
+    border-radius: 20px;
+    width: 85%;
+    max-width: 320px;
+    text-align: center;
+    border: 1px solid #333;
+}
+
+.btn-entendido {
+    background: #00ff00;
+    color: #000;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 10px;
+    font-weight: bold;
+    margin-top: 20px;
+    cursor: pointer;
 }
 
 
@@ -851,10 +910,24 @@
 </head>
 
 <body>
-    <div id="aviso-container" style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
-    <button id="btn-alerta" onclick="abrirAviso()" style="background: #ffcc00; border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); animation: pulse 2s infinite;">
-        ⚠️
-    </button>
+    <div class="notification-wrapper" onclick="abrirAviso()">
+    <div class="bell-icon">
+        <i class="fas fa-bell"></i> 
+        <span class="notification-badge" id="badge-contador">1</span>
+    </div>
+</div>
+
+<div id="modal-aviso" class="modal-dark" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span style="font-size: 30px;">📢</span>
+            <h3 style="color: #fff; margin: 10px 0;">AVISO IMPORTANTE</h3>
+        </div>
+        <p id="texto-alerta" style="color: #ccc; line-height: 1.5;">
+            Atenção: Estamos com alta demanda em Três Corações. Fiquem atentos às novas corridas!
+        </p>
+        <button class="btn-entendido" onclick="fecharAviso()">ENTENDIDO</button>
+    </div>
 </div>
 
 <div id="modal-aviso" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
