@@ -179,62 +179,85 @@
 }
 
         async function cadastrar() {
-            const sel = document.getElementById('select-tipo').value;
-            const nome = document.getElementById('nome').value;
-            const tel = document.getElementById('telefone').value;
-            const email = document.getElementById('email').value;
-            const senha = document.getElementById('senha').value;
+    const sel = document.getElementById('select-tipo').value;
+    const nome = document.getElementById('nome').value;
+    const tel = document.getElementById('telefone').value;
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
 
-            if(!nome || !email || !senha || !tel) return alert("Preencha todos os campos!");
+    // Validação básica para todos
+    if(!nome || !email || !senha || !tel) {
+        return alert("Preencha todos os campos obrigatórios!");
+    }
 
-            // AJUSTE AQUI: O tipo agora pode ser 'cliente', 'empresa' ou 'motoboy'
+    // Montagem do objeto de dados
     const bodyData = {
-        tipo: sel, // Isso enviará 'cliente', 'empresa' ou os valores de motoboy
-        categoria: sel === 'moto_taxi' ? 'Passageiro' : (sel === 'entregas' ? 'Entregas' : 'cliente'),
+        tipo: sel, // 'cliente', 'empresa' ou 'motoboy'
         nome, 
         telefone: tel, 
         email, 
         senha
     };
-    // Se for motoboy, o tipo deve ser fixado como 'motoboy' para o servidor entender
-    if (sel === 'moto_taxi' || sel === 'entregas') {
+
+    // --- LÓGICA DE CATEGORIA E DADOS DE MOTO ---
+    if (sel === 'cliente') {
+        bodyData.categoria = 'cliente';
+    } 
+    else if (sel === 'empresa') {
+        bodyData.categoria = 'empresa';
+    } 
+    else {
+        // Se cair aqui, é motoboy (entregas ou moto_taxi)
         bodyData.tipo = 'motoboy';
+        bodyData.categoria = (sel === 'moto_taxi') ? 'Passageiro' : 'Entregas';
+        
+        // Coleta dados da moto
+        bodyData.modelo_moto = document.getElementById('modelo').value;
+        bodyData.cor_moto = document.getElementById('cor').value;
+        bodyData.placa = document.getElementById('placa').value;
+
+        // Só barra o cadastro se for MOTOBOY e não tiver placa
+        if(!bodyData.placa || !bodyData.modelo_moto) {
+            return alert("Para pilotos, os dados da moto são obrigatórios!");
+        }
     }
 
-            if (sel !== 'cliente') {
-                bodyData.modelo_moto = document.getElementById('modelo').value;
-                bodyData.cor_moto = document.getElementById('cor').value;
-                bodyData.placa = document.getElementById('placa').value;
-                if(!bodyData.placa) return alert("Dados da moto obrigatórios!");
+    // Bloqueio do botão para evitar cliques duplos
+    const btn = document.getElementById('btn-acao');
+    btn.innerText = "PROCESSANDO...";
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('https://falcoes-app.onrender.com/cadastro', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyData)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            const msg = document.getElementById('msg-sucesso-texto');
+            
+            if (sel === 'cliente') {
+                msg.innerHTML = "Conta criada! Já pode pedir sua corrida.";
+            } else if (sel === 'empresa') {
+                msg.innerHTML = "Empresa cadastrada! Agora você pode lançar múltiplas entregas.";
+            } else {
+                msg.innerHTML = "Cadastro enviado! Sua conta está <b>em análise</b>. Aguarde nosso contato.";
             }
-
-            const btn = document.getElementById('btn-acao');
-            btn.innerText = "PROCESSANDO...";
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('https://falcoes-app.onrender.com/cadastro', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(bodyData)
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    const msg = document.getElementById('msg-sucesso-texto');
-                    msg.innerHTML = sel === 'cliente' ? "Conta criada! Já pode pedir sua corrida." : "Cadastro enviado! Sua conta está <b>em análise</b>. Aguarde contato.";
-                    document.getElementById('modal-sucesso').style.display = 'flex';
-                } else {
-                    alert("Erro: " + data.message);
-                    btn.innerText = "TENTAR NOVAMENTE";
-                    btn.disabled = false;
-                }
-            } catch (err) {
-                alert("Erro de conexão.");
-                btn.innerText = "TENTAR NOVAMENTE";
-                btn.disabled = false;
-            }
+            
+            document.getElementById('modal-sucesso').style.display = 'flex';
+        } else {
+            alert("Erro: " + data.message);
+            btn.innerText = "TENTAR NOVAMENTE";
+            btn.disabled = false;
         }
+    } catch (err) {
+        alert("Erro de conexão com o servidor.");
+        btn.innerText = "TENTAR NOVAMENTE";
+        btn.disabled = false;
+    }
+}
         if (data.success) {
     const msg = document.getElementById('msg-sucesso-texto');
     
