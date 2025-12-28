@@ -827,8 +827,7 @@
     border: 2px solid #ff4d4d !important;
     background-color: #fff5f5;
 }
-/* Estilo do Sino Flutuante */
-.notification-wrapper {
+.notification-container {
     position: fixed;
     top: 15px;
     right: 15px;
@@ -836,63 +835,43 @@
     cursor: pointer;
 }
 
-.bell-icon {
-    font-size: 22px;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 10px;
-    border-radius: 12px;
+.bell-box {
+    background: rgba(255, 255, 255, 0.1); /* Efeito transparente */
+    backdrop-filter: blur(10px);
+    padding: 12px;
+    border-radius: 15px;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px); /* Efeito de vidro */
-    position: relative;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
 }
 
-.notification-badge {
+.bell-box i {
+    color: #FFD700; /* Dourado metálico */
+    font-size: 24px;
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+}
+
+.badge-red {
     position: absolute;
     top: -5px;
     right: -5px;
-    background: #ff3b30;
-    color: #fff;
+    background: #ff0000;
+    color: white;
     font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 10px;
     font-weight: bold;
+    padding: 2px 7px;
+    border-radius: 50%;
+    border: 2px solid #121212;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
 }
 
-/* Modal Estilo Dark */
-.modal-dark {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    z-index: 10000;
-    display: none; /* Escondido por padrão */
-    align-items: center;
-    justify-content: center;
+/* Efeito de balanço quando o mouse passa ou quando tiver aviso */
+.bell-box:hover {
+    transform: scale(1.1) rotate(10deg);
 }
-
-.modal-content {
-    background: #1a1a1a;
-    padding: 25px;
-    border-radius: 20px;
-    width: 85%;
-    max-width: 320px;
-    text-align: center;
-    border: 1px solid #333;
-}
-
-.btn-entendido {
-    background: #00ff00;
-    color: #000;
-    border: none;
-    padding: 12px;
-    width: 100%;
-    border-radius: 10px;
-    font-weight: bold;
-    margin-top: 20px;
-    cursor: pointer;
-}
-
-
     </style>
    
     <script>
@@ -910,10 +889,12 @@
 </head>
 
 <body>
-    <div class="notification-wrapper" onclick="abrirAviso()">
-    <div class="bell-icon">
-        <i class="fas fa-bell"></i> 
-        <span class="notification-badge" id="badge-contador">1</span>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div class="notification-container" onclick="abrirAviso()">
+    <div class="bell-box">
+        <i class="fas fa-bell"></i>
+        <span class="badge-red">1</span>
     </div>
 </div>
 
