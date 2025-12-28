@@ -1022,7 +1022,9 @@
         <div id="area-estorno-adm" class="area-estorno" style="display:none; margin-bottom: 15px;">
     <div class="titulo-estorno">⚠️ CORRIDA CANCELADA?</div>
     <p class="desc-estorno">Houve um imprevisto.<br>Solicite o reembolso (Taxa: R$ 0,10).</p>
-    <a id="btn-link-estorno" href="#" class="btn-falar-adm">
+    <a id="btn-link-estorno" 
+       href="https://wa.me/5535997806080?text=Olá%20ADM%2C%20preciso%20de%20suporte%20com%20meu%20pedido%20no%20Falcões%20App." 
+       class="btn-falar-adm">
         <i class="fab fa-whatsapp"></i> FALAR COM O ADM
     </a>
 </div>
@@ -1392,26 +1394,17 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
             // --- 4. CONFIGURAÇÃO DO BOTÃO FALAR COM ADM ---
     // Esta função deve ser chamada dentro do verificarStatus ou no carregar da página
     function configurarBotaoAdm() {
+    const areaEstorno = document.getElementById('area-estorno-adm');
     const btnAdm = document.getElementById('btn-link-estorno');
-    if (btnAdm) {
-        const numeroSuporte = "5535997806080"; 
-        const mensagem = encodeURIComponent("Olá ADM, preciso de suporte com meu pedido no Falcões App.");
+    
+    if (areaEstorno) {
+        // Apenas garante que a área apareça
+        areaEstorno.style.display = 'block'; 
         
-        // Link universal
-        btnAdm.href = `https://wa.me/${numeroSuporte}?text=${mensagem}`;
-        
-        // CORREÇÃO AQUI: Remove o target _blank
-        // Isso impede que o PWA tente abrir uma nova janela e "saia" do seu app
-        btnAdm.removeAttribute('target');
-        
-        // Adiciona um comportamento para mobile
-        btnAdm.onclick = function(e) {
-            // Se for mobile, tentamos o protocolo direto do app
-            if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                // Não cancelamos o evento, deixamos o link wa.me agir sem o target
-                console.log("Abrindo WhatsApp no mobile...");
-            }
-        };
+        // Garante que o botão aceite cliques sem abrir novas abas que reiniciam o PWA
+        if (btnAdm) {
+            btnAdm.removeAttribute('target');
+        }
     }
 }
 
