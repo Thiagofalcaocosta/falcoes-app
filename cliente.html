@@ -2176,7 +2176,7 @@ async function cancelarComTaxa() {
     // === INICIALIZAÇÃO COM MEMÓRIA DE TEMPO (COLE NO FINAL DO SCRIPT) ===
 document.addEventListener('DOMContentLoaded', async () => {
     // === CÓDIGO PARA MANTER LOGADO ===
-    const usuarioSalvo = localStorage.getItem('usuario_sessao');
+    const usuarioSalvo = localStorage.getItem('usuario');
     if (usuarioSalvo) {
         window.usuario = JSON.parse(usuarioSalvo); // Restaura os dados do usuário
         if (window.usuario.tipo === 'empresa') {
@@ -2590,7 +2590,7 @@ function usarMeuLocal() {
 
 // 1. FUNÇÃO SAIR CORRIGIDA (Redireciona para o login real)
 function logout() {
-    localStorage.removeItem('usuario_sessao'); // Remove especificamente o login
+    localStorage.removeItem('usuario'); // Remove especificamente o login
     localStorage.removeItem('rascunho_cliente'); // Limpa rascunhos
     window.location.href = 'index.html'; // Volta para a tela de login real
 }
