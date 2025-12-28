@@ -97,6 +97,7 @@
                 <option value="cliente">SOU CLIENTE (PEDIR)</option>
                 <option value="entregas">MOTOBOY - ENTREGAS</option>
                 <option value="moto_taxi">MOTO TÁXI - PASSAGEIRO</option>
+                <option value="empresa">SOU UMA EMPRESA (RESTAURANTES/LOJAS)</option>
             </select>
         </div>
 
@@ -164,12 +165,18 @@
         }
 
         function mudarFormulario() {
-            const sel = document.getElementById('select-tipo').value;
-            const area = document.getElementById('area-motoboy');
-            const btn = document.getElementById('btn-acao');
-            area.style.display = sel === 'cliente' ? 'none' : 'block';
-            btn.innerText = sel === 'cliente' ? "CRIAR CONTA CLIENTE" : "CADASTRAR PILOTO";
-        }
+    const sel = document.getElementById('select-tipo').value;
+    const area = document.getElementById('area-motoboy');
+    const btn = document.getElementById('btn-acao');
+
+    // Esconde a área de motoboy se for cliente OU empresa
+    area.style.display = (sel === 'cliente' || sel === 'empresa') ? 'none' : 'block';
+
+    // Muda o texto do botão
+    if (sel === 'cliente') btn.innerText = "CRIAR CONTA CLIENTE";
+    else if (sel === 'empresa') btn.innerText = "CADASTRAR MINHA EMPRESA";
+    else btn.innerText = "CADASTRAR PILOTO";
+}
 
         async function cadastrar() {
             const sel = document.getElementById('select-tipo').value;

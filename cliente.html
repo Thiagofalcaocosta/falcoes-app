@@ -827,6 +827,11 @@
     border: 2px solid #ff4d4d !important;
     background-color: #fff5f5;
 }
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 204, 0, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(255, 204, 0, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 204, 0, 0); }
+}
 
 
     </style>
@@ -846,6 +851,19 @@
 </head>
 
 <body>
+    <div id="aviso-container" style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+    <button id="btn-alerta" onclick="abrirAviso()" style="background: #ffcc00; border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); animation: pulse 2s infinite;">
+        ⚠️
+    </button>
+</div>
+
+<div id="modal-aviso" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 20px; border-radius: 15px; width: 80%; max-width: 400px; text-align: center; color: #333;">
+        <h3 style="color: #d9534f;">Informativo Falcões</h3>
+        <p id="texto-alerta">Estamos com alta demanda em Três Corações! As corridas podem demorar um pouco mais.</p>
+        <button onclick="fecharAviso()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">Entendido</button>
+    </div>
+</div>
 
     <div class="toast-container" id="toast-container"></div>
 
@@ -2691,6 +2709,13 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 600) { // <--- MUDADO
             encerrarBuscaPorTimeout(idPedido);
         }
     }, 1000);
+}
+function abrirAviso() {
+    document.getElementById('modal-aviso').style.display = 'flex';
+}
+
+function fecharAviso() {
+    document.getElementById('modal-aviso').style.display = 'none';
 }
 
 // 3. Função de Verificação de Status (Que sabe parar o timer acima)
