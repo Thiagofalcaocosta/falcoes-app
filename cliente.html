@@ -1571,7 +1571,7 @@ async function atualizarCentralDePedidos() {
                                 </div>
                             </div>
                             <button onclick="verDetalhesPedido('${id}')" style="background: ${corStatus}; color: black; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer;">
-                                VER MAPA
+                                VER PEDIDO
                             </button>
                         </div>
                         
@@ -1984,9 +1984,14 @@ document.addEventListener('click', (e) => {
 });
     // === ENVIO DE PEDIDO ===
     async function pedir() {
-    if (!servicoSelecionado) { 
-        showToast("Selecione Moto Táxi ou Entrega", "error"); 
-        return; 
+    // Pega os valores brutos primeiro para validar
+    const campoRuaOrigem = document.getElementById('rua-origem').value.trim();
+    const campoRuaDestino = document.getElementById('rua-destino').value.trim();
+
+    // Bloqueio de segurança: se um dos dois estiver vazio, para tudo
+    if (!campoRuaOrigem || !campoRuaDestino) {
+        showToast("⚠️ Por favor, informe a rua de origem e destino!", "error");
+        return;
     }
     
     const ruaOrigemPura = document.getElementById('rua-origem').value.split(',')[0].trim();
@@ -2170,6 +2175,22 @@ async function cancelarComTaxa() {
     // === INICIALIZAÇÃO DE LISTENERS ===
     // === INICIALIZAÇÃO COM MEMÓRIA DE TEMPO (COLE NO FINAL DO SCRIPT) ===
 document.addEventListener('DOMContentLoaded', async () => {
+    // === CÓDIGO PARA MANTER LOGADO ===
+    const usuarioSalvo = localStorage.getItem('usuario_sessao');
+    if (usuarioSalvo) {
+        window.usuario = JSON.parse(usuarioSalvo); // Restaura os dados do usuário
+        if (window.usuario.tipo === 'empresa') {
+            document.getElementById('fluxo-restaurante').style.display = 'block';
+            document.getElementById('fluxo-cliente-comum').style.display = 'none';
+            atualizarCentralDePedidos(); // Carrega a lista automaticamente
+        }
+    } else {
+        // Se não houver sessão e não estiver na index, volta pro login
+        if (!window.location.href.includes('index.html')) {
+            window.location.href = 'index.html';
+        }
+    }
+    // =================================
 
     const idSalvo = localStorage.getItem('idPedidoAtual');
     // --- 🚨 AQUI ESTÁ A CORREÇÃO DO ID #000 ---
@@ -2182,6 +2203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Também garante que a variável global esteja certa
         window.idPedidoAtual = idSalvo;
     }
+    
 
     if (idSalvo) {
         try {
@@ -2568,9 +2590,9 @@ function usarMeuLocal() {
 
 // 1. FUNÇÃO SAIR CORRIGIDA (Redireciona para o login real)
 function logout() {
-    localStorage.clear(); 
-    // Manda o usuário para a tela inicial/login em vez de recarregar a tela atual quebrada
-    window.location.href = 'index.html'; 
+    localStorage.removeItem('usuario_sessao'); // Remove especificamente o login
+    localStorage.removeItem('rascunho_cliente'); // Limpa rascunhos
+    window.location.href = 'index.html'; // Volta para a tela de login real
 }
 
 // 2. FUNÇÃO DO BOTÃO "LIMPAR" (A Lixeira)
