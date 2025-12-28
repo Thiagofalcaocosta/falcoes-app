@@ -1140,8 +1140,9 @@ app.post('/cancelar-pedido', async (req, res) => {
 
 app.get('/admin/pendentes', async (req, res) => {
   try {
+    // MUDANÇA AQUI: Agora ele busca quem é motoboy OU empresa
     const result = await pool.query(
-      "SELECT * FROM usuarios WHERE aprovado = false AND tipo = 'motoboy' ORDER BY id DESC"
+      "SELECT * FROM usuarios WHERE aprovado = false AND (tipo = 'motoboy' OR tipo = 'empresa') ORDER BY id DESC"
     );
     res.json(result.rows);
   } catch (err) {
