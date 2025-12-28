@@ -24,18 +24,15 @@ const port = process.env.PORT || 3000;
 // ==================================================================
 // 🚨 CORREÇÃO URGENTE: ISSO TEM QUE SER A PRIMEIRA COISA (TOPO) 🚨
 // ==================================================================
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.header("Access-Control-Allow-Credentials", "true");
-    
-    // Responde pro navegador imediatamente que pode conectar
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
-});
+// ==================================================================
+// ✅ FORMA CORRETA E LIMPA USANDO O PACOTE 'CORS'
+// ==================================================================
+app.use(cors({
+    origin: '*', // Permite todas as origens (ou use 'https://falcoes.site' para mais segurança)
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
 // 3A. CONFIGURAÇÃO MERCADO PAGO
 const mpAccessToken = process.env.MP_ACCESS_TOKEN_TEST || process.env.MP_ACCESS_TOKEN;
 
