@@ -187,11 +187,19 @@
 
             if(!nome || !email || !senha || !tel) return alert("Preencha todos os campos!");
 
-            const bodyData = {
-                tipo: sel === 'cliente' ? 'cliente' : 'motoboy',
-                categoria: sel === 'moto_taxi' ? 'Passageiro' : (sel === 'entregas' ? 'Entregas' : 'cliente'),
-                nome, telefone: tel, email, senha
-            };
+            // AJUSTE AQUI: O tipo agora pode ser 'cliente', 'empresa' ou 'motoboy'
+    const bodyData = {
+        tipo: sel, // Isso enviará 'cliente', 'empresa' ou os valores de motoboy
+        categoria: sel === 'moto_taxi' ? 'Passageiro' : (sel === 'entregas' ? 'Entregas' : 'cliente'),
+        nome, 
+        telefone: tel, 
+        email, 
+        senha
+    };
+    // Se for motoboy, o tipo deve ser fixado como 'motoboy' para o servidor entender
+    if (sel === 'moto_taxi' || sel === 'entregas') {
+        bodyData.tipo = 'motoboy';
+    }
 
             if (sel !== 'cliente') {
                 bodyData.modelo_moto = document.getElementById('modelo').value;
@@ -227,6 +235,19 @@
                 btn.disabled = false;
             }
         }
+        if (data.success) {
+    const msg = document.getElementById('msg-sucesso-texto');
+    
+    if (sel === 'cliente') {
+        msg.innerHTML = "Conta criada! Já pode pedir sua corrida.";
+    } else if (sel === 'empresa') {
+        msg.innerHTML = "Empresa cadastrada! Agora você pode lançar múltiplas entregas simultâneas.";
+    } else {
+        msg.innerHTML = "Cadastro enviado! Sua conta está <b>em análise</b>. Aguarde contato.";
+    }
+    
+    document.getElementById('modal-sucesso').style.display = 'flex';
+}
     </script>
 </body>
 </html>
