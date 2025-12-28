@@ -1020,12 +1020,12 @@
     <div class="status-header" id="acompanhamento-status-area">
         
         <div id="area-estorno-adm" class="area-estorno" style="display:none; margin-bottom: 15px;">
-            <div class="titulo-estorno">⚠️ CORRIDA CANCELADA?</div>
-            <p class="desc-estorno">Houve um imprevisto.<br>Solicite o reembolso (Taxa: R$ 0,10).</p>
-            <a id="btn-link-estorno" href="#" target="_blank" class="btn-falar-adm">
-                <i class="fab fa-whatsapp"></i> FALAR COM O ADM
-            </a>
-        </div>
+    <div class="titulo-estorno">⚠️ CORRIDA CANCELADA?</div>
+    <p class="desc-estorno">Houve um imprevisto.<br>Solicite o reembolso (Taxa: R$ 0,10).</p>
+    <a id="btn-link-estorno" href="#" class="btn-falar-adm">
+        <i class="fab fa-whatsapp"></i> FALAR COM O ADM
+    </a>
+</div>
 
         <div class="header-top-row">
             <div class="status-info">
@@ -1392,17 +1392,28 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
             // --- 4. CONFIGURAÇÃO DO BOTÃO FALAR COM ADM ---
     // Esta função deve ser chamada dentro do verificarStatus ou no carregar da página
     function configurarBotaoAdm() {
-        const btnAdm = document.getElementById('btn-link-estorno');
-        if (btnAdm) {
-            // AJUSTE O NÚMERO ABAIXO PARA O SEU WHATSAPP DE SUPORTE
-            const numeroSuporte = "5535997806080"; 
-            const mensagem = encodeURIComponent("Olá ADM, preciso de suporte com meu pedido no Falcões App.");
-            btnAdm.href = `https://wa.me/${numeroSuporte}?text=${mensagem}`;
-            
-            // Garante que abra em nova aba/app externo
-            btnAdm.setAttribute('target', '_blank');
-        }
+    const btnAdm = document.getElementById('btn-link-estorno');
+    if (btnAdm) {
+        const numeroSuporte = "5535997806080"; 
+        const mensagem = encodeURIComponent("Olá ADM, preciso de suporte com meu pedido no Falcões App.");
+        
+        // Link universal
+        btnAdm.href = `https://wa.me/${numeroSuporte}?text=${mensagem}`;
+        
+        // CORREÇÃO AQUI: Remove o target _blank
+        // Isso impede que o PWA tente abrir uma nova janela e "saia" do seu app
+        btnAdm.removeAttribute('target');
+        
+        // Adiciona um comportamento para mobile
+        btnAdm.onclick = function(e) {
+            // Se for mobile, tentamos o protocolo direto do app
+            if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                // Não cancelamos o evento, deixamos o link wa.me agir sem o target
+                console.log("Abrindo WhatsApp no mobile...");
+            }
+        };
     }
+}
 
     // Chame a configuração do ADM ao carregar a página
     document.addEventListener('DOMContentLoaded', () => {
