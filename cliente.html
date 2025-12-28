@@ -1016,6 +1016,7 @@
         </div>
 
        <div id="tela-acompanhamento" class="tela">
+        <div id="fluxo-cliente-comum">
 
     <div class="status-header" id="acompanhamento-status-area">
         
@@ -1122,6 +1123,16 @@
         <textarea id="campo-justificativa-integrada" placeholder="Digite o motivo..." rows="3"></textarea>
         <div id="erro-just-integrada" class="error-msg">Mínimo 5 caracteres.</div>
         <button id="btn-confirmar-cancelamento" class="btn-danger-full" disabled>CONFIRMAR</button>
+    </div>
+    </div> <div id="fluxo-restaurante" style="display: none; padding: 10px;">
+        <h2 style="color: var(--neon-green); text-align: left; margin-bottom: 20px;">CENTRAL DE ENTREGAS</h2>
+        
+        <div id="lista-pedidos-ativos" style="display: flex; flex-direction: column; gap: 15px;">
+            </div>
+        
+        <button onclick="mudarTela('tela-pedido')" class="btn-novo-pedido-neon" style="width: 100%; margin-top: 25px;">
+            + LANÇAR NOVO PEDIDO
+        </button>
     </div>
 </div>
 
@@ -1382,47 +1393,130 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
     
     // === FUNÇÃO PRINCIPAL DE PERSISTÊNCIA (Ao recarregar a página) ===
     function checkPersistedOrder() {
+    const usuarioLogado = JSON.parse(localStorage.getItem("usuario"));
+    const ehEmpresa = usuarioLogado && usuarioLogado.tipo === 'empresa';
+
+    // 1. Se for EMPRESA, lida com múltiplos pedidos
+    if (ehEmpresa) {
+        const pedidosAtivos = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
+        
+        if (pedidosAtivos.length > 0) {
+            mudarTela('tela-acompanhamento');
+            inicializarVisualAcompanhamento(); // Mostra o fluxo-restaurante
+            atualizarCentralDePedidos(); // Chama a função que cria a lista (vamos criar ela a seguir)
+            
+            // Inicia o "espião" para atualizar a lista a cada 5 segundos
+            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+            intervaloVerificacao = setInterval(() => atualizarCentralDePedidos(), 5000);
+        } else {
+            mudarTela('tela-pedido');
+        }
+    } 
+    // 2. Se for CLIENTE comum, segue a lógica original de um pedido só
+    else {
         const persistedId = localStorage.getItem('idPedidoAtual');
         if (persistedId) {
             idPedidoAtual = persistedId;
-            
-            // 1. Preenche os detalhes (chama a função auxiliar)
             preencherDetalhesAcompanhamento();
-            
-            // 2. MUDAR PARA A TELA DE ACOMPANHAMENTO (Isto resolve a sobreposição!)
             mudarTela('tela-acompanhamento');
-            // --- 4. CONFIGURAÇÃO DO BOTÃO FALAR COM ADM ---
-    // Esta função deve ser chamada dentro do verificarStatus ou no carregar da página
-    function configurarBotaoAdm() {
-    const areaEstorno = document.getElementById('area-estorno-adm');
-    const btnAdm = document.getElementById('btn-link-estorno');
-    
-    if (areaEstorno) {
-        // Apenas garante que a área apareça
-        areaEstorno.style.display = 'block'; 
-        
-        // Garante que o botão aceite cliques sem abrir novas abas que reiniciam o PWA
-        if (btnAdm) {
-            btnAdm.removeAttribute('target');
+            inicializarVisualAcompanhamento(); // Garante que mostre o fluxo-cliente-comum
+            
+            verificarStatus(idPedidoAtual);
+            if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
+            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+        } else {
+            mudarTela('tela-pedido');
         }
     }
 }
 
-    // Chame a configuração do ADM ao carregar a página
-    document.addEventListener('DOMContentLoaded', () => {
-        configurarBotaoAdm();
-    });
+// --- FUNÇÃO AUXILIAR PARA TROCAR O VISUAL ---
+function inicializarVisualAcompanhamento() {
+    const usuarioLogado = JSON.parse(localStorage.getItem("usuario"));
+    const fluxoComum = document.getElementById('fluxo-cliente-comum');
+    const fluxoEmpresa = document.getElementById('fluxo-restaurante');
 
-            // 3. Iniciar a verificação de status (Polling)
-            verificarStatus(idPedidoAtual);
+    if (usuarioLogado && usuarioLogado.tipo === 'empresa') {
+        if(fluxoComum) fluxoComum.style.display = 'none';
+        if(fluxoEmpresa) fluxoEmpresa.style.display = 'block';
+    } else {
+        if(fluxoComum) fluxoComum.style.display = 'block';
+        if(fluxoEmpresa) fluxoEmpresa.style.display = 'none';
+    }
+}
+async function atualizarCentralDePedidos() {
+    const container = document.getElementById('lista-pedidos-ativos');
+    const listaIds = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
+
+    if (!container) return;
+
+    if (listaIds.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: #666;">
+                <i class="fas fa-box-open" style="font-size: 40px; margin-bottom: 10px; display: block;"></i>
+                <p>Nenhuma entrega ativa no momento.</p>
+            </div>`;
+        return;
+    }
+
+    // Criamos uma variável para acumular o HTML e não ficar "piscando" a tela
+    let htmlFinal = "";
+
+    // Fazemos um loop por cada ID salvo
+    for (const id of listaIds) {
+        try {
+            const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+            const data = await res.json();
             
-            if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
-            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-        } else {
-            // Se não houver pedido, garante que a tela inicial esteja ativa
-            mudarTela('tela-pedido');
+            if (data.success && data.pedido) {
+                const p = data.pedido;
+
+                // Define a cor baseada no status (Azul, Verde, Dourado ou Vermelho)
+                let corStatus = "#00ffff"; // Buscando
+                let icone = "🔍";
+                
+                if (p.status === 'liberada' || p.status === 'em_andamento') {
+                    corStatus = "#00e640"; 
+                    icone = "🏍️";
+                } else if (p.status === 'concluida') {
+                    corStatus = "#ffd700";
+                    icone = "✅";
+                } else if (p.status === 'cancelada') {
+                    corStatus = "#ff4444";
+                    icone = "❌";
+                }
+
+                htmlFinal += `
+                    <div class="info-card" style="border-left: 4px solid ${corStatus}; margin-bottom: 10px; position: relative;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <span style="font-size: 11px; color: #888; font-weight: bold;">PEDIDO #${id}</span>
+                                <div style="color: ${corStatus}; font-size: 13px; font-weight: 800; margin-top: 2px;">
+                                    ${icone} ${p.status.toUpperCase()}
+                                </div>
+                            </div>
+                            <button onclick="verDetalhesPedido('${id}')" style="background: ${corStatus}; color: black; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer;">
+                                VER MAPA
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top: 10px; font-size: 13px; color: #eee; border-top: 1px solid #333; padding-top: 8px;">
+                            <strong>Para:</strong> ${p.destino.split(',')[0]}
+                        </div>
+                        
+                        <div style="font-size: 12px; color: #aaa; margin-top: 4px;">
+                            <strong>Piloto:</strong> ${p.nome_motoboy || 'Procurando...'}
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (err) {
+            console.error("Erro ao buscar pedido " + id, err);
         }
     }
+
+    container.innerHTML = htmlFinal;
+}
 
 
     // === FUNÇÕES MAPA E CÁLCULO ===
@@ -1820,63 +1914,24 @@ document.addEventListener('click', (e) => {
         return; 
     }
     
-    // Limpeza dos dados
     const ruaOrigemPura = document.getElementById('rua-origem').value.split(',')[0].trim();
     const ruaDestinoPura = document.getElementById('rua-destino').value.split(',')[0].trim();
-    
     const numOrigem = document.getElementById('num-origem').value.trim();
     const bairroOrigem = document.getElementById('bairro-origem').value.trim();
-    
     const numDestino = document.getElementById('num-destino').value.trim();
     const bairroDestino = document.getElementById('bairro-destino').value.trim();
-    const detalhes = document.getElementById('detalhes-entrega').value.trim(); // Adicionado .trim()
+    const detalhes = document.getElementById('detalhes-entrega').value.trim();
 
-    let erro = false;
-
-    // --- VALIDAÇÃO DE ORIGEM ---
-    if (!numOrigem) { 
-        document.getElementById('num-origem').classList.add('erro'); 
-        erro = true; 
-    }
-    if (!bairroOrigem) { 
-        document.getElementById('bairro-origem').classList.add('erro'); 
-        erro = true; 
+    if (!numOrigem || !bairroOrigem || !numDestino || !bairroDestino || (servicoSelecionado === 'entrega' && !detalhes)) {
+        showToast("⚠️ Preencha todos os campos obrigatórios!", "error");
+        return;
     }
 
-    // --- VALIDAÇÃO DE DESTINO ---
-    if (!numDestino) { 
-        document.getElementById('num-destino').classList.add('erro'); 
-        erro = true; 
-    }
-    if (!bairroDestino) { 
-        document.getElementById('bairro-destino').classList.add('erro'); 
-        erro = true; 
-    }
-
-    // --- NOVA VALIDAÇÃO: OBRIGATÓRIO PARA ENTREGA ---
-    if (servicoSelecionado === 'entrega' && !detalhes) {
-        document.getElementById('detalhes-entrega').classList.add('erro');
-        showToast("⚠️ Descreva o que vamos levar!", "error");
-        document.getElementById('detalhes-entrega').focus();
-        return; // Para a execução aqui
-    }
-    
-    if (erro) { 
-        showToast("⚠️ Preencha NÚMERO e BAIRRO corretamente!", "error"); 
-        return; 
-    }
-
-    // --- SE PASSOU, MONTA O ENDEREÇO ---
     const strOrigem = `${ruaOrigemPura}, Nº ${numOrigem}, ${bairroOrigem}`;
     const strDestino = `${ruaDestinoPura}, Nº ${numDestino}, ${bairroDestino}`;
-    
-    const strDestinoFinal = servicoSelecionado === 'entrega'
-        ? `${strDestino} (ITEM: ${detalhes})`
-        : strDestino;
+    const strDestinoFinal = servicoSelecionado === 'entrega' ? `${strDestino} (ITEM: ${detalhes})` : strDestino;
     
     document.getElementById('modal-busca').style.display = 'flex';
-    document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
-    document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
 
     try {
         const body = {
@@ -1895,50 +1950,81 @@ document.addEventListener('click', (e) => {
         const json = await res.json();
 
         if (json.success) {
-            idPedidoAtual = json.id;
-            
-            // SALVA DADOS COMPLETOS PARA POSSÍVEL REUSO
+            const idNovo = json.id;
+            idPedidoAtual = idNovo;
+
+            // 1. Salva na lista de múltiplos (Para Empresas)
+            let pedidosAtivos = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
+            if (!pedidosAtivos.includes(idNovo)) {
+                pedidosAtivos.push(idNovo);
+                localStorage.setItem('meus_pedidos_ativos', JSON.stringify(pedidosAtivos));
+            }
+
+            // 2. Salva dados para persistência
             const dadosParaSalvar = {
                 origem: strOrigem,
                 destino: strDestino,
                 valor: window.valorCalculado || 10.0,
-                tipo_servico: servicoSelecionado,
-                detalhes: servicoSelecionado === 'entrega' ? detalhes : null,
-                campos: {
-                    ruaOrigem: document.getElementById('rua-origem').value,
-                    numOrigem: numOrigem,
-                    bairroOrigem: bairroOrigem,
-                    ruaDestino: document.getElementById('rua-destino').value,
-                    numDestino: numDestino,
-                    bairroDestino: bairroDestino,
-                    detalhesEntrega: servicoSelecionado === 'entrega' ? detalhes : ''
-                }
+                tipo_servico: servicoSelecionado
             };
-            
-            localStorage.setItem('idPedidoAtual', idPedidoAtual);
-            localStorage.setItem('inicioBuscaTimestamp', Date.now());
             localStorage.setItem('pedidoAtual', JSON.stringify(dadosParaSalvar));
-            
-            // Preenche a tela de acompanhamento
-            preencherDetalhesAcompanhamento();
-            
-            // Troca para a tela de Acompanhamento
-            mudarTela('tela-acompanhamento');
+            localStorage.setItem('idPedidoAtual', idNovo);
+            localStorage.setItem('inicioBuscaTimestamp', Date.now());
+
+            // 3. Decide qual fluxo mostrar baseado no tipo do usuário
+            if (usuario && usuario.tipo === 'empresa') {
+                mudarTela('tela-acompanhamento');
+                inicializarVisualAcompanhamento(); 
+                atualizarCentralDePedidos();
+            } else {
+                preencherDetalhesAcompanhamento();
+                mudarTela('tela-acompanhamento');
+                inicializarVisualAcompanhamento();
+                iniciarContadorBusca(idNovo, 600);
+            }
+
             document.getElementById('modal-busca').style.display = 'none';
-            
-            // Inicia contador e verificação
-            iniciarContadorBusca(idPedidoAtual, 600);
-            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-            
-            showToast("Solicitação enviada. Buscando piloto...", "info");
+            showToast("Solicitação enviada!", "success");
+            limparRascunho(); // Limpa o formulário para o próximo pedido
 
         } else {
-            throw new Error(json.message);
+            throw new Error(json.message || "Erro ao processar");
         }
     } catch (e) {
         document.getElementById('modal-busca').style.display = 'none';
-        showToast("Erro ao enviar pedido: " + e.message, "error");
+        showToast("Erro: " + e.message, "error");
     }
+}
+function verDetalhesPedido(id) {
+    // 1. Define este ID como o principal temporariamente
+    idPedidoAtual = id;
+    localStorage.setItem('idPedidoAtual', id);
+    
+    // 2. Esconde a lista da empresa e mostra o acompanhamento comum
+    document.getElementById('fluxo-restaurante').style.display = 'none';
+    document.getElementById('fluxo-cliente-comum').style.display = 'block';
+    
+    // 3. Adiciona um botão de "VOLTAR" caso ele não exista
+    let btnVoltar = document.getElementById('btn-voltar-lista');
+    if (!btnVoltar) {
+        const areaStatus = document.getElementById('acompanhamento-status-area');
+        areaStatus.insertAdjacentHTML('afterbegin', `
+            <button id="btn-voltar-lista" onclick="voltarParaListaEmpresa()" 
+                style="width:100%; margin-bottom:15px; background:#333; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">
+                ⬅️ VOLTAR PARA A LISTA
+            </button>
+        `);
+    }
+
+    // 4. Inicia o monitoramento desse pedido específico
+    preencherDetalhesAcompanhamento();
+    verificarStatus(id);
+}
+
+function voltarParaListaEmpresa() {
+    document.getElementById('fluxo-restaurante').style.display = 'block';
+    document.getElementById('fluxo-cliente-comum').style.display = 'none';
+    atualizarCentralDePedidos();
 }
 
     // === SUBSTITUA SÓ A FUNÇÃO cancelarComTaxa POR ESTA ===
@@ -2809,5 +2895,37 @@ async function enviarCancelamentoComJustificativa() {
     } catch (e) {
         alert("Erro de conexão.");
     }
+}
+function verDetalhesPedido(id) {
+    // 1. Define este ID como o foco atual
+    window.idPedidoAtual = id;
+    
+    // 2. Esconde a lista e mostra o mapa
+    document.getElementById('fluxo-restaurante').style.display = 'none';
+    document.getElementById('fluxo-cliente-comum').style.display = 'block';
+    
+    // 3. Cria o botão de voltar para a lista se não existir
+    if (!document.getElementById('btn-voltar-lista')) {
+        const areaHeader = document.getElementById('acompanhamento-status-area');
+        areaHeader.insertAdjacentHTML('afterbegin', `
+            <button id="btn-voltar-lista" onclick="voltarParaListaEmpresa()" 
+                style="width:100%; margin-bottom:15px; background:#333; color:white; border:1px solid var(--neon-green); padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">
+                ⬅️ VOLTAR PARA A CENTRAL
+            </button>
+        `);
+    }
+
+    // 4. Carrega os dados específicos deste pedido no mapa
+    // Nota: Como é um pedido antigo, os dados de endereço precisam ser buscados do servidor ou salvos em um objeto maior.
+    // Para simplificar, o verificarStatus já vai preencher o motorista e o status no mapa.
+    verificarStatus(id);
+}
+
+function voltarParaListaEmpresa() {
+    document.getElementById('fluxo-restaurante').style.display = 'block';
+    document.getElementById('fluxo-cliente-comum').style.display = 'none';
+    const btn = document.getElementById('btn-voltar-lista');
+    if (btn) btn.remove();
+    atualizarCentralDePedidos();
 }
 </script>
