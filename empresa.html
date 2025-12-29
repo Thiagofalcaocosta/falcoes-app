@@ -123,61 +123,99 @@
     </div>
 
     <script>
-        const MEU_IP = 'https://falcoes-app.onrender.com'; // SEU BACKEND
+        const MEU_IP = 'https://falcoes-app.onrender.com';
 
-        function logout() {
-            localStorage.removeItem('usuario');
-            window.location.href = 'index.html';
-        }
+async function carregarPedidosEmpresa() {
+    const container = document.getElementById('central-lista');
+    const listaIds = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
 
-        function irParaNovoPedido() {
-            // Salva um sinalizador para o cliente.html saber que deve abrir limpo
-            localStorage.setItem('origem_empresa', 'true');
-            window.location.href = 'cliente.html';
-        }
+    if (listaIds.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Nenhum pedido ativo.</p>';
+        return;
+    }
 
-        async function carregarPedidosEmpresa() {
-            const container = document.getElementById('central-lista');
-            // Busca a lista de IDs que esta empresa criou
-            const listaIds = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
+    try {
+        let pedidosDetalhados = [];
 
-            if (listaIds.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Nenhum pedido ativo.</p>';
-                return;
+        // 1. Busca todos os pedidos em paralelo para ser mais rápido
+        const promessas = listaIds.map(id => fetch(`${MEU_IP}/status-pedido/${id}`).then(res => res.json()));
+        const resultados = await Promise.all(promessas);
+
+        resultados.forEach(data => {
+            if (data.success && data.pedido) {
+                pedidosDetalhados.push(data.pedido);
             }
+        });
 
-            let html = "";
+        // 2. Lógica de Ordenação:
+        // Prioridade: 1º Pendente (Buscando), 2º Em Andamento/Liberada, 3º Finalizada/Cancelada
+        const ordemStatus = {
+            'pendente': 1,
+            'aceita': 2,
+            'aguardando_pagamento': 2,
+            'liberada': 3,
+            'em_andamento': 4,
+            'concluida': 5,
+            'cancelada': 6
+        };
+
+        pedidosDetalhados.sort((a, b) => (ordemStatus[a.status] || 99) - (ordemStatus[b.status] || 99));
+
+        // 3. Gerar o HTML com os destaques solicitados
+        let html = "";
+        pedidosDetalhados.forEach(p => {
+            const classeStatus = `status-${p.status}`;
             
-            // Loop para buscar detalhes de cada pedido no servidor
-            for (const id of listaIds) {
-                try {
-                    const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
-                    const data = await res.json();
-                    
-                    if (data.success && data.pedido) {
-                        const p = data.pedido;
-                        const classeStatus = `status-${p.status}`;
-                        
-                        html += `
-                            <div class="pedido-card ${classeStatus}">
-                                <span class="status-badge">${p.status}</span>
-                                <div class="info-linha"><strong>#${id}</strong></div>
-                                <div class="info-linha"><i class="fas fa-map-marker-alt"></i> ${p.destino.split(',')[0]}</div>
-                                <div class="info-linha"><i class="fas fa-motorcycle"></i> Piloto: ${p.nome_motoboy || 'Buscando...'}</div>
-                                <div class="info-linha"><strong>R$ ${parseFloat(p.valor).toFixed(2)}</strong></div>
-                                <button class="btn-ver" onclick="detalharPedido('${id}')">ACOMPANHAR NO MAPA</button>
-                            </div>
-                        `;
-                    }
-                } catch (err) { console.error("Erro no pedido "+id, err); }
-            }
-            container.innerHTML = html;
-        }
+            // Verifica se o pagamento foi confirmado
+            const statusPagamento = p.pago ? 
+                '<span style="color: #00e640;"><i class="fas fa-check-circle"></i> PAGO</span>' : 
+                '<span style="color: #ffcc00;"><i class="fas fa-clock"></i> PENDENTE</span>';
 
-        function detalharPedido(id) {
-            localStorage.setItem('idPedidoAtual', id);
-            window.location.href = 'cliente.html'; // O cliente.html já tem o mapa pronto
-        }
+            html += `
+                <div class="pedido-card ${classeStatus}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-size: 22px; font-weight: 900; color: #fff;">#${p.id}</span>
+                        <span class="status-badge">${p.status.replace('_', ' ')}</span>
+                    </div>
+                    
+                    <div class="info-linha">
+                        <i class="fas fa-map-marker-alt"></i> <strong>Para:</strong> ${p.destino.split(',')[0]}
+                    </div>
+                    
+                    <div class="info-linha">
+                        <i class="fas fa-wallet"></i> <strong>Pagamento:</strong> ${statusPagamento}
+                    </div>
+
+                    <div class="info-linha">
+                        <i class="fas fa-motorcycle"></i> <strong>Piloto:</strong> ${p.nome_motoboy || 'Procurando...'}
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #333; pt-10">
+                        <span style="font-weight: bold; font-size: 16px;">R$ ${parseFloat(p.valor).toFixed(2).replace('.',',')}</span>
+                        <button class="btn-ver" style="width: auto; padding: 8px 15px;" onclick="detalharPedido('${p.id}')">VER MAPA</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+
+    } catch (err) {
+        console.error("Erro ao carregar central:", err);
+    }
+}
+
+// Funções de apoio
+function detalharPedido(id) {
+    localStorage.setItem('idPedidoAtual', id);
+    localStorage.setItem('origem_empresa', 'true'); // Garante o botão de voltar
+    window.location.href = 'cliente.html';
+}
+
+function logout() {
+    localStorage.removeItem('usuario');
+    window.location.href = 'index.html';
+}
 
         // Atualiza a cada 10 segundos
         setInterval(carregarPedidosEmpresa, 10000);
