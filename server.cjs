@@ -1611,3 +1611,30 @@ app.listen(port, () => {
   console.log(`💰 Mercado Pago: ${process.env.MP_ACCESS_TOKEN ? 'Configurado' : 'Modo TESTE'}`);
   console.log('='.repeat(50));
 });
+
+// Rota para o motoboy avisar que coletou o pedido e saiu para entrega
+app.post('/iniciar-corrida', async (req, res) => {
+    const { corrida_id, motoboy_id } = req.body;
+
+    if (!corrida_id || !motoboy_id) {
+        return res.status(400).json({ success: false, message: 'Dados incompletos' });
+    }
+
+    try {
+        // Atualiza o status para 'em_andamento'
+        const result = await pool.query(
+            "UPDATE corridas SET status = 'em_andamento' WHERE id = $1 AND motoboy_id = $2 AND status = 'liberada' RETURNING id",
+            [corrida_id, motoboy_id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ success: false, message: 'Corrida não encontrada ou já iniciada' });
+        }
+
+        console.log(`▶️ Corrida ${corrida_id} marcada como EM ANDAMENTO pelo motoboy ${motoboy_id}`);
+        res.json({ success: true, message: 'Entrega iniciada!' });
+    } catch (err) {
+        console.error('Erro ao iniciar corrida:', err);
+        res.status(500).json({ success: false, message: 'Erro no servidor' });
+    }
+});

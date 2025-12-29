@@ -910,36 +910,44 @@ function abrirConversaZap() {
 
     // --- SUBSTITUA A FUNÇÃO tocarAlerta ANTIGA POR ESTA ---
 // Variável para controlar o loop da vibração
+// Variável para controlar o loop da vibração
 let loopVibracao = null;
 
 function tocarAlerta() {
-    // 1. O SOM (Colocamos em Loop nativo do HTML)
     const audio = document.getElementById('som-alerta');
     if (audio) {
-        audio.loop = true; // <--- MÁGICA: O som repete sozinho
+        audio.loop = true; 
         audio.currentTime = 0;
         audio.play().catch(e => console.warn("Som precisa de interação prévia"));
     }
 
-    // 2. A VIBRAÇÃO (Precisamos forçar o Loop com setInterval)
     if ("vibrate" in navigator) {
-        // Padrão: Vibra 1s, Para 1s
         const padrao = [1000, 1000]; 
-        
-        // Vibra a primeira vez imediatamente
         navigator.vibrate(padrao);
-
-        // Limpa anterior se existir para não acumular
         if (loopVibracao) clearInterval(loopVibracao);
-
-        // Repete a vibração a cada 2 segundos (1s vibrando + 1s pausa)
         loopVibracao = setInterval(() => {
             navigator.vibrate(padrao);
-            console.log("📳 Vibrando...");
         }, 2000); 
     }
 }
 
+// ESTA FUNÇÃO É ESSENCIAL PARA PARAR O BARULHO
+function pararAlerta() {
+    const audio = document.getElementById('som-alerta');
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.loop = false;
+    }
+
+    if (loopVibracao) {
+        clearInterval(loopVibracao);
+        loopVibracao = null;
+    }
+    if ("vibrate" in navigator) {
+        navigator.vibrate(0);
+    }
+}
     async function carregarSaldoMotoboy() {
     try {
         const res = await fetch(`${MEU_IP}/admin/motoboys`);
@@ -1068,90 +1076,66 @@ function mostrarTela(idDesejado) {
 function renderizarBotoesAtiva(status) {
     const container = document.getElementById('botoes-acao-ativa');
     if (!container) return;
-
-    // --- MUDANÇA: Troquei o ID para forçar a atualização ---
-    // Se ele achar o campo NOVO, ele para. Se achar o VELHO, ele ignora e recria.
-    if (document.getElementById('input-codigo-pedido-v2')) {
-        return; 
-    }
     
-    // Limpa qualquer coisa que esteja lá (inclusive o antigo)
+    // Limpa o que tem dentro para reconstruir de acordo com o momento da corrida
     container.innerHTML = ''; 
 
-    if (status === 'liberada' || status === 'em_andamento') {
+    // --- MOMENTO 1: O MOTOBOY ACEITOU MAS AINDA NÃO COLETOU ---
+    if (status === 'liberada') {
+        const btnColetar = document.createElement('button');
+        btnColetar.className = 'btn-acao btn-verde';
+        btnColetar.innerHTML = '🚚 COLETEI O PEDIDO (SAIR)';
+        btnColetar.style.cssText = "width: 100%; padding: 20px; font-size: 18px; background: #00e640; color: #000; border-radius: 12px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 0 20px rgba(0, 230, 64, 0.4);";
         
-        // 1. CONTAINER (Centralizado e menor)
-        const divSenha = document.createElement('div');
-        divSenha.style.cssText = `
-            background: rgba(255, 255, 255, 0.05); 
-            padding: 10px; 
-            border-radius: 12px; 
-            border: 1px solid #444; 
-            text-align: center; 
-            margin: 0 auto 15px auto; 
-            width: 75%; 
-            max-width: 200px; /* Largura bem controlada */
-        `;
-        
-        const stylePlaceholder = document.createElement('style');
-        stylePlaceholder.innerHTML = `
-            .input-pin-style::placeholder { color: #00e640 !important; opacity: 0.3; }
-            .input-pin-style { color: #00e640 !important; caret-color: #00e640 !important; }
-        `;
-        container.appendChild(stylePlaceholder);
+        btnColetar.onclick = async () => {
+            if(confirm("Confirmar que coletou o pedido e está saindo para entrega?")) {
+                try {
+                    const res = await fetch(`${MEU_IP}/iniciar-corrida`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            corrida_id: idCorridaAtual, 
+                            motoboy_id: usuario.id 
+                        })
+                    });
+                    const data = await res.json();
+                    if(data.success) {
+                        verificarEstado(); // Atualiza a tela para mostrar o campo de PIN
+                    }
+                } catch (err) {
+                    alert("Erro ao avisar saída. Verifique sua internet.");
+                }
+            }
+        };
+        container.appendChild(btnColetar);
+    } 
 
-        // 2. INPUT E LABEL (Texto corrigido)
-        divSenha.innerHTML += `
-            <label style="color: #bbb; font-size: 10px; font-weight: bold; display: block; margin-bottom: 5px; text-transform: uppercase;">
-                CÓDIGO DO PEDIDO
-            </label>
-            
-            <input type="tel" 
-                   id="input-codigo-pedido-v2" 
-                   class="input-pin-style"
-                   maxlength="4" 
-                   placeholder="• • • •" 
-                   inputmode="numeric" 
-                   pattern="[0-9]*"
-                   autocomplete="off"
-                   style="
-                      display: block; width: 100%; box-sizing: border-box;
-                      background-color: transparent !important; 
-                      border: none; border-bottom: 2px solid #555;
-                      font-size: 24px; font-weight: bold; letter-spacing: 8px; text-align: center;
-                      padding: 5px 0; margin: 0; outline: none; height: 35px; color: white;
-                   ">
+    // --- MOMENTO 2: JÁ COLETOU E ESTÁ NA RUA (MOSTRA O PIN) ---
+    else if (status === 'em_andamento') {
+        const divSenha = document.createElement('div');
+        divSenha.style.cssText = "background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 12px; border: 1px solid #444; text-align: center; margin: 0 auto 15px auto; width: 85%;";
+        
+        divSenha.innerHTML = `
+            <label style="color: #00e640; font-size: 11px; font-weight: bold; display: block; margin-bottom: 5px; text-transform: uppercase;">CÓDIGO DE ENTREGA</label>
+            <input type="tel" id="input-codigo-pedido-v2" maxlength="4" placeholder="••••" 
+                   style="background: transparent; border: none; border-bottom: 2px solid #00e640; color: white; font-size: 30px; text-align: center; width: 100%; outline: none; letter-spacing: 10px;">
         `;
         container.appendChild(divSenha);
 
-        // 3. BOTÃO FINALIZAR (Mantido)
         const btnFinalizar = document.createElement('button');
         btnFinalizar.className = 'btn-acao btn-verde';
-        btnFinalizar.innerHTML = '✅ FINALIZAR CORRIDA';
-        btnFinalizar.setAttribute('onclick', 'finalizarCorrida()'); // Essa função precisa pegar o ID novo
-        btnFinalizar.style.width = "100%";
-        btnFinalizar.style.padding = "15px";
-        btnFinalizar.style.marginBottom = "10px";
+        btnFinalizar.innerHTML = '✅ FINALIZAR ENTREGA';
+        btnFinalizar.onclick = () => finalizarCorrida();
+        btnFinalizar.style.cssText = "width: 100%; padding: 15px; background: #00e640; color: #000; border-radius: 10px; font-weight: 900; border: none; margin-top: 10px;";
         container.appendChild(btnFinalizar);
-
-        // 4. BOTÃO CANCELAR (Vermelho e Funcional)
-        const btnCancelar = document.createElement('button');
-        btnCancelar.innerText = 'CANCELAR CORRIDA';
-        btnCancelar.setAttribute('onclick', 'cancelarCorridaMotoboy()');
-        btnCancelar.style.cssText = `
-            background-color: #ff4444; 
-            color: white;
-            border: none;
-            padding: 12px; 
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 13px;
-            cursor: pointer;
-            width: 100%;
-            text-transform: uppercase;
-        `;
-        container.appendChild(btnCancelar); 
     }
+
+    // --- BOTÃO CANCELAR (SEMPRE APARECE COMO OPÇÃO) ---
+    const btnCancelar = document.createElement('button');
+    btnCancelar.innerText = 'CANCELAR CORRIDA';
+    btnCancelar.onclick = () => cancelarCorridaMotoboy();
+    btnCancelar.style.cssText = "background: transparent; color: #ff4444; border: 1px solid #ff4444; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; width: 100%; margin-top: 20px; text-transform: uppercase;";
+    container.appendChild(btnCancelar);
 }
 
 
