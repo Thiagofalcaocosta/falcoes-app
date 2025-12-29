@@ -1284,31 +1284,38 @@ function preencherDadosAtiva(c) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ motoboy_id: usuario.id })
         });
-        const dadosLista = await resLista.json();
+        // ... (código anterior do fetch permanece igual)
+const dadosLista = await resLista.json();
 
-        if (dadosLista.success === false && dadosLista.bloqueado) {
-            limparContadores();
-            limparMonitoramento();
-            mostrarTela('bloqueio');
-            document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
-            
-        } else if (dadosLista.success === false && dadosLista.offline) {
-            document.getElementById('lista-corridas').innerHTML =
-                '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE</div>';
-            mostrarTela('lista');
+if (dadosLista.success === false && dadosLista.bloqueado) {
+    limparContadores();
+    limparMonitoramento();
+    mostrarTela('bloqueio');
+    document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
+    
+} else if (dadosLista.success === false && dadosLista.offline) {
+    document.getElementById('lista-corridas').innerHTML =
+        '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE</div>';
+    mostrarTela('lista');
 
-        } else {
-            mostrarTela('lista');
-            let corrida = dadosLista.corrida || null;
+} else {
+    mostrarTela('lista');
+    
+    // --- CORREÇÃO AQUI: Lendo a lista 'corridas' que o servidor envia ---
+    let corrida = null;
+    if (dadosLista.corridas && dadosLista.corridas.length > 0) {
+        corrida = dadosLista.corridas[0]; // Pega a primeira da fila (iFood Style)
+    }
 
-            if (corridaSendoExibida && corrida && corridaSendoExibida.corrida_id !== corrida.corrida_id) {
-                corridaSendoExibida = null;
-            } else if (!corrida && corridaSendoExibida) {
-                corridaSendoExibida = null;
-            }
-            
-            renderizarLista(corrida);
-        }
+    if (corridaSendoExibida && corrida && corridaSendoExibida.corrida_id !== corrida.corrida_id) {
+        corridaSendoExibida = null;
+    } else if (!corrida && corridaSendoExibida) {
+        corridaSendoExibida = null;
+    }
+    
+    renderizarLista(corrida);
+}
+        
         
         if (!estadoVerificacaoInterval && !temCorridaAtiva) {
             estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
@@ -1751,44 +1758,37 @@ window.cancelarCorridaMotoboy = function() {
 // Substitua a função inteira 'window.confirmarCancelamentoMotoboy' por esta:
 
 window.confirmarCancelamentoMotoboy = async function() {
+    // 1. ESSA FUNÇÃO PARA O BARULHO E VIBRAÇÃO
     function pararAlerta() {
-    // 1. Para o Som
-    const audio = document.getElementById('som-alerta');
-    if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.loop = false; // Tira do loop
+        const audio = document.getElementById('som-alerta');
+        if (audio) { audio.pause(); audio.currentTime = 0; audio.loop = false; }
+        if (loopVibracao) { clearInterval(loopVibracao); loopVibracao = null; }
+        if ("vibrate" in navigator) { navigator.vibrate(0); }
     }
 
-    // 2. Para a Vibração
-    if (loopVibracao) {
-        clearInterval(loopVibracao);
-        loopVibracao = null;
-    }
-    // Força parar a vibração atual instantaneamente
-    if ("vibrate" in navigator) {
-        navigator.vibrate(0);
-    }
-}
+    // --- MUDANÇA AQUI: MANDA PARAR O ALERTA ASSIM QUE CLICA ---
+    pararAlerta(); 
+
     const inputMotivo = document.getElementById('justificativa-motoboy');
-    const motivoTexto = inputMotivo ? inputMotivo.value : "Sem motivo";
+    const motivoTexto = inputMotivo ? inputMotivo.value : "Recusado";
 
     if (motivoTexto.length < 5) {
         alert("Digite um motivo válido (mínimo 5 letras).");
         return;
     }
 
-    // Fecha o modal de digitação para mostrar o loading ou resultado
     fecharModal('modal-cancelamento-motoboy');
 
-    const idParaCancelar = idCorridaAtual || window.radarIdCorrida;
+    // --- MUDANÇA AQUI: SEGURANÇA PARA PEGAR O ID DA LISTA OU DA ATIVA ---
+    const idParaCancelar = idCorridaAtual || (corridaSendoExibida ? corridaSendoExibida.corrida_id : null) || window.radarIdCorrida;
 
     if (!idParaCancelar) {
-        alert("Erro: ID da corrida perdido. Atualize a página.");
+        alert("Erro: ID da corrida não encontrado.");
         return;
     }
 
     try {
+        // ... resto do seu código (o fetch e o modal de aviso de 5 min) continua igual
         const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

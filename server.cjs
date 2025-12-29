@@ -332,67 +332,34 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
 
 async function monitorarExpiracoes() {
   try {
-    // 🛡️ GUARDA-COSTAS: mata corridas zumbis
-    await pool.query(`
-      UPDATE corridas
-      SET status = 'cancelada',
-          motivo_cancelamento = '[SYSTEM] Encerrada por timeout'
-      WHERE status = 'pendente'
-        AND data_hora < NOW() - interval '15 minutes'
+    // 1. Pega corridas que estão paradas sem ninguém vendo
+    const corridasSemDono = await pool.query(`
+      SELECT id, tipo_servico FROM corridas 
+      WHERE status = 'pendente' 
+      AND id NOT IN (SELECT corrida_id FROM exposicao_corrida)
     `);
 
-    // 🧹 Remove exposições de corridas que não estão mais pendentes
-    await pool.query(`
-      DELETE FROM exposicao_corrida
-      WHERE corrida_id IN (
-        SELECT id FROM corridas WHERE status != 'pendente'
-      )
-    `);
-
-    // 1. Corridas realmente pendentes
-    const corridasPendentes = await pool.query(
-      "SELECT id, tipo_servico FROM corridas WHERE status = 'pendente'"
-    );
-
-    for (const corrida of corridasPendentes.rows) {
-      const corridaId = corrida.id;
-      const tipoServico = corrida.tipo_servico;
-
-      // 2. Verificar se todos os motoboys já expiraram ou se ainda há alguém
-      const exposicoesAtivas = await pool.query(
-        `
-        SELECT COUNT(*) as total,
-               SUM(CASE WHEN EXTRACT(EPOCH FROM (NOW() - data_exposicao)) >= 60 THEN 1 ELSE 0 END) as expirados
-        FROM exposicao_corrida 
-        WHERE corrida_id = $1
-        `,
-        [corridaId]
-      );
-
-      const totalExposicoes = parseInt(exposicoesAtivas.rows[0].total, 10);
-      const totalExpirados = parseInt(exposicoesAtivas.rows[0].expirados, 10);
-
-      if (totalExposicoes === 0) {
-        // Nenhuma exposição ativa - redistribuir
-        console.log(`[MONITOR] Nenhuma exposição ativa para Corrida ${corridaId}. Redistribuindo...`);
-        await distribuirCorridaParaMotoboys(corridaId, tipoServico);
-      } else if (totalExpirados === totalExposicoes && totalExposicoes > 0) {
-        // TODOS os motoboys expiraram - limpar e redistribuir
-        console.log(`[MONITOR] Todos os ${totalExposicoes} motoboys expiraram para Corrida ${corridaId}. Limpando e redistribuindo...`);
-        
-        // Limpar todas as exposições
-        await pool.query(
-          "DELETE FROM exposicao_corrida WHERE corrida_id = $1",
-          [corridaId]
-        );
-        
-        // Redistribuir para NOVOS motoboys
-        await distribuirCorridaParaMotoboys(corridaId, tipoServico);
-      }
-      // Se houver pelo menos um motoboy ainda com tempo, não faz nada
+    for (const corrida of corridasSemDono.rows) {
+      await distribuirCorridaParaMotoboys(corrida.id, corrida.tipo_servico);
     }
+
+    // 2. Limpa motoboys que deixaram o tempo de 60s acabar
+    const expirados = await pool.query(`
+      DELETE FROM exposicao_corrida 
+      WHERE EXTRACT(EPOCH FROM (NOW() - data_exposicao)) >= 60
+      RETURNING corrida_id
+    `);
+
+    // Se limpou alguém, tenta mandar para o próximo da fila imediatamente
+    for (const exp of expirados.rows) {
+       const dados = await pool.query("SELECT tipo_servico FROM corridas WHERE id = $1", [exp.corrida_id]);
+       if (dados.rows.length > 0) {
+         await distribuirCorridaParaMotoboys(exp.corrida_id, dados.rows[0].tipo_servico);
+       }
+    }
+
   } catch (err) {
-    console.error("❌ ERRO NO MONITORAMENTO CÍCLICO:", err && err.stack ? err.stack : err);
+    console.error("Erro no monitor:", err);
   }
 }
 
@@ -603,9 +570,7 @@ app.post('/corridas-pendentes', async (req, res) => {
   const { motoboy_id } = req.body;
   const TEMPO_LIMITE_SEGUNDOS = 60;
 
-  if (!motoboy_id) {
-    return res.status(400).json({ error: 'motoboy_id é obrigatório' });
-  }
+  if (!motoboy_id) return res.status(400).json({ error: 'motoboy_id é obrigatório' });
 
   try {
     const motoboyResult = await pool.query(
@@ -613,23 +578,12 @@ app.post('/corridas-pendentes', async (req, res) => {
       [motoboy_id]
     );
 
-    if (motoboyResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Motoboy não encontrado.' });
-    }
-
     const motoboy = motoboyResult.rows[0];
 
-    // Bloqueado
+    // Bloqueio de 5 min
     if (motoboy.bloqueado_ate && new Date(motoboy.bloqueado_ate) > new Date()) {
-      const minutos = Math.ceil(
-        (new Date(motoboy.bloqueado_ate) - new Date()) / 60000
-      );
-
-      return res.json({
-        success: false,
-        bloqueado: true,
-        tempo: minutos,
-      });
+      const minutos = Math.ceil((new Date(motoboy.bloqueado_ate) - new Date()) / 60000);
+      return res.json({ success: false, bloqueado: true, tempo: minutos });
     }
 
     // Offline
@@ -637,54 +591,29 @@ app.post('/corridas-pendentes', async (req, res) => {
       return res.json({ success: false, offline: true });
     }
 
-    // Categoria do motoboy (Geral, Passageiro, Entregas)
-    const categoria = motoboy.categoria || 'Geral';
-
+    // BUSCA A CORRIDA QUE O SISTEMA JÁ RESERVOU PARA ELE
     const sql = `
       SELECT
-        c.id AS corrida_id,
-        c.origem,
-        c.destino,
-        c.valor,
-        c.tipo_servico,
-        u.nome AS nome_cliente,
-        u.telefone AS telefone_cliente,
-        EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) AS segundos_passados,
-        ec.ciclo,
-        ec.data_exposicao
+        c.id AS corrida_id, c.origem, c.destino, c.valor, c.tipo_servico,
+        u.nome AS nome_cliente, u.telefone AS telefone_cliente,
+        EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) AS segundos_passados
       FROM exposicao_corrida ec
       JOIN corridas c ON c.id = ec.corrida_id
       JOIN usuarios u ON u.id = c.cliente_id
       WHERE ec.motoboy_id = $1
         AND c.status = 'pendente'
         AND EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) < $2
-        AND (
-          $3 = 'Geral'
-          OR ($3 = 'Passageiro' AND c.tipo_servico = 'moto-taxi')
-          OR ($3 = 'Entregas' AND c.tipo_servico = 'entrega')
-        )
-      ORDER BY ec.data_exposicao ASC
-      LIMIT 1 --
+      LIMIT 1
     `;
 
-    const params = [motoboy_id, TEMPO_LIMITE_SEGUNDOS, categoria];
-    const result = await pool.query(sql, params);
+    const result = await pool.query(sql, [motoboy_id, TEMPO_LIMITE_SEGUNDOS]);
 
-    if (result.rows.length === 0) {
-      return res.json({
-        success: true,
-        corridas: [], // Retorna array vazio
-        message: 'Nenhuma corrida disponível no momento.',
-      });
-    }
-
-    // Retorna TODAS as corridas encontradas, não apenas a primeira [0]
+    // Retorna 'corridas' (plural) para bater com o código do motoboy
     return res.json({ success: true, corridas: result.rows });
+
   } catch (err) {
-    console.error('Erro em /corridas-pendentes:', err && err.stack ? err.stack : err);
-    return res
-      .status(500)
-      .json({ success: false, message: 'Erro ao buscar corridas pendentes.' });
+    console.error('Erro em /corridas-pendentes:', err);
+    return res.status(500).json({ success: false });
   }
 });
 
