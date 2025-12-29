@@ -118,45 +118,78 @@
         }
 
         async function carregarPedidos() {
-            const container = document.getElementById('central-lista');
-            const listaIds = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
+    const container = document.getElementById('central-lista');
+    
+    // 1. Pega os IDs salvos. Se não houver nenhum, tenta buscar pelo ID do usuário
+    const listaIds = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
+    const usuarioId = localStorage.getItem('usuario_id');
 
-            if (listaIds.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#666;">Nenhum pedido ativo.</p>';
-                return;
+    if (listaIds.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Nenhum pedido encontrado no seu histórico local.</p>';
+        return;
+    }
+
+    try {
+        let html = "";
+        let pedidosDetalhados = [];
+
+        // 2. Busca os detalhes de cada pedido
+        const promessas = listaIds.map(id => 
+            fetch(`${MEU_IP}/status-pedido/${id}`).then(r => r.json())
+        );
+        const resultados = await Promise.all(promessas);
+
+        resultados.forEach(res => {
+            if (res.success && res.pedido) {
+                pedidosDetalhados.push(res.pedido);
             }
+        });
 
-            try {
-                let html = "";
-                // Busca os pedidos e ordena (pendentes primeiro)
-                const promessas = listaIds.map(id => fetch(`${MEU_IP}/status-pedido/${id}`).then(r => r.json()));
-                const resultados = await Promise.all(promessas);
+        // 3. ORDENAÇÃO SOLICITADA: 
+        // 1º Pendente (Buscando), 2º Em Andamento, 3º Concluída/Cancelada
+        const pesos = { 'pendente': 1, 'aceita': 2, 'liberada': 2, 'em_andamento': 2, 'concluida': 3, 'cancelada': 4 };
+        pedidosDetalhados.sort((a, b) => (pesos[a.status] || 99) - (pesos[b.status] || 99));
 
-                // Ordenação simples
-                resultados.sort((a, b) => (a.pedido?.status === 'pendente' ? -1 : 1));
+        // 4. GERA O HTML COM VALOR E DESTAQUE
+        pedidosDetalhados.forEach(p => {
+            const statusTraduzido = p.status === 'pendente' ? 'BUSCANDO PILOTO ⏳' : p.status.toUpperCase();
+            const corStatus = p.status === 'pendente' ? '#00ffff' : (p.status === 'concluida' ? '#ffd700' : '#00e640');
+            
+            html += `
+                <div class="pedido-card" style="border-left-color: ${corStatus}; margin-bottom: 15px; background: #252525; padding: 15px; border-radius: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span style="font-size: 26px; font-weight: 900; color: #fff; display: block;">#${p.id}</span>
+                            <span style="color: ${corStatus}; font-weight: bold; font-size: 12px;">${statusTraduzido}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="display: block; font-size: 18px; font-weight: bold; color: var(--neon-green);">R$ ${parseFloat(p.valor).toFixed(2).replace('.',',')}</span>
+                            <span style="font-size: 11px; color: ${p.pago ? '#00e640' : '#ffcc00'}">
+                                <i class="fas fa-wallet"></i> ${p.pago ? 'PAGO' : 'PAGAMENTO PENDENTE'}
+                            </span>
+                        </div>
+                    </div>
 
-                resultados.forEach(res => {
-                    if (res.success && res.pedido) {
-                        const p = res.pedido;
-                        const classe = p.status === 'pendente' ? 'status-pendente' : (p.status === 'concluida' ? 'status-concluida' : 'status-andamento');
-                        
-                        html += `
-                            <div class="pedido-card ${classe}">
-                                <span class="pedido-id">#${p.id}</span>
-                                <div class="info"><strong>Status:</strong> ${p.status.toUpperCase()}</div>
-                                <div class="info"><strong>Destino:</strong> ${p.destino.split(',')[0]}</div>
-                                <div class="info"><strong>Pagamento:</strong> ${p.pago ? '✅ PAGO' : '⏳ PENDENTE'}</div>
-                                <button class="btn-detalhes" onclick="verNoMapa('${p.id}')">VER NO MAPA</button>
-                            </div>
-                        `;
-                    }
-                });
-                container.innerHTML = html;
-            } catch (e) {
-                container.innerHTML = '<p style="color:red">Erro ao atualizar lista.</p>';
-            }
-        }
+                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #333;">
+                        <div class="info"><i class="fas fa-map-marker-alt"></i> <strong>Destino:</strong> ${p.destino.split(',')[0]}</div>
+                        <div class="info"><i class="fas fa-motorcycle"></i> <strong>Piloto:</strong> ${p.nome_motoboy || 'Procurando...'}</div>
+                    </div>
 
+                    <button class="btn-detalhes" style="margin-top:15px; width:100%; padding: 10px; background: ${corStatus}; color: #000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" 
+                        onclick="verNoMapa('${p.id}')">
+                        ACOMPANHAR ENTREGA
+                    </button>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+
+    } catch (e) {
+        console.error("Erro na Central:", e);
+        container.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar dados do servidor.</p>';
+    }
+}
         function verNoMapa(id) {
             localStorage.setItem('idPedidoAtual', id);
             localStorage.setItem('origem_empresa', 'true');
