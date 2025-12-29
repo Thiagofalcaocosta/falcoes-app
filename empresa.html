@@ -120,10 +120,17 @@
         const MEU_IP = 'https://falcoes-app.onrender.com';
 
         // FUNÇÃO QUE ESTAVA FALTANDO:
-        function irParaNovoPedido() {
-            localStorage.setItem('origem_empresa', 'true');
-            window.location.href = 'cliente.html';
-        }
+       function irParaNovoPedido() {
+    // 1. Remove o ID do pedido visualizado anteriormente
+    localStorage.removeItem('idPedidoAtual');
+    localStorage.removeItem('pedidoAtual');
+    
+    // 2. Define que o usuário veio da empresa para mostrar o botão de voltar
+    localStorage.setItem('origem_empresa', 'true');
+    
+    // 3. Redireciona para o formulário de pedido
+    window.location.href = 'cliente.html';
+}
 
         function logout() {
             localStorage.clear();
