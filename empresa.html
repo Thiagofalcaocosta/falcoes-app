@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falcões App - Central Empresa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --neon-green: #00e640;
+            --text-color: #ffffff;
+            --border-color: #333;
+        }
+
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--card-color);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0, 230, 64, 0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        h2 { color: var(--neon-green); margin: 0; font-size: 18px; }
+
+        /* Botão Novo Pedido */
+        .btn-novo-pedido {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: white;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 25px;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn-novo-pedido:hover {
+            background: rgba(0, 230, 64, 0.1);
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+
+        /* Estilo dos Cards de Pedido */
+        .pedido-card {
+            background: #252525;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid #888;
+            position: relative;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 5px;
+            text-transform: uppercase;
+            float: right;
+        }
+
+        .info-linha { margin: 8px 0; font-size: 14px; }
+        .info-linha strong { color: var(--neon-green); }
+
+        .btn-ver {
+            width: 100%;
+            background: var(--neon-green);
+            color: black;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        /* Cores por Status */
+        .status-pendente { border-left-color: #00ffff; color: #00ffff; }
+        .status-aceita { border-left-color: #ffd700; color: #ffd700; }
+        .status-liberada { border-left-color: var(--neon-green); color: var(--neon-green); }
+        .status-cancelada { border-left-color: #ff4444; color: #ff4444; opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2><i class="fas fa-store"></i> CENTRAL DE VENDAS</h2>
+            <button onclick="logout()" style="background:none; border:none; color:#ff4444; font-weight:bold; cursor:pointer;">SAIR</button>
+        </div>
+
+        <button class="btn-novo-pedido" onclick="irParaNovoPedido()">
+            <i class="fas fa-plus"></i> SOLICITAR NOVA ENTREGA
+        </button>
+
+        <div id="central-lista">
+            <p style="text-align:center; color:#666;">Carregando pedidos...</p>
+        </div>
+    </div>
+
+    <script>
+        const MEU_IP = 'https://falcoes-app.onrender.com'; // SEU BACKEND
+
+        function logout() {
+            localStorage.removeItem('usuario');
+            window.location.href = 'index.html';
+        }
+
+        function irParaNovoPedido() {
+            // Salva um sinalizador para o cliente.html saber que deve abrir limpo
+            localStorage.setItem('origem_empresa', 'true');
+            window.location.href = 'cliente.html';
+        }
+
+        async function carregarPedidosEmpresa() {
+            const container = document.getElementById('central-lista');
+            // Busca a lista de IDs que esta empresa criou
+            const listaIds = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
+
+            if (listaIds.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Nenhum pedido ativo.</p>';
+                return;
+            }
+
+            let html = "";
+            
+            // Loop para buscar detalhes de cada pedido no servidor
+            for (const id of listaIds) {
+                try {
+                    const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+                    const data = await res.json();
+                    
+                    if (data.success && data.pedido) {
+                        const p = data.pedido;
+                        const classeStatus = `status-${p.status}`;
+                        
+                        html += `
+                            <div class="pedido-card ${classeStatus}">
+                                <span class="status-badge">${p.status}</span>
+                                <div class="info-linha"><strong>#${id}</strong></div>
+                                <div class="info-linha"><i class="fas fa-map-marker-alt"></i> ${p.destino.split(',')[0]}</div>
+                                <div class="info-linha"><i class="fas fa-motorcycle"></i> Piloto: ${p.nome_motoboy || 'Buscando...'}</div>
+                                <div class="info-linha"><strong>R$ ${parseFloat(p.valor).toFixed(2)}</strong></div>
+                                <button class="btn-ver" onclick="detalharPedido('${id}')">ACOMPANHAR NO MAPA</button>
+                            </div>
+                        `;
+                    }
+                } catch (err) { console.error("Erro no pedido "+id, err); }
+            }
+            container.innerHTML = html;
+        }
+
+        function detalharPedido(id) {
+            localStorage.setItem('idPedidoAtual', id);
+            window.location.href = 'cliente.html'; // O cliente.html já tem o mapa pronto
+        }
+
+        // Atualiza a cada 10 segundos
+        setInterval(carregarPedidosEmpresa, 10000);
+        carregarPedidosEmpresa();
+    </script>
+</body>
+</html>

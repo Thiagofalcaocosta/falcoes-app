@@ -220,7 +220,7 @@
                         window.location.href = 'motoboy.html';
                     } else if (data.user.tipo === 'admin') {
                         window.location.href = 'admin.html';
-                    } else {
+                    } else if (data.user.tipo === 'empresa') {
                         window.location.href = 'cliente.html';
                     }
                 } else {

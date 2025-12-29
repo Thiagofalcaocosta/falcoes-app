@@ -2895,4 +2895,40 @@ async function enviarCancelamentoComJustificativa() {
         alert("Erro de conexão.");
     }
 }
+// Verifica se o usuário veio da tela de empresa para exibir o botão de voltar
+document.addEventListener('DOMContentLoaded', () => {
+    const veioDaEmpresa = localStorage.getItem('origem_empresa');
+    
+    if (veioDaEmpresa === 'true') {
+        const header = document.querySelector('.header-top');
+        if (header) {
+            // Cria o botão com estilo discreto e neon
+            const btnVoltar = document.createElement('button');
+            btnVoltar.innerHTML = '<i class="fas fa-arrow-left"></i> PAINEL';
+            btnVoltar.style.cssText = `
+                background: rgba(0, 230, 64, 0.1);
+                color: #00e640;
+                border: 1px solid #00e640;
+                padding: 8px 15px;
+                border-radius: 8px;
+                font-weight: bold;
+                cursor: pointer;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                transition: 0.3s;
+            `;
+
+            // Ação ao clicar: Volta para empresa e limpa o sinalizador
+            btnVoltar.onclick = () => {
+                localStorage.removeItem('origem_empresa');
+                window.location.href = 'empresa.html';
+            };
+
+            // Adiciona o botão no início do cabeçalho
+            header.prepend(btnVoltar);
+        }
+    }
+});
 </script>
