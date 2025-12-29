@@ -872,6 +872,15 @@
 .bell-box:hover {
     transform: scale(1.1) rotate(10deg);
 }
+#tela-pedido.ativa ~ #tela-acompanhamento {
+    display: none !important;
+}
+
+#fluxo-restaurante {
+    margin-top: 20px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+}
     </style>
    
     <script>
@@ -988,10 +997,11 @@
 </div>
 
 
-        <div class="container"></div>
-        <div class="logo-area"><img src="assets/logo.png" alt="Logo"
-                onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
-        </div>
+        <div class="container"> 
+    <div class="logo-area">
+        <img src="assets/logo.png" alt="Logo" 
+             onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
+    </div>
 
         <div class="header-top">
             <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
@@ -1477,35 +1487,22 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
     function checkPersistedOrder() {
     const usuarioLogado = JSON.parse(localStorage.getItem("usuario"));
     const ehEmpresa = usuarioLogado && usuarioLogado.tipo === 'empresa';
+    const pedidosAtivos = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
 
-    // 1. Se for EMPRESA, lida com múltiplos pedidos
-    if (ehEmpresa) {
-        const pedidosAtivos = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
-        
-        if (pedidosAtivos.length > 0) {
-            mudarTela('tela-acompanhamento');
-            inicializarVisualAcompanhamento(); // Mostra o fluxo-restaurante
-            atualizarCentralDePedidos(); // Chama a função que cria a lista (vamos criar ela a seguir)
-            
-            // Inicia o "espião" para atualizar a lista a cada 5 segundos
-            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
-            intervaloVerificacao = setInterval(() => atualizarCentralDePedidos(), 5000);
-        } else {
-            mudarTela('tela-pedido');
+    // Se for empresa e NÃO estiver na tela de pedido manual, mostra a central
+    if (ehEmpresa && pedidosAtivos.length > 0) {
+        // Verifica se o usuário não clicou para "Novo Pedido" recentemente
+        if (document.getElementById('tela-pedido').classList.contains('ativa')) {
+            return; // Deixa na tela de pedido
         }
-    } 
-    // 2. Se for CLIENTE comum, segue a lógica original de um pedido só
-    else {
+        mudarTela('tela-acompanhamento');
+        inicializarVisualAcompanhamento();
+    } else {
+        // Lógica para cliente comum
         const persistedId = localStorage.getItem('idPedidoAtual');
         if (persistedId) {
-            idPedidoAtual = persistedId;
-            preencherDetalhesAcompanhamento();
             mudarTela('tela-acompanhamento');
-            inicializarVisualAcompanhamento(); // Garante que mostre o fluxo-cliente-comum
-            
-            verificarStatus(idPedidoAtual);
-            if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
-            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+            verificarStatus(persistedId);
         } else {
             mudarTela('tela-pedido');
         }
