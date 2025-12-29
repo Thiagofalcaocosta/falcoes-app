@@ -816,6 +816,25 @@ app.get('/minha-corrida-atual/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro' });
   }
 });
+// Rota essencial para o Painel da Empresa funcionar
+app.get('/pedidos-cliente/:id', async (req, res) => {
+    const clienteId = req.params.id;
+    try {
+        // Busca todos os pedidos onde o cliente_id é igual ao ID da empresa logada
+        const result = await pool.query(
+            'SELECT * FROM corridas WHERE cliente_id = $1 ORDER BY id DESC',
+            [clienteId]
+        );
+
+        res.json({
+            success: true,
+            pedidos: result.rows
+        });
+    } catch (err) {
+        console.error('Erro ao buscar pedidos da empresa:', err);
+        res.status(500).json({ success: false, message: 'Erro no servidor ao buscar lista' });
+    }
+});
 
 app.get('/status-pedido/:id', async (req, res) => {
   try {
