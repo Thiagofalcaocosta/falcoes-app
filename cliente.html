@@ -881,6 +881,15 @@
     border-top: 1px solid var(--border-color);
     padding-top: 20px;
 }
+/* Se a tela de pedido estiver ativa, nada que venha depois dela (como a central) pode aparecer */
+.tela.ativa#tela-pedido ~ .tela {
+    display: none !important;
+}
+
+/* Garante que o container da central só apareça se a tela pai estiver ativa */
+.tela:not(.ativa) #fluxo-restaurante {
+    display: none !important;
+}
     </style>
    
     <script>
@@ -1003,38 +1012,45 @@
              onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
     </div>
 
-        <div class="header-top">
-            <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
-            <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
-        </div>
-
-        <div id="tela-pedido" class="tela ativa">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h2 style="margin: 0; font-size: 20px;">NOVA SOLICITAÇÃO</h2>
-        <button onclick="limparFormularioManual()" class="btn-limpar-discreto" style="background: #333; color: #ccc; border: 1px solid #444; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
-            🗑️ Limpar
-        </button>
+    <div class="header-top">
+        <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
+        <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
     </div>
 
-    <button onclick="voltarParaListaEmpresa()" 
-        style="width: 100%; background: rgba(0, 230, 64, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); padding: 12px; border-radius: 10px; font-weight: bold; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
-        <i class="fas fa-list-ul"></i> IR PARA CENTRAL DE PEDIDOS
-    </button>
+    <div id="tela-pedido" class="tela ativa">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin: 0; font-size: 20px;">NOVA SOLICITAÇÃO</h2>
+            <button onclick="limparFormularioManual()" class="btn-limpar-discreto" style="background: #333; color: #ccc; border: 1px solid #444; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
+                🗑️ Limpar
+            </button>
+        </div>
 
-</div>
+        <button onclick="voltarParaListaEmpresa()" 
+            style="width: 100%; background: rgba(0, 230, 64, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); padding: 12px; border-radius: 10px; font-weight: bold; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <i class="fas fa-list-ul"></i> IR PARA CENTRAL DE PEDIDOS
+        </button>
 
-            <div class="opcoes-servico">
-                <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
-                     <span class="icon">🏍️</span>
-                    <div class="card-title">MOTO TÁXI</div>
-                    <div class="preco">R$ 10,00 + Km</div>
-                </div>
-                <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
-                    <span class="icon">📦</span>
-                    <div class="card-title">ENTREGA</div>
-                    <div class="preco">R$ 8,50 + Km</div>
-                </div>
+        <div class="opcoes-servico">
+            <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
+                 <span class="icon">🏍️</span>
+                <div class="card-title">MOTO TÁXI</div>
+                <div class="preco">R$ 10,00 + Km</div>
             </div>
+            <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
+                <span class="icon">📦</span>
+                <div class="card-title">ENTREGA</div>
+                <div class="preco">R$ 8,50 + Km</div>
+            </div>
+        </div>
+        
+        </div> ```
+
+### O que mudou?
+1. **Removi** o `</div>` que cortava a tela no meio.
+2. Agora, as **opções-servico** estão "dentro" da div `tela-pedido`.
+3. Assim, quando o sistema esconder a `tela-pedido`, as opções de serviço sumirão juntas, deixando a **Central de Entregas** limpa na tela.
+
+**Quer que eu te mostre onde colocar o fechamento final da `container` também?**
 
             <div id="form-endereco">
 
