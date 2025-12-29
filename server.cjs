@@ -259,74 +259,64 @@ initDB();
 async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
   try {
     let categoriaFiltro = null;
+    if (tipoServico === 'moto-taxi') categoriaFiltro = 'Passageiro';
+    else if (tipoServico === 'entrega') categoriaFiltro = 'Entregas';
 
-    if (tipoServico === 'moto-taxi') {
-      categoriaFiltro = 'Passageiro';
-    } else if (tipoServico === 'entrega') {
-      categoriaFiltro = 'Entregas';
-    }
+    // A mágica acontece aqui: Procuramos apenas UM motoboy (LIMIT 1)
+    // que esteja livre (sem corrida ativa) e que ainda não tenha recebido essa oferta
+    const sql = `
+      SELECT u.id 
+      FROM usuarios u 
+      WHERE u.tipo = 'motoboy' 
+        AND u.aprovado = true 
+        AND u.online_ate > NOW()
+        AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW())
+        AND (u.categoria = $2 OR u.categoria = 'Geral' OR $2 IS NULL)
+        
+        -- 1. GARANTE QUE O MOTOBOY ESTÁ LIVRE
+        -- Ele não pode ter nenhuma corrida nos status abaixo:
+        AND NOT EXISTS (
+            SELECT 1 FROM corridas c 
+            WHERE c.motoboy_id = u.id 
+            AND c.status IN ('aguardando_pagamento', 'liberada', 'em_andamento')
+        )
+        
+        -- 2. GARANTE QUE ELE NÃO ESTÁ VENDO OUTRA OFERTA AGORA
+        AND NOT EXISTS (
+            SELECT 1 FROM exposicao_corrida ec2 
+            WHERE ec2.motoboy_id = u.id
+        )
 
-    let sql;
-    let params;
+        -- 3. GARANTE QUE ESSA CORRIDA ESPECÍFICA NÃO FOI RECUSADA/EXPIROU PARA ELE
+        AND NOT EXISTS (
+            SELECT 1 FROM exposicao_corrida ec 
+            WHERE ec.motoboy_id = u.id AND ec.corrida_id = $1
+        )
+      ORDER BY RANDOM() 
+      LIMIT 1
+    `;
 
-    // Buscar TODOS os motoboys elegíveis (remova o LIMIT 1)
-    if (categoriaFiltro) {
-      sql = `
-        SELECT u.id, u.nome, u.placa, u.telefone 
-        FROM usuarios u 
-        LEFT JOIN exposicao_corrida ec ON ec.motoboy_id = u.id AND ec.corrida_id = $1
-        WHERE u.tipo = 'motoboy' 
-          AND u.aprovado = true 
-          AND u.online_ate > NOW()
-          AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW())
-          AND ec.motoboy_id IS NULL
-          AND (u.categoria = $2 OR u.categoria = 'Geral')
-        ORDER BY RANDOM()  -- Distribui aleatoriamente para evitar envio sempre para o mesmo
-      `;
-      params = [corridaId, categoriaFiltro];
-    } else {
-      sql = `
-        SELECT u.id, u.nome, u.placa, u.telefone 
-        FROM usuarios u 
-        LEFT JOIN exposicao_corrida ec ON ec.motoboy_id = u.id AND ec.corrida_id = $1
-        WHERE u.tipo = 'motoboy' 
-          AND u.aprovado = true 
-          AND u.online_ate > NOW()
-          AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW())
-          AND ec.motoboy_id IS NULL
-        ORDER BY RANDOM()
-      `;
-      params = [corridaId];
-    }
-
-    console.log('SQL distribuição para TODOS:', sql);
-
+    const params = [corridaId, categoriaFiltro];
     const result = await pool.query(sql, params);
 
     if (result.rows.length === 0) {
-      console.log(`⚠️ Nenhum motoboy elegível para corrida ${corridaId}`);
+      console.log(`⚠️ Nenhum motoboy livre no momento para corrida ${corridaId}`);
       return 0;
     }
 
-    const motoboysIds = result.rows.map(row => row.id);
-    
-    // Inserir TODOS os motoboys encontrados na tabela de exposição
-    for (const motoboyId of motoboysIds) {
-      await pool.query(
-        'INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo) ' +
-        'VALUES ($1, $2, 1) ' +
-        'ON CONFLICT (corrida_id, motoboy_id) DO NOTHING',
-        [corridaId, motoboyId]
-      );
-      
-      console.log(`📢 Corrida ${corridaId} enviada para Motoboy ${motoboyId}`);
-    }
+    const motoboyId = result.rows[0].id;
 
-    console.log(`✅ Corrida ${corridaId} distribuída para ${motoboysIds.length} motoboys`);
-    return motoboysIds.length;
+    // Envia apenas para o motoboy escolhido
+    await pool.query(
+      'INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo) VALUES ($1, $2, 1)',
+      [corridaId, motoboyId]
+    );
+
+    console.log(`📢 [iFood Style] Corrida ${corridaId} tocando apenas para Motoboy ${motoboyId}`);
+    return 1;
 
   } catch (err) {
-    console.error('Erro ao distribuir corrida para múltiplos motoboys:', err && err.stack ? err.stack : err);
+    console.error('Erro na distribuição exclusiva:', err);
     return 0;
   }
 }
@@ -666,22 +656,22 @@ app.post('/corridas-pendentes', async (req, res) => {
           OR ($3 = 'Entregas' AND c.tipo_servico = 'entrega')
         )
       ORDER BY ec.data_exposicao ASC
-      LIMIT 1
+      LIMIT 1 --
     `;
 
     const params = [motoboy_id, TEMPO_LIMITE_SEGUNDOS, categoria];
-
     const result = await pool.query(sql, params);
 
     if (result.rows.length === 0) {
       return res.json({
         success: true,
-        corrida: null,
+        corridas: [], // Retorna array vazio
         message: 'Nenhuma corrida disponível no momento.',
       });
     }
 
-    return res.json({ success: true, corrida: result.rows[0] });
+    // Retorna TODAS as corridas encontradas, não apenas a primeira [0]
+    return res.json({ success: true, corridas: result.rows });
   } catch (err) {
     console.error('Erro em /corridas-pendentes:', err && err.stack ? err.stack : err);
     return res
@@ -1021,10 +1011,15 @@ app.post('/aceitar-corrida', async (req, res) => {
       `
       UPDATE corridas
       SET status = 'aguardando_pagamento',
-
           motoboy_id = $2
       WHERE id = $1
         AND status = 'pendente'
+        -- TRAVA: Só deixa aceitar se o motoboy NÃO tiver outra corrida ativa
+        AND NOT EXISTS (
+            SELECT 1 FROM corridas 
+            WHERE motoboy_id = $2 
+            AND status IN ('aguardando_pagamento', 'liberada', 'em_andamento')
+        )
       RETURNING id
       `,
       [corrida_id, motoboy_id]
