@@ -258,12 +258,17 @@ initDB();
 // Substitua a função distribuirCorridaParaMotoboys atual por esta:
 async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
   try {
-    let categoriaFiltro = null;
-    if (tipoServico === 'moto-taxi') categoriaFiltro = 'Passageiro';
-    else if (tipoServico === 'entrega') categoriaFiltro = 'Entregas';
+    // 1. Mapeamento rigoroso baseado nas categorias da sua imagem
+    let categoriaNecessaria = null;
+    if (tipoServico === 'moto-taxi') categoriaNecessaria = 'Passageiro';
+    if (tipoServico === 'entrega') categoriaNecessaria = 'Entregas';
 
-    // A mágica acontece aqui: Procuramos apenas UM motoboy (LIMIT 1)
-    // que esteja livre (sem corrida ativa) e que ainda não tenha recebido essa oferta
+    // Se o serviço não for identificado, não distribui para evitar erros
+    if (!categoriaNecessaria) {
+      console.log(`❌ Tipo de serviço [${tipoServico}] não reconhecido para distribuição.`);
+      return 0;
+    }
+
     const sql = `
       SELECT u.id 
       FROM usuarios u 
@@ -271,23 +276,24 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
         AND u.aprovado = true 
         AND u.online_ate > NOW()
         AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW())
-        AND (u.categoria = $2 OR u.categoria = 'Geral' OR $2 IS NULL)
         
-        -- 1. GARANTE QUE O MOTOBOY ESTÁ LIVRE
-        -- Ele não pode ter nenhuma corrida nos status abaixo:
+        -- Filtra EXATAMENTE pela categoria do motoboy (Entregas ou Passageiro)
+        AND u.categoria = $2
+        
+        -- 1. GARANTE QUE O MOTOBOY ESTÁ LIVRE (Sem corrida ativa aceita)
         AND NOT EXISTS (
             SELECT 1 FROM corridas c 
             WHERE c.motoboy_id = u.id 
             AND c.status IN ('aguardando_pagamento', 'liberada', 'em_andamento')
         )
         
-        -- 2. GARANTE QUE ELE NÃO ESTÁ VENDO OUTRA OFERTA AGORA
+        -- 2. GARANTE QUE ELE NÃO ESTÁ VENDO OUTRA OFERTA AGORA (Foco total)
         AND NOT EXISTS (
             SELECT 1 FROM exposicao_corrida ec2 
             WHERE ec2.motoboy_id = u.id
         )
 
-        -- 3. GARANTE QUE ESSA CORRIDA ESPECÍFICA NÃO FOI RECUSADA/EXPIROU PARA ELE
+        -- 3. GARANTE QUE NÃO REPETE A MESMA CORRIDA QUE ELE JÁ DEIXOU EXPIRAR
         AND NOT EXISTS (
             SELECT 1 FROM exposicao_corrida ec 
             WHERE ec.motoboy_id = u.id AND ec.corrida_id = $1
@@ -296,23 +302,26 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
       LIMIT 1
     `;
 
-    const params = [corridaId, categoriaFiltro];
+    const params = [corridaId, categoriaNecessaria];
     const result = await pool.query(sql, params);
 
     if (result.rows.length === 0) {
-      console.log(`⚠️ Nenhum motoboy livre no momento para corrida ${corridaId}`);
+      console.log(`⚠️ Nenhum motoboy [${categoriaNecessaria}] livre para corrida ${corridaId}`);
       return 0;
     }
 
     const motoboyId = result.rows[0].id;
 
-    // Envia apenas para o motoboy escolhido
+    // Limpeza de segurança: garante que a tela dele está limpa antes da nova oferta
+    await pool.query('DELETE FROM exposicao_corrida WHERE motoboy_id = $1', [motoboyId]);
+
+    // Envia a corrida para o motoboy selecionado
     await pool.query(
       'INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo) VALUES ($1, $2, 1)',
       [corridaId, motoboyId]
     );
 
-    console.log(`📢 [iFood Style] Corrida ${corridaId} tocando apenas para Motoboy ${motoboyId}`);
+    console.log(`🚀 [iFood Mode] Corrida ${corridaId} tocando apenas para ${categoriaNecessaria} (ID: ${motoboyId})`);
     return 1;
 
   } catch (err) {
@@ -320,7 +329,6 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
     return 0;
   }
 }
-
 
 async function monitorarExpiracoes() {
   try {
