@@ -213,17 +213,23 @@
                 const data = await response.json();
 
                 if (data.success) {
-    // Salva o objeto completo e também o ID isolado para garantir a leitura
+    // Salva os dados para uso posterior
     localStorage.setItem('usuario', JSON.stringify(data.user));
     localStorage.setItem('usuario_id', data.user.id);
-                    if(data.user.tipo === 'motoboy') {
-                        window.location.href = 'motoboy.html';
-                    } else if (data.user.tipo === 'admin') {
-                        window.location.href = 'admin.html';
-                    } else if (data.user.tipo === 'empresa') {
-                        window.location.href = 'cliente.html';
-                    }
-                } else {
+
+    // Converte para minúsculo para evitar erros de digitação no banco
+    const tipo = data.user.tipo.toLowerCase();
+
+    if (tipo === 'motoboy') {
+        window.location.href = 'motoboy.html';
+    } else if (tipo === 'admin') {
+        window.location.href = 'admin.html';
+    } else if (tipo === 'empresa') {
+        window.location.href = 'empresa.html'; // <--- AGORA VAI PARA O ARQUIVO NOVO!
+    } else {
+        window.location.href = 'cliente.html';
+    }
+} else {
                     const tipo = data.message.includes('análise') ? 'aviso' : 'erro';
                     const titulo = data.message.includes('análise') ? 'CONTA EM ANÁLISE' : 'ERRO DE ACESSO';
                     mostrarAviso(titulo, data.message, tipo);
