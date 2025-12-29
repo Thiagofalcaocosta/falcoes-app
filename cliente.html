@@ -827,69 +827,8 @@
     border: 2px solid #ff4d4d !important;
     background-color: #fff5f5;
 }
-.notification-container {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    z-index: 9999;
-    cursor: pointer;
-}
 
-.bell-box {
-    background: rgba(255, 255, 255, 0.1); /* Efeito transparente */
-    backdrop-filter: blur(10px);
-    padding: 12px;
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.3s;
-}
 
-.bell-box i {
-    color: #FFD700; /* Dourado metálico */
-    font-size: 24px;
-    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
-}
-
-.badge-red {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ff0000;
-    color: white;
-    font-size: 11px;
-    font-weight: bold;
-    padding: 2px 7px;
-    border-radius: 50%;
-    border: 2px solid #121212;
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-}
-
-/* Efeito de balanço quando o mouse passa ou quando tiver aviso */
-.bell-box:hover {
-    transform: scale(1.1) rotate(10deg);
-}
-#tela-pedido.ativa ~ #tela-acompanhamento {
-    display: none !important;
-}
-
-#fluxo-restaurante {
-    margin-top: 20px;
-    border-top: 1px solid var(--border-color);
-    padding-top: 20px;
-}
-/* Se a tela de pedido estiver ativa, nada que venha depois dela (como a central) pode aparecer */
-.tela.ativa#tela-pedido ~ .tela {
-    display: none !important;
-}
-
-/* Garante que o container da central só apareça se a tela pai estiver ativa */
-.tela:not(.ativa) #fluxo-restaurante {
-    display: none !important;
-}
     </style>
    
     <script>
@@ -907,38 +846,6 @@
 </head>
 
 <body>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-<div class="notification-container" onclick="abrirAviso()">
-    <div class="bell-box">
-        <i class="fas fa-bell"></i>
-        <span class="badge-red">1</span>
-    </div>
-</div>
-
-<div id="modal-aviso" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center;">
-    <div style="background: #1a1a1a; padding: 25px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; border: 1px solid #333; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        
-        <div style="font-size: 40px; margin-bottom: 10px;">📢</div>
-        <h3 style="color: #fff; margin: 0 0 10px 0; font-family: sans-serif;">AVISO IMPORTANTE</h3>
-        
-        <p id="texto-alerta" style="color: #ccc; line-height: 1.5; font-family: sans-serif; margin-bottom: 20px;">
-            Mau tempo na sua área 🌧️ Para manter a operação ativa e recompensar nossos parceiros sob chuva, uma taxa extra está sendo aplicada neste momento.
-        </p>
-        
-        <button onclick="fecharAviso()" style="background: #00ff00; color: #000; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px;">
-            ENTENDIDO
-        </button>
-    </div>
-</div>
-
-<div id="modal-aviso" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 20px; border-radius: 15px; width: 80%; max-width: 400px; text-align: center; color: #333;">
-        <h3 style="color: #d9534f;">Informativo Falcões</h3>
-        <p id="texto-alerta">Estamos com alta demanda em Três Corações! As corridas podem demorar um pouco mais.</p>
-        <button onclick="fecharAviso()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">Entendido</button>
-    </div>
-</div>
 
     <div class="toast-container" id="toast-container"></div>
 
@@ -1006,51 +913,37 @@
 </div>
 
 
-        <div class="container"> 
-    <div class="logo-area">
-        <img src="assets/logo.png" alt="Logo" 
-             onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
-    </div>
-
-    <div class="header-top">
-        <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
-        <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
-    </div>
-
-    <div id="tela-pedido" class="tela ativa">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 style="margin: 0; font-size: 20px;">NOVA SOLICITAÇÃO</h2>
-            <button onclick="limparFormularioManual()" class="btn-limpar-discreto" style="background: #333; color: #ccc; border: 1px solid #444; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
-                🗑️ Limpar
-            </button>
+        <div class="container"></div>
+        <div class="logo-area"><img src="assets/logo.png" alt="Logo"
+                onerror="this.style.display='none'; document.querySelector('.logo-area').innerHTML='<h1 style=\'color:var(--neon-green)\'>FALCÕES</h1>'" />
         </div>
 
-        <button onclick="voltarParaListaEmpresa()" 
-            style="width: 100%; background: rgba(0, 230, 64, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); padding: 12px; border-radius: 10px; font-weight: bold; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <i class="fas fa-list-ul"></i> IR PARA CENTRAL DE PEDIDOS
-        </button>
-
-        <div class="opcoes-servico">
-            <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
-                 <span class="icon">🏍️</span>
-                <div class="card-title">MOTO TÁXI</div>
-                <div class="preco">R$ 10,00 + Km</div>
-            </div>
-            <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
-                <span class="icon">📦</span>
-                <div class="card-title">ENTREGA</div>
-                <div class="preco">R$ 8,50 + Km</div>
-            </div>
+        <div class="header-top">
+            <div class="user-info"><span id="msg-ola">Piloto</span> <span class="estrelas">★ 5.0</span></div>
+            <div class="logout"><a href="#" onclick="logout()">SAIR</a></div>
         </div>
-        
-        </div> ```
 
-### O que mudou?
-1. **Removi** o `</div>` que cortava a tela no meio.
-2. Agora, as **opções-servico** estão "dentro" da div `tela-pedido`.
-3. Assim, quando o sistema esconder a `tela-pedido`, as opções de serviço sumirão juntas, deixando a **Central de Entregas** limpa na tela.
+        <div id="tela-pedido" class="tela ativa">
 
-**Quer que eu te mostre onde colocar o fechamento final da `container` também?**
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 style="margin: 0;">NOVA SOLICITAÇÃO</h2>
+    <button onclick="limparFormularioManual()" class="btn-limpar-discreto">
+        🗑️ Limpar
+    </button>
+</div>
+
+            <div class="opcoes-servico">
+                <div class="card" id="card-moto" onclick="selecionarServico('moto-taxi', 10.0)">
+                     <span class="icon">🏍️</span>
+                    <div class="card-title">MOTO TÁXI</div>
+                    <div class="preco">R$ 10,00 + Km</div>
+                </div>
+                <div class="card" id="card-entrega" onclick="selecionarServico('entrega', 8.50)">
+                    <span class="icon">📦</span>
+                    <div class="card-title">ENTREGA</div>
+                    <div class="preco">R$ 8,50 + Km</div>
+                </div>
+            </div>
 
             <div id="form-endereco">
 
@@ -1123,7 +1016,6 @@
         </div>
 
        <div id="tela-acompanhamento" class="tela">
-        <div id="fluxo-cliente-comum">
 
     <div class="status-header" id="acompanhamento-status-area">
         
@@ -1230,17 +1122,6 @@
         <textarea id="campo-justificativa-integrada" placeholder="Digite o motivo..." rows="3"></textarea>
         <div id="erro-just-integrada" class="error-msg">Mínimo 5 caracteres.</div>
         <button id="btn-confirmar-cancelamento" class="btn-danger-full" disabled>CONFIRMAR</button>
-    </div>
-    </div> <div id="fluxo-restaurante" style="display: none; padding: 10px;">
-        <h2 style="color: var(--neon-green); text-align: left; margin-bottom: 20px;">CENTRAL DE ENTREGAS</h2>
-        
-        <div id="lista-pedidos-ativos" style="display: flex; flex-direction: column; gap: 15px;">
-            </div>
-        
-        <button onclick="voltarParaListaEmpresa()" 
-    style="width: 100%; background: rgba(0, 230, 64, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); padding: 12px; border-radius: 10px; font-weight: bold; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
-    <i class="fas fa-list-ul"></i> IR PARA CENTRAL DE PEDIDOS
-</button>
     </div>
 </div>
 
@@ -1501,117 +1382,47 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
     
     // === FUNÇÃO PRINCIPAL DE PERSISTÊNCIA (Ao recarregar a página) ===
     function checkPersistedOrder() {
-    const usuarioLogado = JSON.parse(localStorage.getItem("usuario"));
-    const ehEmpresa = usuarioLogado && usuarioLogado.tipo === 'empresa';
-    const pedidosAtivos = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
-
-    // Se for empresa e NÃO estiver na tela de pedido manual, mostra a central
-    if (ehEmpresa && pedidosAtivos.length > 0) {
-        // Verifica se o usuário não clicou para "Novo Pedido" recentemente
-        if (document.getElementById('tela-pedido').classList.contains('ativa')) {
-            return; // Deixa na tela de pedido
-        }
-        mudarTela('tela-acompanhamento');
-        inicializarVisualAcompanhamento();
-    } else {
-        // Lógica para cliente comum
         const persistedId = localStorage.getItem('idPedidoAtual');
         if (persistedId) {
+            idPedidoAtual = persistedId;
+            
+            // 1. Preenche os detalhes (chama a função auxiliar)
+            preencherDetalhesAcompanhamento();
+            
+            // 2. MUDAR PARA A TELA DE ACOMPANHAMENTO (Isto resolve a sobreposição!)
             mudarTela('tela-acompanhamento');
-            verificarStatus(persistedId);
+            // --- 4. CONFIGURAÇÃO DO BOTÃO FALAR COM ADM ---
+    // Esta função deve ser chamada dentro do verificarStatus ou no carregar da página
+    function configurarBotaoAdm() {
+    const areaEstorno = document.getElementById('area-estorno-adm');
+    const btnAdm = document.getElementById('btn-link-estorno');
+    
+    if (areaEstorno) {
+        // Apenas garante que a área apareça
+        areaEstorno.style.display = 'block'; 
+        
+        // Garante que o botão aceite cliques sem abrir novas abas que reiniciam o PWA
+        if (btnAdm) {
+            btnAdm.removeAttribute('target');
+        }
+    }
+}
+
+    // Chame a configuração do ADM ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+        configurarBotaoAdm();
+    });
+
+            // 3. Iniciar a verificação de status (Polling)
+            verificarStatus(idPedidoAtual);
+            
+            if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
+            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
         } else {
+            // Se não houver pedido, garante que a tela inicial esteja ativa
             mudarTela('tela-pedido');
         }
     }
-}
-
-// --- FUNÇÃO AUXILIAR PARA TROCAR O VISUAL ---
-function inicializarVisualAcompanhamento() {
-    const usuarioLogado = JSON.parse(localStorage.getItem("usuario"));
-    const fluxoComum = document.getElementById('fluxo-cliente-comum');
-    const fluxoEmpresa = document.getElementById('fluxo-restaurante');
-
-    if (usuarioLogado && usuarioLogado.tipo === 'empresa') {
-        if(fluxoComum) fluxoComum.style.display = 'none';
-        if(fluxoEmpresa) fluxoEmpresa.style.display = 'block';
-    } else {
-        if(fluxoComum) fluxoComum.style.display = 'block';
-        if(fluxoEmpresa) fluxoEmpresa.style.display = 'none';
-    }
-}
-async function atualizarCentralDePedidos() {
-    const container = document.getElementById('lista-pedidos-ativos');
-    const listaIds = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
-
-    if (!container) return;
-
-    if (listaIds.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 40px 20px; color: #666;">
-                <i class="fas fa-box-open" style="font-size: 40px; margin-bottom: 10px; display: block;"></i>
-                <p>Nenhuma entrega ativa no momento.</p>
-            </div>`;
-        return;
-    }
-
-    // Criamos uma variável para acumular o HTML e não ficar "piscando" a tela
-    let htmlFinal = "";
-
-    // Fazemos um loop por cada ID salvo
-    for (const id of listaIds) {
-        try {
-            const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
-            const data = await res.json();
-            
-            if (data.success && data.pedido) {
-                const p = data.pedido;
-
-                // Define a cor baseada no status (Azul, Verde, Dourado ou Vermelho)
-                let corStatus = "#00ffff"; // Buscando
-                let icone = "🔍";
-                
-                if (p.status === 'liberada' || p.status === 'em_andamento') {
-                    corStatus = "#00e640"; 
-                    icone = "🏍️";
-                } else if (p.status === 'concluida') {
-                    corStatus = "#ffd700";
-                    icone = "✅";
-                } else if (p.status === 'cancelada') {
-                    corStatus = "#ff4444";
-                    icone = "❌";
-                }
-
-                htmlFinal += `
-                    <div class="info-card" style="border-left: 4px solid ${corStatus}; margin-bottom: 10px; position: relative;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div>
-                                <span style="font-size: 11px; color: #888; font-weight: bold;">PEDIDO #${id}</span>
-                                <div style="color: ${corStatus}; font-size: 13px; font-weight: 800; margin-top: 2px;">
-                                    ${icone} ${p.status.toUpperCase()}
-                                </div>
-                            </div>
-                            <button onclick="verDetalhesPedido('${id}')" style="background: ${corStatus}; color: black; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer;">
-                                VER PEDIDO
-                            </button>
-                        </div>
-                        
-                        <div style="margin-top: 10px; font-size: 13px; color: #eee; border-top: 1px solid #333; padding-top: 8px;">
-                            <strong>Para:</strong> ${(p.destino || "Endereço não informado").split(',')[0]}
-                        </div>
-                        
-                        <div style="font-size: 12px; color: #aaa; margin-top: 4px;">
-                            <strong>Piloto:</strong> ${p.nome_motoboy || 'Procurando...'}
-                        </div>
-                    </div>
-                `;
-            }
-        } catch (err) {
-            console.error("Erro ao buscar pedido " + id, err);
-        }
-    }
-
-    container.innerHTML = htmlFinal;
-}
 
 
     // === FUNÇÕES MAPA E CÁLCULO ===
@@ -2004,34 +1815,68 @@ document.addEventListener('click', (e) => {
 });
     // === ENVIO DE PEDIDO ===
     async function pedir() {
-    // Pega os valores brutos primeiro para validar
-    const campoRuaOrigem = document.getElementById('rua-origem').value.trim();
-    const campoRuaDestino = document.getElementById('rua-destino').value.trim();
-
-    // Bloqueio de segurança: se um dos dois estiver vazio, para tudo
-    if (!campoRuaOrigem || !campoRuaDestino) {
-        showToast("⚠️ Por favor, informe a rua de origem e destino!", "error");
-        return;
+    if (!servicoSelecionado) { 
+        showToast("Selecione Moto Táxi ou Entrega", "error"); 
+        return; 
     }
     
+    // Limpeza dos dados
     const ruaOrigemPura = document.getElementById('rua-origem').value.split(',')[0].trim();
     const ruaDestinoPura = document.getElementById('rua-destino').value.split(',')[0].trim();
+    
     const numOrigem = document.getElementById('num-origem').value.trim();
     const bairroOrigem = document.getElementById('bairro-origem').value.trim();
+    
     const numDestino = document.getElementById('num-destino').value.trim();
     const bairroDestino = document.getElementById('bairro-destino').value.trim();
-    const detalhes = document.getElementById('detalhes-entrega').value.trim();
+    const detalhes = document.getElementById('detalhes-entrega').value.trim(); // Adicionado .trim()
 
-    if (!numOrigem || !bairroOrigem || !numDestino || !bairroDestino || (servicoSelecionado === 'entrega' && !detalhes)) {
-        showToast("⚠️ Preencha todos os campos obrigatórios!", "error");
-        return;
+    let erro = false;
+
+    // --- VALIDAÇÃO DE ORIGEM ---
+    if (!numOrigem) { 
+        document.getElementById('num-origem').classList.add('erro'); 
+        erro = true; 
+    }
+    if (!bairroOrigem) { 
+        document.getElementById('bairro-origem').classList.add('erro'); 
+        erro = true; 
     }
 
+    // --- VALIDAÇÃO DE DESTINO ---
+    if (!numDestino) { 
+        document.getElementById('num-destino').classList.add('erro'); 
+        erro = true; 
+    }
+    if (!bairroDestino) { 
+        document.getElementById('bairro-destino').classList.add('erro'); 
+        erro = true; 
+    }
+
+    // --- NOVA VALIDAÇÃO: OBRIGATÓRIO PARA ENTREGA ---
+    if (servicoSelecionado === 'entrega' && !detalhes) {
+        document.getElementById('detalhes-entrega').classList.add('erro');
+        showToast("⚠️ Descreva o que vamos levar!", "error");
+        document.getElementById('detalhes-entrega').focus();
+        return; // Para a execução aqui
+    }
+    
+    if (erro) { 
+        showToast("⚠️ Preencha NÚMERO e BAIRRO corretamente!", "error"); 
+        return; 
+    }
+
+    // --- SE PASSOU, MONTA O ENDEREÇO ---
     const strOrigem = `${ruaOrigemPura}, Nº ${numOrigem}, ${bairroOrigem}`;
     const strDestino = `${ruaDestinoPura}, Nº ${numDestino}, ${bairroDestino}`;
-    const strDestinoFinal = servicoSelecionado === 'entrega' ? `${strDestino} (ITEM: ${detalhes})` : strDestino;
+    
+    const strDestinoFinal = servicoSelecionado === 'entrega'
+        ? `${strDestino} (ITEM: ${detalhes})`
+        : strDestino;
     
     document.getElementById('modal-busca').style.display = 'flex';
+    document.getElementById('status-titulo-modal').innerText = "BUSCANDO PILOTO...";
+    document.getElementById('status-desc-modal').innerText = "Enviando confirmação...";
 
     try {
         const body = {
@@ -2050,81 +1895,50 @@ document.addEventListener('click', (e) => {
         const json = await res.json();
 
         if (json.success) {
-            const idNovo = json.id;
-            idPedidoAtual = idNovo;
-
-            // 1. Salva na lista de múltiplos (Para Empresas)
-            let pedidosAtivos = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
-            if (!pedidosAtivos.includes(idNovo)) {
-                pedidosAtivos.push(idNovo);
-                localStorage.setItem('meus_pedidos_ativos', JSON.stringify(pedidosAtivos));
-            }
-
-            // 2. Salva dados para persistência
+            idPedidoAtual = json.id;
+            
+            // SALVA DADOS COMPLETOS PARA POSSÍVEL REUSO
             const dadosParaSalvar = {
                 origem: strOrigem,
                 destino: strDestino,
                 valor: window.valorCalculado || 10.0,
-                tipo_servico: servicoSelecionado
+                tipo_servico: servicoSelecionado,
+                detalhes: servicoSelecionado === 'entrega' ? detalhes : null,
+                campos: {
+                    ruaOrigem: document.getElementById('rua-origem').value,
+                    numOrigem: numOrigem,
+                    bairroOrigem: bairroOrigem,
+                    ruaDestino: document.getElementById('rua-destino').value,
+                    numDestino: numDestino,
+                    bairroDestino: bairroDestino,
+                    detalhesEntrega: servicoSelecionado === 'entrega' ? detalhes : ''
+                }
             };
-            localStorage.setItem('pedidoAtual', JSON.stringify(dadosParaSalvar));
-            localStorage.setItem('idPedidoAtual', idNovo);
+            
+            localStorage.setItem('idPedidoAtual', idPedidoAtual);
             localStorage.setItem('inicioBuscaTimestamp', Date.now());
-
-            // 3. Decide qual fluxo mostrar baseado no tipo do usuário
-            if (usuario && usuario.tipo === 'empresa') {
-                mudarTela('tela-acompanhamento');
-                inicializarVisualAcompanhamento(); 
-                atualizarCentralDePedidos();
-            } else {
-                preencherDetalhesAcompanhamento();
-                mudarTela('tela-acompanhamento');
-                inicializarVisualAcompanhamento();
-                iniciarContadorBusca(idNovo, 600);
-            }
-
+            localStorage.setItem('pedidoAtual', JSON.stringify(dadosParaSalvar));
+            
+            // Preenche a tela de acompanhamento
+            preencherDetalhesAcompanhamento();
+            
+            // Troca para a tela de Acompanhamento
+            mudarTela('tela-acompanhamento');
             document.getElementById('modal-busca').style.display = 'none';
-            showToast("Solicitação enviada!", "success");
-            limparRascunho(); // Limpa o formulário para o próximo pedido
+            
+            // Inicia contador e verificação
+            iniciarContadorBusca(idPedidoAtual, 600);
+            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+            
+            showToast("Solicitação enviada. Buscando piloto...", "info");
 
         } else {
-            throw new Error(json.message || "Erro ao processar");
+            throw new Error(json.message);
         }
     } catch (e) {
         document.getElementById('modal-busca').style.display = 'none';
-        showToast("Erro: " + e.message, "error");
+        showToast("Erro ao enviar pedido: " + e.message, "error");
     }
-}
-function verDetalhesPedido(id) {
-    // 1. Define este ID como o principal temporariamente
-    idPedidoAtual = id;
-    localStorage.setItem('idPedidoAtual', id);
-    
-    // 2. Esconde a lista da empresa e mostra o acompanhamento comum
-    document.getElementById('fluxo-restaurante').style.display = 'none';
-    document.getElementById('fluxo-cliente-comum').style.display = 'block';
-    
-    // 3. Adiciona um botão de "VOLTAR" caso ele não exista
-    let btnVoltar = document.getElementById('btn-voltar-lista');
-    if (!btnVoltar) {
-        const areaStatus = document.getElementById('acompanhamento-status-area');
-        areaStatus.insertAdjacentHTML('afterbegin', `
-            <button id="btn-voltar-lista" onclick="voltarParaListaEmpresa()" 
-                style="width:100%; margin-bottom:15px; background:#333; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">
-                ⬅️ VOLTAR PARA A LISTA
-            </button>
-        `);
-    }
-
-    // 4. Inicia o monitoramento desse pedido específico
-    preencherDetalhesAcompanhamento();
-    verificarStatus(id);
-}
-
-function voltarParaListaEmpresa() {
-    document.getElementById('fluxo-restaurante').style.display = 'block';
-    document.getElementById('fluxo-cliente-comum').style.display = 'none';
-    atualizarCentralDePedidos();
 }
 
     // === SUBSTITUA SÓ A FUNÇÃO cancelarComTaxa POR ESTA ===
@@ -2195,22 +2009,6 @@ async function cancelarComTaxa() {
     // === INICIALIZAÇÃO DE LISTENERS ===
     // === INICIALIZAÇÃO COM MEMÓRIA DE TEMPO (COLE NO FINAL DO SCRIPT) ===
 document.addEventListener('DOMContentLoaded', async () => {
-    // === CÓDIGO PARA MANTER LOGADO ===
-    const usuarioSalvo = localStorage.getItem('usuario');
-    if (usuarioSalvo) {
-        window.usuario = JSON.parse(usuarioSalvo); // Restaura os dados do usuário
-        if (window.usuario.tipo === 'empresa') {
-            document.getElementById('fluxo-restaurante').style.display = 'block';
-            document.getElementById('fluxo-cliente-comum').style.display = 'none';
-            atualizarCentralDePedidos(); // Carrega a lista automaticamente
-        }
-    } else {
-        // Se não houver sessão e não estiver na index, volta pro login
-        if (!window.location.href.includes('index.html')) {
-            window.location.href = 'index.html';
-        }
-    }
-    // =================================
 
     const idSalvo = localStorage.getItem('idPedidoAtual');
     // --- 🚨 AQUI ESTÁ A CORREÇÃO DO ID #000 ---
@@ -2223,7 +2021,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Também garante que a variável global esteja certa
         window.idPedidoAtual = idSalvo;
     }
-    
 
     if (idSalvo) {
         try {
@@ -2610,9 +2407,9 @@ function usarMeuLocal() {
 
 // 1. FUNÇÃO SAIR CORRIGIDA (Redireciona para o login real)
 function logout() {
-    localStorage.removeItem('usuario'); // Remove especificamente o login
-    localStorage.removeItem('rascunho_cliente'); // Limpa rascunhos
-    window.location.href = 'index.html'; // Volta para a tela de login real
+    localStorage.clear(); 
+    // Manda o usuário para a tela inicial/login em vez de recarregar a tela atual quebrada
+    window.location.href = 'index.html'; 
 }
 
 // 2. FUNÇÃO DO BOTÃO "LIMPAR" (A Lixeira)
@@ -2808,13 +2605,6 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 600) { // <--- MUDADO
             encerrarBuscaPorTimeout(idPedido);
         }
     }, 1000);
-}
-function abrirAviso() {
-    document.getElementById('modal-aviso').style.display = 'flex';
-}
-
-function fecharAviso() {
-    document.getElementById('modal-aviso').style.display = 'none';
 }
 
 // 3. Função de Verificação de Status (Que sabe parar o timer acima)
@@ -3019,37 +2809,5 @@ async function enviarCancelamentoComJustificativa() {
     } catch (e) {
         alert("Erro de conexão.");
     }
-}
-function verDetalhesPedido(id) {
-    // 1. Define este ID como o foco atual
-    window.idPedidoAtual = id;
-    
-    // 2. Esconde a lista e mostra o mapa
-    document.getElementById('fluxo-restaurante').style.display = 'none';
-    document.getElementById('fluxo-cliente-comum').style.display = 'block';
-    
-    // 3. Cria o botão de voltar para a lista se não existir
-    if (!document.getElementById('btn-voltar-lista')) {
-        const areaHeader = document.getElementById('acompanhamento-status-area');
-        areaHeader.insertAdjacentHTML('afterbegin', `
-            <button id="btn-voltar-lista" onclick="voltarParaListaEmpresa()" 
-                style="width:100%; margin-bottom:15px; background:#333; color:white; border:1px solid var(--neon-green); padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">
-                ⬅️ VOLTAR PARA A CENTRAL
-            </button>
-        `);
-    }
-
-    // 4. Carrega os dados específicos deste pedido no mapa
-    // Nota: Como é um pedido antigo, os dados de endereço precisam ser buscados do servidor ou salvos em um objeto maior.
-    // Para simplificar, o verificarStatus já vai preencher o motorista e o status no mapa.
-    verificarStatus(id);
-}
-
-function voltarParaListaEmpresa() {
-    document.getElementById('fluxo-restaurante').style.display = 'block';
-    document.getElementById('fluxo-cliente-comum').style.display = 'none';
-    const btn = document.getElementById('btn-voltar-lista');
-    if (btn) btn.remove();
-    atualizarCentralDePedidos();
 }
 </script>
