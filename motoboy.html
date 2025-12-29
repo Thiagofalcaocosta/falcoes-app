@@ -1076,11 +1076,17 @@ function mostrarTela(idDesejado) {
 function renderizarBotoesAtiva(status) {
     const container = document.getElementById('botoes-acao-ativa');
     if (!container) return;
+
+    // 🛡️ TRAVA DE SEGURANÇA: Se o usuário já estiver digitando, NÃO RECRIA O CAMPO
+    // Isso evita que o polling (setInterval) apague o que você escreveu
+    const inputExistente = document.getElementById('input-codigo-pedido-v2');
+    if (inputExistente && document.activeElement === inputExistente) {
+        return; 
+    }
     
-    // Limpa o que tem dentro para reconstruir de acordo com o momento da corrida
+    // Se o status mudar ou o campo não existir, aí sim nós limpamos e recriamos
     container.innerHTML = ''; 
 
-    // --- MOMENTO 1: O MOTOBOY ACEITOU MAS AINDA NÃO COLETOU ---
     if (status === 'liberada') {
         const btnColetar = document.createElement('button');
         btnColetar.className = 'btn-acao btn-verde';
@@ -1093,24 +1099,15 @@ function renderizarBotoesAtiva(status) {
                     const res = await fetch(`${MEU_IP}/iniciar-corrida`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            corrida_id: idCorridaAtual, 
-                            motoboy_id: usuario.id 
-                        })
+                        body: JSON.stringify({ corrida_id: idCorridaAtual, motoboy_id: usuario.id })
                     });
                     const data = await res.json();
-                    if(data.success) {
-                        verificarEstado(); // Atualiza a tela para mostrar o campo de PIN
-                    }
-                } catch (err) {
-                    alert("Erro ao avisar saída. Verifique sua internet.");
-                }
+                    if(data.success) verificarEstado(); 
+                } catch (err) { alert("Erro ao avisar saída."); }
             }
         };
         container.appendChild(btnColetar);
     } 
-
-    // --- MOMENTO 2: JÁ COLETOU E ESTÁ NA RUA (MOSTRA O PIN) ---
     else if (status === 'em_andamento') {
         const divSenha = document.createElement('div');
         divSenha.style.cssText = "background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 12px; border: 1px solid #444; text-align: center; margin: 0 auto 15px auto; width: 85%;";
@@ -1130,7 +1127,6 @@ function renderizarBotoesAtiva(status) {
         container.appendChild(btnFinalizar);
     }
 
-    // --- BOTÃO CANCELAR (SEMPRE APARECE COMO OPÇÃO) ---
     const btnCancelar = document.createElement('button');
     btnCancelar.innerText = 'CANCELAR CORRIDA';
     btnCancelar.onclick = () => cancelarCorridaMotoboy();
