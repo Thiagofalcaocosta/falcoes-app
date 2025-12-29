@@ -999,16 +999,18 @@
         </div>
 
         <div id="tela-pedido" class="tela ativa">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="margin: 0; font-size: 20px;">NOVA SOLICITAÇÃO</h2>
+        <button onclick="limparFormularioManual()" class="btn-limpar-discreto" style="background: #333; color: #ccc; border: 1px solid #444; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
+            🗑️ Limpar
+        </button>
+    </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h2 style="margin: 0;">NOVA SOLICITAÇÃO</h2>
-    <button onclick="mudarTela('fluxo-restaurante'); atualizarCentralDePedidos();" 
-    style="width: 100%; background: #222; color: var(--neon-green); border: 1px solid var(--neon-green); padding: 12px; border-radius: 10px; font-weight: bold; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
-    <i class="fas fa-list-ul"></i> IR PARA CENTRAL DE PEDIDOS
-</button>
-    <button onclick="limparFormularioManual()" class="btn-limpar-discreto">
-        🗑️ Limpar
+    <button onclick="voltarParaListaEmpresa()" 
+        style="width: 100%; background: rgba(0, 230, 64, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); padding: 12px; border-radius: 10px; font-weight: bold; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <i class="fas fa-list-ul"></i> IR PARA CENTRAL DE PEDIDOS
     </button>
+
 </div>
 
             <div class="opcoes-servico">
