@@ -84,6 +84,19 @@
             margin-top: 15px;
             cursor: pointer;
         }
+        /* Cores Neons por Status */
+.status-pendente { border-left: 6px solid #00ffff !important; } /* Azul Ciano - Buscando */
+.status-aceita, .status-liberada, .status-em_andamento { 
+    border-left: 6px solid #00e640 !important; 
+} /* Verde - Em curso */
+.status-concluida { border-left: 6px solid #ffd700 !important; opacity: 0.8; } /* Dourado - Finalizado */
+.status-cancelada { border-left: 6px solid #ff4444 !important; opacity: 0.7; } /* Vermelho - Cancelado */
+
+/* Ajuste a cor do texto do status dentro do card */
+.badge-pendente { color: #00ffff; }
+.badge-ativo { color: #00e640; }
+.badge-concluido { color: #ffd700; }
+.badge-cancelado { color: #ff4444; }
     </style>
 </head>
 <body>
@@ -158,21 +171,52 @@ function renderizarLista(pedidos) {
 
     let html = "";
     pedidos.forEach(p => {
-        const cor = p.status === 'pendente' ? '#00ffff' : (p.status === 'concluida' ? '#ffd700' : '#00e640');
-        html += `
-            <div class="pedido-card" style="border-left: 6px solid ${cor}; background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="font-size: 24px; font-weight: 900; color: #fff;">#${p.id}</span>
-                    <span style="color: ${cor}; font-weight: bold; font-size: 11px;">${p.status.toUpperCase()}</span>
+    // 1. Definição lógica das cores por status
+    let cor;
+    let textoStatus = p.status.toUpperCase().replace('_', ' ');
+
+    switch (p.status) {
+        case 'pendente':
+            cor = '#00ffff'; // Azul Ciano (Buscando)
+            break;
+        case 'concluida':
+            cor = '#ffd700'; // Dourado (Finalizada)
+            break;
+        case 'cancelada':
+            cor = '#ff4444'; // Vermelho (Cancelada)
+            break;
+        case 'aceita':
+        case 'liberada':
+        case 'em_andamento':
+            cor = '#00e640'; // Verde (Em curso)
+            break;
+        default:
+            cor = '#888888'; // Cinza (Outros)
+    }
+
+    // 2. Montagem do HTML com a cor dinâmica
+    html += `
+        <div class="pedido-card" style="border-left: 6px solid ${cor}; background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 24px; font-weight: 900; color: #fff;">#${p.id}</span>
+                <span style="color: ${cor}; font-weight: bold; font-size: 11px;">${textoStatus}</span>
+            </div>
+            <div style="margin: 10px 0; font-size: 14px;">
+                <div style="color: var(--neon-green); font-weight: bold; font-size: 18px; margin-bottom: 5px;">
+                    R$ ${parseFloat(p.valor || 0).toFixed(2).replace('.', ',')}
                 </div>
-                <div style="margin: 10px 0; font-size: 14px;">
-                    <div style="color: var(--neon-green); font-weight: bold;">R$ ${parseFloat(p.valor || 0).toFixed(2)}</div>
-                    <div style="color: #aaa;">Para: ${p.destino?.split(',')[0] || '---'}</div>
+                <div style="color: #aaa;"><strong>Para:</strong> ${p.destino?.split(',')[0] || '---'}</div>
+                <div style="color: #888; font-size: 12px; margin-top: 5px;">
+                    <i class="fas fa-wallet"></i> ${p.pago ? '✅ Pago' : '⏳ Pgto Pendente'}
                 </div>
-                <button class="btn-detalhes" onclick="verNoMapa('${p.id}')">DETALHES</button>
-            </div>`;
-    });
-    container.innerHTML = html;
+            </div>
+            <button class="btn-detalhes" style="width: 100%; padding: 10px; background: ${cor}; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" 
+                onclick="verNoMapa('${p.id}')">
+                DETALHES
+            </button>
+        </div>`;
+});
+container.innerHTML = html;
 }
         function verNoMapa(id) {
             localStorage.setItem('idPedidoAtual', id);
