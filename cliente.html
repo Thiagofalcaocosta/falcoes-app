@@ -827,6 +827,51 @@
     border: 2px solid #ff4d4d !important;
     background-color: #fff5f5;
 }
+.notification-container {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 9999;
+    cursor: pointer;
+}
+
+.bell-box {
+    background: rgba(255, 255, 255, 0.1); /* Efeito transparente */
+    backdrop-filter: blur(10px);
+    padding: 12px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+}
+
+.bell-box i {
+    color: #FFD700; /* Dourado metálico */
+    font-size: 24px;
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+}
+
+.badge-red {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff0000;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 7px;
+    border-radius: 50%;
+    border: 2px solid #121212;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+/* Efeito de balanço quando o mouse passa ou quando tiver aviso */
+.bell-box:hover {
+    transform: scale(1.1) rotate(10deg);
+}
 
 
     </style>
@@ -846,6 +891,38 @@
 </head>
 
 <body>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div class="notification-container" onclick="abrirAviso()">
+    <div class="bell-box">
+        <i class="fas fa-bell"></i>
+        <span class="badge-red">1</span>
+    </div>
+</div>
+
+<div id="modal-aviso" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: #1a1a1a; padding: 25px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; border: 1px solid #333; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        
+        <div style="font-size: 40px; margin-bottom: 10px;">📢</div>
+        <h3 style="color: #fff; margin: 0 0 10px 0; font-family: sans-serif;">AVISO IMPORTANTE</h3>
+        
+        <p id="texto-alerta" style="color: #ccc; line-height: 1.5; font-family: sans-serif; margin-bottom: 20px;">
+            Mau tempo na sua área 🌧️ Para manter a operação ativa e recompensar nossos parceiros sob chuva, uma taxa extra está sendo aplicada neste momento.
+        </p>
+        
+        <button onclick="fecharAviso()" style="background: #00ff00; color: #000; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px;">
+            ENTENDIDO
+        </button>
+    </div>
+</div>
+
+<div id="modal-aviso" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 20px; border-radius: 15px; width: 80%; max-width: 400px; text-align: center; color: #333;">
+        <h3 style="color: #d9534f;">Informativo Falcões</h3>
+        <p id="texto-alerta">Estamos com alta demanda em Três Corações! As corridas podem demorar um pouco mais.</p>
+        <button onclick="fecharAviso()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">Entendido</button>
+    </div>
+</div>
 
     <div class="toast-container" id="toast-container"></div>
 
@@ -2605,6 +2682,14 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 600) { // <--- MUDADO
             encerrarBuscaPorTimeout(idPedido);
         }
     }, 1000);
+}
+
+function abrirAviso() {
+    document.getElementById('modal-aviso').style.display = 'flex';
+}
+
+function fecharAviso() {
+    document.getElementById('modal-aviso').style.display = 'none';
 }
 
 // 3. Função de Verificação de Status (Que sabe parar o timer acima)
