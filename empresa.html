@@ -116,61 +116,63 @@
             localStorage.clear();
             window.location.href = 'index.html';
         }
-
-        async function carregarPedidos() {
+ 
+       async function carregarPedidos() {
     const container = document.getElementById('central-lista');
-    const usuarioId = localStorage.getItem('usuario_id'); // Pega o ID da empresa logada
-
-    if (!usuarioId) {
-        container.innerHTML = '<p style="text-align:center; color:#ff4444;">Erro: Usuário não identificado. Faça login novamente.</p>';
-        return;
-    }
+    const usuarioId = localStorage.getItem('usuario_id');
+    const listaLocal = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
 
     try {
-        // BUSCA DIRETO DO BACKEND TODOS OS PEDIDOS DESTA EMPRESA
-        // Certifique-se que seu backend tem a rota /pedidos-cliente/ID
+        // Tenta buscar no banco de dados
         const response = await fetch(`${MEU_IP}/pedidos-cliente/${usuarioId}`);
-        const data = await response.json();
-
-        if (!data.success || !data.pedidos || data.pedidos.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Nenhum pedido encontrado no banco de dados.</p>';
-            return;
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.pedidos.length > 0) {
+                renderizarLista(data.pedidos);
+                return;
+            }
+        }
+        
+        // Se o banco falhar (404) ou estiver vazio, tenta carregar os IDs locais
+        if (listaLocal.length > 0) {
+            const promessas = listaLocal.map(id => fetch(`${MEU_IP}/status-pedido/${id}`).then(r => r.json()));
+            const resultados = await Promise.all(promessas);
+            const pedidosValidos = resultados.filter(r => r.success).map(r => r.pedido);
+            renderizarLista(pedidosValidos);
+        } else {
+            container.innerHTML = '<p style="text-align:center; color:#666;">Nenhum pedido ativo encontrado.</p>';
         }
 
-        let pedidos = data.pedidos;
-
-        // ORDENAÇÃO: 1º Pendentes, 2º Em Andamento, 3º Concluídos
-        const pesos = { 'pendente': 1, 'aceita': 2, 'liberada': 2, 'em_andamento': 2, 'concluida': 3, 'cancelada': 4 };
-        pedidos.sort((a, b) => (pesos[a.status] || 99) - (pesos[b.status] || 99));
-
-        let html = "";
-        pedidos.forEach(p => {
-            const corStatus = p.status === 'pendente' ? '#00ffff' : (p.status === 'concluida' ? '#ffd700' : '#00e640');
-            
-            html += `
-                <div class="pedido-card" style="border-left: 6px solid ${corStatus}; background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="font-size: 24px; font-weight: 900; color: #fff;">#${p.id}</span>
-                        <span style="color: ${corStatus}; font-weight: bold; font-size: 12px;">${p.status.toUpperCase()}</span>
-                    </div>
-                    <div style="margin-top: 10px; font-size: 14px; color: #ccc;">
-                        <div><strong>Valor:</strong> R$ ${parseFloat(p.valor).toFixed(2)}</div>
-                        <div><strong>Pagamento:</strong> ${p.pago ? '✅ PAGO' : '⏳ PENDENTE'}</div>
-                        <div><strong>Para:</strong> ${p.destino.split(',')[0]}</div>
-                    </div>
-                    <button class="btn-detalhes" style="width:100%; margin-top:10px; padding:10px; background:${corStatus}; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="verNoMapa('${p.id}')">
-                        DETALHES DA ENTREGA
-                    </button>
-                </div>
-            `;
-        });
-
-        container.innerHTML = html;
-
     } catch (e) {
-        console.error("Erro ao carregar central:", e);
-        container.innerHTML = '<p style="color:red; text-align:center;">Erro de conexão com o servidor.</p>';
+        container.innerHTML = '<p style="color:orange; text-align:center;">Modo Offline: Verificando pedidos locais...</p>';
     }
+}
+
+// Função auxiliar para desenhar os cards (Centraliza a organização)
+function renderizarLista(pedidos) {
+    const container = document.getElementById('central-lista');
+    // Ordenação: Pendentes primeiro
+    const pesos = { 'pendente': 1, 'em_andamento': 2, 'concluida': 3 };
+    pedidos.sort((a, b) => (pesos[a.status] || 99) - (pesos[b.status] || 99));
+
+    let html = "";
+    pedidos.forEach(p => {
+        const cor = p.status === 'pendente' ? '#00ffff' : (p.status === 'concluida' ? '#ffd700' : '#00e640');
+        html += `
+            <div class="pedido-card" style="border-left: 6px solid ${cor}; background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="font-size: 24px; font-weight: 900; color: #fff;">#${p.id}</span>
+                    <span style="color: ${cor}; font-weight: bold; font-size: 11px;">${p.status.toUpperCase()}</span>
+                </div>
+                <div style="margin: 10px 0; font-size: 14px;">
+                    <div style="color: var(--neon-green); font-weight: bold;">R$ ${parseFloat(p.valor || 0).toFixed(2)}</div>
+                    <div style="color: #aaa;">Para: ${p.destino?.split(',')[0] || '---'}</div>
+                </div>
+                <button class="btn-detalhes" onclick="verNoMapa('${p.id}')">DETALHES</button>
+            </div>`;
+    });
+    container.innerHTML = html;
 }
         function verNoMapa(id) {
             localStorage.setItem('idPedidoAtual', id);

@@ -242,6 +242,25 @@
                 btn.disabled = false;
             }
         }
+        // Rota para listar pedidos de um cliente específico
+app.get('/pedidos-cliente/:id', async (req, res) => {
+    const clienteId = req.params.id;
+    try {
+        // Altere 'pedidos' pelo nome da sua tabela no banco de dados
+        const resultado = await pool.query(
+            'SELECT * FROM pedidos WHERE cliente_id = $1 ORDER BY id DESC', 
+            [clienteId]
+        );
+        
+        res.json({
+            success: true,
+            pedidos: resultado.rows
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Erro ao buscar pedidos" });
+    }
+});
     </script>
 </body>
 </html>
