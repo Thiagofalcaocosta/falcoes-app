@@ -119,65 +119,47 @@
 
         async function carregarPedidos() {
     const container = document.getElementById('central-lista');
-    
-    // 1. Pega os IDs salvos. Se não houver nenhum, tenta buscar pelo ID do usuário
-    const listaIds = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
-    const usuarioId = localStorage.getItem('usuario_id');
+    const usuarioId = localStorage.getItem('usuario_id'); // Pega o ID da empresa logada
 
-    if (listaIds.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Nenhum pedido encontrado no seu histórico local.</p>';
+    if (!usuarioId) {
+        container.innerHTML = '<p style="text-align:center; color:#ff4444;">Erro: Usuário não identificado. Faça login novamente.</p>';
         return;
     }
 
     try {
-        let html = "";
-        let pedidosDetalhados = [];
+        // BUSCA DIRETO DO BACKEND TODOS OS PEDIDOS DESTA EMPRESA
+        // Certifique-se que seu backend tem a rota /pedidos-cliente/ID
+        const response = await fetch(`${MEU_IP}/pedidos-cliente/${usuarioId}`);
+        const data = await response.json();
 
-        // 2. Busca os detalhes de cada pedido
-        const promessas = listaIds.map(id => 
-            fetch(`${MEU_IP}/status-pedido/${id}`).then(r => r.json())
-        );
-        const resultados = await Promise.all(promessas);
+        if (!data.success || !data.pedidos || data.pedidos.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Nenhum pedido encontrado no banco de dados.</p>';
+            return;
+        }
 
-        resultados.forEach(res => {
-            if (res.success && res.pedido) {
-                pedidosDetalhados.push(res.pedido);
-            }
-        });
+        let pedidos = data.pedidos;
 
-        // 3. ORDENAÇÃO SOLICITADA: 
-        // 1º Pendente (Buscando), 2º Em Andamento, 3º Concluída/Cancelada
+        // ORDENAÇÃO: 1º Pendentes, 2º Em Andamento, 3º Concluídos
         const pesos = { 'pendente': 1, 'aceita': 2, 'liberada': 2, 'em_andamento': 2, 'concluida': 3, 'cancelada': 4 };
-        pedidosDetalhados.sort((a, b) => (pesos[a.status] || 99) - (pesos[b.status] || 99));
+        pedidos.sort((a, b) => (pesos[a.status] || 99) - (pesos[b.status] || 99));
 
-        // 4. GERA O HTML COM VALOR E DESTAQUE
-        pedidosDetalhados.forEach(p => {
-            const statusTraduzido = p.status === 'pendente' ? 'BUSCANDO PILOTO ⏳' : p.status.toUpperCase();
+        let html = "";
+        pedidos.forEach(p => {
             const corStatus = p.status === 'pendente' ? '#00ffff' : (p.status === 'concluida' ? '#ffd700' : '#00e640');
             
             html += `
-                <div class="pedido-card" style="border-left-color: ${corStatus}; margin-bottom: 15px; background: #252525; padding: 15px; border-radius: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <span style="font-size: 26px; font-weight: 900; color: #fff; display: block;">#${p.id}</span>
-                            <span style="color: ${corStatus}; font-weight: bold; font-size: 12px;">${statusTraduzido}</span>
-                        </div>
-                        <div style="text-align: right;">
-                            <span style="display: block; font-size: 18px; font-weight: bold; color: var(--neon-green);">R$ ${parseFloat(p.valor).toFixed(2).replace('.',',')}</span>
-                            <span style="font-size: 11px; color: ${p.pago ? '#00e640' : '#ffcc00'}">
-                                <i class="fas fa-wallet"></i> ${p.pago ? 'PAGO' : 'PAGAMENTO PENDENTE'}
-                            </span>
-                        </div>
+                <div class="pedido-card" style="border-left: 6px solid ${corStatus}; background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 24px; font-weight: 900; color: #fff;">#${p.id}</span>
+                        <span style="color: ${corStatus}; font-weight: bold; font-size: 12px;">${p.status.toUpperCase()}</span>
                     </div>
-
-                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #333;">
-                        <div class="info"><i class="fas fa-map-marker-alt"></i> <strong>Destino:</strong> ${p.destino.split(',')[0]}</div>
-                        <div class="info"><i class="fas fa-motorcycle"></i> <strong>Piloto:</strong> ${p.nome_motoboy || 'Procurando...'}</div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #ccc;">
+                        <div><strong>Valor:</strong> R$ ${parseFloat(p.valor).toFixed(2)}</div>
+                        <div><strong>Pagamento:</strong> ${p.pago ? '✅ PAGO' : '⏳ PENDENTE'}</div>
+                        <div><strong>Para:</strong> ${p.destino.split(',')[0]}</div>
                     </div>
-
-                    <button class="btn-detalhes" style="margin-top:15px; width:100%; padding: 10px; background: ${corStatus}; color: #000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" 
-                        onclick="verNoMapa('${p.id}')">
-                        ACOMPANHAR ENTREGA
+                    <button class="btn-detalhes" style="width:100%; margin-top:10px; padding:10px; background:${corStatus}; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="verNoMapa('${p.id}')">
+                        DETALHES DA ENTREGA
                     </button>
                 </div>
             `;
@@ -186,8 +168,8 @@
         container.innerHTML = html;
 
     } catch (e) {
-        console.error("Erro na Central:", e);
-        container.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar dados do servidor.</p>';
+        console.error("Erro ao carregar central:", e);
+        container.innerHTML = '<p style="color:red; text-align:center;">Erro de conexão com o servidor.</p>';
     }
 }
         function verNoMapa(id) {
