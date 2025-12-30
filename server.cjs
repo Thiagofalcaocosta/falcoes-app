@@ -1577,3 +1577,28 @@ app.post('/iniciar-corrida', async (req, res) => {
         res.status(500).json({ success: false, message: 'Erro no servidor' });
     }
 });
+
+app.post('/avaliar', async (req, res) => {
+    const { corrida_id, avaliador_id, avaliado_id, nota } = req.body;
+
+    try {
+        // 1. Salva a avaliação
+        await pool.query(
+            'INSERT INTO avaliacoes (corrida_id, avaliador_id, avaliado_id, nota) VALUES ($1, $2, $3, $4)',
+            [corrida_id, avaliador_id, avaliado_id, nota]
+        );
+
+        // 2. Recalcula a média do usuário avaliado
+        await pool.query(
+            `UPDATE usuarios 
+             SET nota_media = (SELECT AVG(nota) FROM avaliacoes WHERE avaliado_id = $1),
+                 total_avaliacoes = total_avaliacoes + 1
+             WHERE id = $1`,
+            [avaliado_id]
+        );
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Erro ao salvar avaliação" });
+    }
+});
