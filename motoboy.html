@@ -932,22 +932,7 @@ function tocarAlerta() {
 }
 
 // ESTA FUNÇÃO É ESSENCIAL PARA PARAR O BARULHO
-function pararAlerta() {
-    const audio = document.getElementById('som-alerta');
-    if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.loop = false;
-    }
 
-    if (loopVibracao) {
-        clearInterval(loopVibracao);
-        loopVibracao = null;
-    }
-    if ("vibrate" in navigator) {
-        navigator.vibrate(0);
-    }
-}
     async function carregarSaldoMotoboy() {
     try {
         const res = await fetch(`${MEU_IP}/admin/motoboys`);
@@ -1301,13 +1286,21 @@ if (dadosLista.success === false && dadosLista.bloqueado) {
 } else {
     mostrarTela('lista');
     
-    // --- CORREÇÃO AQUI: Lendo a lista 'corridas' que o servidor envia ---
     let corrida = null;
+    const container = document.getElementById('lista-corridas');
+
     if (dadosLista.corridas && dadosLista.corridas.length > 0) {
-        corrida = dadosLista.corridas[0]; // Pega a primeira da fila (iFood Style)
-        pararAlerta();
+        corrida = dadosLista.corridas[0]; 
+        // NÃO COLOQUE pararAlerta() AQUI, senão o som para assim que a corrida chega!
+    } else {
+        // --- SE A LISTA VIER VAZIA, PARA O SOM E VIBRAÇÃO IMEDIATAMENTE ---
+        pararAlerta(); 
+        if (container) {
+            container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
+        }
     }
 
+    // Mantém sua lógica de controle de exibição
     if (corridaSendoExibida && corrida && corridaSendoExibida.corrida_id !== corrida.corrida_id) {
         corridaSendoExibida = null;
     } else if (!corrida && corridaSendoExibida) {
@@ -1336,25 +1329,7 @@ if (dadosLista.success === false && dadosLista.bloqueado) {
      *  CRIAÇÃO E RENDERIZAÇÃO DA LISTA
      ***********************/
      function iniciarContador(id, tempoInicial, onTimeout) {
-        function pararAlerta() {
-    // 1. Para o Som
-    const audio = document.getElementById('som-alerta');
-    if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.loop = false; // Tira do loop
-    }
-
-    // 2. Para a Vibração
-    if (loopVibracao) {
-        clearInterval(loopVibracao);
-        loopVibracao = null;
-    }
-    // Força parar a vibração atual instantaneamente
-    if ("vibrate" in navigator) {
-        navigator.vibrate(0);
-    }
-}
+        
         limparContadores();
 
         let tempoRestante = tempoInicial;
@@ -1582,25 +1557,8 @@ function criarCardCorrida(corrida) {
     }
 
     async function confirmarAceitarCorrida() {
-        function pararAlerta() {
-    // 1. Para o Som
-    const audio = document.getElementById('som-alerta');
-    if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.loop = false; // Tira do loop
-    }
-
-    // 2. Para a Vibração
-    if (loopVibracao) {
-        clearInterval(loopVibracao);
-        loopVibracao = null;
-    }
-    // Força parar a vibração atual instantaneamente
-    if ("vibrate" in navigator) {
-        navigator.vibrate(0);
-    }
-}
+        pararAlerta();
+        
         if (!idCorridaSelecionada) {
             alert('Nenhuma corrida selecionada.');
             return;
@@ -1759,16 +1717,7 @@ window.cancelarCorridaMotoboy = function() {
 // Substitua a função inteira 'window.confirmarCancelamentoMotoboy' por esta:
 
 window.confirmarCancelamentoMotoboy = async function() {
-    // 1. ESSA FUNÇÃO PARA O BARULHO E VIBRAÇÃO
-    function pararAlerta() {
-        const audio = document.getElementById('som-alerta');
-        if (audio) { audio.pause(); audio.currentTime = 0; audio.loop = false; }
-        if (loopVibracao) { clearInterval(loopVibracao); loopVibracao = null; }
-        if ("vibrate" in navigator) { navigator.vibrate(0); }
-    }
-
-    // --- MUDANÇA AQUI: MANDA PARAR O ALERTA ASSIM QUE CLICA ---
-    pararAlerta(); 
+pararAlerta(); 
 
     const inputMotivo = document.getElementById('justificativa-motoboy');
     const motivoTexto = inputMotivo ? inputMotivo.value : "Recusado";
@@ -1886,24 +1835,27 @@ window.iniciarRadarCancelamento = function(idCorrida) {
         }
     }, 3000); // Verifica a cada 3 segundos
 }; 
-  // Cole isso no final do seu script, fora de qualquer outra função
 function pararAlerta() {
-    console.log("Comando para parar som e vibração executado.");
+    console.log("🛑 Silenciando som e vibração...");
+    
+    // 1. Para o Som
     const audio = document.getElementById('som-alerta');
     if (audio) {
         audio.pause();
         audio.currentTime = 0;
         audio.loop = false;
     }
-    if (window.loopVibracao) {
-        clearInterval(window.loopVibracao);
-        window.loopVibracao = null;
+
+    // 2. Para a Vibração
+    if (loopVibracao) {
+        clearInterval(loopVibracao);
+        loopVibracao = null;
     }
+    
+    // Força o navegador a parar qualquer vibração ativa agora
     if ("vibrate" in navigator) {
         navigator.vibrate(0);
     }
-} 
-
-
-
+}
+ 
 </script>
