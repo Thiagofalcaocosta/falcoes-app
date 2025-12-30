@@ -2804,6 +2804,14 @@ async function verificarStatus(id) {
             document.getElementById('motoboy-placa').innerText = pedido.placa || "---";
             document.getElementById('motoboy-modelo').innerText = pedido.modelo_moto || "Moto";
             document.getElementById('motoboy-cor').innerText = pedido.cor_moto || "";
+            // +++ ADICIONE ESTE BLOCO DA FOTO AQUI +++
+            const imgPiloto = document.getElementById('motoboy-foto');
+            if (imgPiloto) {
+                // Se existir foto_perfil no pedido, usa ela. Senão, usa o ícone padrão.
+                imgPiloto.src = pedido.foto_perfil 
+                    ? `assets/pilotos/${pedido.foto_perfil}` 
+                    : "https://cdn-icons-png.flaticon.com/512/709/709699.png";
+            }
 
             if (pedido.telefone_motoboy && btnWpp) {
                 const fone = pedido.telefone_motoboy.replace(/\D/g, '');

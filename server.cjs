@@ -776,6 +776,8 @@ app.get('/status-pedido/:id', async (req, res) => {
         u.telefone AS telefone_motoboy,
         u.modelo_moto,
         u.placa
+        u.cor_moto,       -- Adicionado para preencher o campo 'Cor'
+        u.foto_perfil     -- ADICIONADO PARA A FOTO FUNCIONAR
       FROM corridas c
       LEFT JOIN usuarios u ON c.motoboy_id = u.id
       WHERE c.id = $1
