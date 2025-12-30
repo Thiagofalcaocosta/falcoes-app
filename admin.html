@@ -238,9 +238,12 @@
                         <td style="color:#666; font-size:11px;">#${c.id}</td>
                         <td style="font-weight:bold; color:var(--neon-green)">${valorF}</td>
                         <td>
-                            <span style="background:${corPgto}; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">
+                            <span style="background:${corPgto}; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:900;">
                                 ${c.forma_pagamento || 'DINHEIRO'}
                             </span>
+                        </td>
+                        <td style="color: #ff4444; font-weight: bold;">
+                            ${(parseFloat(c.valor || 0) * 0.15).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' })}
                         </td>
                         <td>
                             <div style="color:#fff; font-weight:600;">📍 ${(c.origem || '').split(',')[0]}</div>
