@@ -205,73 +205,38 @@
     try {
         const res = await fetch(`${MEU_IP}/admin/dashboard`);
         const data = await res.json();
-        // ... dentro de carregarDashboard()
-try {
-    const resUsers = await fetch(`${MEU_IP}/admin/clientes`); // Pega todos os usuários ativos
-    const todosUsuarios = await resUsers.json();
-    
-    const resMotos = await fetch(`${MEU_IP}/admin/motoboys`);
-    const todosMotos = await resMotos.json();
 
-    const qtdEmpresas = todosUsuarios.filter(u => u.tipo === 'empresa').length;
-    const qtdClientes = todosUsuarios.filter(u => u.tipo === 'cliente').length;
-    const qtdPilotos = todosMotos.length;
-
-    document.getElementById('total-empresas').innerText = qtdEmpresas;
-    document.getElementById('total-clientes').innerText = qtdClientes;
-    document.getElementById('total-pilotos').innerText = qtdPilotos;
-    
-    // ... resto da sua lógica de faturamento
-} catch (err) { console.error("Erro nos contadores:", err); }
-
-        // Função segura para atualizar texto sem dar erro se o ID não existir
         const atualizarTexto = (id, valor) => {
             const el = document.getElementById(id);
             if (el) el.innerText = valor;
         };
 
-        atualizarTexto('total-hoje', data.total_hoje || 0);
-        atualizarTexto('total-mes', data.total_mes || 0);
-        atualizarTexto('qtd-moto', data.qtd_moto || 0);
-
-        data.historico.forEach(c => {
-    const valorF = parseFloat(c.valor || 0).toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
-    
-    // Define se a etiqueta é Azul (Pix) ou Amarela (Dinheiro)
-    const corPgto = c.forma_pagamento === 'PIX' ? '#007bff' : '#ffc107';
-
-    tbody.innerHTML += `
-        <tr>
-            <td style="color:#666; font-size:11px;">#${c.id}</td>
-            <td style="font-weight:bold; color:var(--neon-green)">${valorF}</td>
-            <td>
-                <span style="background:${corPgto}; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">
-                    ${c.forma_pagamento || 'DINHEIRO'}
-                </span>
-            </td>
-            <td>
-                <div style="color:#fff; font-weight:600;">📍 ${(c.origem || '').split(',')[0]}</div>
-                <div style="color:#666; font-size:11px;">🏁 ${(c.destino || '').split(',')[0]}</div>
-            </td>
-            <td><span class="status-tag status-${c.status}">${c.status}</span></td>
-            <td>${c.nome_motoboy || '---'}</td>
-        </tr>`;
-});
-
         const formatar = (v) => v.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-        atualizarTexto('faturamento-hoje', formatar(somaHoje));
-        atualizarTexto('faturamento-mes', formatar(somaMes));
 
-        // Tabela (seu código original de renderização permanece abaixo...)
+        // 1. Atualiza os cards de cima
+        atualizarTexto('total-hoje', data.total_hoje || 0);
+        atualizarTexto('faturamento-hoje', formatar(data.faturamento_valor_hoje || 0));
+        atualizarTexto('saldo-a-receber', formatar(data.saldo_adm_a_receber || 0));
+
+        // 2. PRIMEIRO definimos quem é o tbody (isso resolve o erro da imagem)
         const tbody = document.getElementById('tabela-historico');
-        if (tbody) {
-            tbody.innerHTML = '';
+        
+        // 3. AGORA preenchemos a tabela
+        if (tbody && data.historico) {
+            tbody.innerHTML = ''; // Limpa a tabela antes de começar
             data.historico.forEach(c => {
-                const valorF = parseFloat(c.valor || 0).toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
+                const valorF = parseFloat(c.valor || 0).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+                const corPgto = c.forma_pagamento === 'PIX' ? '#007bff' : '#ffc107';
+
                 tbody.innerHTML += `
                     <tr>
                         <td style="color:#666; font-size:11px;">#${c.id}</td>
                         <td style="font-weight:bold; color:var(--neon-green)">${valorF}</td>
+                        <td>
+                            <span style="background:${corPgto}; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">
+                                ${c.forma_pagamento || 'DINHEIRO'}
+                            </span>
+                        </td>
                         <td>
                             <div style="color:#fff; font-weight:600;">📍 ${(c.origem || '').split(',')[0]}</div>
                             <div style="color:#666; font-size:11px;">🏁 ${(c.destino || '').split(',')[0]}</div>
@@ -281,7 +246,20 @@ try {
                     </tr>`;
             });
         }
-    } catch (err) { console.error("Erro dashboard:", err); }
+
+        // 4. Atualiza os contadores de usuários (Pilotos, Clientes, etc)
+        const resUsers = await fetch(`${MEU_IP}/admin/clientes`);
+        const todosUsuarios = await resUsers.json();
+        const resMotos = await fetch(`${MEU_IP}/admin/motoboys`);
+        const todosMotos = await resMotos.json();
+
+        atualizarTexto('total-empresas', todosUsuarios.filter(u => u.tipo === 'empresa').length);
+        atualizarTexto('total-clientes', todosUsuarios.filter(u => u.tipo === 'cliente').length);
+        atualizarTexto('total-pilotos', todosMotos.length);
+
+    } catch (err) {
+        console.error("Erro dashboard:", err);
+    }
 }
 
     // --- MANTENDO SUAS FUNÇÕES DE GESTÃO ---
