@@ -1251,7 +1251,7 @@
                     style="flex: 1; padding: 14px; border-radius: 10px; border: none; font-weight: bold; background: #ff4444; color: white; cursor: pointer;">
                 CONFIRMAR
             </button>
-            <div id="modal-avaliacao-cliente" class="modal-overlay" style="display:none; z-index: 10001;">
+            <div id="modal-avaliacao-cliente" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:999999 !important; align-items:center; justify-content:center;"></div>
     <div class="modal-box">
         <div style="font-size: 40px; margin-bottom: 10px;">⭐</div>
         <h3 style="color: var(--neon-green); margin: 0;">AVALIE O PILOTO</h3>
@@ -2851,6 +2851,11 @@ async function verificarStatus(id) {
         // 🟡 CONCLUÍDA (NOVO VISUAL DOURADO)
         else if (pedido.status === 'concluida') {
             if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+            // 1. Primeiro tenta abrir o modal
+            const modalAval = document.getElementById('modal-avaliacao-cliente');
+            if (modalAval) {
+                modalAval.style.setProperty('display', 'flex', 'important');
+            }
             
             // APLICA O DOURADO NEON
             if (statusArea) statusArea.classList.add('status-finalizada');
@@ -2859,11 +2864,7 @@ async function verificarStatus(id) {
 
             if (statusTitulo) { 
                 statusTitulo.innerHTML = "CORRIDA FINALIZADA ✅"; 
-                // === ADICIONE ESTAS 4 LINHAS AQUI PARA O MODAL APARECER ===
-            const modalAvaliacao = document.getElementById('modal-avaliacao-cliente');
-            if (modalAvaliacao) {
-                modalAvaliacao.style.display = 'flex';
-            }
+
                 // A cor do texto agora vem do CSS .status-finalizada
             }
             if (statusDesc) statusDesc.innerText = "Obrigado por viajar conosco!";
