@@ -142,14 +142,15 @@
         <div class="tabela-container">
             <table>
                 <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>VALOR</th>
-                        <th>LOCALIZAÇÃO</th>
-                        <th>STATUS</th>
-                        <th>PILOTO</th>
-                    </tr>
-                </thead>
+    <tr>
+        <th>ID</th>
+        <th>VALOR</th>
+        <th>PGTO</th>
+        <th>TAXA (15%)</th> <th>LOCALIZAÇÃO</th>
+        <th>STATUS</th>
+        <th>PILOTO</th>
+    </tr>
+</thead>
                 <tbody id="tabela-historico"></tbody>
             </table>
         </div>
@@ -216,21 +217,31 @@
             if (el) el.innerText = valor;
         };
 
-        const formatar = (v) => v.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+        // Função de formatação para Real Brasileiro (R$)
+        const formatar = (v) => {
+            return parseFloat(v || 0).toLocaleString('pt-br', { 
+                style: 'currency', 
+                currency: 'BRL' 
+            });
+        };
 
-        // 1. Atualiza os cards de cima
+        // 1. Atualiza os cards de resumo no topo
         atualizarTexto('total-hoje', data.total_hoje || 0);
-        atualizarTexto('faturamento-hoje', formatar(data.faturamento_valor_hoje || 0));
-        atualizarTexto('saldo-a-receber', formatar(data.saldo_adm_a_receber || 0));
+        atualizarTexto('faturamento-hoje', formatar(data.faturamento_valor_hoje));
+        atualizarTexto('saldo-a-receber', formatar(data.saldo_adm_a_receber));
 
-        // 2. PRIMEIRO definimos quem é o tbody (isso resolve o erro da imagem)
+        // 2. Define o corpo da tabela
         const tbody = document.getElementById('tabela-historico');
         
-        // 3. AGORA preenchemos a tabela
+        // 3. Preenche a tabela com os pedidos recentes
         if (tbody && data.historico) {
-            tbody.innerHTML = ''; // Limpa a tabela antes de começar
+            tbody.innerHTML = ''; 
             data.historico.forEach(c => {
-                const valorF = parseFloat(c.valor || 0).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+                const valorF = formatar(c.valor);
+                // Calcula a taxa de 15% para exibição na tabela
+                const taxaF = formatar(parseFloat(c.valor || 0) * 0.15);
+                
+                // Define a cor da etiqueta de pagamento (Azul para PIX, Amarelo para Dinheiro)
                 const corPgto = c.forma_pagamento === 'PIX' ? '#007bff' : '#ffc107';
 
                 tbody.innerHTML += `
@@ -243,7 +254,7 @@
                             </span>
                         </td>
                         <td style="color: #ff4444; font-weight: bold;">
-                            ${(parseFloat(c.valor || 0) * 0.15).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' })}
+                            ${taxaF}
                         </td>
                         <td>
                             <div style="color:#fff; font-weight:600;">📍 ${(c.origem || '').split(',')[0]}</div>
