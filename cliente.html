@@ -1251,27 +1251,9 @@
                     style="flex: 1; padding: 14px; border-radius: 10px; border: none; font-weight: bold; background: #ff4444; color: white; cursor: pointer;">
                 CONFIRMAR
             </button>
-            <div id="modal-avaliacao-cliente" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:999999 !important; align-items:center; justify-content:center;"></div>
-    <div class="modal-box">
-        <div style="font-size: 40px; margin-bottom: 10px;">⭐</div>
-        <h3 style="color: var(--neon-green); margin: 0;">AVALIE O PILOTO</h3>
-        <p style="color: #ccc; font-size: 14px; margin-bottom: 20px;">Como foi sua experiência com o piloto?</p>
-        
-        <div class="estrelas-container" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; font-size: 35px;">
-            <span onclick="selecionarEstrela(1)" class="estrela" style="cursor:pointer; filter: grayscale(1);">⭐</span>
-            <span onclick="selecionarEstrela(2)" class="estrela" style="cursor:pointer; filter: grayscale(1);">⭐</span>
-            <span onclick="selecionarEstrela(3)" class="estrela" style="cursor:pointer; filter: grayscale(1);">⭐</span>
-            <span onclick="selecionarEstrela(4)" class="estrela" style="cursor:pointer; filter: grayscale(1);">⭐</span>
-            <span onclick="selecionarEstrela(5)" class="estrela" style="cursor:pointer; filter: grayscale(1);">⭐</span>
-        </div>
-
-        <button onclick="enviarNotaPiloto()" id="btn-enviar-avaliacao" class="btn" style="padding: 12px; font-size: 16px;" disabled>ENVIAR AVALIAÇÃO</button>
-    </div>
-</div>
         </div>
     </div>
 </div>
-
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
 
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
@@ -2812,7 +2794,6 @@ async function verificarStatus(id) {
             if (elTempo) elTempo.style.display = 'none';
             if (btnCancelBusca) btnCancelBusca.style.display = 'none';
             if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
-            window.idMotoboyAtual = pedido.motoboy_id;
 
             // Garante o Verde Padrão
             if (statusArea) statusArea.setAttribute('style', 'background: rgba(0, 230, 64, 0.15) !important; border: 1px solid #00e640 !important;');
@@ -2851,11 +2832,6 @@ async function verificarStatus(id) {
         // 🟡 CONCLUÍDA (NOVO VISUAL DOURADO)
         else if (pedido.status === 'concluida') {
             if (intervaloVerificacao) clearInterval(intervaloVerificacao);
-            // 1. Primeiro tenta abrir o modal
-            const modalAval = document.getElementById('modal-avaliacao-cliente');
-            if (modalAval) {
-                modalAval.style.setProperty('display', 'flex', 'important');
-            }
             
             // APLICA O DOURADO NEON
             if (statusArea) statusArea.classList.add('status-finalizada');
@@ -2864,7 +2840,6 @@ async function verificarStatus(id) {
 
             if (statusTitulo) { 
                 statusTitulo.innerHTML = "CORRIDA FINALIZADA ✅"; 
-
                 // A cor do texto agora vem do CSS .status-finalizada
             }
             if (statusDesc) statusDesc.innerText = "Obrigado por viajar conosco!";
@@ -2966,69 +2941,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-
-// Variável para guardar a nota que o cliente escolher
-let notaFinalCliente = 0;
-
-// Função para pintar as estrelas quando clicar
-function selecionarEstrela(nota) {
-    notaFinalCliente = nota;
-    // Seleciona todas as estrelas dentro do modal
-    const estrelas = document.querySelectorAll('#modal-avaliacao-cliente .estrela');
-    
-    estrelas.forEach((estrela, index) => {
-        // Se a posição da estrela for menor que a nota, ela brilha (tira o cinza)
-        if (index < nota) {
-            estrela.style.filter = 'grayscale(0)';
-        } else {
-            estrela.style.filter = 'grayscale(1)';
-        }
-    });
-
-    // Ativa o botão de enviar (que começa desativado)
-    document.getElementById('btn-enviar-avaliacao').disabled = false;
-}
-
-// Função que manda a nota para o servidor
-async function enviarNotaPiloto() {
-    const idPedido = idPedidoAtual || localStorage.getItem('idPedidoAtual');
-    const user = JSON.parse(localStorage.getItem("usuario"));
-
-    // Bloqueia o botão para não clicar duas vezes
-    const btn = document.getElementById('btn-enviar-avaliacao');
-    btn.disabled = true;
-    btn.innerText = "ENVIANDO...";
-
-    try {
-        const res = await fetch(`${MEU_IP}/avaliar`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                corrida_id: idPedido,
-                avaliador_id: user.id, // O cliente avaliando
-                avaliado_id: window.idMotoboyAtual, // O piloto avaliado (que você salvou no passo anterior)
-                nota: notaFinalCliente
-            })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-            showToast("Obrigado pela avaliação!", "success");
-            // Fecha o modal
-            document.getElementById('modal-avaliacao-cliente').style.display = 'none';
-            // Reinicia o app para o cliente poder pedir outra corrida
-            setTimeout(() => reiniciarApp(), 1500);
-        } else {
-            throw new Error();
-        }
-    } catch (e) {
-        showToast("Erro ao salvar nota. Reiniciando...", "error");
-        btn.disabled = false;
-        btn.innerText = "ENVIAR AVALIAÇÃO";
-        setTimeout(() => reiniciarApp(), 2000);
-    }
-}
-
-
 </script>
