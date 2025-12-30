@@ -1305,6 +1305,7 @@ if (dadosLista.success === false && dadosLista.bloqueado) {
     let corrida = null;
     if (dadosLista.corridas && dadosLista.corridas.length > 0) {
         corrida = dadosLista.corridas[0]; // Pega a primeira da fila (iFood Style)
+        pararAlerta();
     }
 
     if (corridaSendoExibida && corrida && corridaSendoExibida.corrida_id !== corrida.corrida_id) {
@@ -1884,7 +1885,24 @@ window.iniciarRadarCancelamento = function(idCorrida) {
             console.error("Erro radar:", e);
         }
     }, 3000); // Verifica a cada 3 segundos
-};    
+}; 
+  // Cole isso no final do seu script, fora de qualquer outra função
+function pararAlerta() {
+    console.log("Comando para parar som e vibração executado.");
+    const audio = document.getElementById('som-alerta');
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.loop = false;
+    }
+    if (window.loopVibracao) {
+        clearInterval(window.loopVibracao);
+        window.loopVibracao = null;
+    }
+    if ("vibrate" in navigator) {
+        navigator.vibrate(0);
+    }
+} 
 
 
 
