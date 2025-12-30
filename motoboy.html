@@ -914,20 +914,37 @@ function abrirConversaZap() {
 let loopVibracao = null;
 
 function tocarAlerta() {
+    // 1. Tenta tocar o som (funciona se a aba estiver aberta)
     const audio = document.getElementById('som-alerta');
     if (audio) {
         audio.loop = true; 
         audio.currentTime = 0;
-        audio.play().catch(e => console.warn("Som precisa de interação prévia"));
+        audio.play().catch(e => console.warn("Áudio bloqueado ou em segundo plano"));
     }
 
+    // 2. Inicia a vibração
     if ("vibrate" in navigator) {
         const padrao = [1000, 1000]; 
-        navigator.vibrate(padrao);
         if (loopVibracao) clearInterval(loopVibracao);
+        navigator.vibrate(padrao);
         loopVibracao = setInterval(() => {
             navigator.vibrate(padrao);
         }, 2000); 
+    }
+
+    // 3. NOVO: DISPARA A NOTIFICAÇÃO PUSH (Para celular bloqueado)
+    if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(function(registration) {
+            registration.showNotification("⚡ NOVA CORRIDA FALCÕES!", {
+                body: "Toque aqui para aceitar agora! 🦅",
+                icon: "assets/logo.png", // Verifique se o caminho está certo
+                badge: "assets/logo.png",
+                vibrate: [500, 200, 500],
+                tag: "nova-corrida", // Não deixa acumular várias notificações
+                renotify: true,
+                requireInteraction: true // A notificação fica na tela até ele clicar
+            });
+        });
     }
 }
 
@@ -964,6 +981,16 @@ function tocarAlerta() {
 
 // Faz o saldo carregar assim que o motoboy entra no app
 document.addEventListener('DOMContentLoaded', carregarSaldoMotoboy);
+// Pede permissão no primeiro clique que o motoboy der na tela
+document.body.addEventListener('click', async function() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        const permissao = await Notification.requestPermission();
+        if (permissao === 'granted') {
+            console.log("Notificações ativadas!");
+            // Opcional: mostrar um aviso visual de sucesso
+        }
+    }
+}, { once: true }); // O '{ once: true }' faz isso rodar apenas uma vez
 
     // Substitua sua função mostrarTela por esta versão protegida
 function mostrarTela(idDesejado) {
@@ -1855,6 +1882,25 @@ function pararAlerta() {
     // Força o navegador a parar qualquer vibração ativa agora
     if ("vibrate" in navigator) {
         navigator.vibrate(0);
+    }
+}
+if ('serviceWorker' in navigator && 'PushManager' in window) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js').then(function(reg) {
+            console.log('Service Worker registrado com sucesso!', reg);
+        }).catch(function(err) {
+            console.error('Erro ao registrar Service Worker:', err);
+        });
+    });
+}
+
+// Função para pedir permissão ao piloto (Chame isso ao clicar em "Ficar Online")
+async function pedirPermissaoNotificacao() {
+    const permissao = await Notification.requestPermission();
+    if (permissao === 'granted') {
+        console.log('Piloto aceitou notificações!');
+    } else {
+        alert('Você precisa permitir as notificações para receber corridas!');
     }
 }
  
