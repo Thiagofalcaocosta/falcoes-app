@@ -766,24 +766,25 @@ app.get('/pedidos-cliente/:id', async (req, res) => {
 app.get('/status-pedido/:id', async (req, res) => {
   try {
     const result = await pool.query(
-      `
-      SELECT 
-        c.id,
-        c.status,
-        c.valor,
-        c.codigo_seguranca,
-        u.nome AS nome_motoboy,
-        u.telefone AS telefone_motoboy,
-        u.modelo_moto,
-        u.placa
-        u.cor_moto,       -- Adicionado para preencher o campo 'Cor'
-        u.foto_perfil     -- ADICIONADO PARA A FOTO FUNCIONAR
-      FROM corridas c
-      LEFT JOIN usuarios u ON c.motoboy_id = u.id
-      WHERE c.id = $1
-      `,
-      [req.params.id]
-    );
+  `
+  SELECT 
+    c.id,
+    c.status,
+    c.valor,
+    c.codigo_seguranca,
+    u.nome AS nome_motoboy,
+    u.telefone AS telefone_motoboy,
+    u.modelo_moto,
+    u.placa,          -- Adicionada a vírgula necessária aqui
+    u.cor_moto,       -- Agora o campo Cor funcionará
+    u.foto_perfil     -- Agora a foto funcionará
+  FROM corridas c
+  LEFT JOIN usuarios u ON c.motoboy_id = u.id
+  WHERE c.id = $1
+  `,
+  [req.params.id]
+);
+       
 
     if (result.rows.length === 0) {
       return res.json({ success: false });
