@@ -903,36 +903,40 @@ app.post('/motoboy/status-online', async (req, res) => {
 
 app.get('/admin/dashboard', async (req, res) => {
   try {
-    const hoje = await pool.query(
-      'SELECT COUNT(*) FROM corridas WHERE data_hora::date = CURRENT_DATE'
-    );
-    const mes = await pool.query(
-      'SELECT COUNT(*) FROM corridas WHERE EXTRACT(MONTH FROM data_hora) = EXTRACT(MONTH FROM CURRENT_DATE)'
-    );
-    const entregas = await pool.query(
-      "SELECT COUNT(*) FROM corridas WHERE tipo_servico = 'entrega'"
-    );
-    const motoTaxi = await pool.query(
-      "SELECT COUNT(*) FROM corridas WHERE tipo_servico = 'moto-taxi'"
-    );
+    // 1. Contagens básicas (que você já tinha)
+    const hoje = await pool.query('SELECT COUNT(*) FROM corridas WHERE data_hora::date = CURRENT_DATE');
+    const mes = await pool.query('SELECT COUNT(*) FROM corridas WHERE EXTRACT(MONTH FROM data_hora) = EXTRACT(MONTH FROM CURRENT_DATE)');
+    
+    // 2. LÓGICA FINANCEIRA: Calcula quanto você (ADM) tem a receber (15% de taxa)
+    // Se foi em DINHEIRO, o motoboy te deve a taxa.
+    // Se foi em PIX, a taxa já é sua.
+    const financeiro = await pool.query(`
+      SELECT 
+        SUM(valor * 0.15) FILTER (WHERE forma_pagamento = 'DINHEIRO' AND status = 'concluida') as a_receber,
+        SUM(valor) FILTER (WHERE data_hora::date = CURRENT_DATE AND status = 'concluida') as faturamento_total
+      FROM corridas
+    `);
+
+    // 3. Histórico com a forma de pagamento incluída
     const historico = await pool.query(`
-      SELECT c.id, c.origem, c.destino, c.valor, c.tipo_servico, c.status, c.motivo_cancelamento,
+      SELECT c.id, c.origem, c.destino, c.valor, c.tipo_servico, c.status, c.forma_pagamento,
              u.nome AS nome_motoboy
       FROM corridas c
       LEFT JOIN usuarios u ON c.motoboy_id = u.id
       ORDER BY c.id DESC
       LIMIT 10
     `);
+
     res.json({
       total_hoje: hoje.rows[0].count,
       total_mes: mes.rows[0].count,
-      qtd_entrega: entregas.rows[0].count,
-      qtd_moto: motoTaxi.rows[0].count,
+      faturamento_valor_hoje: financeiro.rows[0].faturamento_total || 0,
+      saldo_adm_a_receber: financeiro.rows[0].a_receber || 0, // O que os motoboys te devem
       historico: historico.rows,
     });
   } catch (err) {
-    console.error('Erro em /admin/dashboard:', err && err.stack ? err.stack : err);
-    res.status(500).json({ error: 'Erro' });
+    console.error('Erro em /admin/dashboard:', err);
+    res.status(500).json({ error: 'Erro ao carregar dashboard' });
   }
 });
 
