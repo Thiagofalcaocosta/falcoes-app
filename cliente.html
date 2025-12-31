@@ -1259,10 +1259,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
     <script>
-    // Define o arquivo de áudio
-const somNotificacao = new Audio('/assets/som.mp3');
-let somJaTocou = false; // Trava para o som não ficar repetindo sem parar
-
+  
     // 1. Abre o modal quando clica no botão
     function abrirModalCancelamentoBusca() {
     const modal = document.getElementById('modal-confirmar-cancelamento-busca');
@@ -2705,24 +2702,9 @@ async function verificarStatus(id) {
         const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
         const data = await res.json();
         
-        if (!data.success || !data.pedido) return;
-
         const pedido = data.pedido;
         const statusAtual = pedido.status; // Criamos a variável que faltava aqui
 
-        // LÓGICA DO SOM 🔔
-        // Compara o status que veio agora com o que estava guardado na memória
-        if (statusAnterior === 'pendente' && 
-           (statusAtual === 'aguardando_pagamento' || statusAtual === 'liberada')) {
-            
-            if (!somJaTocou) {
-                somNotificacao.play().catch(e => console.log("Som aguardando interação"));
-                somJaTocou = true; // Garante que toca apenas uma vez
-                
-                // Opcional: Vibração para reforçar o aviso
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-            }
-        }
 
         if (!data.success || !pedido) return;
 
