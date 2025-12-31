@@ -1583,6 +1583,10 @@ app.get('/teste-sentry', (req, res) => {
 });
 
 Sentry.setupExpressErrorHandler(app);
+app.use(function onError(err, req, res, next) {
+  res.statusCode = 500;
+  res.end(res.sentry + "\n");
+});
 
 
 app.listen(port, () => {
