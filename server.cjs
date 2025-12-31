@@ -27,6 +27,7 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }, // PERMITE carregar imagens/tiles de outros domínios
     crossOriginEmbedderPolicy: false // Evita bloqueios de carregamento de scripts externos
 }));
+app.use(helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }));
 
 
 // 2. CORS Único e correto
