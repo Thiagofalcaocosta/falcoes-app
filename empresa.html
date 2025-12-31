@@ -200,70 +200,81 @@
         }
 
         function renderizarLista(pedidos) {
-            const container = document.getElementById('central-lista');
-            const countAtivos = document.getElementById('count-ativos');
-            const countConcluidos = document.getElementById('count-concluidos');
+    const container = document.getElementById('central-lista');
+    const countAtivos = document.getElementById('count-ativos');
+    const countConcluidos = document.getElementById('count-concluidos');
 
-            // LIMPEZA CRÍTICA: Evita duplicar a interface
-            container.innerHTML = "";
+    // LIMPEZA CRÍTICA: Remove duplicatas da tela
+    container.innerHTML = "";
 
-            if (!pedidos || pedidos.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:#555;"><i class="fas fa-box-open" style="font-size:30px; margin-bottom:10px;"></i><p>Nenhuma entrega ativa.</p></div>';
-                countAtivos.innerText = "0";
-                countConcluidos.innerText = "0";
-                return;
-            }
+    if (!pedidos || pedidos.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:#555;"><i class="fas fa-box-open" style="font-size:30px; margin-bottom:10px;"></i><p>Nenhuma entrega encontrada.</p></div>';
+        countAtivos.innerText = "0";
+        countConcluidos.innerText = "0";
+        return;
+    }
 
-            // Filtros
-            const ativos = pedidos.filter(p => p.status !== 'concluida' && p.status !== 'cancelada');
-            const concluidos = pedidos.filter(p => p.status === 'concluida');
-            
-            countAtivos.innerText = ativos.length;
-            countConcluidos.innerText = concluidos.length;
+    // Filtros
+    const ativos = pedidos.filter(p => p.status !== 'concluida' && p.status !== 'cancelada');
+    const concluidos = pedidos.filter(p => p.status === 'concluida');
+    
+    countAtivos.innerText = ativos.length;
+    countConcluidos.innerText = concluidos.length;
 
-            // Ordenação (Mais recentes primeiro)
-            pedidos.sort((a, b) => b.id - a.id);
+    // Ordenação (Mais recentes primeiro)
+    pedidos.sort((a, b) => b.id - a.id);
 
-            pedidos.forEach(p => {
-                const isFinalizado = p.status === 'concluida' || p.status === 'cancelada';
-                const cor = getStatusColor(p.status);
-                const textoStatus = p.status.toUpperCase().replace('_', ' ');
+    pedidos.forEach(p => {
+        const isFinalizado = p.status === 'concluida' || p.status === 'cancelada';
+        const cor = getStatusColor(p.status);
+        const textoStatus = p.status.toUpperCase().replace('_', ' ');
 
-                container.innerHTML += `
-                    <div class="pedido-card" style="opacity: ${isFinalizado ? '0.6' : '1'}">
-                        <div class="status-indicator" style="background: ${cor}"></div>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div>
-                                <span style="color: var(--text-dim); font-size: 11px; font-weight: bold;">CÓDIGO</span>
-                                <div style="font-size: 18px; font-weight: 900; color: #fff;">#${p.id}</div>
-                            </div>
-                            <span class="badge-status" style="background: ${cor}22; color: ${cor}; border: 1px solid ${cor}55">
-                                ${textoStatus}
-                            </span>
-                        </div>
-
-                        <div class="route-info">
-                            <div><i class="fas fa-map-marker-alt" style="color: #ff4444; width: 15px;"></i> ${p.destino?.split(',')[0] || '---'}</div>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-                            <div style="font-size: 22px; font-weight: 900; color: var(--neon-green);">
-                                R$ ${parseFloat(p.valor || 0).toFixed(2).replace('.', ',')}
-                            </div>
-                            <div style="font-size: 11px; font-weight: bold; color: ${p.pago ? '#00e640' : '#ff9f43'}">
-                                <i class="fas ${p.pago ? 'fa-check-circle' : 'fa-clock'}"></i> ${p.pago ? 'PAGO' : 'PGTO PENDENTE'}
-                            </div>
-                        </div>
-
-                        <button onclick="verNoMapa('${p.id}')" class="btn-detalhes" 
-                            style="background: ${isFinalizado ? '#333' : cor}; color: ${isFinalizado ? '#fff' : '#000'}">
-                            ${isFinalizado ? 'VER RESUMO' : 'RASTREAMENTO EM TEMPO REAL'}
-                        </button>
-                    </div>
-                `;
-            });
+        // Lógica de Pagamento: Só exibe se for um pedido ATIVO e não estiver pago.
+        // Se estiver finalizado, não exibe mais a tag de pendência.
+        let htmlPagamento = "";
+        if (!isFinalizado) {
+            htmlPagamento = `
+                <div style="font-size: 11px; font-weight: bold; color: ${p.pago ? '#00e640' : '#ff9f43'}">
+                    <i class="fas ${p.pago ? 'fa-check-circle' : 'fa-clock'}"></i> ${p.pago ? 'PAGO' : 'PGTO PENDENTE'}
+                </div>`;
+        } else if (p.pago) {
+            // Se estiver finalizado e PAGO, mostra apenas um ✅ discreto
+            htmlPagamento = `<div style="font-size: 11px; color: #00e640;"><i class="fas fa-check-circle"></i> PAGO</div>`;
         }
+
+        container.innerHTML += `
+            <div class="pedido-card" style="opacity: ${isFinalizado ? '0.6' : '1'}">
+                <div class="status-indicator" style="background: ${cor}"></div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <span style="color: var(--text-dim); font-size: 11px; font-weight: bold;">CÓDIGO</span>
+                        <div style="font-size: 18px; font-weight: 900; color: #fff;">#${p.id}</div>
+                    </div>
+                    <span class="badge-status" style="background: ${cor}22; color: ${cor}; border: 1px solid ${cor}55">
+                        ${textoStatus}
+                    </span>
+                </div>
+
+                <div class="route-info">
+                    <div><i class="fas fa-map-marker-alt" style="color: #ff4444; width: 15px;"></i> ${p.destino?.split(',')[0] || '---'}</div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                    <div style="font-size: 22px; font-weight: 900; color: var(--neon-green);">
+                        R$ ${parseFloat(p.valor || 0).toFixed(2).replace('.', ',')}
+                    </div>
+                    ${htmlPagamento}
+                </div>
+
+                <button onclick="verNoMapa('${p.id}')" class="btn-detalhes" 
+                    style="background: ${isFinalizado ? '#333' : cor}; color: ${isFinalizado ? '#fff' : '#000'}">
+                    ${isFinalizado ? 'VER RESUMO' : 'RASTREAMENTO EM TEMPO REAL'}
+                </button>
+            </div>
+        `;
+    });
+}
 
         function getStatusColor(status) {
             switch (status) {
