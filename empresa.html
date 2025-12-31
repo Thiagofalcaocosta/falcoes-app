@@ -30,7 +30,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
@@ -39,7 +38,6 @@
             padding: 10px 0;
         }
 
-        /* Dashboard Stats */
         .header-stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -58,7 +56,6 @@
         .stat-card span { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: bold; }
         .stat-card div { font-size: 24px; font-weight: 900; margin-top: 5px; }
 
-        /* Botão Novo Pedido Premium */
         .btn-novo-premium {
             width: 100%;
             padding: 18px;
@@ -78,9 +75,6 @@
             transition: 0.3s;
         }
 
-        .btn-novo-premium:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 230, 64, 0.4); }
-
-        /* Cards de Pedido */
         .pedido-card {
             background: var(--card-color);
             border-radius: 18px;
@@ -120,7 +114,6 @@
             font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
-            transition: 0.2s;
         }
     </style>
 </head>
@@ -148,7 +141,6 @@
         </button>
 
         <h3 style="font-size: 14px; color: var(--text-dim); margin-bottom: 15px; text-transform: uppercase;">Suas Entregas</h3>
-
         <div id="central-lista">
             <p style="text-align:center; color:#666; margin-top: 20px;">Buscando pedidos ativos...</p>
         </div>
@@ -172,8 +164,6 @@
         async function carregarPedidos() {
             const usuarioId = localStorage.getItem('usuario_id');
             const container = document.getElementById('central-lista');
-            const listaLocal = JSON.parse(localStorage.getItem('meus_pedidos_ativos')) || [];
-
             try {
                 const response = await fetch(`${MEU_IP}/pedidos-cliente/${usuarioId}`);
                 if (response.ok) {
@@ -183,174 +173,102 @@
                         return;
                     }
                 }
-
-                // Fallback Local se o banco não retornar nada ou falhar
-                if (listaLocal.length > 0) {
-                    const promessas = listaLocal.map(id => fetch(`${MEU_IP}/status-pedido/${id}`).then(r => r.json()));
-                    const resultados = await Promise.all(promessas);
-                    const pedidosValidos = resultados.filter(r => r.success).map(r => r.pedido);
-                    renderizarLista(pedidosValidos);
-                } else {
-                    container.innerHTML = '<p style="text-align:center; color:#666;">Nenhum pedido encontrado.</p>';
-                }
-            } catch (e) {
-                console.error("Erro ao carregar:", e);
-                container.innerHTML = '<p style="color:orange; text-align:center;">Verificando conexão...</p>';
-            }
+            } catch (e) { console.error(e); }
         }
 
         function renderizarLista(pedidos) {
-    const container = document.getElementById('central-lista');
-    const countAtivos = document.getElementById('count-ativos');
-    const countConcluidos = document.getElementById('count-concluidos');
-    // Ordenação: Pendentes e Em Andamento primeiro, Concluídas e Canceladas por último
-pedidos.sort((a, b) => {
-    const ordem = { 'pendente': 1, 'em_andamento': 1, 'aceita': 1, 'liberada': 1, 'concluida': 2, 'cancelada': 2 };
-    return (ordem[a.status] || 99) - (ordem[b.status] || 99);
-});
-
-    // LIMPEZA CRÍTICA: Remove duplicatas da tela
-    container.innerHTML = "";
-
-    if (!pedidos || pedidos.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:30px; color:#555;"><i class="fas fa-box-open" style="font-size:30px; margin-bottom:10px;"></i><p>Nenhuma entrega encontrada.</p></div>';
-        countAtivos.innerText = "0";
-        countConcluidos.innerText = "0";
-        return;
-    }
-
-    // Filtros
-    const ativos = pedidos.filter(p => p.status !== 'concluida' && p.status !== 'cancelada');
-    const concluidos = pedidos.filter(p => p.status === 'concluida');
-    
-    countAtivos.innerText = ativos.length;
-    countConcluidos.innerText = concluidos.length;
-
-    // Ordenação (Mais recentes primeiro)
-    pedidos.sort((a, b) => b.id - a.id);
-
-    pedidos.forEach(p => {
-    const isCancelada = p.status === 'cancelada';
-    const isConcluida = p.status === 'concluida';
-    const isFinalizado = isConcluida || isCancelada;
-    const cor = getStatusColor(p.status);
-    const textoStatus = p.status.toUpperCase().replace('_', ' ');
-
-    // --- LÓGICA DE TAXAS DE CANCELAMENTO EXPLICATIVAS ---
-// --- LÓGICA DE TAXAS BASEADA NO MOTIVO (PREFIXO) ---
-let valorExibicao = parseFloat(p.valor || 0);
-let detalheTaxa = "";
-
-if (p.status === 'cancelada') {
-    // Verifica se o motivo começa com [CLIENTE]
-    const motivo = p.motivo_cancelamento || "";
-    
-    if (motivo.includes('[CLIENTE]') || motivo.toLowerCase().includes('cliente desistiu')) {
-        valorExibicao = 5.00;
-        detalheTaxa = `
-            <div style="background: rgba(255, 68, 68, 0.1); padding: 10px; border-radius: 8px; border: 1px solid #ff4444; margin-bottom: 12px;">
-                <span style="color: #ff4444; font-size: 11px; font-weight: bold; display: block; text-transform: uppercase;">Você Cancelou</span>
-                <span style="color: #eee; font-size: 10px; line-height: 1.2; display: block; margin-top: 4px;">
-                    Será cobrado R$ 5,00 no estorno do seu dinheiro (taxa de deslocamento).
-                </span>
-            </div>`;
-    } 
-    else {
-        // Se for [PILOTO] ou qualquer outro cancelamento administrativo
-        valorExibicao = 0.10;
-        detalheTaxa = `
-            <div style="background: rgba(0, 210, 255, 0.1); padding: 10px; border-radius: 8px; border: 1px solid #00d2ff; margin-bottom: 12px;">
-                <span style="color: #00d2ff; font-size: 11px; font-weight: bold; display: block; text-transform: uppercase;">O Motoboy Cancelou</span>
-                <span style="color: #eee; font-size: 10px; line-height: 1.2; display: block; margin-top: 4px;">
-                    Será cobrado taxa mínima de R$ 0,10 no estorno do seu dinheiro.
-                </span>
-            </div>`;
-    }
-}
-    
-
-    // --- MONTAGEM DO HTML ---
-// --- MONTAGEM DO HTML ---
-    let botaoReenvio = "";
-
-    // Se a corrida for cancelada, cria o botão de pedir de novo
-    if (isCancelada) {
-        botaoReenvio = `
-            <button onclick="tentarNovamentePeloHistorico('${p.id}')" 
-                style="width:100%; margin-top:10px; padding:12px; background: #00e640; color:#000; border:none; border-radius:10px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                <i class="fas fa-redo"></i> PEDIR NOVAMENTE
-            </button>
-        `;
-    }
-
-    container.innerHTML += `
-        <div class="pedido-card" style="opacity: ${isFinalizado ? '0.8' : '1'}">
-            <div class="status-indicator" style="background: ${cor}"></div>
+            const container = document.getElementById('central-lista');
+            const countAtivos = document.getElementById('count-ativos');
+            const countConcluidos = document.getElementById('count-concluidos');
             
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <span style="color: var(--text-dim); font-size: 11px; font-weight: bold;">CÓDIGO</span>
-                    <div style="font-size: 18px; font-weight: 900; color: #fff;">#${p.id}</div>
-                </div>
-                <span class="badge-status" style="background: ${cor}22; color: ${cor}; border: 1px solid ${cor}55">
-                    ${textoStatus}
-                </span>
-            </div>
+            container.innerHTML = "";
 
-            <div class="route-info">
-                <div><i class="fas fa-map-marker-alt" style="color: #ff4444; width: 15px;"></i> ${p.destino?.split(',')[0] || '---'}</div>
-            </div>
+            if (!pedidos || pedidos.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#666;">Nenhum pedido encontrado.</p>';
+                return;
+            }
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-                <div>
-                    ${detalheTaxa}
-                    <div style="font-size: 22px; font-weight: 900; color: ${isCancelada ? '#fff' : 'var(--neon-green)'};">
-                        R$ ${valorExibicao.toFixed(2).replace('.', ',')}
-                    </div>
-                </div>
-                ${!isFinalizado ? `
-                <div style="font-size: 11px; font-weight: bold; color: ${p.pago ? '#00e640' : '#ff9f43'}">
-                    <i class="fas ${p.pago ? 'fa-check-circle' : 'fa-clock'}"></i> ${p.pago ? 'PAGO' : 'PGTO PENDENTE'}
-                </div>` : ''}
-            </div>
+            const ativos = pedidos.filter(p => p.status !== 'concluida' && p.status !== 'cancelada');
+            const concluidos = pedidos.filter(p => p.status === 'concluida');
+            countAtivos.innerText = ativos.length;
+            countConcluidos.innerText = concluidos.length;
 
-            ${botaoReenvio}
+            pedidos.sort((a, b) => b.id - a.id);
 
-            <button onclick="verNoMapa('${p.id}')" class="btn-detalhes" 
-                style="width:100%; margin-top:10px; background: ${isFinalizado ? '#333' : cor}; color: ${isFinalizado ? '#fff' : '#000'}">
-                ${isFinalizado ? 'VER RESUMO' : 'RASTREAMENTO EM TEMPO REAL'}
-            </button>
-        </div>
-    `;
+            pedidos.forEach(p => {
+                const isCancelada = p.status === 'cancelada';
+                const isConcluida = p.status === 'concluida';
+                const isFinalizado = isConcluida || isCancelada;
+                const cor = getStatusColor(p.status);
+                const textoStatus = p.status.toUpperCase().replace('_', ' ');
 
-});
-}
-// ... (código anterior das taxas)
+                let valorExibicao = parseFloat(p.valor || 0);
+                let detalheTaxa = "";
+                let botaoReenvio = "";
 
-// ONDE COLAR:
-if (isCancelada) {
-    html += `
-        <button onclick="tentarNovamentePeloHistorico('${p.id}')" 
-            style="width:100%; margin-top:10px; padding:12px; background: #00e640; color:#000; border:none; border-radius:10px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-            <i class="fas fa-redo"></i> PEDIR NOVAMENTE
-        </button>
-    `;
-}
+                if (isCancelada) {
+                    const motivo = p.motivo_cancelamento || "";
+                    if (motivo.includes('[CLIENTE]') || motivo.toLowerCase().includes('cliente desistiu')) {
+                        valorExibicao = 5.00;
+                        detalheTaxa = `<div style="background: rgba(255, 68, 68, 0.1); padding: 8px; border-radius: 8px; border: 1px solid #ff4444; margin-bottom: 8px;">
+                            <span style="color: #ff4444; font-size: 11px; font-weight: bold; display: block;">VOCÊ CANCELOU</span>
+                            <span style="color: #eee; font-size: 10px;">Será cobrado R$ 5,00 no estorno do seu dinheiro (taxa de deslocamento).</span>
+                        </div>`;
+                    } else {
+                        valorExibicao = 0.10;
+                        detalheTaxa = `<div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px; border: 1px solid #00d2ff; margin-bottom: 8px;">
+                            <span style="color: #00d2ff; font-size: 11px; font-weight: bold; display: block;">O MOTOBOY CANCELOU</span>
+                            <span style="color: #eee; font-size: 10px;">Será cobrado taxa mínima de R$ 0,10 no estorno do seu dinheiro.</span>
+                        </div>`;
+                    }
+                    
+                    botaoReenvio = `<button onclick="tentarNovamentePeloHistorico('${p.id}')" style="width:100%; margin-top:10px; padding:12px; background: #00e640; color:#000; border:none; border-radius:10px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <i class="fas fa-redo"></i> PEDIR NOVAMENTE
+                    </button>`;
+                }
 
-// Botão que você já tem no código:
-html += `
-    <button onclick="verNoMapa('${p.id}')" class="btn-detalhes" 
-        style="background: ${isFinalizado ? '#333' : cor}; color: ${isFinalizado ? '#fff' : '#000'}">
-        ${isFinalizado ? 'VER RESUMO' : 'RASTREAMENTO EM TEMPO REAL'}
-    </button>
-</div>`; // Fecha a div do card
+                container.innerHTML += `
+                    <div class="pedido-card" style="opacity: ${isFinalizado ? '0.8' : '1'}">
+                        <div class="status-indicator" style="background: ${cor}"></div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div><span style="color: var(--text-dim); font-size: 11px; font-weight: bold;">CÓDIGO</span><div style="font-size: 18px; font-weight: 900; color: #fff;">#${p.id}</div></div>
+                            <span class="badge-status" style="background: ${cor}22; color: ${cor}; border: 1px solid ${cor}55">${textoStatus}</span>
+                        </div>
+                        <div class="route-info"><div><i class="fas fa-map-marker-alt" style="color: #ff4444; width: 15px;"></i> ${p.destino?.split(',')[0] || '---'}</div></div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                            <div>${detalheTaxa}<div style="font-size: 22px; font-weight: 900; color: ${isCancelada ? '#fff' : 'var(--neon-green)'};">R$ ${valorExibicao.toFixed(2).replace('.', ',')}</div></div>
+                            ${!isFinalizado ? `<div style="font-size: 11px; font-weight: bold; color: ${p.pago ? '#00e640' : '#ff9f43'}"><i class="fas ${p.pago ? 'fa-check-circle' : 'fa-clock'}"></i> ${p.pago ? 'PAGO' : 'PGTO PENDENTE'}</div>` : ''}
+                        </div>
+                        ${botaoReenvio}
+                        <button onclick="verNoMapa('${p.id}')" class="btn-detalhes" style="background: ${isFinalizado ? '#333' : cor}; color: ${isFinalizado ? '#fff' : '#000'}">
+                            ${isFinalizado ? 'VER RESUMO' : 'RASTREAMENTO EM TEMPO REAL'}
+                        </button>
+                    </div>`;
+            });
+        }
+
+        async function tentarNovamentePeloHistorico(id) {
+            try {
+                const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+                const data = await res.json();
+                if (data.success) {
+                    const p = data.pedido;
+                    const rascunho = {
+                        'rua-origem': p.origem.split(',')[0],
+                        'rua-destino': p.destino.split(',')[0],
+                        'servico': p.tipo_servico,
+                        'timestamp': new Date().getTime()
+                    };
+                    localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
+                    window.location.href = 'cliente.html';
+                }
+            } catch (e) { console.error(e); }
+        }
 
         function getStatusColor(status) {
             switch (status) {
                 case 'pendente': return '#00d2ff';
-                case 'aceita':
-                case 'liberada':
-                case 'em_andamento': return '#00e640';
+                case 'aceita': case 'liberada': case 'em_andamento': return '#00e640';
                 case 'concluida': return '#ffd700';
                 case 'cancelada': return '#ff4444';
                 default: return '#888';
@@ -365,30 +283,6 @@ html += `
 
         setInterval(carregarPedidos, 7000);
         carregarPedidos();
-        async function tentarNovamentePeloHistorico(id) {
-    try {
-        const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
-        const data = await res.json();
-
-        if (data.success) {
-            const p = data.pedido;
-            
-            // Pega o endereço e o serviço da corrida que deu erro
-            const rascunho = {
-                'rua-origem': p.origem.split(',')[0],
-                'rua-destino': p.destino.split(',')[0],
-                'servico': p.tipo_servico,
-                'timestamp': new Date().getTime()
-            };
-
-            // Salva na memória do celular e manda para a tela de pedido
-            localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
-            window.location.href = 'cliente.html';
-        }
-    } catch (e) {
-        console.error("Erro ao reenviar:", e);
-    }
-}
     </script>
 </body>
 </html>
