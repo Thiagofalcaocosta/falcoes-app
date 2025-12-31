@@ -1,7 +1,7 @@
 const Sentry = require("@sentry/node");
 
 Sentry.init({
-  dsn: "https://62429f9653073714d290ef1b632e4a50@o4510628443652096.ingest.us.sentry.io/4510628482580480", // Esse link você pega no painel do Sentry
+  dsn: process.env.SENTRY_DSN, // Agora ele busca a chave protegida do Render
   tracesSampleRate: 1.0,
 });
 /* 
@@ -26,6 +26,17 @@ const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('merca
 // ===============================================
 const app = express();
 const port = process.env.PORT || 3000;
+
+// ROTA TEMPORÁRIA PARA TESTAR O SENTRY
+/*app.get('/testar-agora', (req, res) => {
+  throw new Error("🚀 FUNCIONA PELO AMOR DE DEUS");
+});
+
+Sentry.setupExpressErrorHandler(app);
+app.use(function onError(err, req, res, next) {
+  res.statusCode = 500;
+  res.end(res.sentry + "\n");
+});*/
 
 
 // ==================================================================
