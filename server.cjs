@@ -21,10 +21,13 @@ const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('merca
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 1. Blindagem Helmet
+// 1. Blindagem Helmet Ajustada para Mapas
 app.use(helmet({
-  contentSecurityPolicy: false,
+    contentSecurityPolicy: false, // Mantém desativado para não conflitar com scripts externos
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // PERMITE carregar imagens/tiles de outros domínios
+    crossOriginEmbedderPolicy: false // Evita bloqueios de carregamento de scripts externos
 }));
+
 
 // 2. CORS Único e correto
 app.use(cors({
