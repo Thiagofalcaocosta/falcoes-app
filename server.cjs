@@ -28,7 +28,7 @@ const port = process.env.PORT || 3000;
 // ✅ FORMA CORRETA E LIMPA USANDO O PACOTE 'CORS'
 // ==================================================================
 app.use(cors({
-    origin: '*', // Permite todas as origens (ou use 'https://falcoes.site' para mais segurança)
+    origin: ['https://falcoes.site', 'https://www.falcoes.site'], // Permite todas as origens (ou use 'https://falcoes.site' para mais segurança)
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -64,7 +64,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // SUBSTITUA A LINHA "app.use(cors())" ANTIGA POR ISSO:
 app.use(cors({
-    origin: '*', // Libera para qualquer site (resolve o erro vermelho)
+    origin: ['https://falcoes.site', 'https://www.falcoes.site'],// Libera para qualquer site (resolve o erro vermelho)
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
