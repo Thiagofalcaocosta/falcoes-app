@@ -27,7 +27,6 @@ const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('merca
 const app = express();
 const port = process.env.PORT || 3000;
 // Deve ser o primeiro middleware no app
-Sentry.setupExpressErrorHandler(app);
 
 // ==================================================================
 // 🚨 CORREÇÃO URGENTE: ISSO TEM QUE SER A PRIMEIRA COISA (TOPO) 🚨
@@ -1582,6 +1581,8 @@ app.post('/iniciar-corrida', async (req, res) => {
 app.get('/teste-sentry', (req, res) => {
   throw new Error("🚀 Alarme Falcões Ativado: O Sentry está funcionando!");
 });
+
+Sentry.setupExpressErrorHandler(app);
 
 
 app.listen(port, () => {
