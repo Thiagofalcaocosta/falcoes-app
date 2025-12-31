@@ -27,7 +27,7 @@ const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('merca
 const app = express();
 const port = process.env.PORT || 3000;
 // Deve ser o primeiro middleware no app
-app.use(Sentry.Handlers.requestHandler());
+Sentry.setupExpressErrorHandler(app);
 
 // ==================================================================
 // 🚨 CORREÇÃO URGENTE: ISSO TEM QUE SER A PRIMEIRA COISA (TOPO) 🚨
@@ -1577,10 +1577,6 @@ app.post('/iniciar-corrida', async (req, res) => {
         res.status(500).json({ success: false, message: 'Erro no servidor' });
     }
 });
-
-// Este middleware captura erros que aconteceram nas rotas acima
-app.use(Sentry.Handlers.errorHandler());
-
 
 
 app.listen(port, () => {
