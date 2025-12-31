@@ -1578,6 +1578,11 @@ app.post('/iniciar-corrida', async (req, res) => {
     }
 });
 
+// ROTA TEMPORÁRIA PARA TESTAR O SENTRY
+app.get('/teste-sentry', (req, res) => {
+  throw new Error("🚀 Alarme Falcões Ativado: O Sentry está funcionando!");
+});
+
 
 app.listen(port, () => {
   console.log('='.repeat(50));
