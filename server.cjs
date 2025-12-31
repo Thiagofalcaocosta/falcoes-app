@@ -1,53 +1,40 @@
 const Sentry = require("@sentry/node");
 
 Sentry.init({
-  dsn: process.env.SENTRY_DSN, // Agora ele busca a chave protegida do Render
+  dsn: process.env.SENTRY_DSN,
   tracesSampleRate: 1.0,
 });
-/* 
-   Versão completa com Mercado Pago e correção de ordem
-*/
-require('dotenv').config();
 
+require('dotenv').config();
 const express = require('express');
+const helmet = require('helmet'); // <--- ADICIONE ESTA LINHA QUE FALTOU
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
 const path = require('path');
 const cors = require('cors');
-
 
 const PUBLIC_BASE_URL = 'https://falcoes-app.onrender.com';
 const FRONT_URL = 'https://falcoes.site';
 
 const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('mercadopago');
 
-// ===============================================
-// 3. DECLARAR O APP EXPRESS
-// ===============================================
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ROTA TEMPORÁRIA PARA TESTAR O SENTRY
-/*app.get('/testar-agora', (req, res) => {
-  throw new Error("🚀 FUNCIONA PELO AMOR DE DEUS");
-});
+// 1. Blindagem Helmet
+app.use(helmet({
+  contentSecurityPolicy: false,
+}));
 
-Sentry.setupExpressErrorHandler(app);
-app.use(function onError(err, req, res, next) {
-  res.statusCode = 500;
-  res.end(res.sentry + "\n");
-});*/
-
-
-// ==================================================================
-// ✅ FORMA CORRETA E LIMPA USANDO O PACOTE 'CORS'
-// ==================================================================
+// 2. CORS Único e correto
 app.use(cors({
-    origin: ['https://falcoes.site', 'https://www.falcoes.site'], // Permite todas as origens (ou use 'https://falcoes.site' para mais segurança)
+    origin: ['https://falcoes.site', 'https://www.falcoes.site'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'sentry-trace', 'baggage'],
     credentials: true
 }));
+
+
 // 3A. CONFIGURAÇÃO MERCADO PAGO
 const mpAccessToken = process.env.MP_ACCESS_TOKEN_TEST || process.env.MP_ACCESS_TOKEN;
 
@@ -1578,6 +1565,12 @@ app.post('/iniciar-corrida', async (req, res) => {
         console.error('Erro ao iniciar corrida:', err);
         res.status(500).json({ success: false, message: 'Erro no servidor' });
     }
+});
+
+Sentry.setupExpressErrorHandler(app);
+app.use(function onError(err, req, res, next) {
+  res.statusCode = 500;
+  res.end(res.sentry + "\n");
 });
 
 
