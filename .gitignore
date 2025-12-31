@@ -6,3 +6,8 @@
 
 # Ignorar arquivos de log
 *.log
+# Ignorar segredos e banco de dados local
+.env
+database.db
+*.db
+*.sqlite

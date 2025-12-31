@@ -1,3 +1,9 @@
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "https://62429f9653073714d290ef1b632e4a50@o4510628443652096.ingest.us.sentry.io/4510628482580480", // Esse link você pega no painel do Sentry
+  tracesSampleRate: 1.0,
+});
 /* 
    Versão completa com Mercado Pago e correção de ordem
 */
@@ -20,6 +26,8 @@ const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('merca
 // ===============================================
 const app = express();
 const port = process.env.PORT || 3000;
+// Deve ser o primeiro middleware no app
+app.use(Sentry.Handlers.requestHandler());
 
 // ==================================================================
 // 🚨 CORREÇÃO URGENTE: ISSO TEM QUE SER A PRIMEIRA COISA (TOPO) 🚨
@@ -1541,16 +1549,6 @@ pool.connect((err, client, release) => {
     release();
   }
 });
-
-app.listen(port, () => {
-  console.log('='.repeat(50));
-  console.log(`🚀 Servidor Falcões rodando na porta ${port}`);
-  console.log(`🔗 Backend URL: ${PUBLIC_BASE_URL}`);
-  console.log(`🌐 Frontend URL: ${FRONT_URL}`);
-  console.log(`💰 Mercado Pago: ${process.env.MP_ACCESS_TOKEN ? 'Configurado' : 'Modo TESTE'}`);
-  console.log('='.repeat(50));
-});
-
 // Rota para o motoboy avisar que coletou o pedido e saiu para entrega
 app.post('/iniciar-corrida', async (req, res) => {
     const { corrida_id, motoboy_id } = req.body;
@@ -1577,4 +1575,20 @@ app.post('/iniciar-corrida', async (req, res) => {
         res.status(500).json({ success: false, message: 'Erro no servidor' });
     }
 });
+
+// Este middleware captura erros que aconteceram nas rotas acima
+app.use(Sentry.Handlers.errorHandler());
+
+
+
+app.listen(port, () => {
+  console.log('='.repeat(50));
+  console.log(`🚀 Servidor Falcões rodando na porta ${port}`);
+  console.log(`🔗 Backend URL: ${PUBLIC_BASE_URL}`);
+  console.log(`🌐 Frontend URL: ${FRONT_URL}`);
+  console.log(`💰 Mercado Pago: ${process.env.MP_ACCESS_TOKEN ? 'Configurado' : 'Modo TESTE'}`);
+  console.log('='.repeat(50));
+});
+
+
 
