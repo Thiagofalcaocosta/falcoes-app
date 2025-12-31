@@ -27,19 +27,6 @@ const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('merca
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ROTA TEMPORÁRIA PARA TESTAR O SENTRY
-app.get('/testar-agora', (req, res) => {
-  throw new Error("🚀 FUNCIONA PELO AMOR DE DEUS");
-});
-
-Sentry.setupExpressErrorHandler(app);
-app.use(function onError(err, req, res, next) {
-  res.statusCode = 500;
-  res.end(res.sentry + "\n");
-});
-
-
-
 
 // ==================================================================
 // ✅ FORMA CORRETA E LIMPA USANDO O PACOTE 'CORS'
