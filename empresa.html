@@ -248,22 +248,38 @@
         }
 
         async function tentarNovamentePeloHistorico(id) {
-            try {
-                const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
-                const data = await res.json();
-                if (data.success) {
-                    const p = data.pedido;
-                    const rascunho = {
-                        'rua-origem': p.origem.split(',')[0],
-                        'rua-destino': p.destino.split(',')[0],
-                        'servico': p.tipo_servico,
-                        'timestamp': new Date().getTime()
-                    };
-                    localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
-                    window.location.href = 'cliente.html';
-                }
-            } catch (e) { console.error(e); }
+    try {
+        const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+        const data = await res.json();
+        
+        if (data.success && data.pedido) {
+            const p = data.pedido;
+
+            // PROTEÇÃO: Verifica se os endereços existem antes de dar o "split"
+            const ruaOrigem = p.origem ? p.origem.split(',')[0] : "";
+            const ruaDestino = p.destino ? p.destino.split(',')[0] : "";
+            
+            const rascunho = {
+                'rua-origem': ruaOrigem,
+                'rua-destino': ruaDestino,
+                'servico': p.tipo_servico || 'moto-taxi',
+                'timestamp': new Date().getTime()
+            };
+
+            // Salva na memória do navegador
+            localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
+            
+            // Avisa o usuário e redireciona
+            alert("Dados recuperados! Você será levado ao formulário.");
+            window.location.href = 'cliente.html';
+        } else {
+            alert("Não foi possível recuperar os detalhes desta corrida.");
         }
+    } catch (e) {
+        console.error("Erro ao reenviar:", e);
+        alert("Erro de conexão ao tentar recuperar o pedido.");
+    }
+}
 
         function getStatusColor(status) {
             switch (status) {
