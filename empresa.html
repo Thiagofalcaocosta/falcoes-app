@@ -177,75 +177,83 @@
         }
 
         function renderizarLista(pedidos) {
-            const container = document.getElementById('central-lista');
-            const countAtivos = document.getElementById('count-ativos');
-            const countConcluidos = document.getElementById('count-concluidos');
-            
-            container.innerHTML = "";
+    const container = document.getElementById('central-lista');
+    const countAtivos = document.getElementById('count-ativos');
+    const countConcluidos = document.getElementById('count-concluidos');
+    
+    container.innerHTML = "";
 
-            if (!pedidos || pedidos.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#666;">Nenhum pedido encontrado.</p>';
-                return;
+    if (!pedidos || pedidos.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#666;">Nenhum pedido encontrado.</p>';
+        return;
+    }
+
+    // Atualiza contadores
+    const ativos = pedidos.filter(p => p.status !== 'concluida' && p.status !== 'cancelada');
+    const concluidos = pedidos.filter(p => p.status === 'concluida');
+    countAtivos.innerText = ativos.length;
+    countConcluidos.innerText = concluidos.length;
+
+    // Ordena do mais novo para o mais antigo
+    pedidos.sort((a, b) => b.id - a.id);
+
+    pedidos.forEach(p => {
+        const isCancelada = p.status === 'cancelada';
+        const isConcluida = p.status === 'concluida';
+        const isFinalizado = isConcluida || isCancelada;
+        const cor = getStatusColor(p.status);
+        const textoStatus = p.status.toUpperCase().replace('_', ' ');
+
+        // --- TRATAMENTO SEGURO DO ENDEREÇO ---
+        // Se p.destino for "Rua A, 100", pega "Rua A". Se for apenas "Rua A", pega "Rua A".
+        const destinoExibicao = p.destino ? (p.destino.includes(',') ? p.destino.split(',')[0] : p.destino) : "Endereço não informado";
+
+        let valorExibicao = parseFloat(p.valor || 0);
+        let detalheTaxa = "";
+        let botaoReenvio = "";
+
+        if (isCancelada) {
+            const motivo = p.motivo_cancelamento || "";
+            if (motivo.includes('[CLIENTE]') || motivo.toLowerCase().includes('cliente desistiu')) {
+                valorExibicao = 5.00;
+                detalheTaxa = `<div style="background: rgba(255, 68, 68, 0.1); padding: 8px; border-radius: 8px; border: 1px solid #ff4444; margin-bottom: 8px;">
+                    <span style="color: #ff4444; font-size: 11px; font-weight: bold; display: block;">VOCÊ CANCELOU</span>
+                    <span style="color: #eee; font-size: 10px;">Será cobrado R$ 5,00 no estorno do seu dinheiro.</span>
+                </div>`;
+            } else {
+                valorExibicao = 0.10;
+                detalheTaxa = `<div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px; border: 1px solid #00d2ff; margin-bottom: 8px;">
+                    <span style="color: #00d2ff; font-size: 11px; font-weight: bold; display: block;">O MOTOBOY CANCELOU</span>
+                    <span style="color: #eee; font-size: 10px;">Será cobrado taxa mínima de R$ 0,10 no estorno do seu dinheiro.</span>
+                </div>`;
             }
-
-            const ativos = pedidos.filter(p => p.status !== 'concluida' && p.status !== 'cancelada');
-            const concluidos = pedidos.filter(p => p.status === 'concluida');
-            countAtivos.innerText = ativos.length;
-            countConcluidos.innerText = concluidos.length;
-
-            pedidos.sort((a, b) => b.id - a.id);
-
-            pedidos.forEach(p => {
-                const isCancelada = p.status === 'cancelada';
-                const isConcluida = p.status === 'concluida';
-                const isFinalizado = isConcluida || isCancelada;
-                const cor = getStatusColor(p.status);
-                const textoStatus = p.status.toUpperCase().replace('_', ' ');
-
-                let valorExibicao = parseFloat(p.valor || 0);
-                let detalheTaxa = "";
-                let botaoReenvio = "";
-
-                if (isCancelada) {
-                    const motivo = p.motivo_cancelamento || "";
-                    if (motivo.includes('[CLIENTE]') || motivo.toLowerCase().includes('cliente desistiu')) {
-                        valorExibicao = 5.00;
-                        detalheTaxa = `<div style="background: rgba(255, 68, 68, 0.1); padding: 8px; border-radius: 8px; border: 1px solid #ff4444; margin-bottom: 8px;">
-                            <span style="color: #ff4444; font-size: 11px; font-weight: bold; display: block;">VOCÊ CANCELOU</span>
-                            <span style="color: #eee; font-size: 10px;">Será cobrado R$ 5,00 no estorno do seu dinheiro (taxa de deslocamento).</span>
-                        </div>`;
-                    } else {
-                        valorExibicao = 0.10;
-                        detalheTaxa = `<div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px; border: 1px solid #00d2ff; margin-bottom: 8px;">
-                            <span style="color: #00d2ff; font-size: 11px; font-weight: bold; display: block;">O MOTOBOY CANCELOU</span>
-                            <span style="color: #eee; font-size: 10px;">Será cobrado taxa mínima de R$ 0,10 no estorno do seu dinheiro.</span>
-                        </div>`;
-                    }
-                    
-                    botaoReenvio = `<button onclick="tentarNovamentePeloHistorico('${p.id}')" style="width:100%; margin-top:10px; padding:12px; background: #00e640; color:#000; border:none; border-radius:10px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                        <i class="fas fa-redo"></i> PEDIR NOVAMENTE
-                    </button>`;
-                }
-
-                container.innerHTML += `
-                    <div class="pedido-card" style="opacity: ${isFinalizado ? '0.8' : '1'}">
-                        <div class="status-indicator" style="background: ${cor}"></div>
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div><span style="color: var(--text-dim); font-size: 11px; font-weight: bold;">CÓDIGO</span><div style="font-size: 18px; font-weight: 900; color: #fff;">#${p.id}</div></div>
-                            <span class="badge-status" style="background: ${cor}22; color: ${cor}; border: 1px solid ${cor}55">${textoStatus}</span>
-                        </div>
-                        <div class="route-info"><div><i class="fas fa-map-marker-alt" style="color: #ff4444; width: 15px;"></i> ${p.destino?.split(',')[0] || '---'}</div></div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-                            <div>${detalheTaxa}<div style="font-size: 22px; font-weight: 900; color: ${isCancelada ? '#fff' : 'var(--neon-green)'};">R$ ${valorExibicao.toFixed(2).replace('.', ',')}</div></div>
-                            ${!isFinalizado ? `<div style="font-size: 11px; font-weight: bold; color: ${p.pago ? '#00e640' : '#ff9f43'}"><i class="fas ${p.pago ? 'fa-check-circle' : 'fa-clock'}"></i> ${p.pago ? 'PAGO' : 'PGTO PENDENTE'}</div>` : ''}
-                        </div>
-                        ${botaoReenvio}
-                        <button onclick="verNoMapa('${p.id}')" class="btn-detalhes" style="background: ${isFinalizado ? '#333' : cor}; color: ${isFinalizado ? '#fff' : '#000'}">
-                            ${isFinalizado ? 'VER RESUMO' : 'RASTREAMENTO EM TEMPO REAL'}
-                        </button>
-                    </div>`;
-            });
+            
+            botaoReenvio = `<button onclick="tentarNovamentePeloHistorico('${p.id}')" style="width:100%; margin-top:10px; padding:12px; background: #00e640; color:#000; border:none; border-radius:10px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <i class="fas fa-redo"></i> PEDIR NOVAMENTE
+            </button>`;
         }
+
+        container.innerHTML += `
+            <div class="pedido-card" style="opacity: ${isFinalizado ? '0.8' : '1'}">
+                <div class="status-indicator" style="background: ${cor}"></div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div><span style="color: var(--text-dim); font-size: 11px; font-weight: bold;">CÓDIGO</span><div style="font-size: 18px; font-weight: 900; color: #fff;">#${p.id}</div></div>
+                    <span class="badge-status" style="background: ${cor}22; color: ${cor}; border: 1px solid ${cor}55">${textoStatus}</span>
+                </div>
+                <div class="route-info">
+                    <div><i class="fas fa-map-marker-alt" style="color: #ff4444; width: 15px;"></i> ${destinoExibicao}</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                    <div>${detalheTaxa}<div style="font-size: 22px; font-weight: 900; color: ${isCancelada ? '#fff' : 'var(--neon-green)'};">R$ ${valorExibicao.toFixed(2).replace('.', ',')}</div></div>
+                    ${!isFinalizado ? `<div style="font-size: 11px; font-weight: bold; color: ${p.pago ? '#00e640' : '#ff9f43'}"><i class="fas ${p.pago ? 'fa-check-circle' : 'fa-clock'}"></i> ${p.pago ? 'PAGO' : 'PGTO PENDENTE'}</div>` : ''}
+                </div>
+                ${botaoReenvio}
+                <button onclick="verNoMapa('${p.id}')" class="btn-detalhes" style="background: ${isFinalizado ? '#333' : cor}; color: ${isFinalizado ? '#fff' : '#000'}">
+                    ${isFinalizado ? 'VER RESUMO' : 'RASTREAMENTO EM TEMPO REAL'}
+                </button>
+            </div>`;
+    });
+}
 
         async function tentarNovamentePeloHistorico(id) {
     try {
