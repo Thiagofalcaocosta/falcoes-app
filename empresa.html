@@ -203,6 +203,11 @@
     const container = document.getElementById('central-lista');
     const countAtivos = document.getElementById('count-ativos');
     const countConcluidos = document.getElementById('count-concluidos');
+    // Ordenação: Pendentes e Em Andamento primeiro, Concluídas e Canceladas por último
+pedidos.sort((a, b) => {
+    const ordem = { 'pendente': 1, 'em_andamento': 1, 'aceita': 1, 'liberada': 1, 'concluida': 2, 'cancelada': 2 };
+    return (ordem[a.status] || 99) - (ordem[b.status] || 99);
+});
 
     // LIMPEZA CRÍTICA: Remove duplicatas da tela
     container.innerHTML = "";
@@ -265,8 +270,21 @@ if (p.status === 'cancelada') {
     
 
     // --- MONTAGEM DO HTML ---
+// --- MONTAGEM DO HTML ---
+    let botaoReenvio = "";
+
+    // Se a corrida for cancelada, cria o botão de pedir de novo
+    if (isCancelada) {
+        botaoReenvio = `
+            <button onclick="tentarNovamentePeloHistorico('${p.id}')" 
+                style="width:100%; margin-top:10px; padding:12px; background: #00e640; color:#000; border:none; border-radius:10px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <i class="fas fa-redo"></i> PEDIR NOVAMENTE
+            </button>
+        `;
+    }
+
     container.innerHTML += `
-        <div class="pedido-card" style="opacity: ${isFinalizado ? '0.6' : '1'}">
+        <div class="pedido-card" style="opacity: ${isFinalizado ? '0.8' : '1'}">
             <div class="status-indicator" style="background: ${cor}"></div>
             
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -296,14 +314,36 @@ if (p.status === 'cancelada') {
                 </div>` : ''}
             </div>
 
+            ${botaoReenvio}
+
             <button onclick="verNoMapa('${p.id}')" class="btn-detalhes" 
-                style="background: ${isFinalizado ? '#333' : cor}; color: ${isFinalizado ? '#fff' : '#000'}">
+                style="width:100%; margin-top:10px; background: ${isFinalizado ? '#333' : cor}; color: ${isFinalizado ? '#fff' : '#000'}">
                 ${isFinalizado ? 'VER RESUMO' : 'RASTREAMENTO EM TEMPO REAL'}
             </button>
         </div>
     `;
+
 });
 }
+// ... (código anterior das taxas)
+
+// ONDE COLAR:
+if (isCancelada) {
+    html += `
+        <button onclick="tentarNovamentePeloHistorico('${p.id}')" 
+            style="width:100%; margin-top:10px; padding:12px; background: #00e640; color:#000; border:none; border-radius:10px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <i class="fas fa-redo"></i> PEDIR NOVAMENTE
+        </button>
+    `;
+}
+
+// Botão que você já tem no código:
+html += `
+    <button onclick="verNoMapa('${p.id}')" class="btn-detalhes" 
+        style="background: ${isFinalizado ? '#333' : cor}; color: ${isFinalizado ? '#fff' : '#000'}">
+        ${isFinalizado ? 'VER RESUMO' : 'RASTREAMENTO EM TEMPO REAL'}
+    </button>
+</div>`; // Fecha a div do card
 
         function getStatusColor(status) {
             switch (status) {
@@ -325,6 +365,30 @@ if (p.status === 'cancelada') {
 
         setInterval(carregarPedidos, 7000);
         carregarPedidos();
+        async function tentarNovamentePeloHistorico(id) {
+    try {
+        const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+        const data = await res.json();
+
+        if (data.success) {
+            const p = data.pedido;
+            
+            // Pega o endereço e o serviço da corrida que deu erro
+            const rascunho = {
+                'rua-origem': p.origem.split(',')[0],
+                'rua-destino': p.destino.split(',')[0],
+                'servico': p.tipo_servico,
+                'timestamp': new Date().getTime()
+            };
+
+            // Salva na memória do celular e manda para a tela de pedido
+            localStorage.setItem('rascunho_cliente', JSON.stringify(rascunho));
+            window.location.href = 'cliente.html';
+        }
+    } catch (e) {
+        console.error("Erro ao reenviar:", e);
+    }
+}
     </script>
 </body>
 </html>
