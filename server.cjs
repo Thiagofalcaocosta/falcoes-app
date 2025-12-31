@@ -26,11 +26,21 @@ const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require('merca
 // ===============================================
 const app = express();
 const port = process.env.PORT || 3000;
-// Deve ser o primeiro middleware no app
 
-// ==================================================================
-// 🚨 CORREÇÃO URGENTE: ISSO TEM QUE SER A PRIMEIRA COISA (TOPO) 🚨
-// ==================================================================
+// ROTA TEMPORÁRIA PARA TESTAR O SENTRY
+app.get('/testar-agora', (req, res) => {
+  throw new Error("🚀 FUNCIONA PELO AMOR DE DEUS");
+});
+
+Sentry.setupExpressErrorHandler(app);
+app.use(function onError(err, req, res, next) {
+  res.statusCode = 500;
+  res.end(res.sentry + "\n");
+});
+
+
+
+
 // ==================================================================
 // ✅ FORMA CORRETA E LIMPA USANDO O PACOTE 'CORS'
 // ==================================================================
@@ -69,12 +79,7 @@ const merchantOrderClient  = new MerchantOrder(mpClient);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// SUBSTITUA A LINHA "app.use(cors())" ANTIGA POR ISSO:
-app.use(cors({
-    origin: ['https://falcoes.site', 'https://www.falcoes.site'],// Libera para qualquer site (resolve o erro vermelho)
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+
 // ===============================================
 // 🛡️ SEGURANÇA: BLOQUEIO DE ARQUIVOS SENSÍVEIS
 // ===============================================
@@ -1577,16 +1582,6 @@ app.post('/iniciar-corrida', async (req, res) => {
     }
 });
 
-// ROTA TEMPORÁRIA PARA TESTAR O SENTRY
-app.get('/testar-agora', (req, res) => {
-  throw new Error("🚀 FUNCIONA PELO AMOR DE DEUS");
-});
-
-Sentry.setupExpressErrorHandler(app);
-app.use(function onError(err, req, res, next) {
-  res.statusCode = 500;
-  res.end(res.sentry + "\n");
-});
 
 
 app.listen(port, () => {
