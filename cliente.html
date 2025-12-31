@@ -1259,6 +1259,10 @@
 
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
     <script>
+        // 1. ADICIONE ESTAS 3 LINHAS AQUI (Preparação do Som)
+    const somNotificacao = new Audio('/assets/som.mp3');
+    let statusAnteriorSom = 'pendente'; 
+    let somJaTocou = false;
   
     // 1. Abre o modal quando clica no botão
     function abrirModalCancelamentoBusca() {
@@ -2707,6 +2711,27 @@ async function verificarStatus(id) {
 
 
         if (!data.success || !pedido) return;
+        // === COLE ESTE BLOCO EXATAMENTE AQUI ===
+        if (statusAnteriorSom === 'pendente' && 
+           (statusAtual === 'aguardando_pagamento' || statusAtual === 'liberada' || statusAtual === 'aceita')) {
+            
+            if (!somJaTocou) {
+                somNotificacao.play().catch(e => console.log("Som aguardando interação"));
+                somJaTocou = true; 
+                
+                // Ativa a animação visual no título se você a adicionou no CSS
+                const titulo = document.getElementById('acompanhamento-status-titulo');
+                if (titulo) {
+                    titulo.classList.add('animar-vitoria');
+                    setTimeout(() => titulo.classList.remove('animar-vitoria'), 5000);
+                }
+
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            }
+        }
+        // Atualiza a variável global para a próxima conferência
+        statusAnteriorSom = statusAtual;
+        
 
         // Elementos da Interface
         const statusTitulo = document.getElementById('acompanhamento-status-titulo');
