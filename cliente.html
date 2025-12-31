@@ -2234,8 +2234,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-</script>
-<script>
+
+
+
 // pagamento em dinheiro
 async function pagarDinheiro() {
     if (!idPedidoAtual) {
@@ -2722,7 +2723,6 @@ async function verificarStatus(id) {
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
             }
         }
-        statusAnterior = statusAtual;
 
         if (!data.success || !pedido) return;
 
