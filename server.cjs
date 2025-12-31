@@ -135,10 +135,12 @@ if (!fetchFn) {
 // 1. Primeiro definimos a variável (Isso é o que estava faltando!)
 const connectionString = process.env.DATABASE_URL;
 
-// 2. Depois criamos a conexão usando ela
+// 2. Depois criamos a conexão usando ela (AJUSTADO PARA O RENDER)
 const pool = new Pool({
   connectionString: connectionString,
-  ssl: false, 
+  ssl: {
+    rejectUnauthorized: false // Isso permite que o Render aceite a conexão segura
+  },
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
