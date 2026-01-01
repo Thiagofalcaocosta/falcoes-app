@@ -266,9 +266,9 @@
         } catch (err) { console.error(err); }
     }
 
-    async function gerarRelatorio() {
-    const inicio = document.getElementById('filtro-data-inicio').value; // Formato: YYYY-MM-DD
-    const fim = document.getElementById('filtro-data-fim').value;       // Formato: YYYY-MM-DD
+   async function gerarRelatorio() {
+    const inicio = document.getElementById('filtro-data-inicio').value;
+    const fim = document.getElementById('filtro-data-fim').value;
 
     if (!inicio || !fim) return alert("Selecione as datas inicial e final!");
 
@@ -276,22 +276,20 @@
         const res = await fetch(`${MEU_IP}/admin/dashboard`);
         const data = await res.json();
         
-        if (!data.historico) return alert("Nenhum histórico encontrado no servidor.");
+        if (!data.historico) return alert("Nenhum histórico encontrado.");
 
         const filtrados = data.historico.filter(item => {
             if (!item.data_hora) return false;
 
-            // 1. Extrai apenas a DATA (YYYY-MM-DD) ignorando a HORA do banco
-            // O seu banco retorna "2026-01-01 11:10:15", o split(' ')[0] pega "2026-01-01"
-            const dataSomenteTexto = item.data_hora.includes(' ') 
-                ? item.data_hora.split(' ')[0] 
-                : item.data_hora.split('T')[0];
+            // 1. Tratamento da Data: extrai apenas YYYY-MM-DD
+            // Aceita tanto formato com "T" (ISO) quanto com espaço (Postgres)
+            const dataLimpa = item.data_hora.split('T')[0].split(' ')[0];
 
-            // 2. Normaliza o status para minúsculo
-            const statusNormalizado = item.status ? item.status.toLowerCase() : '';
+            // 2. Tratamento do Status: remove espaços e coloca em minúsculo
+            const statusNormalizado = item.status ? item.status.trim().toLowerCase() : '';
 
-            // 3. Comparação lógica
-            const dataBate = dataSomenteTexto >= inicio && dataSomenteTexto <= fim;
+            // 3. Comparação
+            const dataBate = dataLimpa >= inicio && dataLimpa <= fim;
             const statusBate = statusNormalizado === 'concluida';
 
             return dataBate && statusBate;
@@ -305,7 +303,7 @@
         exibirDadosRelatorio(filtrados);
     } catch (err) {
         console.error("Erro ao gerar relatório:", err);
-        alert("Erro ao conectar com o servidor.");
+        alert("Erro ao carregar dados do servidor.");
     }
 }
 
