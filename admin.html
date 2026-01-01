@@ -267,44 +267,54 @@
     }
 
    async function gerarRelatorio() {
-    const inicioInput = document.getElementById('filtro-data-inicio').value; // Ex: "2026-01-01"
-    const fimInput = document.getElementById('filtro-data-fim').value;       // Ex: "2026-01-01"
+    const inicioInput = document.getElementById('filtro-data-inicio').value;
+    const fimInput = document.getElementById('filtro-data-fim').value;
 
-    if (!inicioInput || !fimInput) return alert("Selecione as datas inicial e final!");
+    if (!inicioInput || !fimInput) return alert("Selecione as datas!");
 
     try {
         const res = await fetch(`${MEU_IP}/admin/dashboard`);
         const data = await res.json();
         
-        if (!data.historico) return alert("Nenhum histórico encontrado no servidor.");
+        if (!data.historico || data.historico.length === 0) {
+            return alert("O servidor não retornou nenhum histórico.");
+        }
 
-        // Filtro robusto para datas do Postgres e status
         const filtrados = data.historico.filter(item => {
-            if (!item.data_hora || !item.status) return false;
+            // Tenta encontrar a data em diferentes nomes de campo possíveis
+            const dataRaw = item.data_hora || item.data || item.created_at;
+            if (!dataRaw || !item.status) return false;
 
-            // 1. Limpa a data do banco (pega apenas YYYY-MM-DD)
-            // Funciona se vier "2026-01-01 11:10:15" ou "2026-01-01T14:10:15.000Z"
-            const dataBancoTratada = item.data_hora.split(' ')[0].split('T')[0];
+            // 1. Tratamento de Data Universal
+            // Converte qualquer formato para YYYY-MM-DD
+            const dataObjeto = new Date(dataRaw);
+            const ano = dataObjeto.getFullYear();
+            const mes = String(dataObjeto.getMonth() + 1).padStart(2, '0');
+            const dia = String(dataObjeto.getDate()).padStart(2, '0');
+            const dataBancoFormatada = `${ano}-${mes}-${dia}`;
 
-            // 2. Normaliza o status
-            const statusNormalizado = item.status.trim().toLowerCase();
+            // 2. Normalização de Status (remove acentos e espaços)
+            const statusNormalizado = item.status.trim().toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
 
-            // 3. Comparação direta de strings (YYYY-MM-DD)
-            const dataBate = dataBancoTratada >= inicioInput && dataBancoTratada <= fimInput;
+            // 3. Verificação no Console (Apenas para você ver no F12 se está batendo)
+            console.log(`Comparando: ${dataBancoFormatada} com ${inicioInput} | Status: ${statusNormalizado}`);
+
+            const dataBate = dataBancoFormatada >= inicioInput && dataBancoFormatada <= fimInput;
             const statusBate = statusNormalizado === 'concluida';
 
             return dataBate && statusBate;
         });
 
         if (filtrados.length === 0) {
-            alert("Nenhuma corrida concluída encontrada para este período.");
+            alert("Nenhuma corrida concluída encontrada para este período. Verifique se o status no banco é 'concluida'.");
         }
 
         dadosRelatorioGlobal = filtrados;
         exibirDadosRelatorio(filtrados);
     } catch (err) {
-        console.error("Erro ao gerar relatório:", err);
-        alert("Erro ao conectar com o servidor.");
+        console.error("Erro detalhado:", err);
+        alert("Erro ao processar relatório. Verifique o console (F12).");
     }
 }
     function exibirDadosRelatorio(dados) {
