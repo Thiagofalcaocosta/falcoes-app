@@ -334,19 +334,34 @@ async function alternarStatus(id, statusAtual) {
 
 // Nova função para Gerenciar Dívidas
 async function mudarStatusFinanceiro(id, statusAtual) {
-    const novoStatus = statusAtual === 2 ? 1 : 2; 
-    const msg = novoStatus === 2 ? "Bloquear este cliente por dívida?" : "Desbloquear este cliente?";
+    // Inverte o status: se é 2 (bloqueado) vai para 1 (liberado). Se é 1, vai para 2.
+    const novoStatus = (statusAtual === 2) ? 1 : 2; 
+    const acaoTexto = (novoStatus === 1) ? "LIBERAR" : "BLOQUEAR POR DÍVIDA";
     
-    if(!confirm(msg)) return;
+    if (!confirm(`Deseja realmente ${acaoTexto} este cliente?`)) return;
 
     try {
         const res = await fetch(`${MEU_IP}/admin/alterar-status-cliente`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, novoStatusConta: novoStatus })
+            body: JSON.stringify({ 
+                id: id, 
+                novoStatusConta: novoStatus 
+            })
         });
-        if(res.ok) carregarClientes();
-    } catch (e) { alert("Erro ao processar."); }
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            alert("✅ Sucesso: Cliente " + (novoStatus === 1 ? "Liberado" : "Bloqueado"));
+            carregarClientes(); // Recarrega a lista na tela para atualizar as cores
+        } else {
+            alert("❌ Erro do servidor: " + data.message);
+        }
+    } catch (e) { 
+        console.error("Erro na requisição:", e);
+        alert("Erro de conexão. Verifique se o servidor está rodando.");
+    }
 }
 
     async function decisao(id, acao) {

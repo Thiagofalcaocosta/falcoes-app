@@ -29,6 +29,32 @@ app.use(helmet({
 }));
 app.use(helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }));
 
+// Rota para o ADM alterar o status financeiro do cliente (Bloquear/Liberar)
+app.post('/admin/alterar-status-cliente', async (req, res) => {
+    const { id, novoStatusConta } = req.body;
+
+    if (!id || !novoStatusConta) {
+        return res.status(400).json({ success: false, message: "ID ou Status faltando" });
+    }
+
+    try {
+        // Atualiza o status_conta (1 para ativo, 2 para bloqueado por dívida)
+        const result = await pool.query(
+            "UPDATE usuarios SET status_conta = $1 WHERE id = $2",
+            [novoStatusConta, id]
+        );
+
+        if (result.rowCount > 0) {
+            res.json({ success: true, message: "Status atualizado com sucesso!" });
+        } else {
+            res.status(404).json({ success: false, message: "Usuário não encontrado" });
+        }
+    } catch (err) {
+        console.error('Erro ao atualizar status financeiro:', err);
+        res.status(500).json({ success: false, message: "Erro interno no servidor" });
+    }
+});
+
 
 // 2. CORS Único e correto
 app.use(cors({
