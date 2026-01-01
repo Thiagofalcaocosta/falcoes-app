@@ -65,16 +65,7 @@
             text-transform: uppercase;
         }
 
-        .logout {
-            color: var(--danger-color);
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 13px;
-            border: 1px solid var(--danger-color);
-            padding: 4px 10px;
-            border-radius: 15px;
-            margin-left: 10px;
-        }
+        
 
         #tela-lista,
         #tela-bloqueio,
@@ -313,6 +304,24 @@
                 opacity: 1;
             }
         }
+
+        .logout {
+    color: #ff4444; /* Vermelho para indicar saída */
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 11px;
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    padding: 5px 12px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    background: rgba(255, 68, 68, 0.05);
+    transition: 0.3s;
+}
+
+.logout:hover {
+    background: #ff4444;
+    color: white;
+}
         /* ESTILO PARA O CAMPO TEXTAREA NO MODAL DE CANCELAMENTO */
 .modal-box textarea {
     width: 100%;
@@ -648,6 +657,11 @@
     <img src="assets/logo.png" alt="Logo" class="logo-pequeno">
     
     <span id="msg-ola" class="moto-saudacao" style="margin-top: 15px;">OLÁ, PILOTO</span>
+    
+    <div class="botoes-row">
+        <span id="status-online-indicator" style="display:none;"></span>
+        <a href="index.html" class="logout" onclick="deslogar()" style="margin-top: 10px; padding: 8px 25px; border-radius: 20px; border: 1px solid #555; color: #888; text-decoration: none; font-size: 12px; font-weight: bold;">SAIR DO APP</a>
+    </div>
 
     <div style="margin: 10px 0;">
         <span style="font-size: 11px; color: #888; font-weight: bold; letter-spacing: 1px;">CATEGORIA:</span>
@@ -661,11 +675,6 @@
         <button onclick="solicitarPagamentoAdm()" style="background: #25d366; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: 900; font-size: 12px; margin-top: 12px; cursor: pointer; width: 100%; text-transform: uppercase;">
             <i class="fab fa-whatsapp"></i> Solicitar Pagamento
         </button>
-    </div>
-
-    <div class="botoes-row">
-        <span id="status-online-indicator" style="display:none;"></span>
-        <a href="index.html" class="logout" onclick="deslogar()" style="margin-top: 10px; padding: 8px 25px; border-radius: 20px; border: 1px solid #555; color: #888; text-decoration: none; font-size: 12px; font-weight: bold;">SAIR DO APP</a>
     </div>
 </div>    
 
