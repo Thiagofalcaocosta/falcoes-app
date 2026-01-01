@@ -267,29 +267,30 @@
     }
 
    async function gerarRelatorio() {
-    const inicio = document.getElementById('filtro-data-inicio').value;
-    const fim = document.getElementById('filtro-data-fim').value;
+    const inicioInput = document.getElementById('filtro-data-inicio').value; // Ex: "2026-01-01"
+    const fimInput = document.getElementById('filtro-data-fim').value;       // Ex: "2026-01-01"
 
-    if (!inicio || !fim) return alert("Selecione as datas inicial e final!");
+    if (!inicioInput || !fimInput) return alert("Selecione as datas inicial e final!");
 
     try {
         const res = await fetch(`${MEU_IP}/admin/dashboard`);
         const data = await res.json();
         
-        if (!data.historico) return alert("Nenhum histórico encontrado.");
+        if (!data.historico) return alert("Nenhum histórico encontrado no servidor.");
 
+        // Filtro robusto para datas do Postgres e status
         const filtrados = data.historico.filter(item => {
-            if (!item.data_hora) return false;
+            if (!item.data_hora || !item.status) return false;
 
-            // 1. Tratamento da Data: extrai apenas YYYY-MM-DD
-            // Aceita tanto formato com "T" (ISO) quanto com espaço (Postgres)
-            const dataLimpa = item.data_hora.split('T')[0].split(' ')[0];
+            // 1. Limpa a data do banco (pega apenas YYYY-MM-DD)
+            // Funciona se vier "2026-01-01 11:10:15" ou "2026-01-01T14:10:15.000Z"
+            const dataBancoTratada = item.data_hora.split(' ')[0].split('T')[0];
 
-            // 2. Tratamento do Status: remove espaços e coloca em minúsculo
-            const statusNormalizado = item.status ? item.status.trim().toLowerCase() : '';
+            // 2. Normaliza o status
+            const statusNormalizado = item.status.trim().toLowerCase();
 
-            // 3. Comparação
-            const dataBate = dataLimpa >= inicio && dataLimpa <= fim;
+            // 3. Comparação direta de strings (YYYY-MM-DD)
+            const dataBate = dataBancoTratada >= inicioInput && dataBancoTratada <= fimInput;
             const statusBate = statusNormalizado === 'concluida';
 
             return dataBate && statusBate;
@@ -303,10 +304,9 @@
         exibirDadosRelatorio(filtrados);
     } catch (err) {
         console.error("Erro ao gerar relatório:", err);
-        alert("Erro ao carregar dados do servidor.");
+        alert("Erro ao conectar com o servidor.");
     }
 }
-
     function exibirDadosRelatorio(dados) {
         const tbody = document.getElementById('tabela-relatorio-corpo');
         let t = { valor: 0, eQ: 0, mQ: 0 };
