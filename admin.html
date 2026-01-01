@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Administrativo - Falcões</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
         :root {
@@ -19,14 +20,12 @@
             margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh;
         }
 
-        /* HEADER */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
             background: #000; padding: 12px 20px; border-bottom: 1px solid var(--border-color);
         }
         .logo-pequeno { height: 35px; filter: drop-shadow(0 0 5px var(--neon-green)); }
         
-        /* MENU TABS */
         .menu-tabs { 
             display: flex; background: #000; padding: 8px 15px; gap: 8px;
             overflow-x: auto; border-bottom: 1px solid var(--border-color);
@@ -43,13 +42,7 @@
 
         .container-principal { padding: 15px; flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
 
-        /* CARDS ESTATÍSTICAS */
-        .cards-resumo { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 12px; 
-            margin-bottom: 25px; 
-        }
+        .cards-resumo { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
         @media (min-width: 768px) { .cards-resumo { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
 
         .card-stat { 
@@ -62,7 +55,6 @@
         .card-destaque { border-left: 4px solid var(--money-color); }
         .card-pendente { border-left: 4px solid var(--danger-color); }
 
-        /* TABELAS */
         .tabela-container { 
             background: var(--card-color); border-radius: 12px; border: 1px solid var(--border-color); 
             overflow-x: auto; margin-top: 10px;
@@ -71,12 +63,10 @@
         th { background-color: #000; color: var(--neon-green); font-size: 11px; padding: 15px; text-align: left; text-transform: uppercase; }
         td { padding: 15px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
 
-        /* STATUS TAGS */
         .status-tag { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
         .status-concluida { background: rgba(0, 230, 64, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); }
         .status-cancelada { background: rgba(255, 68, 68, 0.1); color: var(--danger-color); border: 1px solid var(--danger-color); }
 
-        /* GESTÃO DE USUÁRIOS */
         .painel-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
         @media (min-width: 900px) { .painel-grid { grid-template-columns: 1fr 1fr; } }
         
@@ -85,20 +75,18 @@
             background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 12px; 
             border: 1px solid #333; transition: 0.2s;
         }
-        .card-user-gestao:hover { border-color: #555; }
         .user-name { font-weight: bold; font-size: 14px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
         .user-sub { font-size: 12px; color: #888; display: block; margin-top: 4px; }
 
         .btn-remover { color: var(--danger-color); background: none; border: none; cursor: pointer; padding: 5px; font-size: 16px; transition: 0.2s; }
-        .btn-remover:hover { transform: scale(1.2); }
-
         .vazio { text-align: center; color: #444; padding: 30px; font-size: 14px; }
         
-        .filtro-box { margin-bottom: 15px; display: flex; gap: 10px; }
+        .filtro-box { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
         .input-busca { 
             flex: 1; background: #000; border: 1px solid #333; color: white; 
             padding: 8px 12px; border-radius: 6px; outline: none;
         }
+        label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; }
     </style>
 </head>
 
@@ -114,6 +102,7 @@
 
 <div class="menu-tabs">
     <button class="tab-btn ativo" onclick="mudarAba('dashboard', event)"><i class="fas fa-chart-line"></i> DASHBOARD</button>
+    <button class="tab-btn" onclick="mudarAba('relatorios', event)"><i class="fas fa-file-invoice-dollar"></i> RELATÓRIOS</button>
     <button class="tab-btn" onclick="mudarAba('aprovacoes', event)"><i class="fas fa-user-clock"></i> APROVAÇÕES</button>
     <button class="tab-btn" onclick="mudarAba('gerenciar', event)"><i class="fas fa-users-cog"></i> GESTÃO GERAL</button>
 </div>
@@ -160,15 +149,74 @@
         </div>
     </div>
 
+    <div id="relatorios" style="display:none;" class="conteudo-aba">
+        <div class="coluna" style="margin-bottom: 20px;">
+            <h3><i class="fas fa-filter"></i> FILTRAR HISTÓRICO</h3>
+            <div class="filtro-box">
+                <div style="flex: 1; min-width: 150px;">
+                    <label>DATA INICIAL</label>
+                    <input type="date" id="filtro-data-inicio" class="input-busca">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label>DATA FINAL</label>
+                    <input type="date" id="filtro-data-fim" class="input-busca">
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <button onclick="gerarRelatorio()" style="background: var(--neon-green); color: black; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">CONSULTAR</button>
+                    <button onclick="exportarExcel()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;"><i class="fas fa-file-excel"></i> PLANILHA</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="cards-resumo">
+            <div class="card-stat card-destaque">
+                <span class="stat-titulo">Total Faturado</span>
+                <span class="stat-valor" id="rel-faturamento-total">R$ 0,00</span>
+            </div>
+            <div class="card-stat" style="border-left: 4px solid var(--info-color);">
+                <span class="stat-titulo">Qtd Corridas</span>
+                <span class="stat-valor" id="rel-total-corridas" style="color: var(--info-color)">0</span>
+            </div>
+            <div class="card-stat" style="border-left: 4px solid #a29bfe;">
+                <span class="stat-titulo">Entregas</span>
+                <span class="stat-valor" id="rel-total-entregas" style="color: #a29bfe">0</span>
+                <small id="rel-valor-entregas" style="color: #888;">R$ 0,00</small>
+            </div>
+            <div class="card-stat" style="border-left: 4px solid #fab1a0;">
+                <span class="stat-titulo">Moto Táxi</span>
+                <span class="stat-valor" id="rel-total-mototaxi" style="color: #fab1a0">0</span>
+                <small id="rel-valor-mototaxi" style="color: #888;">R$ 0,00</small>
+            </div>
+        </div>
+
+        <div class="tabela-container">
+            <table id="tabela-relatorio">
+                <thead>
+                    <tr>
+                        <th>DATA</th>
+                        <th>CATEGORIA</th>
+                        <th>PILOTO</th>
+                        <th>VALOR</th>
+                        <th>TAXA ADM</th>
+                        <th>PAGAMENTO</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-relatorio-corpo">
+                    <tr><td colspan="6" class="vazio">Selecione um período.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div id="aprovacoes" style="display:none;" class="conteudo-aba">
         <div class="painel-grid">
             <div class="coluna">
                 <h3 style="color: var(--warning-color)"><i class="fas fa-building"></i> EMPRESAS PENDENTES</h3>
-                <div id="lista-empresas" class="scroll-v">Carregando...</div>
+                <div id="lista-empresas">Carregando...</div>
             </div>
             <div class="coluna">
                 <h3 style="color: var(--neon-green)"><i class="fas fa-motorcycle"></i> PILOTOS PENDENTES</h3>
-                <div id="lista-motoboys" class="scroll-v">Carregando...</div>
+                <div id="lista-motoboys">Carregando...</div>
             </div>
         </div>
     </div>
@@ -177,35 +225,27 @@
         <div class="painel-grid">
             <div class="coluna">
                 <h3><i class="fas fa-motorcycle"></i> PILOTOS ATIVOS</h3>
-                <div class="filtro-box">
-                    <input type="text" class="input-busca" placeholder="Buscar piloto..." onkeyup="filtrarLista('container-motoboys-ativos', this.value)">
-                </div>
-                <div id="container-motoboys-ativos"></div>
+                <input type="text" class="input-busca" placeholder="Buscar piloto..." onkeyup="filtrarLista('container-motoboys-ativos', this.value)">
+                <div id="container-motoboys-ativos" style="margin-top: 15px;"></div>
             </div>
             <div class="coluna">
                 <h3><i class="fas fa-users"></i> CLIENTES & EMPRESAS</h3>
-                <div class="filtro-box">
-                    <input type="text" class="input-busca" placeholder="Buscar cliente..." onkeyup="filtrarLista('container-clientes-ativos', this.value)">
-                </div>
-                <div id="container-clientes-ativos"></div>
+                <input type="text" class="input-busca" placeholder="Buscar cliente..." onkeyup="filtrarLista('container-clientes-ativos', this.value)">
+                <div id="container-clientes-ativos" style="margin-top: 15px;"></div>
             </div>
         </div>
     </div>
-
 </div>
 
 <script>
     const MEU_IP = 'https://falcoes-app.onrender.com';
-    const usuarioLogado = JSON.parse(localStorage.getItem('usuario'));
-
-    if (!usuarioLogado || usuarioLogado.tipo !== 'admin') window.location.href = 'index.html';
+    let dadosRelatorioGlobal = [];
 
     function mudarAba(aba, event) {
         document.querySelectorAll('.conteudo-aba').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('ativo'));
         document.getElementById(aba).style.display = 'block';
         event.currentTarget.classList.add('ativo');
-
         if (aba === 'dashboard') carregarDashboard();
         if (aba === 'aprovacoes') carregarPendentes();
         if (aba === 'gerenciar') { carregarMotoboysAtivos(); carregarClientes(); }
@@ -217,133 +257,145 @@
         try {
             const res = await fetch(`${MEU_IP}/admin/dashboard`);
             const data = await res.json();
-
             document.getElementById('faturamento-hoje').innerText = formatarBRL(data.faturamento_valor_hoje);
             document.getElementById('saldo-a-receber').innerText = formatarBRL(data.saldo_adm_a_receber);
-
+            
             const tbody = document.getElementById('tabela-historico');
-            if (tbody && data.historico) {
-                tbody.innerHTML = data.historico.map(c => `
-                    <tr>
-                        <td style="color:#666;">#${c.id}</td>
-                        <td style="font-weight:bold;">${c.nome_motoboy || '---'}</td>
-                        <td style="color:var(--neon-green); font-weight:800;">${formatarBRL(c.valor)}</td>
-                        <td style="color:var(--danger-color); font-weight:bold;">${formatarBRL(c.valor * 0.15)}</td>
-                        <td>
-                            <span style="background:${c.forma_pagamento === 'PIX' ? '#007bff' : '#ffc107'}; color:#000; padding:3px 8px; border-radius:4px; font-size:10px; font-weight:900;">
-                                ${c.forma_pagamento || 'DINHEIRO'}
-                            </span>
-                        </td>
-                        <td><span class="status-tag status-${c.status}">${c.status}</span></td>
-                        <td style="font-size:11px; color:#666;">${new Date().toLocaleDateString()}</td>
-                    </tr>
-                `).join('');
-            }
+            tbody.innerHTML = data.historico.map(c => `
+                <tr>
+                    <td style="color:#666;">#${c.id}</td>
+                    <td style="font-weight:bold;">${c.nome_motoboy || '---'}</td>
+                    <td style="color:var(--neon-green); font-weight:800;">${formatarBRL(c.valor)}</td>
+                    <td style="color:var(--danger-color); font-weight:bold;">${formatarBRL(c.valor * 0.15)}</td>
+                    <td><span style="background:${c.forma_pagamento === 'PIX' ? '#007bff' : '#ffc107'}; color:#000; padding:3px 8px; border-radius:4px; font-size:10px; font-weight:900;">${c.forma_pagamento || 'DINHEIRO'}</span></td>
+                    <td><span class="status-tag status-${c.status}">${c.status}</span></td>
+                    <td style="font-size:11px; color:#666;">${new Date(c.data_hora || Date.now()).toLocaleDateString()}</td>
+                </tr>
+            `).join('');
 
-            // Contagem dinâmica
             const resUsers = await fetch(`${MEU_IP}/admin/clientes`);
             const users = await resUsers.json();
             const resMotos = await fetch(`${MEU_IP}/admin/motoboys`);
             const motos = await resMotos.json();
-
             document.getElementById('total-pilotos').innerText = motos.length;
             document.getElementById('total-usuarios').innerText = users.length;
+        } catch (err) { console.error(err); }
+    }
 
-        } catch (err) { console.error("Erro dashboard:", err); }
+    async function gerarRelatorio() {
+        const inicio = document.getElementById('filtro-data-inicio').value;
+        const fim = document.getElementById('filtro-data-fim').value;
+        if (!inicio || !fim) return alert("Selecione as datas!");
+
+        try {
+            const res = await fetch(`${MEU_IP}/admin/dashboard`);
+            const data = await res.json();
+            
+            const filtrados = data.historico.filter(item => {
+                const dataItem = item.data_hora ? item.data_hora.split('T')[0] : '';
+                return dataItem >= inicio && dataItem <= fim && item.status === 'concluida';
+            });
+
+            dadosRelatorioGlobal = filtrados;
+            exibirDadosRelatorio(filtrados);
+        } catch (err) { console.error(err); }
+    }
+
+    function exibirDadosRelatorio(dados) {
+        const tbody = document.getElementById('tabela-relatorio-corpo');
+        let t = { valor: 0, corridas: dados.length, eQ: 0, eV: 0, mQ: 0, mV: 0 };
+
+        tbody.innerHTML = dados.length ? dados.map(c => {
+            const v = parseFloat(c.valor || 0);
+            t.valor += v;
+            if (c.categoria === 'entrega' || c.tipo_servico === 'entrega') { t.eQ++; t.eV += v; } 
+            else { t.mQ++; t.mV += v; }
+
+            return `<tr>
+                <td>${new Date(c.data_hora).toLocaleDateString()}</td>
+                <td style="text-transform:uppercase; font-weight:bold;">${c.categoria || 'Moto Táxi'}</td>
+                <td>${c.nome_motoboy || '---'}</td>
+                <td style="color:var(--neon-green); font-weight:bold;">${formatarBRL(v)}</td>
+                <td style="color:var(--danger-color);">${formatarBRL(v * 0.15)}</td>
+                <td><small>${c.forma_pagamento || 'DINHEIRO'}</small></td>
+            </tr>`;
+        }).join('') : '<tr><td colspan="6" class="vazio">Sem dados.</td></tr>';
+
+        document.getElementById('rel-faturamento-total').innerText = formatarBRL(t.valor);
+        document.getElementById('rel-total-corridas').innerText = t.corridas;
+        document.getElementById('rel-total-entregas').innerText = t.eQ;
+        document.getElementById('rel-valor-entregas').innerText = formatarBRL(t.eV);
+        document.getElementById('rel-total-mototaxi').innerText = t.mQ;
+        document.getElementById('rel-valor-mototaxi').innerText = formatarBRL(t.mV);
+    }
+
+    function exportarExcel() {
+        if (!dadosRelatorioGlobal.length) return alert("Gere um relatório primeiro!");
+        const worksheet = XLSX.utils.json_to_sheet(dadosRelatorioGlobal);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio");
+        XLSX.writeFile(workbook, `Falcões_Relatorio_${new Date().toLocaleDateString()}.xlsx`);
     }
 
     async function carregarPendentes() {
-        try {
-            const res = await fetch(`${MEU_IP}/admin/pendentes`);
-            const users = await res.json();
-            
-            const divMoto = document.getElementById('lista-motoboys');
-            const divEmpresa = document.getElementById('lista-empresas');
-            
-            const pMotos = users.filter(u => u.tipo === 'motoboy');
-            const pEmps = users.filter(u => u.tipo === 'empresa');
-
-            divMoto.innerHTML = pMotos.length ? pMotos.map(u => criarCardAprovacao(u, 'PILOTO')).join('') : '<div class="vazio">Nenhum piloto pendente</div>';
-            divEmpresa.innerHTML = pEmps.length ? pEmps.map(u => criarCardAprovacao(u, 'EMPRESA')).join('') : '<div class="vazio">Nenhuma empresa pendente</div>';
-        } catch (e) { console.error(e); }
+        const res = await fetch(`${MEU_IP}/admin/pendentes`);
+        const users = await res.json();
+        const pMotos = users.filter(u => u.tipo === 'motoboy');
+        const pEmps = users.filter(u => u.tipo === 'empresa');
+        document.getElementById('lista-motoboys').innerHTML = pMotos.map(u => criarCardAprovacao(u, 'PILOTO')).join('') || '<div class="vazio">Nenhum</div>';
+        document.getElementById('lista-empresas').innerHTML = pEmps.map(u => criarCardAprovacao(u, 'EMPRESA')).join('') || '<div class="vazio">Nenhum</div>';
     }
 
     function criarCardAprovacao(u, label) {
         const cor = label === 'EMPRESA' ? 'var(--warning-color)' : 'var(--neon-green)';
-        return `
-            <div class="card-user-gestao" style="border-left: 3px solid ${cor}">
-                <div class="user-name">${u.nome} <span style="font-size:9px; background:${cor}; color:#000; padding:2px 5px; border-radius:3px;">${label}</span></div>
-                <span class="user-sub"><i class="fas fa-phone"></i> ${u.telefone}</span>
-                <div style="margin-top:10px; display:flex; gap:8px;">
-                    <button style="flex:1; background:${cor}; border:none; padding:8px; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="decisao(${u.id}, 'aprovar')">APROVAR</button>
-                    <button style="flex:1; background:transparent; border:1px solid var(--danger-color); color:var(--danger-color); padding:8px; border-radius:5px; cursor:pointer;" onclick="decisao(${u.id}, 'rejeitar')">RECUSAR</button>
-                </div>
-            </div>`;
+        return `<div class="card-user-gestao" style="border-left: 3px solid ${cor}">
+            <div class="user-name">${u.nome} <span style="font-size:9px; background:${cor}; color:#000; padding:2px 5px; border-radius:3px;">${label}</span></div>
+            <span class="user-sub">${u.telefone}</span>
+            <div style="margin-top:10px; display:flex; gap:8px;">
+                <button style="flex:1; background:${cor}; border:none; padding:8px; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="decisao(${u.id}, 'aprovar')">APROVAR</button>
+                <button style="flex:1; background:transparent; border:1px solid var(--danger-color); color:var(--danger-color); padding:8px; border-radius:5px; cursor:pointer;" onclick="decisao(${u.id}, 'rejeitar')">RECUSAR</button>
+            </div>
+        </div>`;
     }
 
     async function carregarMotoboysAtivos() {
-        const div = document.getElementById('container-motoboys-ativos');
         const res = await fetch(`${MEU_IP}/admin/motoboys`);
         const data = await res.json();
-        div.innerHTML = data.map(m => `
+        document.getElementById('container-motoboys-ativos').innerHTML = data.map(m => `
             <div class="card-user-gestao user-item">
-                <div class="user-name">
-                    ${m.nome}
-                    <button class="btn-remover" onclick="removerUsuario(${m.id}, 'motoboy')"><i class="fas fa-trash-alt"></i></button>
-                </div>
-                <span class="user-sub">${m.email} | ${m.telefone || 'Sem Tel'}</span>
+                <div class="user-name">${m.nome} <button class="btn-remover" onclick="removerUsuario(${m.id}, 'motoboy')"><i class="fas fa-trash-alt"></i></button></div>
+                <span class="user-sub">${m.email}</span>
             </div>`).join('');
     }
 
     async function carregarClientes() {
-        const div = document.getElementById('container-clientes-ativos');
         const res = await fetch(`${MEU_IP}/admin/clientes`);
         const data = await res.json();
-        div.innerHTML = data.map(c => `
+        document.getElementById('container-clientes-ativos').innerHTML = data.map(c => `
             <div class="card-user-gestao user-item">
-                <div class="user-name">
-                    ${c.nome} ${c.tipo === 'empresa' ? '<span style="color:var(--warning-color); font-size:10px;">[EMPRESA]</span>' : ''}
-                    <button class="btn-remover" onclick="removerUsuario(${c.id}, 'cliente')"><i class="fas fa-trash-alt"></i></button>
-                </div>
-                <span class="user-sub">${c.email} | ${c.telefone}</span>
+                <div class="user-name">${c.nome} ${c.tipo === 'empresa' ? '<span style="color:var(--warning-color); font-size:10px;">[EMPRESA]</span>' : ''} <button class="btn-remover" onclick="removerUsuario(${c.id}, 'cliente')"><i class="fas fa-trash-alt"></i></button></div>
+                <span class="user-sub">${c.telefone}</span>
             </div>`).join('');
     }
 
     async function decisao(id, acao) {
-        if(!confirm(`Deseja realmente ${acao} este cadastro?`)) return;
-        const res = await fetch(`${MEU_IP}/admin/${acao === 'aprovar' ? 'aprovar' : 'rejeitar'}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
-        });
-        const r = await res.json();
-        if(r.success) carregarPendentes();
+        if(!confirm(`Confirmar ${acao}?`)) return;
+        await fetch(`${MEU_IP}/admin/${acao}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+        carregarPendentes();
     }
 
     async function removerUsuario(id, tipo) {
-        if(!confirm(`ATENÇÃO: Deseja remover permanentemente este ${tipo}?`)) return;
-        try {
-            const res = await fetch(`${MEU_IP}/admin/remover/${id}`, { method: 'DELETE' });
-            const data = await res.json();
-            if(data.success) {
-                alert("Removido com sucesso!");
-                carregarMotoboysAtivos();
-                carregarClientes();
-                carregarDashboard();
-            }
-        } catch (e) { alert("Erro ao remover usuário."); }
+        if(!confirm(`Remover permanentemente este ${tipo}?`)) return;
+        const res = await fetch(`${MEU_IP}/admin/remover/${id}`, { method: 'DELETE' });
+        if((await res.json()).success) { carregarMotoboysAtivos(); carregarClientes(); carregarDashboard(); }
     }
 
-    function filtrarLista(idContainer, termo) {
-        const items = document.getElementById(idContainer).getElementsByClassName('user-item');
-        termo = termo.toLowerCase();
-        Array.from(items).forEach(item => {
-            const texto = item.innerText.toLowerCase();
-            item.style.display = texto.includes(termo) ? 'block' : 'none';
-        });
+    function filtrarLista(id, termo) {
+        const items = document.getElementById(id).getElementsByClassName('user-item');
+        Array.from(items).forEach(item => item.style.display = item.innerText.toLowerCase().includes(termo.toLowerCase()) ? 'block' : 'none');
     }
 
-    // Init
     carregarDashboard();
 </script>
-
 </body>
 </html>
