@@ -163,7 +163,7 @@
                 </div>
                 <div style="display: flex; gap: 10px; align-items: flex-end;">
                     <button onclick="gerarRelatorio()" style="background: var(--neon-green); color: black; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">CONSULTAR</button>
-                    <button onclick="exportarExcel()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;"><i class="fas fa-file-excel"></i> PLANILHA</button>
+                    <button onclick="exportarPlanilhaInteligente()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;"><i class="fas fa-file-excel"></i> PLANILHA</button>
                 </div>
             </div>
         </div>
@@ -282,6 +282,7 @@
         } catch (err) { console.error(err); }
     }
 
+    // FUNÇÃO DE RELATÓRIO CORRIGIDA PARA STATUS MAIÚSCULO/MINÚSCULO
     async function gerarRelatorio() {
         const inicio = document.getElementById('filtro-data-inicio').value;
         const fim = document.getElementById('filtro-data-fim').value;
@@ -293,7 +294,9 @@
             
             const filtrados = data.historico.filter(item => {
                 const dataItem = item.data_hora ? item.data_hora.split('T')[0] : '';
-                return dataItem >= inicio && dataItem <= fim && item.status === 'concluida';
+                // Normaliza o status para evitar erro se estiver "CONCLUIDA" ou "concluida"
+                const statusNormalizado = item.status ? item.status.toLowerCase() : '';
+                return dataItem >= inicio && dataItem <= fim && statusNormalizado === 'concluida';
             });
 
             dadosRelatorioGlobal = filtrados;
@@ -308,6 +311,7 @@
         tbody.innerHTML = dados.length ? dados.map(c => {
             const v = parseFloat(c.valor || 0);
             t.valor += v;
+            // Verifica categoria ou tipo de serviço
             if (c.categoria === 'entrega' || c.tipo_servico === 'entrega') { t.eQ++; t.eV += v; } 
             else { t.mQ++; t.mV += v; }
 
@@ -329,12 +333,34 @@
         document.getElementById('rel-valor-mototaxi').innerText = formatarBRL(t.mV);
     }
 
-    function exportarExcel() {
+    // PLANILHA INTELIGENTE DE CONCILIAÇÃO
+    function exportarPlanilhaInteligente() {
         if (!dadosRelatorioGlobal.length) return alert("Gere um relatório primeiro!");
-        const worksheet = XLSX.utils.json_to_sheet(dadosRelatorioGlobal);
+
+        const dadosFormatados = dadosRelatorioGlobal.map(c => {
+            const valor = parseFloat(c.valor || 0);
+            const taxa = valor * 0.15;
+            
+            return {
+                "DATA": new Date(c.data_hora).toLocaleDateString(),
+                "ID": `#${c.id}`,
+                "PILOTO": c.nome_motoboy,
+                "CATEGORIA": c.categoria || "Moto Táxi",
+                "VALOR TOTAL": valor,
+                "PAGAMENTO": c.forma_pagamento,
+                "QUEM RECEBEU": c.forma_pagamento === 'PIX' ? 'EMPRESA (BANCO)' : 'PILOTO (MÃO)',
+                "MINHA COMISSÃO (15%)": taxa,
+                "STATUS DE CONCILIAÇÃO": c.forma_pagamento === 'PIX' ? 'CONFERIR NO MP' : 'COBRAR DO PILOTO'
+            };
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(dadosFormatados);
+        const wscols = [{wch:12}, {wch:10}, {wch:20}, {wch:15}, {wch:12}, {wch:12}, {wch:20}, {wch:20}, {wch:25}];
+        worksheet['!cols'] = wscols;
+
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio");
-        XLSX.writeFile(workbook, `Falcões_Relatorio_${new Date().toLocaleDateString()}.xlsx`);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Controle Financeiro");
+        XLSX.writeFile(workbook, `Financeiro_Falcoes_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
     async function carregarPendentes() {
