@@ -7,6 +7,7 @@
     <title>Painel Administrativo - Falcões</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root {
@@ -65,28 +66,18 @@
 
         .status-tag { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
         .status-concluida { background: rgba(0, 230, 64, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); }
-        .status-cancelada { background: rgba(255, 68, 68, 0.1); color: var(--danger-color); border: 1px solid var(--danger-color); }
 
         .painel-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
         @media (min-width: 900px) { .painel-grid { grid-template-columns: 1fr 1fr; } }
         
         .coluna { background: var(--card-color); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); }
-        .card-user-gestao { 
-            background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 12px; 
-            border: 1px solid #333; transition: 0.2s;
-        }
-        .user-name { font-weight: bold; font-size: 14px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
-        .user-sub { font-size: 12px; color: #888; display: block; margin-top: 4px; }
-
-        .btn-remover { color: var(--danger-color); background: none; border: none; cursor: pointer; padding: 5px; font-size: 16px; transition: 0.2s; }
-        .vazio { text-align: center; color: #444; padding: 30px; font-size: 14px; }
+        .card-user-gestao { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #333; }
+        .btn-remover { color: var(--danger-color); background: none; border: none; cursor: pointer; padding: 5px; font-size: 16px; }
         
-        .filtro-box { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .input-busca { 
-            flex: 1; background: #000; border: 1px solid #333; color: white; 
-            padding: 8px 12px; border-radius: 6px; outline: none;
-        }
-        label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; }
+        .input-busca { flex: 1; background: #000; border: 1px solid #333; color: white; padding: 8px 12px; border-radius: 6px; outline: none; }
+        
+        /* Estilo do Gráfico */
+        .chart-box { max-width: 400px; margin: 20px auto; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 15px; }
     </style>
 </head>
 
@@ -135,13 +126,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>PILOTO</th>
-                        <th>VALOR</th>
-                        <th>TAXA ADM</th>
-                        <th>PAGAMENTO</th>
-                        <th>STATUS</th>
-                        <th>DATA/HORA</th>
+                        <th>ID</th> <th>PILOTO</th> <th>VALOR</th> <th>TAXA ADM</th> <th>PAGAMENTO</th> <th>STATUS</th> <th>DATA/HORA</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-historico"></tbody>
@@ -152,13 +137,13 @@
     <div id="relatorios" style="display:none;" class="conteudo-aba">
         <div class="coluna" style="margin-bottom: 20px;">
             <h3><i class="fas fa-filter"></i> FILTRAR HISTÓRICO</h3>
-            <div class="filtro-box">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 150px;">
-                    <label>DATA INICIAL</label>
+                    <label style="font-size:11px; color:#888;">DATA INICIAL</label>
                     <input type="date" id="filtro-data-inicio" class="input-busca">
                 </div>
                 <div style="flex: 1; min-width: 150px;">
-                    <label>DATA FINAL</label>
+                    <label style="font-size:11px; color:#888;">DATA FINAL</label>
                     <input type="date" id="filtro-data-fim" class="input-busca">
                 </div>
                 <div style="display: flex; gap: 10px; align-items: flex-end;">
@@ -170,41 +155,39 @@
 
         <div class="cards-resumo">
             <div class="card-stat card-destaque">
-                <span class="stat-titulo">Total Faturado</span>
+                <span class="stat-titulo">Total Período</span>
                 <span class="stat-valor" id="rel-faturamento-total">R$ 0,00</span>
             </div>
             <div class="card-stat" style="border-left: 4px solid var(--info-color);">
-                <span class="stat-titulo">Qtd Corridas</span>
+                <span class="stat-titulo">Total Corridas</span>
                 <span class="stat-valor" id="rel-total-corridas" style="color: var(--info-color)">0</span>
             </div>
             <div class="card-stat" style="border-left: 4px solid #a29bfe;">
                 <span class="stat-titulo">Entregas</span>
                 <span class="stat-valor" id="rel-total-entregas" style="color: #a29bfe">0</span>
-                <small id="rel-valor-entregas" style="color: #888;">R$ 0,00</small>
             </div>
             <div class="card-stat" style="border-left: 4px solid #fab1a0;">
                 <span class="stat-titulo">Moto Táxi</span>
                 <span class="stat-valor" id="rel-total-mototaxi" style="color: #fab1a0">0</span>
-                <small id="rel-valor-mototaxi" style="color: #888;">R$ 0,00</small>
             </div>
         </div>
 
-        <div class="tabela-container">
-            <table id="tabela-relatorio">
-                <thead>
-                    <tr>
-                        <th>DATA</th>
-                        <th>CATEGORIA</th>
-                        <th>PILOTO</th>
-                        <th>VALOR</th>
-                        <th>TAXA ADM</th>
-                        <th>PAGAMENTO</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-relatorio-corpo">
-                    <tr><td colspan="6" class="vazio">Selecione um período.</td></tr>
-                </tbody>
-            </table>
+        <div class="painel-grid">
+            <div class="coluna">
+                <div class="chart-box">
+                    <canvas id="graficoCategorias"></canvas>
+                </div>
+            </div>
+            <div class="coluna">
+                <div class="tabela-container" style="max-height: 400px;">
+                    <table id="tabela-relatorio">
+                        <thead>
+                            <tr><th>DATA</th> <th>CATEGORIA</th> <th>PILOTO</th> <th>VALOR</th> <th>ADM</th></tr>
+                        </thead>
+                        <tbody id="tabela-relatorio-corpo"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -240,6 +223,7 @@
 <script>
     const MEU_IP = 'https://falcoes-app.onrender.com';
     let dadosRelatorioGlobal = [];
+    let meuGrafico = null;
 
     function mudarAba(aba, event) {
         document.querySelectorAll('.conteudo-aba').forEach(el => el.style.display = 'none');
@@ -268,7 +252,7 @@
                     <td style="color:var(--neon-green); font-weight:800;">${formatarBRL(c.valor)}</td>
                     <td style="color:var(--danger-color); font-weight:bold;">${formatarBRL(c.valor * 0.15)}</td>
                     <td><span style="background:${c.forma_pagamento === 'PIX' ? '#007bff' : '#ffc107'}; color:#000; padding:3px 8px; border-radius:4px; font-size:10px; font-weight:900;">${c.forma_pagamento || 'DINHEIRO'}</span></td>
-                    <td><span class="status-tag status-${c.status}">${c.status}</span></td>
+                    <td><span class="status-tag status-concluida" style="text-transform: uppercase;">${c.status}</span></td>
                     <td style="font-size:11px; color:#666;">${new Date(c.data_hora || Date.now()).toLocaleDateString()}</td>
                 </tr>
             `).join('');
@@ -282,101 +266,130 @@
         } catch (err) { console.error(err); }
     }
 
-    // FUNÇÃO DE RELATÓRIO CORRIGIDA PARA STATUS MAIÚSCULO/MINÚSCULO
     async function gerarRelatorio() {
-        const inicio = document.getElementById('filtro-data-inicio').value;
-        const fim = document.getElementById('filtro-data-fim').value;
-        if (!inicio || !fim) return alert("Selecione as datas!");
+    const inicio = document.getElementById('filtro-data-inicio').value; // Formato: YYYY-MM-DD
+    const fim = document.getElementById('filtro-data-fim').value;       // Formato: YYYY-MM-DD
 
-        try {
-            const res = await fetch(`${MEU_IP}/admin/dashboard`);
-            const data = await res.json();
-            
-            const filtrados = data.historico.filter(item => {
-                const dataItem = item.data_hora ? item.data_hora.split('T')[0] : '';
-                // Normaliza o status para evitar erro se estiver "CONCLUIDA" ou "concluida"
-                const statusNormalizado = item.status ? item.status.toLowerCase() : '';
-                return dataItem >= inicio && dataItem <= fim && statusNormalizado === 'concluida';
-            });
+    if (!inicio || !fim) return alert("Selecione as datas inicial e final!");
 
-            dadosRelatorioGlobal = filtrados;
-            exibirDadosRelatorio(filtrados);
-        } catch (err) { console.error(err); }
+    try {
+        const res = await fetch(`${MEU_IP}/admin/dashboard`);
+        const data = await res.json();
+        
+        if (!data.historico) return alert("Nenhum histórico encontrado no servidor.");
+
+        const filtrados = data.historico.filter(item => {
+            if (!item.data_hora) return false;
+
+            // 1. Extrai apenas a DATA (YYYY-MM-DD) ignorando a HORA do banco
+            // O seu banco retorna "2026-01-01 11:10:15", o split(' ')[0] pega "2026-01-01"
+            const dataSomenteTexto = item.data_hora.includes(' ') 
+                ? item.data_hora.split(' ')[0] 
+                : item.data_hora.split('T')[0];
+
+            // 2. Normaliza o status para minúsculo
+            const statusNormalizado = item.status ? item.status.toLowerCase() : '';
+
+            // 3. Comparação lógica
+            const dataBate = dataSomenteTexto >= inicio && dataSomenteTexto <= fim;
+            const statusBate = statusNormalizado === 'concluida';
+
+            return dataBate && statusBate;
+        });
+
+        if (filtrados.length === 0) {
+            alert("Nenhuma corrida concluída encontrada para este período.");
+        }
+
+        dadosRelatorioGlobal = filtrados;
+        exibirDadosRelatorio(filtrados);
+    } catch (err) {
+        console.error("Erro ao gerar relatório:", err);
+        alert("Erro ao conectar com o servidor.");
     }
+}
 
     function exibirDadosRelatorio(dados) {
         const tbody = document.getElementById('tabela-relatorio-corpo');
-        let t = { valor: 0, corridas: dados.length, eQ: 0, eV: 0, mQ: 0, mV: 0 };
+        let t = { valor: 0, eQ: 0, mQ: 0 };
 
         tbody.innerHTML = dados.length ? dados.map(c => {
             const v = parseFloat(c.valor || 0);
             t.valor += v;
-            // Verifica categoria ou tipo de serviço
-            if (c.categoria === 'entrega' || c.tipo_servico === 'entrega') { t.eQ++; t.eV += v; } 
-            else { t.mQ++; t.mV += v; }
+            if (c.categoria === 'entrega' || c.tipo_servico === 'entrega') t.eQ++; else t.mQ++;
 
             return `<tr>
                 <td>${new Date(c.data_hora).toLocaleDateString()}</td>
-                <td style="text-transform:uppercase; font-weight:bold;">${c.categoria || 'Moto Táxi'}</td>
+                <td style="text-transform:uppercase; font-size:10px;">${c.categoria || 'Moto Táxi'}</td>
                 <td>${c.nome_motoboy || '---'}</td>
                 <td style="color:var(--neon-green); font-weight:bold;">${formatarBRL(v)}</td>
                 <td style="color:var(--danger-color);">${formatarBRL(v * 0.15)}</td>
-                <td><small>${c.forma_pagamento || 'DINHEIRO'}</small></td>
             </tr>`;
-        }).join('') : '<tr><td colspan="6" class="vazio">Sem dados.</td></tr>';
+        }).join('') : '<tr><td colspan="5" class="vazio">Sem dados.</td></tr>';
 
         document.getElementById('rel-faturamento-total').innerText = formatarBRL(t.valor);
-        document.getElementById('rel-total-corridas').innerText = t.corridas;
+        document.getElementById('rel-total-corridas').innerText = dados.length;
         document.getElementById('rel-total-entregas').innerText = t.eQ;
-        document.getElementById('rel-valor-entregas').innerText = formatarBRL(t.eV);
         document.getElementById('rel-total-mototaxi').innerText = t.mQ;
-        document.getElementById('rel-valor-mototaxi').innerText = formatarBRL(t.mV);
+
+        atualizarGrafico(t.eQ, t.mQ);
     }
 
-    // PLANILHA INTELIGENTE DE CONCILIAÇÃO
+    function atualizarGrafico(entregas, mototaxi) {
+        const ctx = document.getElementById('graficoCategorias').getContext('2d');
+        if (meuGrafico) meuGrafico.destroy();
+
+        meuGrafico = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Entregas', 'Moto Táxi'],
+                datasets: [{
+                    data: [entregas, mototaxi],
+                    backgroundColor: ['#a29bfe', '#fab1a0'],
+                    borderColor: '#141414',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { labels: { color: '#e0e0e0', font: { size: 12 } } },
+                    title: { display: true, text: 'Volume de Serviços', color: '#888' }
+                }
+            }
+        });
+    }
+
     function exportarPlanilhaInteligente() {
         if (!dadosRelatorioGlobal.length) return alert("Gere um relatório primeiro!");
+        const dadosFormatados = dadosRelatorioGlobal.map(c => ({
+            "DATA": new Date(c.data_hora).toLocaleDateString(),
+            "PILOTO": c.nome_motoboy,
+            "CATEGORIA": c.categoria || "Moto Táxi",
+            "VALOR TOTAL": parseFloat(c.valor),
+            "PAGAMENTO": c.forma_pagamento,
+            "QUEM RECEBEU": c.forma_pagamento === 'PIX' ? 'EMPRESA (BANCO)' : 'PILOTO (MÃO)',
+            "TAXA ADM (15%)": parseFloat(c.valor) * 0.15,
+            "AUDITORIA": c.forma_pagamento === 'PIX' ? 'CONFERIR NO MERCADO PAGO' : 'COBRAR COMISSÃO DO PILOTO'
+        }));
 
-        const dadosFormatados = dadosRelatorioGlobal.map(c => {
-            const valor = parseFloat(c.valor || 0);
-            const taxa = valor * 0.15;
-            
-            return {
-                "DATA": new Date(c.data_hora).toLocaleDateString(),
-                "ID": `#${c.id}`,
-                "PILOTO": c.nome_motoboy,
-                "CATEGORIA": c.categoria || "Moto Táxi",
-                "VALOR TOTAL": valor,
-                "PAGAMENTO": c.forma_pagamento,
-                "QUEM RECEBEU": c.forma_pagamento === 'PIX' ? 'EMPRESA (BANCO)' : 'PILOTO (MÃO)',
-                "MINHA COMISSÃO (15%)": taxa,
-                "STATUS DE CONCILIAÇÃO": c.forma_pagamento === 'PIX' ? 'CONFERIR NO MP' : 'COBRAR DO PILOTO'
-            };
-        });
-
-        const worksheet = XLSX.utils.json_to_sheet(dadosFormatados);
-        const wscols = [{wch:12}, {wch:10}, {wch:20}, {wch:15}, {wch:12}, {wch:12}, {wch:20}, {wch:20}, {wch:25}];
-        worksheet['!cols'] = wscols;
-
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Controle Financeiro");
-        XLSX.writeFile(workbook, `Financeiro_Falcoes_${new Date().toISOString().slice(0,10)}.xlsx`);
+        const ws = XLSX.utils.json_to_sheet(dadosFormatados);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Financeiro");
+        XLSX.writeFile(wb, `Financeiro_Falcoes_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
+    /* FUNÇÕES DE GESTÃO (PRESERVADAS) */
     async function carregarPendentes() {
         const res = await fetch(`${MEU_IP}/admin/pendentes`);
         const users = await res.json();
-        const pMotos = users.filter(u => u.tipo === 'motoboy');
-        const pEmps = users.filter(u => u.tipo === 'empresa');
-        document.getElementById('lista-motoboys').innerHTML = pMotos.map(u => criarCardAprovacao(u, 'PILOTO')).join('') || '<div class="vazio">Nenhum</div>';
-        document.getElementById('lista-empresas').innerHTML = pEmps.map(u => criarCardAprovacao(u, 'EMPRESA')).join('') || '<div class="vazio">Nenhum</div>';
+        document.getElementById('lista-motoboys').innerHTML = users.filter(u => u.tipo === 'motoboy').map(u => criarCardAprovacao(u, 'PILOTO')).join('') || '<div class="vazio">Nenhum</div>';
+        document.getElementById('lista-empresas').innerHTML = users.filter(u => u.tipo === 'empresa').map(u => criarCardAprovacao(u, 'EMPRESA')).join('') || '<div class="vazio">Nenhum</div>';
     }
 
     function criarCardAprovacao(u, label) {
         const cor = label === 'EMPRESA' ? 'var(--warning-color)' : 'var(--neon-green)';
         return `<div class="card-user-gestao" style="border-left: 3px solid ${cor}">
             <div class="user-name">${u.nome} <span style="font-size:9px; background:${cor}; color:#000; padding:2px 5px; border-radius:3px;">${label}</span></div>
-            <span class="user-sub">${u.telefone}</span>
             <div style="margin-top:10px; display:flex; gap:8px;">
                 <button style="flex:1; background:${cor}; border:none; padding:8px; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="decisao(${u.id}, 'aprovar')">APROVAR</button>
                 <button style="flex:1; background:transparent; border:1px solid var(--danger-color); color:var(--danger-color); padding:8px; border-radius:5px; cursor:pointer;" onclick="decisao(${u.id}, 'rejeitar')">RECUSAR</button>
