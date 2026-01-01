@@ -1358,6 +1358,16 @@ const topic = req.query.topic || req.query.type || req.body.type;
   }
 });
 
+app.post('/admin/alterar-status', async (req, res) => {
+    const { id, aprovado } = req.body;
+    try {
+        await pool.query('UPDATE usuarios SET aprovado = $1 WHERE id = $2', [aprovado, id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao atualizar status' });
+    }
+});
+
 
 // RETORNO DO MERCADO PAGO
 app.get('/mp-retorno', async (req, res) => {
@@ -1570,15 +1580,7 @@ app.post('/iniciar-corrida', async (req, res) => {
     }
 });
 
-app.post('/admin/alterar-status', async (req, res) => {
-    const { id, aprovado } = req.body;
-    try {
-        await pool.query('UPDATE usuarios SET aprovado = $1 WHERE id = $2', [aprovado, id]);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Erro ao atualizar status' });
-    }
-});
+
 
 Sentry.setupExpressErrorHandler(app);
 app.use(function onError(err, req, res, next) {
