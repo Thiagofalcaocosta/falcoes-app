@@ -93,22 +93,48 @@
 <div class="container-principal">
     
     <div id="dashboard" class="conteudo-aba">
-        <div class="cards-resumo">
-            <div class="card-stat card-adm"><span class="stat-titulo">Lucro Adm (Hoje)</span><span class="stat-valor" id="faturamento-adm-hoje">R$ 0,00</span></div>
-            <div class="card-stat card-dinheiro"><span class="stat-titulo">Dinheiro na Rua</span><span class="stat-valor" id="saldo-rua-hoje" style="color: var(--warning-color)">R$ 0,00</span></div>
-            <div class="card-stat"><span class="stat-titulo">Pilotos Ativos</span><span class="stat-valor" id="total-pilotos-dashboard">0</span></div>
-            <div class="card-stat"><span class="stat-titulo">Clientes Totais</span><span class="stat-valor" id="total-clientes-dashboard" style="color: var(--info-color)">0</span></div>
-</div>
-            <div class="card-stat"><span class="stat-titulo">Total Bruto</span><span class="stat-valor" id="total-bruto-hoje" style="color: var(--info-color)">R$ 0,00</span></div>
+    <div class="cards-resumo">
+        <div class="card-stat card-adm">
+            <span class="stat-titulo">Lucro Adm (Hoje)</span>
+            <span class="stat-valor" id="faturamento-adm-hoje">R$ 0,00</span>
         </div>
-        <h3 style="color: #666; font-size: 14px; margin-bottom: 12px; text-transform: uppercase;"><i class="fas fa-history"></i> Pedidos Recentes</h3>
-        <div class="tabela-container">
-            <table>
-                <thead><tr><th>PILOTO</th> <th>VALOR</th> <th>PGTO</th> <th>STATUS</th></tr></thead>
-                <tbody id="tabela-historico"></tbody>
-            </table>
+        <div class="card-stat card-dinheiro">
+            <span class="stat-titulo">Dinheiro na Rua</span>
+            <span class="stat-valor" id="saldo-rua-hoje" style="color: var(--warning-color)">R$ 0,00</span>
         </div>
+        <div class="card-stat">
+            <span class="stat-titulo">Pilotos Ativos</span>
+            <span class="stat-valor" id="total-pilotos-dashboard">0</span>
+        </div>
+        <div class="card-stat">
+            <span class="stat-titulo">Clientes Totais</span>
+            <span class="stat-valor" id="total-clientes-dashboard" style="color: var(--info-color)">0</span>
+        </div>
+        <div class="card-stat">
+            <span class="stat-titulo">Total Bruto</span>
+            <span class="stat-valor" id="total-bruto-hoje" style="color: var(--info-color)">R$ 0,00</span>
+        </div>
+    </div> <h3 style="color: #666; font-size: 14px; margin-bottom: 12px; text-transform: uppercase;">
+        <i class="fas fa-history"></i> Pedidos Recentes
+    </h3>
+
+    <div class="tabela-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>PILOTO</th>
+                    <th>VALOR</th>
+                    <th>PGTO</th>
+                    <th>STATUS</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-historico"></tbody>
+        </table>
     </div>
+</div> ```
+
+---
+
 
     <div id="relatorios" style="display:none;" class="conteudo-aba">
         <div class="card-stat" style="margin-bottom: 20px;">
