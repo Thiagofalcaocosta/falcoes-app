@@ -775,10 +775,12 @@
     }
 
     // EXIBE NOME E CATEGORIA
-    document.getElementById('msg-ola').innerText = "OLÁ, " + usuario.nome.split(' ')[0].toUpperCase();
-    const categoriaExibicao = usuario.categoria || "GERAL";
-    document.getElementById('label-categoria').innerText = `SUA CATEGORIA: ${categoriaExibicao.toUpperCase()}`;
+    // EXIBE NOME E CATEGORIA (AJUSTADO)
+document.getElementById('msg-ola').innerText = "OLÁ, " + usuario.nome.split(' ')[0].toUpperCase();
 
+const categoriaExibicao = usuario.categoria || "GERAL";
+// Removemos o "SUA CATEGORIA:" para aparecer apenas o nome da categoria no destaque
+document.getElementById('label-categoria').innerText = categoriaExibicao.toUpperCase();
     let idCorridaSelecionada = null;
     let idCorridaAtual = null;
     let onlineInterval = null;
@@ -1054,33 +1056,28 @@ function mostrarTela(idDesejado) {
      *  FUNÇÕES DE STATUS ONLINE
      ***********************/
 
-    async function enviarStatusOnline(online) {
+    let ultimoEnvioStatus = 0;
+
+async function enviarStatusOnline(online) {
+    const agora = Date.now();
+    // Agora só envia para o banco se passou mais de 60 segundos (1 minuto)
+    if (agora - ultimoEnvioStatus < 60000) return; 
+
     try {
         const response = await fetch(`${MEU_IP}/motoboy/status-online`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                motoboy_id: usuario?.id,
-                online: online,
-                latitude: null,
-                longitude: null
-            })
+            body: JSON.stringify({ motoboy_id: usuario?.id, online: online })
         });
-
-        const result = await response.json();
-        if (result.success) {
-            // Verifica se o elemento existe antes de tentar mudar o texto
-            const statusElement = document.getElementById('status-online-indicator');
-            if (statusElement) {
-                statusElement.innerText = online ? "● ONLINE" : "● OFFLINE";
-            }
-            console.log(online ? "🟢 Piloto Online no Banco" : "🔴 Piloto Offline no Banco");
+        
+        if (response.ok) {
+            ultimoEnvioStatus = agora;
+            console.log("🟢 Status atualizado no banco (1 min).");
         }
     } catch (err) {
-        console.error("Erro ao enviar status online:", err);
+        // Erro silencioso
     }
 }
-
     /***********************
      *  CONTROLE DE FLUXO E TELAS
      ***********************/
@@ -1113,7 +1110,7 @@ function renderizarBotoesAtiva(status) {
     if (status === 'liberada') {
         const btnColetar = document.createElement('button');
         btnColetar.className = 'btn-acao btn-verde';
-        btnColetar.innerHTML = '🚚 COLETEI O PEDIDO (SAIR)';
+        btnColetar.innerHTML = '🏍️ COLETEI O PEDIDO (SAIR)';
         btnColetar.style.cssText = "width: 100%; padding: 20px; font-size: 18px; background: #00e640; color: #000; border-radius: 12px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 0 20px rgba(0, 230, 64, 0.4);";
         
         btnColetar.onclick = async () => {
