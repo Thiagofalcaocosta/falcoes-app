@@ -18,86 +18,58 @@
 
         body {
             font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-color);
-            margin: 0; padding: 0; overflow-x: hidden;
+            margin: 0; padding: 0; overflow-x: hidden; display: flex; flex-direction: column; min-height: 100vh;
         }
 
-        /* HEADER OTIMIZADO PARA MOBILE */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
-            background: #000; padding: 10px 15px; border-bottom: 1px solid var(--border-color);
+            background: #000; padding: 12px 20px; border-bottom: 1px solid var(--border-color);
             position: sticky; top: 0; z-index: 1000;
         }
-        .logo-pequeno { height: 30px; filter: drop-shadow(0 0 5px var(--neon-green)); }
+        .logo-pequeno { height: 35px; filter: drop-shadow(0 0 5px var(--neon-green)); }
         
-        /* MENU TABS RESPONSIVO */
         .menu-tabs { 
-            display: flex; background: #000; padding: 5px 10px; gap: 5px;
+            display: flex; background: #000; padding: 8px 15px; gap: 8px;
             overflow-x: auto; border-bottom: 1px solid var(--border-color);
-            scrollbar-width: none; position: sticky; top: 51px; z-index: 999;
+            scrollbar-width: none; position: sticky; top: 60px; z-index: 999;
         }
         .menu-tabs::-webkit-scrollbar { display: none; }
 
         .tab-btn {
             background: transparent; border: 1px solid #222; color: #666;
-            padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; 
-            transition: 0.3s; white-space: nowrap; display: flex; align-items: center; gap: 5px; font-size: 12px;
+            padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; 
+            transition: 0.3s; white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 13px;
         }
-        .tab-btn.ativo { background: var(--neon-green); color: black; border-color: var(--neon-green); }
+        .tab-btn.ativo { background: var(--neon-green); color: black; border-color: var(--neon-green); box-shadow: 0 0 15px rgba(0, 230, 64, 0.2); }
 
-        .container-principal { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        .container-principal { padding: 15px; flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
 
-        /* CARDS FINANCEIROS - AGORA EM 1 COLUNA NO MOBILE */
-        .cards-resumo { 
-            display: grid; 
-            grid-template-columns: 1fr; /* Padrão mobile: 1 por linha */
-            gap: 10px; 
-            margin-bottom: 20px; 
-        }
+        .cards-resumo { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 25px; }
         @media (min-width: 480px) { .cards-resumo { grid-template-columns: repeat(2, 1fr); } }
         @media (min-width: 900px) { .cards-resumo { grid-template-columns: repeat(4, 1fr); } }
 
-        .card-stat { 
-            background: var(--card-color); padding: 15px; border-radius: 10px; 
-            border: 1px solid var(--border-color); position: relative;
-        }
-        .stat-valor { font-size: 22px; font-weight: 800; color: var(--neon-green); display: block; margin-top: 3px; }
+        .card-stat { background: var(--card-color); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); position: relative; }
+        .stat-valor { font-size: 24px; font-weight: 800; color: var(--neon-green); display: block; margin-top: 5px; }
         .stat-titulo { color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; }
         
-        .card-adm { border-left: 4px solid var(--neon-green); background: rgba(0, 230, 64, 0.03); }
-        .card-dinheiro { border-left: 4px solid var(--warning-color); background: rgba(255, 170, 0, 0.03); }
+        .card-adm { border-left: 4px solid var(--neon-green); background: rgba(0, 230, 64, 0.05); }
+        .card-dinheiro { border-left: 4px solid var(--warning-color); background: rgba(255, 170, 0, 0.05); }
 
-        /* FILTROS RESPONSIVOS */
-        .filtro-container {
-            background: var(--card-color); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);
-            margin-bottom: 15px;
-        }
-        .filtro-grid {
-            display: grid; grid-template-columns: 1fr; gap: 10px;
-        }
-        @media (min-width: 600px) { .filtro-grid { grid-template-columns: 1fr 1fr auto; align-items: flex-end; } }
-
-        .input-busca { 
-            width: 100%; background: #000; border: 1px solid #333; color: white; 
-            padding: 10px; border-radius: 6px; outline: none; box-sizing: border-box; font-size: 14px;
-        }
-
-        /* TABELA ADAPTADA */
-        .tabela-container { 
-            background: var(--card-color); border-radius: 10px; border: 1px solid var(--border-color); 
-            overflow-x: auto; -webkit-overflow-scrolling: touch;
-        }
+        .tabela-container { background: var(--card-color); border-radius: 12px; border: 1px solid var(--border-color); overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th { background: #000; color: var(--neon-green); font-size: 10px; padding: 12px 10px; text-align: left; }
-        td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); font-size: 12px; }
+        th { background: #000; color: var(--neon-green); font-size: 11px; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
 
-        .chart-container {
-            background: var(--card-color); border-radius: 10px; border: 1px solid var(--border-color);
-            padding: 15px; margin-top: 15px; height: 250px; display: flex; justify-content: center;
-        }
+        .card-user-gestao { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #333; border-left: 3px solid var(--neon-green); }
+        .user-name { font-weight: bold; font-size: 14px; color: #fff; display: block; }
+        .user-sub { font-size: 12px; color: #777; display: block; margin-top: 3px; }
 
-        .btn-acao {
-            width: 100%; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; font-size: 14px;
-        }
+        .btn-acao { width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; margin-top: 10px; transition: 0.2s; }
+        .btn-acao:active { transform: scale(0.98); }
+        .input-busca { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; outline: none; box-sizing: border-box; }
+        
+        .chart-box { background: var(--card-color); padding: 15px; border-radius: 15px; border: 1px solid var(--border-color); margin-top: 20px; height: 300px; display: flex; justify-content: center; align-items: center; }
+        .vazio { text-align: center; color: #444; padding: 20px; font-size: 13px; }
     </style>
 </head>
 
@@ -106,100 +78,81 @@
 <div class="header">
     <img src="assets/logo.png" class="logo-pequeno">
     <div style="text-align: right;">
-        <span style="display: block; font-size: 9px; color: var(--neon-green);">ADMINISTRADOR</span>
-        <a href="index.html" style="color: var(--danger-color); text-decoration: none; font-weight: bold; font-size: 11px;">SAIR <i class="fas fa-sign-out-alt"></i></a>
+        <span style="display: block; font-size: 10px; color: #666;">ADM ONLINE</span>
+        <a href="index.html" style="color: var(--danger-color); text-decoration: none; font-weight: bold; font-size: 12px;">SAIR <i class="fas fa-sign-out-alt"></i></a>
     </div>
 </div>
 
 <div class="menu-tabs">
-    <button class="tab-btn ativo" onclick="mudarAba('dashboard', event)"><i class="fas fa-home"></i> INÍCIO</button>
-    <button class="tab-btn" onclick="mudarAba('relatorios', event)"><i class="fas fa-chart-bar"></i> RELATÓRIOS</button>
-    <button class="tab-btn" onclick="mudarAba('gerenciar', event)"><i class="fas fa-users"></i> GESTÃO</button>
+    <button class="tab-btn ativo" onclick="mudarAba('dashboard', event)"><i class="fas fa-chart-line"></i> DASHBOARD</button>
+    <button class="tab-btn" onclick="mudarAba('relatorios', event)"><i class="fas fa-file-invoice-dollar"></i> RELATÓRIOS</button>
+    <button class="tab-btn" onclick="mudarAba('aprovacoes', event)"><i class="fas fa-user-clock"></i> APROVAÇÕES</button>
+    <button class="tab-btn" onclick="mudarAba('gerenciar', event)"><i class="fas fa-users-cog"></i> GESTÃO GERAL</button>
 </div>
 
 <div class="container-principal">
     
     <div id="dashboard" class="conteudo-aba">
         <div class="cards-resumo">
-            <div class="card-stat card-adm">
-                <span class="stat-titulo">Lucro Adm (Hoje)</span>
-                <span class="stat-valor" id="faturamento-adm-hoje">R$ 0,00</span>
-            </div>
-            <div class="card-stat card-dinheiro">
-                <span class="stat-titulo">Dinheiro na Rua</span>
-                <span class="stat-valor" id="saldo-rua-hoje" style="color: var(--warning-color)">R$ 0,00</span>
-            </div>
-            <div class="card-stat">
-                <span class="stat-titulo">Pilotos Ativos</span>
-                <span class="stat-valor" id="total-pilotos">0</span>
-            </div>
-            <div class="card-stat">
-                <span class="stat-titulo">Total Bruto (Hoje)</span>
-                <span class="stat-valor" id="total-bruto-hoje" style="color: var(--info-color)">R$ 0,00</span>
-            </div>
+            <div class="card-stat card-adm"><span class="stat-titulo">Lucro Adm (Hoje)</span><span class="stat-valor" id="faturamento-adm-hoje">R$ 0,00</span></div>
+            <div class="card-stat card-dinheiro"><span class="stat-titulo">Dinheiro na Rua</span><span class="stat-valor" id="saldo-rua-hoje" style="color: var(--warning-color)">R$ 0,00</span></div>
+            <div class="card-stat"><span class="stat-titulo">Pilotos Ativos</span><span class="stat-valor" id="total-pilotos-dashboard">0</span></div>
+            <div class="card-stat"><span class="stat-titulo">Total Bruto</span><span class="stat-valor" id="total-bruto-hoje" style="color: var(--info-color)">R$ 0,00</span></div>
         </div>
-
-        <h3 style="color: #666; font-size: 12px; margin: 15px 0 10px; padding-left: 5px;">ATIVIDADE RECENTE</h3>
+        <h3 style="color: #666; font-size: 14px; margin-bottom: 12px; text-transform: uppercase;"><i class="fas fa-history"></i> Pedidos Recentes</h3>
         <div class="tabela-container">
             <table>
-                <thead>
-                    <tr><th>PILOTO</th> <th>VALOR</th> <th>PGTO</th> <th>STATUS</th></tr>
-                </thead>
+                <thead><tr><th>PILOTO</th> <th>VALOR</th> <th>PGTO</th> <th>STATUS</th></tr></thead>
                 <tbody id="tabela-historico"></tbody>
             </table>
         </div>
     </div>
 
     <div id="relatorios" style="display:none;" class="conteudo-aba">
-        <div class="filtro-container">
-            <div class="filtro-grid">
-                <div>
-                    <label style="font-size: 10px; color: #888;">INÍCIO</label>
-                    <input type="date" id="filtro-data-inicio" class="input-busca">
-                </div>
-                <div>
-                    <label style="font-size: 10px; color: #888;">FIM</label>
-                    <input type="date" id="filtro-data-fim" class="input-busca">
-                </div>
-                <button class="btn-acao" style="background: var(--neon-green); color: #000;" onclick="gerarRelatorio()">CONSULTAR</button>
+        <div class="card-stat" style="margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div><label style="font-size: 10px; color: #888;">INÍCIO</label><input type="date" id="filtro-data-inicio" class="input-busca"></div>
+                <div><label style="font-size: 10px; color: #888;">FIM</label><input type="date" id="filtro-data-fim" class="input-busca"></div>
             </div>
+            <button class="btn-acao" style="background: var(--neon-green); color: #000;" onclick="gerarRelatorio()">CONSULTAR RELATÓRIO</button>
         </div>
-
         <div class="cards-resumo">
-            <div class="card-stat card-adm">
-                <span class="stat-titulo">Comissão Adm</span>
-                <span class="stat-valor" id="rel-lucro-adm">R$ 0,00</span>
-            </div>
-            <div class="card-stat card-dinheiro">
-                <span class="stat-titulo">Total em Dinheiro</span>
-                <span class="stat-valor" id="rel-total-dinheiro" style="color: var(--warning-color)">R$ 0,00</span>
-            </div>
-            <div class="card-stat" style="border-left: 4px solid var(--info-color)">
-                <span class="stat-titulo">Total em PIX</span>
-                <span class="stat-valor" id="rel-total-pix" style="color: var(--info-color)">R$ 0,00</span>
-            </div>
-            <div class="card-stat">
-                <span class="stat-titulo">Qtd Corridas</span>
-                <span class="stat-valor" id="rel-qtd-total">0</span>
-            </div>
+            <div class="card-stat card-adm"><span class="stat-titulo">Comissão Adm</span><span class="stat-valor" id="rel-lucro-adm">R$ 0,00</span></div>
+            <div class="card-stat card-dinheiro"><span class="stat-titulo">Total Dinheiro</span><span class="stat-valor" id="rel-total-dinheiro" style="color: var(--warning-color)">R$ 0,00</span></div>
+            <div class="card-stat"><span class="stat-titulo">Total PIX</span><span class="stat-valor" id="rel-total-pix" style="color: var(--info-color)">R$ 0,00</span></div>
+            <div class="card-stat"><span class="stat-titulo">Qtd Corridas</span><span class="stat-valor" id="rel-qtd-total">0</span></div>
         </div>
-
-        <div class="chart-container">
-            <canvas id="graficoCategorias"></canvas>
-        </div>
-
-        <div class="tabela-container" style="margin-top: 15px;">
+        <div class="chart-box"><canvas id="graficoCategorias"></canvas></div>
+        <div class="tabela-container" style="margin-top: 20px;">
             <table>
-                <thead>
-                    <tr><th>DATA</th> <th>CATEGORIA</th> <th>VALOR</th> <th>ADM (15%)</th></tr>
-                </thead>
+                <thead><tr><th>DATA</th> <th>CATEGORIA</th> <th>VALOR</th> <th>ADM (15%)</th></tr></thead>
                 <tbody id="tabela-relatorio-corpo"></tbody>
             </table>
         </div>
+        <button class="btn-acao" style="background: #27ae60; color: white; margin-top: 15px;" onclick="exportarExcel()"><i class="fas fa-file-excel"></i> BAIXAR PLANILHA INTELIGENTE</button>
+    </div>
+
+    <div id="aprovacoes" style="display:none;" class="conteudo-aba">
+        <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+            <div class="coluna">
+                <h3 style="color: var(--warning-color); font-size: 14px;"><i class="fas fa-building"></i> EMPRESAS PENDENTES</h3>
+                <div id="lista-empresas-pendentes"><div class="vazio">Carregando...</div></div>
+            </div>
+            <div class="coluna">
+                <h3 style="color: var(--neon-green); font-size: 14px;"><i class="fas fa-motorcycle"></i> PILOTOS PENDENTES</h3>
+                <div id="lista-motoboys-pendentes"><div class="vazio">Carregando...</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gerenciar" style="display:none;" class="conteudo-aba">
+        <h3 style="font-size: 14px; margin-bottom: 10px;">PILOTOS ATIVOS</h3>
+        <input type="text" class="input-busca" placeholder="Buscar piloto..." onkeyup="filtrarLista('container-motoboys-ativos', this.value)">
+        <div id="container-motoboys-ativos"></div>
         
-        <button class="btn-acao" style="background: #27ae60; color: white; margin-top: 15px;" onclick="exportarExcel()">
-            <i class="fas fa-file-excel"></i> BAIXAR PLANILHA
-        </button>
+        <h3 style="font-size: 14px; margin: 25px 0 10px;">CLIENTES & EMPRESAS ATIVAS</h3>
+        <input type="text" class="input-busca" placeholder="Buscar cliente..." onkeyup="filtrarLista('container-clientes-ativos', this.value)">
+        <div id="container-clientes-ativos"></div>
     </div>
 
 </div>
@@ -211,98 +164,154 @@
 
     const formatarBRL = (v) => parseFloat(v || 0).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
 
+    // NAVEGAÇÃO ENTRE ABAS COM TRATAMENTO DE ERRO
     function mudarAba(aba, event) {
         document.querySelectorAll('.conteudo-aba').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('ativo'));
-        document.getElementById(aba).style.display = 'block';
-        event.currentTarget.classList.add('ativo');
+        
+        const target = document.getElementById(aba);
+        if(target) {
+            target.style.display = 'block';
+            event.currentTarget.classList.add('ativo');
+        }
+
         if (aba === 'dashboard') carregarDashboard();
+        if (aba === 'aprovacoes') carregarPendentes();
+        if (aba === 'gerenciar') { carregarMotoboysAtivos(); carregarClientes(); }
     }
 
     async function carregarDashboard() {
         try {
             const res = await fetch(`${MEU_IP}/admin/dashboard`);
             const data = await res.json();
-            
-            let admHoje = 0;
-            let ruaHoje = 0;
-            let brutoHoje = 0;
-
+            let admHoje = 0, ruaHoje = 0, brutoHoje = 0;
             const tbody = document.getElementById('tabela-historico');
+            
             tbody.innerHTML = data.historico.map(c => {
                 const valor = parseFloat(c.valor || 0);
-                const statusNormal = c.status ? c.status.toLowerCase() : '';
-                
-                if(statusNormal === 'concluida') {
-                    brutoHoje += valor;
-                    admHoje += (valor * 0.15);
+                if(c.status?.toLowerCase() === 'concluida') {
+                    brutoHoje += valor; admHoje += (valor * 0.15);
                     if(c.forma_pagamento === 'DINHEIRO') ruaHoje += valor;
                 }
-
-                return `
-                    <tr>
-                        <td style="font-weight:bold;">${(c.nome_motoboy || '---').split(' ')[0]}</td>
-                        <td style="color:var(--neon-green)">${formatarBRL(valor)}</td>
-                        <td><small>${c.forma_pagamento || 'DINHEIRO'}</small></td>
-                        <td><span style="font-size:9px; padding:2px 5px; border-radius:3px; background:rgba(0,230,64,0.1); color:var(--neon-green)">${c.status}</span></td>
-                    </tr>`;
+                return `<tr>
+                    <td style="font-weight:bold;">${(c.nome_motoboy || '---').split(' ')[0]}</td>
+                    <td style="color:var(--neon-green); font-weight:800;">${formatarBRL(valor)}</td>
+                    <td><span style="background:${c.forma_pagamento === 'PIX' ? '#007bff' : '#ffc107'}; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:900;">${c.forma_pagamento}</span></td>
+                    <td><span style="font-size:10px; padding:3px 6px; border-radius:4px; background:rgba(0,230,64,0.1); color:var(--neon-green); border:1px solid var(--neon-green); text-transform:uppercase;">${c.status}</span></td>
+                </tr>`;
             }).join('');
 
             document.getElementById('faturamento-adm-hoje').innerText = formatarBRL(admHoje);
             document.getElementById('saldo-rua-hoje').innerText = formatarBRL(ruaHoje);
             document.getElementById('total-bruto-hoje').innerText = formatarBRL(brutoHoje);
-            document.getElementById('total-pilotos').innerText = data.total_pilotos || 0;
+            
+            const resM = await fetch(`${MEU_IP}/admin/motoboys`);
+            const motos = await resM.json();
+            document.getElementById('total-pilotos-dashboard').innerText = motos.length;
+        } catch (e) { console.error("Erro dashboard:", e); }
+    }
 
-        } catch (err) { console.error("Erro dashboard:", err); }
+    async function carregarPendentes() {
+        try {
+            const res = await fetch(`${MEU_IP}/admin/pendentes`);
+            const users = await res.json();
+            const divM = document.getElementById('lista-motoboys-pendentes');
+            const divE = document.getElementById('lista-empresas-pendentes');
+            
+            const pMotos = users.filter(u => u.tipo === 'motoboy');
+            divM.innerHTML = pMotos.map(u => `
+                <div class="card-user-gestao" style="border-left-color: var(--neon-green)">
+                    <span class="user-name">${u.nome} <small style="color:var(--neon-green)">[PILOTO]</small></span>
+                    <span class="user-sub"><i class="fas fa-phone"></i> ${u.telefone}</span>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button class="btn-acao" style="background:var(--neon-green); color:#000; margin:0;" onclick="decisao(${u.id},'aprovar')">LIBERAR</button>
+                        <button class="btn-acao" style="background:transparent; border:1px solid var(--danger-color); color:var(--danger-color); margin:0;" onclick="decisao(${u.id},'rejeitar')">RECUSAR</button>
+                    </div>
+                </div>`).join('') || '<div class="vazio">Nenhum piloto aguardando.</div>';
+
+            const pEmps = users.filter(u => u.tipo === 'empresa');
+            divE.innerHTML = pEmps.map(u => `
+                <div class="card-user-gestao" style="border-left-color: var(--warning-color)">
+                    <span class="user-name">${u.nome} <small style="color:var(--warning-color)">[EMPRESA]</small></span>
+                    <span class="user-sub"><i class="fas fa-envelope"></i> ${u.email}</span>
+                    <button class="btn-acao" style="background:var(--warning-color); color:#000;" onclick="decisao(${u.id},'aprovar')">APROVAR ACESSO</button>
+                </div>`).join('') || '<div class="vazio">Nenhuma empresa aguardando.</div>';
+        } catch (e) { console.error("Erro pendentes:", e); }
+    }
+
+    async function carregarMotoboysAtivos() {
+        try {
+            const res = await fetch(`${MEU_IP}/admin/motoboys`);
+            const data = await res.json();
+            document.getElementById('container-motoboys-ativos').innerHTML = data.map(m => `
+                <div class="card-user-gestao user-item">
+                    <button onclick="removerUsuario(${m.id},'motoboy')" style="float:right; background:none; border:none; color:#444; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                    <span class="user-name">${m.nome}</span>
+                    <span class="user-sub">${m.email} | ${m.telefone || 'Sem Tel'}</span>
+                </div>`).join('');
+        } catch (e) { console.error(e); }
+    }
+
+    async function carregarClientes() {
+        try {
+            const res = await fetch(`${MEU_IP}/admin/clientes`);
+            const data = await res.json();
+            document.getElementById('container-clientes-ativos').innerHTML = data.map(c => {
+                const ehEmpresa = c.tipo === 'empresa';
+                return `
+                <div class="card-user-gestao user-item" style="border-left-color: ${ehEmpresa ? 'var(--warning-color)' : '#555'}">
+                    <button onclick="removerUsuario(${c.id},'cliente')" style="float:right; background:none; border:none; color:#444; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                    <span class="user-name">${c.nome} ${ehEmpresa ? '<small style="color:var(--warning-color)">[EMPRESA]</small>' : ''}</span>
+                    <span class="user-sub">${c.email} | ${c.telefone}</span>
+                </div>`;
+            }).join('');
+        } catch (e) { console.error(e); }
+    }
+
+    async function decisao(id, acao) {
+        if(!confirm(`Confirma ${acao}?`)) return;
+        await fetch(`${MEU_IP}/admin/${acao}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id}) });
+        carregarPendentes();
+    }
+
+    async function removerUsuario(id, tipo) {
+        if(!confirm(`Remover permanentemente este ${tipo}?`)) return;
+        const res = await fetch(`${MEU_IP}/admin/remover/${id}`, { method: 'DELETE' });
+        if((await res.json()).success) { carregarMotoboysAtivos(); carregarClientes(); carregarDashboard(); }
     }
 
     async function gerarRelatorio() {
         const inicio = document.getElementById('filtro-data-inicio').value;
         const fim = document.getElementById('filtro-data-fim').value;
-        if (!inicio || !fim) return alert("Defina as datas!");
+        if (!inicio || !fim) return alert("Selecione as datas!");
 
         try {
             const res = await fetch(`${MEU_IP}/admin/dashboard`);
             const data = await res.json();
-            
             const filtrados = data.historico.filter(item => {
                 if(!item.data_hora || !item.status) return false;
-                const dataLimpa = item.data_hora.substring(0, 10);
-                return dataLimpa >= inicio && dataLimpa <= fim && item.status.toLowerCase() === 'concluida';
+                const d = item.data_hora.substring(0, 10);
+                return d >= inicio && d <= fim && item.status.toLowerCase() === 'concluida';
             });
-
             dadosRelatorioGlobal = filtrados;
-            
-            let financeiro = { adm: 0, dinheiro: 0, pix: 0, entregas: 0, mototaxi: 0 };
-
-            const tbody = document.getElementById('tabela-relatorio-corpo');
-            tbody.innerHTML = filtrados.map(c => {
-                const v = parseFloat(c.valor || 0);
-                const adm = v * 0.15;
-                financeiro.adm += adm;
-                
-                if(c.forma_pagamento === 'PIX') financeiro.pix += v;
-                else financeiro.dinheiro += v;
-
-                if(c.categoria === 'entrega' || c.tipo_servico === 'entrega') financeiro.entregas++;
-                else financeiro.mototaxi++;
-
+            let fin = { adm: 0, din: 0, pix: 0, ent: 0, mot: 0 };
+            document.getElementById('tabela-relatorio-corpo').innerHTML = filtrados.map(c => {
+                const v = parseFloat(c.valor || 0); fin.adm += (v * 0.15);
+                if(c.forma_pagamento === 'PIX') fin.pix += v; else fin.din += v;
+                if(c.categoria === 'entrega' || c.tipo_servico === 'entrega') fin.ent++; else fin.mot++;
                 return `<tr>
-                    <td>${new Date(c.data_hora).toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}</td>
-                    <td style="text-transform:uppercase; font-size:10px;">${c.categoria || 'Moto Táxi'}</td>
-                    <td style="font-weight:bold;">${formatarBRL(v)}</td>
-                    <td style="color:var(--neon-green)">${formatarBRL(adm)}</td>
+                    <td>${c.data_hora.substring(8,10)}/${c.data_hora.substring(5,7)}</td>
+                    <td style="text-transform:uppercase; font-size:10px; font-weight:bold;">${c.categoria || 'Moto Táxi'}</td>
+                    <td style="color:var(--neon-green); font-weight:bold;">${formatarBRL(v)}</td>
+                    <td style="color:var(--danger-color); font-weight:bold;">${formatarBRL(v*0.15)}</td>
                 </tr>`;
             }).join('');
-
-            document.getElementById('rel-lucro-adm').innerText = formatarBRL(financeiro.adm);
-            document.getElementById('rel-total-dinheiro').innerText = formatarBRL(financeiro.dinheiro);
-            document.getElementById('rel-total-pix').innerText = formatarBRL(financeiro.pix);
+            document.getElementById('rel-lucro-adm').innerText = formatarBRL(fin.adm);
+            document.getElementById('rel-total-dinheiro').innerText = formatarBRL(fin.din);
+            document.getElementById('rel-total-pix').innerText = formatarBRL(fin.pix);
             document.getElementById('rel-qtd-total').innerText = filtrados.length;
-
-            atualizarGrafico(financeiro.entregas, financeiro.mototaxi);
-
-        } catch (err) { console.error(err); }
+            atualizarGrafico(fin.ent, fin.mot);
+        } catch (e) { console.error(e); }
     }
 
     function atualizarGrafico(e, m) {
@@ -310,32 +319,32 @@
         if (meuGrafico) meuGrafico.destroy();
         meuGrafico = new Chart(ctx, {
             type: 'doughnut',
-            data: {
-                labels: ['Entregas', 'Moto Táxi'],
-                datasets: [{
-                    data: [e, m],
-                    backgroundColor: ['#a29bfe', '#fab1a0'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { color: '#888', font: { size: 10 } } } }
-            }
+            data: { labels: ['Entregas', 'Moto Táxi'], datasets: [{ data: [e, m], backgroundColor: ['#a29bfe', '#fab1a0'], borderWidth: 0 }] },
+            options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#888', font: { size: 10 } } } } }
         });
+    }
+
+    function filtrarLista(id, termo) {
+        const items = document.getElementById(id).getElementsByClassName('user-item');
+        Array.from(items).forEach(item => item.style.display = item.innerText.toLowerCase().includes(termo.toLowerCase()) ? 'block' : 'none');
     }
 
     function exportarExcel() {
         if (!dadosRelatorioGlobal.length) return alert("Gere o relatório primeiro!");
-        const ws = XLSX.utils.json_to_sheet(dadosRelatorioGlobal);
+        const ws = XLSX.utils.json_to_sheet(dadosRelatorioGlobal.map(c => ({
+            DATA: c.data_hora.substring(0,10),
+            PILOTO: c.nome_motoboy,
+            VALOR: c.valor,
+            ADM_15: c.valor * 0.15,
+            PAGAMENTO: c.forma_pagamento,
+            QUEM_RECEBEU: c.forma_pagamento === 'PIX' ? 'EMPRESA (MP)' : 'PILOTO (MAO)'
+        })));
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Relatorio_Financeiro");
-        XLSX.writeFile(wb, "Financeiro_Falcoes.xlsx");
+        XLSX.utils.book_append_sheet(wb, ws, "Financeiro");
+        XLSX.writeFile(wb, "Relatorio_Falcoes.xlsx");
     }
 
-    // Início automático
     carregarDashboard();
 </script>
-
 </body>
 </html>
