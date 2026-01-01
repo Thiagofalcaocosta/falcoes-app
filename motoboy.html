@@ -929,38 +929,30 @@ function abrirConversaZap() {
 let loopVibracao = null;
 
 function tocarAlerta() {
-    // 1. Tenta tocar o som (funciona se a aba estiver aberta)
+    // 1. Áudio
     const audio = document.getElementById('som-alerta');
     if (audio) {
         audio.loop = true; 
-        audio.currentTime = 0;
-        audio.play().catch(e => console.warn("Áudio bloqueado ou em segundo plano"));
+        audio.play().catch(e => console.warn("Áudio ainda bloqueado"));
     }
 
-    // 2. Inicia a vibração
+    // 2. Vibração com Proteção
     if ("vibrate" in navigator) {
-        const padrao = [1000, 1000]; 
-        if (loopVibracao) clearInterval(loopVibracao);
-        navigator.vibrate(padrao);
-        loopVibracao = setInterval(() => {
+        try {
+            const padrao = [1000, 1000]; 
+            if (loopVibracao) clearInterval(loopVibracao);
+            
+            // O navegador só executará se houver "User Activation"
             navigator.vibrate(padrao);
-        }, 2000); 
+            
+            loopVibracao = setInterval(() => {
+                navigator.vibrate(padrao);
+            }, 2000); 
+        } catch (e) {
+            console.warn("Vibração bloqueada pelo navegador: Requer interação prévia.");
+        }
     }
-
-    // 3. NOVO: DISPARA A NOTIFICAÇÃO PUSH (Para celular bloqueado)
-    if (Notification.permission === 'granted') {
-        navigator.serviceWorker.ready.then(function(registration) {
-            registration.showNotification("⚡ NOVA CORRIDA FALCÕES!", {
-                body: "Toque aqui para aceitar agora! 🦅",
-                icon: "assets/logo.png", // Verifique se o caminho está certo
-                badge: "assets/logo.png",
-                vibrate: [500, 200, 500],
-                tag: "nova-corrida", // Não deixa acumular várias notificações
-                renotify: true,
-                requireInteraction: true // A notificação fica na tela até ele clicar
-            });
-        });
-    }
+    // ... restante do código de Notificação Push
 }
 
 // ESTA FUNÇÃO É ESSENCIAL PARA PARAR O BARULHO
@@ -1932,17 +1924,19 @@ function solicitarPagamentoAdm() {
     window.open(`https://api.whatsapp.com/send?phone=${numAdm}&text=${encodeURIComponent(texto)}`, '_blank');
 }
 
-// 2. FUNÇÃO DE ATIVAÇÃO OBRIGATÓRIA (Destrava tudo no primeiro toque)
 async function ativarRecursos() {
     // Esconde a tela de ativação
     document.getElementById('camada-ativacao').style.display = 'none';
     
-    // Tenta ativar a tela sempre acesa (Wake Lock)
+    // NOVO: Destrava a vibração no primeiro toque
+    if ("vibrate" in navigator) {
+        navigator.vibrate(10); // Vibração curtinha só para validar
+    }
+
     if (typeof ativarWakeLock === "function") {
         await ativarWakeLock();
     }
     
-    // Toca e para o som mudo para "acordar" o áudio do celular
     const audio = document.getElementById('som-alerta');
     if(audio) {
         audio.play().then(() => {
@@ -1952,7 +1946,6 @@ async function ativarRecursos() {
         }).catch(() => {});
     }
     
-    // Inicia o status online
     enviarStatusOnline(true);
 }
  
