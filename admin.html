@@ -452,20 +452,46 @@ async function mudarStatusFinanceiro(id, statusAtual) {
     }
 
     function exportarExcel() {
-        if (!dadosRelatorioGlobal.length) return alert("Gere o relatório primeiro!");
-        const ws = XLSX.utils.json_to_sheet(dadosRelatorioGlobal.map(c => ({
-            DATA: c.data_hora.substring(0,10),
-            PILOTO: c.nome_motoboy,
-            VALOR: c.valor,
-            ADM_15: c.valor * 0.15,
-            PAGAMENTO: c.forma_pagamento,
-            QUEM_RECEBEU: c.forma_pagamento === 'PIX' ? 'EMPRESA (MP)' : 'PILOTO (MAO)'
-        })));
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Financeiro");
-        XLSX.writeFile(wb, "Relatorio_Falcoes.xlsx");
+    if (!dadosRelatorioGlobal || !dadosRelatorioGlobal.length) {
+        return alert("Gere o relatório na tela primeiro!");
     }
 
+    // 1. Mapeamento com limpeza de dados (Garante que números sejam números)
+    const dadosFormatados = dadosRelatorioGlobal.map(c => ({
+        DATA: c.data_hora ? c.data_hora.substring(0, 10) : '---',
+        PILOTO: c.nome_motoboy || '---',
+        VALOR: parseFloat(c.valor || 0),
+        ADM_15: parseFloat(c.valor || 0) * 0.15,
+        PAGAMENTO: c.forma_pagamento || 'N/A',
+        QUEM_RECEBEU: c.forma_pagamento === 'PIX' ? 'EMPRESA (MP)' : 'PILOTO (MÃO)'
+    }));
+
+    // 2. Criação da planilha
+    const ws = XLSX.utils.json_to_sheet(dadosFormatados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Financeiro");
+
+    /* 3. CORREÇÃO PARA GOOGLE SHEETS: 
+       Geramos um buffer binário em vez de apenas disparar o download simples.
+    */
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // 4. Criação do arquivo para download forçando o tipo Excel
+    const blob = new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    
+    a.href = url;
+    a.download = `Relatorio_Falcoes_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+
+    // Limpeza
+    setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }, 100);
+}
     carregarDashboard();
 </script>
 </body>
