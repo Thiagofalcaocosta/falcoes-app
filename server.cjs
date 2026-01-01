@@ -1570,12 +1570,6 @@ app.post('/iniciar-corrida', async (req, res) => {
     }
 });
 
-Sentry.setupExpressErrorHandler(app);
-app.use(function onError(err, req, res, next) {
-  res.statusCode = 500;
-  res.end(res.sentry + "\n");
-});
-
 app.post('/admin/alterar-status', async (req, res) => {
     const { id, aprovado } = req.body;
     try {
@@ -1585,6 +1579,13 @@ app.post('/admin/alterar-status', async (req, res) => {
         res.status(500).json({ error: 'Erro ao atualizar status' });
     }
 });
+
+Sentry.setupExpressErrorHandler(app);
+app.use(function onError(err, req, res, next) {
+  res.statusCode = 500;
+  res.end(res.sentry + "\n");
+});
+
 
 
 
