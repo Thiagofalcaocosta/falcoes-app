@@ -35,6 +35,7 @@ app.use(cors({
     origin: ['https://falcoes.site', 'https://www.falcoes.site'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'sentry-trace', 'baggage'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'], // <--- ADICIONE ESTA LINHA
     credentials: true
 }));
 
