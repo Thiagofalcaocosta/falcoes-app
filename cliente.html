@@ -1422,7 +1422,15 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
         document.querySelectorAll('.tela').forEach(tela => {
             tela.classList.remove('ativa');
         });
-        document.getElementById(novaTelaId).classList.add('ativa');
+        // Salva o que está escrito antes de esconder a tela
+    if (document.getElementById('tela-pedido').classList.contains('ativa')) {
+        salvarRascunhoFormulario();
+    }
+document.querySelectorAll('.tela').forEach(tela => {
+        tela.classList.remove('ativa');
+    });
+    document.getElementById(novaTelaId).classList.add('ativa');
+
     }
 
     function reiniciarApp() {
@@ -1465,47 +1473,41 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBv
     
     // === FUNÇÃO PRINCIPAL DE PERSISTÊNCIA (Ao recarregar a página) ===
     function checkPersistedOrder() {
-        const persistedId = localStorage.getItem('idPedidoAtual');
-        if (persistedId) {
-            idPedidoAtual = persistedId;
-            
-            // 1. Preenche os detalhes (chama a função auxiliar)
-            preencherDetalhesAcompanhamento();
-            
-            // 2. MUDAR PARA A TELA DE ACOMPANHAMENTO (Isto resolve a sobreposição!)
-            mudarTela('tela-acompanhamento');
-            // --- 4. CONFIGURAÇÃO DO BOTÃO FALAR COM ADM ---
-    // Esta função deve ser chamada dentro do verificarStatus ou no carregar da página
-    function configurarBotaoAdm() {
-    const areaEstorno = document.getElementById('area-estorno-adm');
-    const btnAdm = document.getElementById('btn-link-estorno');
-    
-    if (areaEstorno) {
-        // Apenas garante que a área apareça
-        areaEstorno.style.display = 'block'; 
-        
-        // Garante que o botão aceite cliques sem abrir novas abas que reiniciam o PWA
-        if (btnAdm) {
-            btnAdm.removeAttribute('target');
+    const persistedId = localStorage.getItem('idPedidoAtual');
+
+    if (persistedId) {
+        // Atualiza as variáveis globais para o sistema saber que há um pedido
+        idPedidoAtual = persistedId;
+        window.idPedidoAtual = persistedId;
+
+        // 1. Restaura visualmente os endereços e valores na tela
+        preencherDetalhesAcompanhamento();
+
+        // 2. Muda para a tela de acompanhamento na hora (evita aparecer a tela de pedido)
+        mudarTela('tela-acompanhamento');
+
+        // 3. RECUPERAÇÃO DO TEMPO (O que estava faltando)
+        const inicioBusca = parseInt(localStorage.getItem('inicioBuscaTimestamp'));
+        if (inicioBusca) {
+            const agora = Date.now();
+            const segundosPassados = Math.floor((agora - inicioBusca) / 1000);
+            const tempoRestante = 600 - segundosPassados; // 600s = 10 minutos de busca
+
+            if (tempoRestante > 0) {
+                // Se ainda estiver dentro dos 10 min, reinicia o cronômetro do ponto certo
+                iniciarContadorBusca(idPedidoAtual, tempoRestante);
+            } else {
+                // Se o tempo acabou enquanto o app estava fechado, encerra a busca
+                encerrarBuscaPorTimeout(idPedidoAtual);
+            }
         }
+
+        // 4. Configura o botão do ADM e inicia o monitoramento com o servidor
+        configurarBotaoAdm();
+        if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+        intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
     }
 }
-
-    // Chame a configuração do ADM ao carregar a página
-    document.addEventListener('DOMContentLoaded', () => {
-        configurarBotaoAdm();
-    });
-
-            // 3. Iniciar a verificação de status (Polling)
-            verificarStatus(idPedidoAtual);
-            
-            if (intervaloVerificacao) clearInterval(intervaloVerificacao); 
-            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
-        } else {
-            // Se não houver pedido, garante que a tela inicial esteja ativa
-            mudarTela('tela-pedido');
-        }
-    }
 
 
     // === FUNÇÕES MAPA E CÁLCULO ===
