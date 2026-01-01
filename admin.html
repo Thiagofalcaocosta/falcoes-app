@@ -135,6 +135,9 @@
     <div id="aprovacoes" style="display:none;" class="conteudo-aba">
         <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
             <div class="coluna">
+            <h3 style="color: var(--info-color); font-size: 14px;"><i class="fas fa-user-plus"></i> CLIENTES AGUARDANDO APROVAÇÃO</h3>
+            <div id="lista-clientes-pendentes"><div class="vazio">Carregando...</div></div>
+        </div>
                 <h3 style="color: var(--warning-color); font-size: 14px;"><i class="fas fa-building"></i> EMPRESAS PENDENTES</h3>
                 <div id="lista-empresas-pendentes"><div class="vazio">Carregando...</div></div>
             </div>
@@ -211,33 +214,47 @@
         } catch (e) { console.error("Erro dashboard:", e); }
     }
 
-    async function carregarPendentes() {
-        try {
-            const res = await fetch(`${MEU_IP}/admin/pendentes`);
-            const users = await res.json();
-            const divM = document.getElementById('lista-motoboys-pendentes');
-            const divE = document.getElementById('lista-empresas-pendentes');
-            
-            const pMotos = users.filter(u => u.tipo === 'motoboy');
-            divM.innerHTML = pMotos.map(u => `
-                <div class="card-user-gestao" style="border-left-color: var(--neon-green)">
-                    <span class="user-name">${u.nome} <small style="color:var(--neon-green)">[PILOTO]</small></span>
-                    <span class="user-sub"><i class="fas fa-phone"></i> ${u.telefone}</span>
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <button class="btn-acao" style="background:var(--neon-green); color:#000; margin:0;" onclick="decisao(${u.id},'aprovar')">LIBERAR</button>
-                        <button class="btn-acao" style="background:transparent; border:1px solid var(--danger-color); color:var(--danger-color); margin:0;" onclick="decisao(${u.id},'rejeitar')">RECUSAR</button>
-                    </div>
-                </div>`).join('') || '<div class="vazio">Nenhum piloto aguardando.</div>';
+   async function carregarPendentes() {
+    try {
+        const res = await fetch(`${MEU_IP}/admin/pendentes`);
+        const users = await res.json();
+        
+        const divC = document.getElementById('lista-clientes-pendentes');
+        const divM = document.getElementById('lista-motoboys-pendentes');
+        const divE = document.getElementById('lista-empresas-pendentes');
+        
+        // Filtro Clientes
+        const pClientes = users.filter(u => u.tipo === 'cliente');
+        divC.innerHTML = pClientes.map(u => `
+            <div class="card-user-gestao" style="border-left-color: var(--info-color)">
+                <span class="user-name">${u.nome}</span>
+                <span class="user-sub"><i class="fas fa-phone"></i> ${u.telefone}</span>
+                <button class="btn-acao" style="background:var(--info-color); color:#fff;" onclick="decisao(${u.id},'aprovar')">APROVAR CLIENTE</button>
+            </div>`).join('') || '<div class="vazio">Nenhum cliente novo.</div>';
 
-            const pEmps = users.filter(u => u.tipo === 'empresa');
-            divE.innerHTML = pEmps.map(u => `
-                <div class="card-user-gestao" style="border-left-color: var(--warning-color)">
-                    <span class="user-name">${u.nome} <small style="color:var(--warning-color)">[EMPRESA]</small></span>
-                    <span class="user-sub"><i class="fas fa-envelope"></i> ${u.email}</span>
-                    <button class="btn-acao" style="background:var(--warning-color); color:#000;" onclick="decisao(${u.id},'aprovar')">APROVAR ACESSO</button>
-                </div>`).join('') || '<div class="vazio">Nenhuma empresa aguardando.</div>';
-        } catch (e) { console.error("Erro pendentes:", e); }
-    }
+        // Filtro Motoboys
+        const pMotos = users.filter(u => u.tipo === 'motoboy');
+        divM.innerHTML = pMotos.map(u => `
+            <div class="card-user-gestao" style="border-left-color: var(--neon-green)">
+                <span class="user-name">${u.nome}</span>
+                <span class="user-sub">${u.telefone}</span>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn-acao" style="background:var(--neon-green); color:#000; margin:0;" onclick="decisao(${u.id},'aprovar')">LIBERAR</button>
+                    <button class="btn-acao" style="background:transparent; border:1px solid var(--danger-color); color:var(--danger-color); margin:0;" onclick="decisao(${u.id},'rejeitar')">RECUSAR</button>
+                </div>
+            </div>`).join('') || '<div class="vazio">Nenhum piloto aguardando.</div>';
+
+        // Filtro Empresas
+        const pEmps = users.filter(u => u.tipo === 'empresa');
+        divE.innerHTML = pEmps.map(u => `
+            <div class="card-user-gestao" style="border-left-color: var(--warning-color)">
+                <span class="user-name">${u.nome}</span>
+                <span class="user-sub">${u.email}</span>
+                <button class="btn-acao" style="background:var(--warning-color); color:#000;" onclick="decisao(${u.id},'aprovar')">APROVAR ACESSO</button>
+            </div>`).join('') || '<div class="vazio">Nenhuma empresa aguardando.</div>';
+            
+    } catch (e) { console.error("Erro pendentes:", e); }
+}
 
     // Substitua a listagem de motoboys para incluir o botão de Ativar/Desativar
 async function carregarMotoboysAtivos() {
@@ -281,20 +298,48 @@ async function alternarStatus(id, statusAtual) {
 }
 
     async function carregarClientes() {
-        try {
-            const res = await fetch(`${MEU_IP}/admin/clientes`);
-            const data = await res.json();
-            document.getElementById('container-clientes-ativos').innerHTML = data.map(c => {
-                const ehEmpresa = c.tipo === 'empresa';
-                return `
-                <div class="card-user-gestao user-item" style="border-left-color: ${ehEmpresa ? 'var(--warning-color)' : '#555'}">
-                    <button onclick="removerUsuario(${c.id},'cliente')" style="float:right; background:none; border:none; color:#444; cursor:pointer;"><i class="fas fa-trash"></i></button>
-                    <span class="user-name">${c.nome} ${ehEmpresa ? '<small style="color:var(--warning-color)">[EMPRESA]</small>' : ''}</span>
-                    <span class="user-sub">${c.email} | ${c.telefone}</span>
-                </div>`;
-            }).join('');
-        } catch (e) { console.error(e); }
-    }
+    try {
+        const res = await fetch(`${MEU_IP}/admin/clientes`);
+        const data = await res.json();
+        
+        // Atualiza contagem no dashboard se desejar
+        // document.getElementById('total-clientes-dashboard').innerText = data.length;
+
+        document.getElementById('container-clientes-ativos').innerHTML = data.map(c => {
+            const ehEmpresa = c.tipo === 'empresa';
+            const estaBloqueado = c.status_conta === 2;
+            
+            return `
+            <div class="card-user-gestao user-item" style="border-left-color: ${estaBloqueado ? 'var(--danger-color)' : (ehEmpresa ? 'var(--warning-color)' : '#555')}">
+                <button onclick="removerUsuario(${c.id},'cliente')" style="float:right; background:none; border:none; color:#444; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                
+                <button onclick="mudarStatusFinanceiro(${c.id}, ${c.status_conta})" style="float:right; background:none; border:none; color:${estaBloqueado ? 'var(--neon-green)' : 'var(--danger-color)'}; font-size:10px; font-weight:bold; margin-right:10px; cursor:pointer;">
+                    ${estaBloqueado ? 'DESBLOQUEAR' : 'BLOQUEAR DÍVIDA'}
+                </button>
+
+                <span class="user-name">${c.nome} ${estaBloqueado ? '<small style="color:red"> [BLOQUEADO]</small>' : ''}</span>
+                <span class="user-sub">${c.telefone} | ${c.email}</span>
+            </div>`;
+        }).join('');
+    } catch (e) { console.error(e); }
+}
+
+// Nova função para Gerenciar Dívidas
+async function mudarStatusFinanceiro(id, statusAtual) {
+    const novoStatus = statusAtual === 2 ? 1 : 2; 
+    const msg = novoStatus === 2 ? "Bloquear este cliente por dívida?" : "Desbloquear este cliente?";
+    
+    if(!confirm(msg)) return;
+
+    try {
+        const res = await fetch(`${MEU_IP}/admin/alterar-status-cliente`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, novoStatusConta: novoStatus })
+        });
+        if(res.ok) carregarClientes();
+    } catch (e) { alert("Erro ao processar."); }
+}
 
     async function decisao(id, acao) {
         if(!confirm(`Confirma ${acao}?`)) return;

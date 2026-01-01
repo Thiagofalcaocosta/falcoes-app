@@ -181,12 +181,13 @@ CREATE TABLE IF NOT EXISTS usuarios (
   email VARCHAR(100) UNIQUE,
   senha VARCHAR(100),
   tipo VARCHAR(20),
-  telefone VARCHAR(20),
+  telefone VARCHAR(20), UNIQUE,
   placa VARCHAR(20),
   modelo_moto VARCHAR(50),
   cor_moto VARCHAR(30),
   categoria VARCHAR(50),
   aprovado BOOLEAN DEFAULT false,
+  status_conta INTEGER DEFAULT 1, -- 1 = Ativo, 2 = Bloqueado (Dívida)
   bloqueado_ate TIMESTAMP,
   online_ate TIMESTAMP,
   latitude DECIMAL(10,8),
@@ -394,38 +395,57 @@ app.get('/install', (req, res) => {
 // ===============================================
 
 app.post('/cadastro', async (req, res) => {
-  const { nome, email, senha, tipo, telefone, placa, modelo_moto, cor_moto, categoria } = req.body;
+    const { nome, email, senha, tipo, telefone, placa, modelo_moto, cor_moto, categoria } = req.body;
 
-  try {
-    const contagem = await pool.query('SELECT COUNT(*) FROM usuarios');
-    const totalUsuarios = parseInt(contagem.rows[0].count);
+    try {
+        const contagem = await pool.query('SELECT COUNT(*) FROM usuarios');
+        const totalUsuarios = parseInt(contagem.rows[0].count);
 
-    let estaAprovado = false;
-    let tipoFinal = tipo;
+        let estaAprovado = false;
+        let tipoFinal = tipo;
 
-    if (totalUsuarios === 0) {
-      tipoFinal = 'admin';
-      estaAprovado = true;
-      console.log('👑 PRIMEIRO USUÁRIO DETECTADO: Criando Admin Supremo.');
-    } else {
-      estaAprovado = tipo === 'cliente' ? true : false;
+        // Regra para o primeiro usuário ser Admin
+        if (totalUsuarios === 0) {
+            tipoFinal = 'admin';
+            estaAprovado = true;
+            console.log('👑 PRIMEIRO USUÁRIO DETECTADO: Criando Admin Supremo.');
+        } else {
+            // Clientes são aprovados automaticamente, motoboys e empresas ficam como false (pendente)
+            estaAprovado = (tipo === 'cliente');
+        }
+
+        // INSERT incluindo a nova coluna status_conta (1 = Ativo)
+        const result = await pool.query(
+            `INSERT INTO usuarios 
+            (nome, email, senha, tipo, telefone, placa, modelo_moto, cor_moto, categoria, aprovado, status_conta) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 1) 
+            RETURNING id`,
+            [nome, email, senha, tipoFinal, telefone, placa, modelo_moto, cor_moto, categoria, estaAprovado]
+        );
+
+        if (estaAprovado) {
+            res.json({ success: true, message: 'Conta Criada com Sucesso!' });
+        } else {
+            res.json({ success: true, message: 'Cadastro enviado! Aguarde aprovação da administração.' });
+        }
+
+    } catch (err) {
+        console.error('Erro em /cadastro:', err);
+
+        // Tratamento de erro para Telefone ou Email duplicado (Chave Única)
+        if (err.code === '23505') { 
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Este número de telefone ou e-mail já está cadastrado no sistema.' 
+            });
+        }
+
+        res.status(500).json({ success: false, message: 'Erro interno ao cadastrar. Tente novamente.' });
     }
-
-    const result = await pool.query(
-      'INSERT INTO usuarios (nome, email, senha, tipo, telefone, placa, modelo_moto, cor_moto, categoria, aprovado) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id',
-      [nome, email, senha, tipoFinal, telefone, placa, modelo_moto, cor_moto, categoria, estaAprovado]
-    );
-
-    if (estaAprovado) {
-      res.json({ success: true, message: 'Conta Criada com Sucesso!' });
-    } else {
-      res.json({ success: true, message: 'Cadastro enviado! Aguarde aprovação.' });
-    }
-  } catch (err) {
-    console.error('Erro em /cadastro:', err && err.stack ? err.stack : err);
-    res.status(500).json({ success: false, message: 'Erro ao cadastrar. Email já existe?' });
-  }
 });
+
+
+
 
 app.post('/escolher-pagamento', async (req, res) => {
   try {
@@ -498,17 +518,35 @@ app.post('/login', async (req, res) => {
       'SELECT * FROM usuarios WHERE email = $1 AND senha = $2',
       [email, senha]
     );
+
     if (result.rows.length > 0) {
       const user = result.rows[0];
+
+      // 1. Admin sempre entra
       if (user.tipo === 'admin') return res.json({ success: true, user });
-      if (!user.aprovado)
-        return res.status(401).json({ success: false, message: 'Sua conta está em análise.' });
+
+      // 2. Trava de Aprovação (Cadastro Novo)
+      if (!user.aprovado) {
+        return res.status(401).json({ 
+          success: false, 
+          message: 'Sua conta está em análise pela administração.' 
+        });
+      }
+
+      // 3. Trava de Bloqueio por Dívida ou Telefone (status_conta = 2)
+      if (user.status_conta === 2) {
+        return res.status(403).json({ 
+          success: false, 
+          message: '🚫 ACESSO BLOQUEADO: Consta uma pendência financeira em seu número. Fale com o suporte.' 
+        });
+      }
+
       res.json({ success: true, user });
     } else {
       res.status(401).json({ success: false, message: 'Email ou senha incorretos.' });
     }
   } catch (err) {
-    console.error('Erro em /login:', err && err.stack ? err.stack : err);
+    console.error('Erro em /login:', err);
     res.status(500).json({ success: false, message: 'Erro no servidor' });
   }
 });
@@ -1409,6 +1447,23 @@ app.get('/mp-retorno', async (req, res) => {
     console.error('❌ Erro no retorno Mercado Pago:', err);
     return res.redirect('/cliente.html');
   }
+});
+
+// Rota para o ADM alterar o status do cliente (Aprovar, Bloquear por Dívida, etc)
+app.post('/admin/alterar-status-cliente', async (req, res) => {
+    const { id, novoStatusConta, aprovado } = req.body;
+    try {
+        // Se novoStatusConta for enviado, atualiza (ex: 2 para bloquear por dívida)
+        // Se aprovado for enviado, atualiza (ex: true para liberar cadastro novo)
+        await pool.query(
+            'UPDATE usuarios SET status_conta = COALESCE($1, status_conta), aprovado = COALESCE($2, aprovado) WHERE id = $3',
+            [novoStatusConta, aprovado, id]
+        );
+        res.json({ success: true, message: "Status do cliente atualizado!" });
+    } catch (err) {
+        console.error('Erro ao atualizar status do cliente:', err);
+        res.status(500).json({ success: false, message: "Erro no servidor" });
+    }
 });
 
 // ROTA PARA VERIFICAR STATUS DO PAGAMENTO
