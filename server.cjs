@@ -1576,6 +1576,16 @@ app.use(function onError(err, req, res, next) {
   res.end(res.sentry + "\n");
 });
 
+app.post('/admin/alterar-status', async (req, res) => {
+    const { id, aprovado } = req.body;
+    try {
+        await pool.query('UPDATE usuarios SET aprovado = $1 WHERE id = $2', [aprovado, id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao atualizar status' });
+    }
+});
+
 
 
 app.listen(port, () => {
@@ -1585,16 +1595,6 @@ app.listen(port, () => {
   console.log(`🌐 Frontend URL: ${FRONT_URL}`);
   console.log(`💰 Mercado Pago: ${process.env.MP_ACCESS_TOKEN ? 'Configurado' : 'Modo TESTE'}`);
   console.log('='.repeat(50));
-});
-
-app.post('/admin/alterar-status', async (req, res) => {
-    const { id, aprovado } = req.body;
-    try {
-        await pool.query('UPDATE usuarios SET aprovado = $1 WHERE id = $2', [aprovado, id]);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Erro ao atualizar status' });
-    }
 });
 
 
