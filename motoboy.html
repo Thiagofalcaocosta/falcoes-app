@@ -928,31 +928,37 @@ function abrirConversaZap() {
 // Variável para controlar o loop da vibração
 let loopVibracao = null;
 
-function tocarAlerta() {
-    // 1. Áudio
-    const audio = document.getElementById('som-alerta');
-    if (audio) {
-        audio.loop = true; 
-        audio.play().catch(e => console.warn("Áudio ainda bloqueado"));
-    }
+let loopAlertaGeral = null; // Variável global para controlar som + vibração
 
-    // 2. Vibração com Proteção
-    if ("vibrate" in navigator) {
-        try {
-            const padrao = [1000, 1000]; 
-            if (loopVibracao) clearInterval(loopVibracao);
-            
-            // O navegador só executará se houver "User Activation"
-            navigator.vibrate(padrao);
-            
-            loopVibracao = setInterval(() => {
-                navigator.vibrate(padrao);
-            }, 2000); 
-        } catch (e) {
-            console.warn("Vibração bloqueada pelo navegador: Requer interação prévia.");
+function tocarAlerta() {
+    const audio = document.getElementById('som-alerta');
+    
+    // Se o alerta já estiver rodando, não cria outro por cima
+    if (loopAlertaGeral) return; 
+
+    console.log("🔊 Iniciando Alerta Infinito (Som + Vibração)...");
+
+    const executarChamada = () => {
+        // 1. FORÇA O SOM
+        if (audio) {
+            audio.currentTime = 0; // Volta o som para o início toda vez
+            audio.play().catch(e => {
+                console.warn("Navegador bloqueou áudio. O motoboy precisa tocar na tela uma vez.");
+            });
         }
-    }
-    // ... restante do código de Notificação Push
+
+        // 2. FORÇA A VIBRAÇÃO
+        if ("vibrate" in navigator) {
+            navigator.vibrate([1000, 500, 1000]); // Vibra 1s, para 0.5s, vibra 1s
+        }
+    };
+
+    // Toca a primeira vez imediatamente
+    executarChamada();
+
+    // 3. CRIA O LOOP (Repete a cada 3 segundos)
+    // Se o seu som.mp3 for longo (ex: 10 segundos), mude 3000 para 10000.
+    loopAlertaGeral = setInterval(executarChamada, 3000); 
 }
 
 // ESTA FUNÇÃO É ESSENCIAL PARA PARAR O BARULHO
@@ -1845,6 +1851,7 @@ window.iniciarRadarCancelamento = function(idCorrida) {
             // SE DETECTAR CANCELAMENTO
             if (data.success && (data.status === 'cancelada' || data.status === 'cancelado')) {
                 clearInterval(window.radarIntervalo);
+                pararAlerta();
                 
                 // 1. Som e Vibração
                 if (typeof tocarAlerta === 'function') tocarAlerta();
@@ -1868,23 +1875,22 @@ window.iniciarRadarCancelamento = function(idCorrida) {
     }, 3000); // Verifica a cada 3 segundos
 }; 
 function pararAlerta() {
-    console.log("🛑 Silenciando som e vibração...");
-    
-    // 1. Para o Som
+    console.log("🛑 Silenciando alertas...");
+
+    // 1. Limpa o loop de repetição imediatamente
+    if (loopAlertaGeral) {
+        clearInterval(loopAlertaGeral);
+        loopAlertaGeral = null;
+    }
+
+    // 2. Para o som fisicamente
     const audio = document.getElementById('som-alerta');
     if (audio) {
         audio.pause();
         audio.currentTime = 0;
-        audio.loop = false;
     }
 
-    // 2. Para a Vibração
-    if (loopVibracao) {
-        clearInterval(loopVibracao);
-        loopVibracao = null;
-    }
-    
-    // Força o navegador a parar qualquer vibração ativa agora
+    // 3. Interrompe a vibração
     if ("vibrate" in navigator) {
         navigator.vibrate(0);
     }
