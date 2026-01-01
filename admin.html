@@ -266,7 +266,7 @@
         } catch (err) { console.error(err); }
     }
 
-  async function gerarRelatorio() {
+ async function gerarRelatorio() {
     const inicioInput = document.getElementById('filtro-data-inicio').value;
     const fimInput = document.getElementById('filtro-data-fim').value;
 
@@ -278,17 +278,18 @@
         
         if (!data.historico || data.historico.length === 0) return alert("Nenhum dado recebido.");
 
+        // TESTE DE CAMPO: Verifica se a data existe no primeiro item
+        if (!data.historico[0].data_hora) {
+            console.error("ERRO CRÍTICO: O campo 'data_hora' não existe no JSON enviado pelo servidor.");
+            return alert("Erro: O servidor não está enviando a data das corridas. Verifique sua consulta SQL no Backend.");
+        }
+
         const filtrados = data.historico.filter(item => {
-            // Tenta todas as variações de nome de campo de data que podem vir do banco
-            const dataRaw = item.data_hora || item.data || item.created_at || item.datahora;
+            const dataRaw = item.data_hora;
             const statusRaw = item.status || "";
 
-            if (!dataRaw) return false;
-
-            // Limpa a data para YYYY-MM-DD ignorando fuso horário e horas
+            // Limpa a data com segurança
             const dataBanco = dataRaw.substring(0, 10);
-            
-            // Normaliza o status para bater com o banco ("concluida")
             const statusNormalizado = statusRaw.trim().toLowerCase();
 
             return dataBanco >= inicioInput && 
@@ -297,14 +298,14 @@
         });
 
         if (filtrados.length === 0) {
-            alert("Nenhuma corrida encontrada. Verifique se a data no calendário é 01/01/2026.");
+            alert(`Nenhuma corrida encontrada. Data no banco: ${data.historico[0].data_hora.substring(0,10)}`);
         }
 
         dadosRelatorioGlobal = filtrados;
         exibirDadosRelatorio(filtrados);
     } catch (err) {
-        console.error("Erro:", err);
-        alert("Erro ao carregar dados.");
+        console.error("Erro detalhado:", err);
+        alert("Erro ao processar. Verifique o console F12.");
     }
 }
     function exibirDadosRelatorio(dados) {

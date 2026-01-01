@@ -910,13 +910,11 @@ app.post('/motoboy/status-online', async (req, res) => {
 
 app.get('/admin/dashboard', async (req, res) => {
   try {
-    // 1. Contagens básicas (que você já tinha)
+    // 1. Contagens básicas
     const hoje = await pool.query('SELECT COUNT(*) FROM corridas WHERE data_hora::date = CURRENT_DATE');
     const mes = await pool.query('SELECT COUNT(*) FROM corridas WHERE EXTRACT(MONTH FROM data_hora) = EXTRACT(MONTH FROM CURRENT_DATE)');
     
-    // 2. LÓGICA FINANCEIRA: Calcula quanto você (ADM) tem a receber (15% de taxa)
-    // Se foi em DINHEIRO, o motoboy te deve a taxa.
-    // Se foi em PIX, a taxa já é sua.
+    // 2. LÓGICA FINANCEIRA
     const financeiro = await pool.query(`
       SELECT 
         SUM(valor * 0.15) FILTER (WHERE forma_pagamento = 'DINHEIRO' AND status = 'concluida') as a_receber,
@@ -924,21 +922,21 @@ app.get('/admin/dashboard', async (req, res) => {
       FROM corridas
     `);
 
-    // 3. Histórico com a forma de pagamento incluída
+    // 3. HISTÓRICO CORRIGIDO (Adicionado c.data_hora)
     const historico = await pool.query(`
-      SELECT c.id, c.origem, c.destino, c.valor, c.tipo_servico, c.status, c.forma_pagamento,
-             u.nome AS nome_motoboy
+      SELECT c.id, c.origem, c.destino, c.valor, c.tipo_servico, c.status, 
+             c.forma_pagamento, c.data_hora, u.nome AS nome_motoboy
       FROM corridas c
       LEFT JOIN usuarios u ON c.motoboy_id = u.id
       ORDER BY c.id DESC
-      LIMIT 10
-    `);
+      LIMIT 100
+    `); // Aumentei o LIMIT para 100 para que o relatório tenha mais dados para buscar
 
     res.json({
       total_hoje: hoje.rows[0].count,
       total_mes: mes.rows[0].count,
       faturamento_valor_hoje: financeiro.rows[0].faturamento_total || 0,
-      saldo_adm_a_receber: financeiro.rows[0].a_receber || 0, // O que os motoboys te devem
+      saldo_adm_a_receber: financeiro.rows[0].a_receber || 0,
       historico: historico.rows,
     });
   } catch (err) {
