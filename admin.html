@@ -266,7 +266,7 @@
         } catch (err) { console.error(err); }
     }
 
-   async function gerarRelatorio() {
+  async function gerarRelatorio() {
     const inicioInput = document.getElementById('filtro-data-inicio').value;
     const fimInput = document.getElementById('filtro-data-fim').value;
 
@@ -276,45 +276,35 @@
         const res = await fetch(`${MEU_IP}/admin/dashboard`);
         const data = await res.json();
         
-        if (!data.historico || data.historico.length === 0) {
-            return alert("O servidor não retornou nenhum histórico.");
-        }
+        if (!data.historico || data.historico.length === 0) return alert("Nenhum dado recebido.");
 
         const filtrados = data.historico.filter(item => {
-            // Tenta encontrar a data em diferentes nomes de campo possíveis
-            const dataRaw = item.data_hora || item.data || item.created_at;
-            if (!dataRaw || !item.status) return false;
+            // Tenta todas as variações de nome de campo de data que podem vir do banco
+            const dataRaw = item.data_hora || item.data || item.created_at || item.datahora;
+            const statusRaw = item.status || "";
 
-            // 1. Tratamento de Data Universal
-            // Converte qualquer formato para YYYY-MM-DD
-            const dataObjeto = new Date(dataRaw);
-            const ano = dataObjeto.getFullYear();
-            const mes = String(dataObjeto.getMonth() + 1).padStart(2, '0');
-            const dia = String(dataObjeto.getDate()).padStart(2, '0');
-            const dataBancoFormatada = `${ano}-${mes}-${dia}`;
+            if (!dataRaw) return false;
 
-            // 2. Normalização de Status (remove acentos e espaços)
-            const statusNormalizado = item.status.trim().toLowerCase()
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
+            // Limpa a data para YYYY-MM-DD ignorando fuso horário e horas
+            const dataBanco = dataRaw.substring(0, 10);
+            
+            // Normaliza o status para bater com o banco ("concluida")
+            const statusNormalizado = statusRaw.trim().toLowerCase();
 
-            // 3. Verificação no Console (Apenas para você ver no F12 se está batendo)
-            console.log(`Comparando: ${dataBancoFormatada} com ${inicioInput} | Status: ${statusNormalizado}`);
-
-            const dataBate = dataBancoFormatada >= inicioInput && dataBancoFormatada <= fimInput;
-            const statusBate = statusNormalizado === 'concluida';
-
-            return dataBate && statusBate;
+            return dataBanco >= inicioInput && 
+                   dataBanco <= fimInput && 
+                   statusNormalizado === "concluida";
         });
 
         if (filtrados.length === 0) {
-            alert("Nenhuma corrida concluída encontrada para este período. Verifique se o status no banco é 'concluida'.");
+            alert("Nenhuma corrida encontrada. Verifique se a data no calendário é 01/01/2026.");
         }
 
         dadosRelatorioGlobal = filtrados;
         exibirDadosRelatorio(filtrados);
     } catch (err) {
-        console.error("Erro detalhado:", err);
-        alert("Erro ao processar relatório. Verifique o console (F12).");
+        console.error("Erro:", err);
+        alert("Erro ao carregar dados.");
     }
 }
     function exibirDadosRelatorio(dados) {
