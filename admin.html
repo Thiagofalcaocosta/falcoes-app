@@ -97,6 +97,8 @@
             <div class="card-stat card-adm"><span class="stat-titulo">Lucro Adm (Hoje)</span><span class="stat-valor" id="faturamento-adm-hoje">R$ 0,00</span></div>
             <div class="card-stat card-dinheiro"><span class="stat-titulo">Dinheiro na Rua</span><span class="stat-valor" id="saldo-rua-hoje" style="color: var(--warning-color)">R$ 0,00</span></div>
             <div class="card-stat"><span class="stat-titulo">Pilotos Ativos</span><span class="stat-valor" id="total-pilotos-dashboard">0</span></div>
+            <div class="card-stat"><span class="stat-titulo">Clientes Totais</span><span class="stat-valor" id="total-clientes-dashboard" style="color: var(--info-color)">0</span></div>
+</div>
             <div class="card-stat"><span class="stat-titulo">Total Bruto</span><span class="stat-valor" id="total-bruto-hoje" style="color: var(--info-color)">R$ 0,00</span></div>
         </div>
         <h3 style="color: #666; font-size: 14px; margin-bottom: 12px; text-transform: uppercase;"><i class="fas fa-history"></i> Pedidos Recentes</h3>
@@ -211,6 +213,12 @@
             const resM = await fetch(`${MEU_IP}/admin/motoboys`);
             const motos = await resM.json();
             document.getElementById('total-pilotos-dashboard').innerText = motos.length;
+            // BUSCA CONTAGEM DE CLIENTES (O QUE VOCÊ PEDIU)
+        const resC = await fetch(`${MEU_IP}/admin/clientes`);
+        const clientes = await resC.json();
+        document.getElementById('total-clientes-dashboard').innerText = clientes.length;
+
+
         } catch (e) { console.error("Erro dashboard:", e); }
     }
 
