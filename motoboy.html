@@ -638,24 +638,35 @@
     </div>
 
 
-    <div class="container">
-  <div class="header">
-    <img src="assets/logo.png" alt="Logo" class="logo-pequeno">
-    
-    <span id="msg-ola" class="moto-saudacao">OLÁ, ROBERTO</span>
-
-    <div class="saldo-wrapper card-verde" id="card-saldo-neon">
-        <span class="label-mini">Saldo em Conta</span>
-        <div id="saldo-piloto">R$ 0,00</div>
-    </div>
-
-    <div class="botoes-row">
-        <span id="status-online-indicator" class="status-moto">● ONLINE</span>
-        <a href="index.html" class="logout" onclick="deslogar()" style="margin:0; padding: 5px 15px; border-radius: 20px;">SAIR</a>
-    </div>
+    <div id="camada-ativacao" onclick="ativarRecursos()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;">
+    <i class="fas fa-mouse-pointer" style="font-size: 50px; color: #00e640; margin-bottom: 20px;"></i>
+    <h2 style="color: white; text-align: center; font-weight: 900;">TOQUE PARA ATIVAR<br><span style="font-size: 14px; color: #888; font-weight: 400;">(Sons e tela sempre acesa)</span></h2>
 </div>
 
-        <span id="label-categoria" class="categoria-badge">CATEGORIA: --</span>
+<div class="container">
+    <div class="header" style="padding-top: 20px;">
+        <img src="assets/logo.png" alt="Logo" class="logo-pequeno">
+        
+        <span id="msg-ola" class="moto-saudacao" style="margin-top: 15px;">OLÁ, ROBERTO</span>
+
+        <div style="margin: 10px 0;">
+            <span style="font-size: 11px; color: #888; font-weight: bold; letter-spacing: 1px;">CATEGORIA:</span>
+            <span id="label-categoria" style="color: #00e640; font-weight: 900; background: rgba(0, 230, 64, 0.15); padding: 4px 12px; border-radius: 5px; text-transform: uppercase; border: 1px solid rgba(0, 230, 64, 0.3); margin-left: 5px;">--</span>
+        </div>
+
+        <div class="saldo-wrapper card-verde" id="card-saldo-neon" style="margin-bottom: 5px;">
+            <span class="label-mini">Saldo em Conta</span>
+            <div id="saldo-piloto">R$ 0,00</div>
+            
+            <button onclick="solicitarPagamentoAdm()" style="background: #25d366; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 900; font-size: 11px; margin-top: 10px; cursor: pointer; width: 100%; text-transform: uppercase;">
+                <i class="fab fa-whatsapp"></i> Solicitar Pagamento
+            </button>
+        </div>
+
+        <div class="botoes-row">
+            <a href="index.html" class="logout" onclick="deslogar()" style="margin:0; padding: 5px 25px; border-radius: 20px; border-color: #555; color: #888;">SAIR DO APP</a>
+        </div>
+    </div>
 
         <div id="tela-lista">
             <h2 style="text-align:center; color:var(--neon-green)">CORRIDAS DISPONÍVEIS</h2>
@@ -1903,6 +1914,45 @@ async function pedirPermissaoNotificacao() {
     } else {
         alert('Você precisa permitir as notificações para receber corridas!');
     }
+}
+
+// 1. FUNÇÃO PARA SOLICITAR PAGAMENTO (WHATSAPP DO ADM)
+function solicitarPagamentoAdm() {
+    const nomePiloto = document.getElementById('msg-ola').innerText.replace('OLÁ, ', '');
+    const saldo = document.getElementById('saldo-piloto').innerText;
+    const numAdm = "5535997806080"; // Seu número configurado
+    
+    const texto = `*FALCÕES APP - FINANCEIRO* 🦅\n\n` +
+                  `Olá, Admin!\n` +
+                  `Sou o piloto *${nomePiloto}*.\n` +
+                  `Gostaria de solicitar a retirada do meu saldo atual: *${saldo}*.\n\n` +
+                  `Pode verificar para mim?`;
+                  
+    window.open(`https://api.whatsapp.com/send?phone=${numAdm}&text=${encodeURIComponent(texto)}`, '_blank');
+}
+
+// 2. FUNÇÃO DE ATIVAÇÃO OBRIGATÓRIA (Destrava tudo no primeiro toque)
+async function ativarRecursos() {
+    // Esconde a tela de ativação
+    document.getElementById('camada-ativacao').style.display = 'none';
+    
+    // Tenta ativar a tela sempre acesa (Wake Lock)
+    if (typeof ativarWakeLock === "function") {
+        await ativarWakeLock();
+    }
+    
+    // Toca e para o som mudo para "acordar" o áudio do celular
+    const audio = document.getElementById('som-alerta');
+    if(audio) {
+        audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            console.log("🔊 Áudio desbloqueado com sucesso!");
+        }).catch(() => {});
+    }
+    
+    // Inicia o status online
+    enviarStatusOnline(true);
 }
  
 </script>
