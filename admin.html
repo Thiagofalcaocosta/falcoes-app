@@ -239,18 +239,46 @@
         } catch (e) { console.error("Erro pendentes:", e); }
     }
 
-    async function carregarMotoboysAtivos() {
-        try {
-            const res = await fetch(`${MEU_IP}/admin/motoboys`);
-            const data = await res.json();
-            document.getElementById('container-motoboys-ativos').innerHTML = data.map(m => `
-                <div class="card-user-gestao user-item">
-                    <button onclick="removerUsuario(${m.id},'motoboy')" style="float:right; background:none; border:none; color:#444; cursor:pointer;"><i class="fas fa-trash"></i></button>
-                    <span class="user-name">${m.nome}</span>
-                    <span class="user-sub">${m.email} | ${m.telefone || 'Sem Tel'}</span>
-                </div>`).join('');
-        } catch (e) { console.error(e); }
+    // Substitua a listagem de motoboys para incluir o botão de Ativar/Desativar
+async function carregarMotoboysAtivos() {
+    try {
+        const res = await fetch(`${MEU_IP}/admin/motoboys`);
+        const data = await res.json();
+        document.getElementById('container-motoboys-ativos').innerHTML = data.map(m => `
+            <div class="card-user-gestao user-item" style="border-left-color: ${m.aprovado ? 'var(--neon-green)' : 'var(--danger-color)'}">
+                <button onclick="removerUsuario(${m.id},'motoboy')" style="float:right; background:none; border:none; color:#444; margin-left:10px;"><i class="fas fa-trash"></i></button>
+                <button onclick="alternarStatus(${m.id}, ${m.aprovado})" style="float:right; background:none; border:none; color:${m.aprovado ? 'var(--warning-color)' : 'var(--neon-green)'}; font-size:12px; font-weight:bold;">
+                    ${m.aprovado ? 'DESATIVAR' : 'ATIVAR'}
+                </button>
+                <span class="user-name">${m.nome}</span>
+                <span class="user-sub">${m.telefone || 'Sem Tel'}</span>
+            </div>`).join('');
+    } catch (e) { console.error(e); }
+}
+
+// Nova função para mudar o status sem abrir o banco
+async function alternarStatus(id, statusAtual) {
+    const novoStatus = !statusAtual; // Se era TRUE vira FALSE, e vice-versa
+    const acao = novoStatus ? "Ativar" : "Desativar";
+    
+    if(!confirm(`Deseja ${acao} este usuário?`)) return;
+
+    try {
+        const res = await fetch(`${MEU_IP}/admin/alterar-status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, aprovado: novoStatus })
+        });
+        
+        if (res.ok) {
+            carregarMotoboysAtivos();
+            carregarClientes();
+            if(typeof carregarPendentes === "function") carregarPendentes();
+        }
+    } catch (e) {
+        alert("Erro ao mudar status.");
     }
+}
 
     async function carregarClientes() {
         try {

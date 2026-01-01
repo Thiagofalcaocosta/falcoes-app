@@ -1587,5 +1587,15 @@ app.listen(port, () => {
   console.log('='.repeat(50));
 });
 
+app.post('/admin/alterar-status', async (req, res) => {
+    const { id, aprovado } = req.body;
+    try {
+        await pool.query('UPDATE usuarios SET aprovado = $1 WHERE id = $2', [aprovado, id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao atualizar status' });
+    }
+});
+
 
 
