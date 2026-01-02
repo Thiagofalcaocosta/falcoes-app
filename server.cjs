@@ -905,6 +905,10 @@ app.get('/mensagens/:id', async (req, res) => {
 app.post('/motoboy/status-online', async (req, res) => {
   const { motoboy_id, online, latitude, longitude } = req.body;
 
+  // --- CONFIGURAÇÃO DO LIMITE DE DÍVIDA ---
+  const LIMITE_DEVEDOR = -50.00; // Se dever mais que 50 reais, trava.
+  // ----------------------------------------
+
   if (!motoboy_id || typeof online === 'undefined') {
     return res
       .status(400)
@@ -917,12 +921,39 @@ app.post('/motoboy/status-online', async (req, res) => {
   }
 
   try {
-    // 🔹 LIMPA BLOQUEIO VENCIDO
+    // 1. BUSCA O USUÁRIO E O SALDO ATUAL (Passo Novo Importante)
+    const usuarioRes = await pool.query('SELECT saldo, bloqueado_ate FROM usuarios WHERE id = $1', [idNum]);
+    
+    if (usuarioRes.rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Motoboy não encontrado.' });
+    }
+
+    const usuario = usuarioRes.rows[0];
+    const saldoAtual = parseFloat(usuario.saldo || 0);
+
+    // 2. VERIFICAÇÃO DE DÍVIDA (A Trava de Segurança)
+    // Só verificamos se ele estiver tentando ficar ONLINE
+    if (online && saldoAtual < LIMITE_DEVEDOR) {
+        console.log(`🚫 Bloqueio Financeiro: Motoboy ${idNum} deve R$ ${saldoAtual}`);
+        
+        // Força ele a ficar offline no banco também, por garantia
+        await pool.query('UPDATE usuarios SET online_ate = NULL WHERE id = $1', [idNum]);
+
+        return res.json({ 
+            success: false, 
+            bloqueado_financeiro: true, // O Front deve ler isso e abrir a tela de Pix
+            saldo_devedor: saldoAtual,
+            message: `Você atingiu o limite de dívida (R$ ${saldoAtual.toFixed(2)}). Realize um pagamento para ficar online.` 
+        });
+    }
+
+    // 🔹 LIMPA BLOQUEIO VENCIDO (Se for bloqueio de tempo/punição)
     await pool.query(
       "UPDATE usuarios SET bloqueado_ate = NULL WHERE id = $1 AND bloqueado_ate < NOW()",
       [idNum]
     );
 
+    // Lógica Original de Atualização de Coordenadas
     const lat =
       latitude === null || latitude === undefined ? null : Number(latitude);
     const lng =

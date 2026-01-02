@@ -675,6 +675,39 @@
             </div>
         </div>
     </div>
+    <div id="modalFinanceiro" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 10001;">
+    <div class="modal-box" style="background: white; border: 2px solid #d32f2f; max-width: 90%; width: 380px; text-align: center; border-radius: 15px; box-shadow: 0 0 50px rgba(0,0,0,0.8);">
+        
+        <div style="font-size: 50px; margin-bottom: 10px;">🚫</div>
+        
+        <h2 style="color: #d32f2f; font-size: 24px; font-weight: 900; margin: 0; font-family: sans-serif; text-transform: uppercase;">
+            ACESSO BLOQUEADO
+        </h2>
+        
+        <p style="color: #333; font-size: 16px; margin-top: 10px; font-family: sans-serif; line-height: 1.4;">
+            Seu saldo devedor atingiu o limite.<br>
+            Para voltar a receber corridas, realize o pagamento.
+        </p>
+
+        <div style="background: #ffebee; border: 1px solid #ffcdd2; border-radius: 8px; padding: 15px; margin: 15px 0;">
+            <span style="display: block; font-size: 12px; color: #d32f2f; font-weight: bold; text-transform: uppercase;">VOCÊ DEVE:</span>
+            <span id="textoValorDivida" style="display: block; font-size: 32px; color: #d32f2f; font-weight: 900;">R$ 0,00</span>
+        </div>
+
+        <p style="font-size: 14px; color: #555; margin-bottom: 5px; font-weight: bold;">Chave Pix (Copie abaixo):</p>
+        
+        <input type="text" id="inputPix" value="SEU_PIX_AQUI@FALCOES.COM" readonly 
+               style="width: 100%; padding: 12px; text-align: center; border: 2px solid #ccc; border-radius: 8px; background: #eee; font-weight: bold; font-size: 16px; color: #333; margin-bottom: 15px;">
+
+        <button onclick="copiarChavePix()" style="width: 100%; padding: 15px; background: #2e7d32; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 900; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+            COPIAR CHAVE PIX
+        </button>
+
+        <button onclick="fecharModalFinanceiro()" style="width: 100%; padding: 15px; background: #777; color: white; border: none; border-radius: 8px; font-size: 14px; margin-top: 10px; cursor: pointer; font-weight: bold;">
+            JÁ PAGUEI / ATUALIZAR
+        </button>
+    </div>
+</div>
 
 
     <div id="camada-ativacao" onclick="ativarRecursos()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;">
@@ -1104,23 +1137,67 @@ function abrirGPS(tipo) {
 
 async function enviarStatusOnline(online) {
     const agora = Date.now();
-    // Agora só envia para o banco se passou mais de 60 segundos (1 minuto)
+    
+    // --- SEU CÓDIGO ORIGINAL (Mantido) ---
+    // Só envia se passou 60 segundos
     if (agora - ultimoEnvioStatus < 60000) return; 
 
     try {
         const response = await fetch(`${MEU_IP}/motoboy/status-online`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            // --- SEU PAYLOAD ORIGINAL (Mantido) ---
             body: JSON.stringify({ motoboy_id: usuario?.id, online: online })
         });
         
+        // --- NOVA LÓGICA (Para ler o bloqueio) ---
+        // Precisamos ler a resposta do servidor para saber se tem dívida
+        const data = await response.json();
+
+        // 1. CHECA SE VEIO O BLOQUEIO FINANCEIRO
+        if (data.success === false && data.bloqueado_financeiro) {
+            console.warn("🚫 BLOQUEADO POR DÍVIDA");
+
+            // Formata o valor para dinheiro (Ex: R$ 55,90)
+            const valorFormatado = parseFloat(data.saldo_devedor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            // Preenche o Modal Vermelho
+            const elValor = document.getElementById('textoValorDivida');
+            if (elValor) elValor.innerText = valorFormatado;
+
+            // Mostra o Modal
+            const elModal = document.getElementById('modalFinanceiro');
+            if (elModal) elModal.style.display = 'flex';
+
+            // TRAVA O LOOP: Para de tentar ficar online automaticamente
+            if (onlineInterval) clearInterval(onlineInterval);
+            
+            return; // Sai da função aqui, não executa o sucesso
+        }
+
+        // --- SEU CÓDIGO ORIGINAL DE SUCESSO (Mantido) ---
         if (response.ok) {
             ultimoEnvioStatus = agora;
             console.log("🟢 Status atualizado no banco (1 min).");
         }
+
     } catch (err) {
-        // Erro silencioso
+        // Erro silencioso (Mantido)
+        // console.error(err); // Descomente se quiser ver erros no futuro
     }
+}
+
+// --- FUNÇÕES AUXILIARES DO MODAL (Cole logo abaixo da função acima) ---
+function copiarChavePix() {
+    var copyText = document.getElementById("inputPix");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    alert("✅ Chave Pix copiada!");
+}
+
+function fecharModalFinanceiro() {
+    window.location.reload(); // Recarrega para validar se o pagamento caiu
 }
     /***********************
      *  CONTROLE DE FLUXO E TELAS
@@ -1306,35 +1383,71 @@ function preencherDadosAtiva(c) {
             } 
             
             // --- AQUI ESTÁ A MUDANÇA VISUAL (AGUARDANDO PAGAMENTO) ---
-            else if (statusCorrida === 'aguardando_pagamento' || statusCorrida === 'aceita') {
-                pararMonitoramentoAtiva();
-                monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); 
+            // ...dentro do seu if/else if principal...
 
-                mostrarTela('lista'); // Usa a tela de lista como base
-                const container = document.getElementById('lista-corridas');
+else if (statusCorrida === 'aguardando_pagamento' || statusCorrida === 'aceita') {
+    pararMonitoramentoAtiva();
+    monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); 
+
+    mostrarTela('lista'); 
+    const container = document.getElementById('lista-corridas');
+    
+    if (container) {
+        // --- NOVO: LÓGICA DO TEMPO (Relógio Invisível) ---
+        // 1. Salva a hora que começou a esperar
+        if (!sessionStorage.getItem('inicio_espera_pagamento')) {
+            sessionStorage.setItem('inicio_espera_pagamento', Date.now());
+        }
+
+        // 2. Calcula se já passou 5 minutos
+        const inicio = parseInt(sessionStorage.getItem('inicio_espera_pagamento'));
+        const agora = Date.now();
+        const tempoPassado = agora - inicio;
+        const cincoMinutos = 5 * 60 * 1000; // 5 minutos em milissegundos
+
+        // 3. Define se mostra o botão ou não
+        const displayBotao = tempoPassado > cincoMinutos ? 'block' : 'none';
+
+        // --- SEU HTML ORIGINAL + O BOTÃO ESCONDIDO ---
+        container.innerHTML = `
+            <div class="card-espera-gold">
+                <div class="spinner-gold"></div>
                 
-                if (container) {
-                    // Novo HTML com Spinner Dourado e Card Pulsante
-                    container.innerHTML = `
-                        <div class="card-espera-gold">
-                            <div class="spinner-gold"></div>
-                            
-                            <div class="titulo-espera">
-                                AGUARDANDO LIBERAÇÃO
-                            </div>
-                            
-                            <div class="desc-espera">
-                                O cliente está finalizando o pagamento.<br>
-                                <span style="font-size:12px; color:#aaa; display:block; margin-top:10px;">
-                                    Não saia desta tela. Você será notificado assim que for 
-                                    <strong style="color:#ffd700">LIBERADA</strong>.
-                                </span>
-                            </div>
-                        </div>
-                    `;
-                }
-                return;
-            }
+                <div class="titulo-espera">
+                    AGUARDANDO LIBERAÇÃO
+                </div>
+                
+                <div class="desc-espera">
+                    O cliente está finalizando o pagamento.<br>
+                    <span style="font-size:12px; color:#aaa; display:block; margin-top:10px;">
+                        Não saia desta tela. Você será notificado assim que for 
+                        <strong style="color:#ffd700">LIBERADA</strong>.
+                    </span>
+                </div>
+
+                <div id="btn-cancelar-demora" style="display: ${displayBotao}; margin-top: 20px; border-top: 1px solid #333; padding-top: 15px; animation: fadeIn 1s;">
+                    <p style="color: #ff4444; font-size: 11px; font-weight: bold; margin-bottom: 10px;">
+                        DEMORANDO MUITO?
+                    </p>
+                    <button onclick="cancelarPorDemoraPagamento()" style="
+                        background: rgba(255, 68, 68, 0.1); 
+                        border: 1px solid #ff4444; 
+                        color: #ff4444; 
+                        padding: 12px; 
+                        width: 100%; 
+                        border-radius: 8px; 
+                        font-size: 12px; 
+                        font-weight: 900; 
+                        cursor: pointer;
+                        text-transform: uppercase;">
+                        🚫 CANCELAR E LIBERAR TELA
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    return;
+}
             // ---------------------------------------------------------
         }
         
@@ -1989,6 +2102,41 @@ if ('serviceWorker' in navigator && 'PushManager' in window) {
         });
     });
 }
+async function cancelarPorDemoraPagamento() {
+    if (!confirm("O cliente não pagou e você deseja cancelar para ficar livre?")) return;
+
+    try {
+        // Limpa o timer da sessão para a próxima corrida não começar bugada
+        sessionStorage.removeItem('inicio_espera_pagamento');
+
+        // Usa o ID da corrida atual que está travada
+        const idParaCancelar = idCorridaAtual; 
+
+        const res = await fetch(`${MEU_IP}/cancelar-pedido`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: idParaCancelar,
+                motivo: '[SISTEMA] Cliente demorou pagar (Cancelado pelo Motoboy)',
+                cancelado_por: 'motoboy',
+                motoboy_id: usuario.id
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("Você foi liberado dessa corrida!");
+            window.location.reload();
+        } else {
+            alert("Erro ao cancelar. Tente novamente.");
+        }
+
+    } catch (err) {
+        console.error("Erro:", err);
+        alert("Erro de conexão.");
+    }
+}
 
 // Função para pedir permissão ao piloto (Chame isso ao clicar em "Ficar Online")
 async function pedirPermissaoNotificacao() {
@@ -1999,6 +2147,7 @@ async function pedirPermissaoNotificacao() {
         alert('Você precisa permitir as notificações para receber corridas!');
     }
 }
+
 
 // 1. FUNÇÃO PARA SOLICITAR PAGAMENTO (WHATSAPP DO ADM)
 function solicitarPagamentoAdm() {
