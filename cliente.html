@@ -2769,45 +2769,29 @@ async function verificarStatus(id) {
         // --- Lógica de Estados ---
 
         // 🔴 CANCELADA
+        // 🔴 CANCELADA (CORREÇÃO DO LOOP)
         if (pedido.status === 'cancelada') {
             if (intervaloVerificacao) clearInterval(intervaloVerificacao);
             if (timerBuscaInterval) clearInterval(timerBuscaInterval);
-            // --- CÓDIGO NOVO: O ALERTA NA TELA DO CLIENTE ---
-            // Verifica se o modal de pagamento estava aberto e fecha
+            
+            // 1. FECHA O MODAL DE PAGAMENTO SE TIVER ABERTO
             const modalPag = document.getElementById('modal-pagamento');
             if(modalPag) {
                 modalPag.classList.remove('show');
                 modalPag.style.display = 'none';
             }
 
-            // Toca um som de erro/alerta se quiser
-            // const audioErro = new Audio('assets/som_erro.mp3'); audioErro.play();
+            // 2. IMPORTANTE: LIMPA A MEMÓRIA PARA NÃO ENTRAR EM LOOP
+            localStorage.removeItem('idPedidoAtual'); 
+            localStorage.removeItem('pedidoAtual');
+            localStorage.removeItem('inicioBuscaTimestamp');
+            idPedidoAtual = null; // Zera a variável global também
 
-            // Mostra o alerta na tela explicando o motivo
-            alert("🚫 PEDIDO CANCELADO\n\n" + (pedido.motivo || "Tempo limite excedido ou cancelado pelo piloto."));
+            // 3. MOSTRA O ALERTA E DEPOIS REINICIA
+            alert("🚫 PEDIDO CANCELADO\n\n" + (pedido.motivo || "Cancelado pelo sistema ou piloto."));
             
-            // Recarrega a página para limpar tudo
-            window.location.reload();
-            return; // Para a execução aqui
-            // -
-            
-            if (statusArea) statusArea.setAttribute('style', 'background: rgba(255, 68, 68, 0.15) !important; border: 1px solid #ff4444 !important;');
-            if (statusTitulo) { statusTitulo.style.color = '#ff4444'; statusTitulo.innerText = "PEDIDO CANCELADO ❌"; }
-            if (statusDesc) statusDesc.innerText = "Esta corrida foi cancelada.";
-            
-            if (motoboyBox) motoboyBox.style.display = 'none';
-            if (btnWpp) btnWpp.style.display = 'none';
-            if (btnTaxa) btnTaxa.style.display = 'none';
-            if (btnCancelBusca) btnCancelBusca.style.display = 'none';
-
-            const areaEstorno = document.getElementById('area-estorno-adm');
-            if(areaEstorno) areaEstorno.style.display = 'block';
-            
-            if(btnFechar) {
-                btnFechar.style.display = 'block';
-                btnFechar.innerText = "FAZER NOVO PEDIDO";
-                btnFechar.onclick = reiniciarApp;
-            }
+            window.location.href = 'index.html'; // Força ir para o início
+            return; 
         }
 
         // 🔵 PENDENTE (BUSCANDO - NOVO VISUAL AZUL)
