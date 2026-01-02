@@ -1403,7 +1403,7 @@ else if (statusCorrida === 'aguardando_pagamento' || statusCorrida === 'aceita')
         const inicio = parseInt(sessionStorage.getItem('inicio_espera_pagamento'));
         const agora = Date.now();
         const tempoPassado = agora - inicio;
-        const cincoMinutos = 10 * 1000; // 5 minutos em milissegundos
+        const cincoMinutos = 3 * 60 * 1000; // 5 minutos em milissegundos
 
         // 3. Define se mostra o botão ou não
         const displayBotao = tempoPassado > cincoMinutos ? 'block' : 'none';
