@@ -1072,18 +1072,30 @@ function mostrarTela(idDesejado) {
      ***********************/
 
     // Abre o Google Maps ou Waze
-    function abrirGPS(tipo) {
-        const endereco = tipo === 'origem' 
-            ? document.getElementById('ativa-origem').innerText 
-            : document.getElementById('ativa-destino').innerText;
-        
-        if (endereco && endereco !== '--') {
-            // No PC abre o Maps no navegador, no celular abre o App direto
-            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
-            window.open(url, '_blank');
-        }
-    }
+    // Abre o Google Maps ou Waze (CORRIGIDO PARA REMOVER O ITEM)
+// Abre o Google Maps ou Waze (Versão que limpa o ITEM apenas para o GPS)
+function abrirGPS(tipo) {
+    // 1. Pega o texto completo que está na tela (incluindo o ITEM)
+    let enderecoCompleto = tipo === 'origem' 
+        ? document.getElementById('ativa-origem').innerText 
+        : document.getElementById('ativa-destino').innerText;
 
+    if (enderecoCompleto && enderecoCompleto !== '--') {
+        
+        // 2. Limpeza inteligente apenas para o link do GPS
+        // A função .split('(') divide o texto onde tiver um parentese.
+        // O [0] pega apenas a primeira parte (o endereço) e ignora o resto (o item).
+        let enderecoLimpo = enderecoCompleto.split('(')[0];
+
+        // Remove espaços vazios que podem sobrar no final (ex: "Rua X, 123 ")
+        enderecoLimpo = enderecoLimpo.trim();
+
+        // 3. Cria o link usando o endereço LIMPO, mas o motoboy continua vendo o completo na tela
+        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoLimpo)}`;
+        
+        window.open(url, '_blank');
+    }
+}
     /***********************
      *  FUNÇÕES DE STATUS ONLINE
      ***********************/
@@ -1451,16 +1463,55 @@ function criarCardCorrida(corrida) {
     // 2. Funçãozinha para tentar destacar o bairro em Neon
     // Ela pega tudo depois da primeira vírgula e coloca na classe neon
     const formatarEndereco = (texto) => {
-        if (!texto) return "--";
-        const partes = texto.split(',');
-        if (partes.length > 1) {
-            // A primeira parte é a rua, o resto pintamos de neon
-            const rua = partes[0];
-            const resto = partes.slice(1).join(','); 
-            return `${rua}, <span class="bairro-neon">${resto}</span>`;
+    if (!texto) return "--";
+
+    // --- CENÁRIO 1: TEM ITEM (Identificado pelo parênteses) ---
+    if (texto.includes('(')) {
+        const partesItem = texto.split('(');
+        let enderecoBase = partesItem[0]; // A parte da rua
+        let itemTexto = partesItem[1].replace(')', ''); // O texto do item sem o parentese final
+
+        // Formata o Bairro Neon na parte do endereço
+        const partesEnd = enderecoBase.split(',');
+        if (partesEnd.length > 1) {
+            const rua = partesEnd[0];
+            const resto = partesEnd.slice(1).join(',');
+            enderecoBase = `${rua}, <span class="bairro-neon">${resto}</span>`;
         }
-        return texto; // Se não tiver vírgula, retorna normal
-    };
+
+        // Cria a caixa de destaque para o ITEM
+        // O ( e ) foram removidos visualmente da caixa para ficar mais limpo,
+        // mas o GPS continua funcionando pois ele pega o endereçoBase limpo na outra função.
+        const itemDestacado = `
+            <div style="
+                margin-top: 8px;
+                background: rgba(255, 215, 0, 0.1);
+                border: 1px dashed #ffd700;
+                color: #ffd700;
+                padding: 8px;
+                border-radius: 6px;
+                font-weight: 900;
+                font-size: 14px;
+                text-transform: uppercase;
+                display: block;
+            ">
+                📦 ${itemTexto}
+            </div>
+        `;
+
+        return enderecoBase + itemDestacado;
+    }
+
+    // --- CENÁRIO 2: NÃO TEM ITEM (Endereço comum) ---
+    const partes = texto.split(',');
+    if (partes.length > 1) {
+        const rua = partes[0];
+        const resto = partes.slice(1).join(','); 
+        return `${rua}, <span class="bairro-neon">${resto}</span>`;
+    }
+    
+    return texto;
+};
 
     const div = document.createElement('div');
     div.className = 'card-corrida';
