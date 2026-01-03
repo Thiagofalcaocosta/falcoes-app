@@ -1713,16 +1713,20 @@ function criarCardCorrida(corrida) {
             const data = await res.json();
 
             if (!data.success) {
-                localStorage.setItem('idCorridaAtualMotoboy', idCorridaSelecionada);
                 fecharModal('modal-confirmacao');
                 mostrarErro(data.message || 'Não foi possível aceitar a corrida.');
                 verificarEstado(); 
                 return;
+                localStorage.setItem('idCorridaAtualMotoboy', idCorridaSelecionada);
+                 idCorridaAtual = idCorridaSelecionada;
+            temCorridaAtiva = true;
+                
+                
+
             }
 
             // Sucesso
-            idCorridaAtual = idCorridaSelecionada;
-            temCorridaAtiva = true;
+           
             
             limparContadores();
             limparMonitoramento();
