@@ -1030,7 +1030,7 @@
         <div class="row-rua">
             <div class="input-rua-wrapper">
                 <input type="text" id="rua-origem" placeholder="Busque a rua..."
-                    oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
+                    oninput="buscarEnderecoComDelay(this.value, 'lista-origem', 'origem')" autocomplete="off">
                 <div id="lista-origem" class="sugestoes-lista"></div>
             </div>
             
@@ -2691,6 +2691,17 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 600) { // <--- MUDADO
             encerrarBuscaPorTimeout(idPedido);
         }
     }, 1000);
+}
+let timerBusca = null;
+
+function buscarEnderecoComDelay(valor, listaId, tipo) {
+    // Se o usuário digitar de novo antes de 500ms, cancela a busca anterior
+    clearTimeout(timerBusca);
+
+    // Espera 500ms (meio segundo) para buscar
+    timerBusca = setTimeout(() => {
+        buscarEndereco(valor, listaId, tipo);
+    }, 500);
 }
 
 function abrirAviso() {
