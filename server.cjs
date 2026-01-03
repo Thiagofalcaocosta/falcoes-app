@@ -289,14 +289,13 @@ initDB();
 // Substitua a função distribuirCorridaParaMotoboys atual por esta:
 async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
   try {
-    // 1. Mapeamento rigoroso baseado nas categorias da sua imagem
+    // 1. Mapeamento rigoroso baseado nas categorias
     let categoriaNecessaria = null;
     if (tipoServico === 'moto-taxi') categoriaNecessaria = 'Passageiro';
     if (tipoServico === 'entrega') categoriaNecessaria = 'Entregas';
 
-    // Se o serviço não for identificado, não distribui para evitar erros
     if (!categoriaNecessaria) {
-      console.log(`❌ Tipo de serviço [${tipoServico}] não reconhecido para distribuição.`);
+      console.log(`❌ Tipo de serviço [${tipoServico}] não reconhecido.`);
       return 0;
     }
 
@@ -305,26 +304,28 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
       FROM usuarios u 
       WHERE u.tipo = 'motoboy' 
         AND u.aprovado = true 
-        AND u.online_ate > NOW()
-        AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW())
         
-        -- Filtra EXATAMENTE pela categoria do motoboy (Entregas ou Passageiro)
+        -- 🔴 CORREÇÃO CRÍTICA: TRAVA OBRIGATÓRIA DE ONLINE
+        AND u.online = true  
+        AND u.online_ate > NOW()
+
+        AND (u.bloqueado_ate IS NULL OR u.bloqueado_ate < NOW())
         AND u.categoria = $2
         
-        -- 1. GARANTE QUE O MOTOBOY ESTÁ LIVRE (Sem corrida ativa aceita)
+        -- 1. GARANTE QUE O MOTOBOY ESTÁ LIVRE
         AND NOT EXISTS (
             SELECT 1 FROM corridas c 
             WHERE c.motoboy_id = u.id 
             AND c.status IN ('aguardando_pagamento', 'liberada', 'em_andamento')
         )
         
-        -- 2. GARANTE QUE ELE NÃO ESTÁ VENDO OUTRA OFERTA AGORA (Foco total)
+        -- 2. GARANTE QUE ELE NÃO ESTÁ VENDO OUTRA OFERTA AGORA
         AND NOT EXISTS (
             SELECT 1 FROM exposicao_corrida ec2 
             WHERE ec2.motoboy_id = u.id
         )
 
-        -- 3. GARANTE QUE NÃO REPETE A MESMA CORRIDA QUE ELE JÁ DEIXOU EXPIRAR
+        -- 3. NÃO REPETE A MESMA CORRIDA JÁ REJEITADA
         AND NOT EXISTS (
             SELECT 1 FROM exposicao_corrida ec 
             WHERE ec.motoboy_id = u.id AND ec.corrida_id = $1
@@ -337,26 +338,26 @@ async function distribuirCorridaParaMotoboys(corridaId, tipoServico) {
     const result = await pool.query(sql, params);
 
     if (result.rows.length === 0) {
-      console.log(`⚠️ Nenhum motoboy [${categoriaNecessaria}] livre para corrida ${corridaId}`);
+      console.log(`⚠️ Nenhum motoboy ONLINE e da categoria [${categoriaNecessaria}] livre.`);
       return 0;
     }
 
     const motoboyId = result.rows[0].id;
 
-    // Limpeza de segurança: garante que a tela dele está limpa antes da nova oferta
+    // Limpa a tela dele antes de mandar a nova
     await pool.query('DELETE FROM exposicao_corrida WHERE motoboy_id = $1', [motoboyId]);
 
-    // Envia a corrida para o motoboy selecionado
+    // Envia a corrida
     await pool.query(
       'INSERT INTO exposicao_corrida (corrida_id, motoboy_id, ciclo) VALUES ($1, $2, 1)',
       [corridaId, motoboyId]
     );
 
-    console.log(`🚀 [iFood Mode] Corrida ${corridaId} tocando apenas para ${categoriaNecessaria} (ID: ${motoboyId})`);
+    console.log(`🚀 Corrida ${corridaId} enviada para ${categoriaNecessaria} (ID: ${motoboyId})`);
     return 1;
 
   } catch (err) {
-    console.error('Erro na distribuição exclusiva:', err);
+    console.error('Erro na distribuição:', err);
     return 0;
   }
 }
@@ -904,100 +905,67 @@ app.get('/mensagens/:id', async (req, res) => {
 
 app.post('/motoboy/status-online', async (req, res) => {
   const { motoboy_id, online, latitude, longitude } = req.body;
-
-  // --- CONFIGURAÇÃO DO LIMITE DE DÍVIDA ---
-  const LIMITE_DEVEDOR = -50.00; // Se dever mais que 50 reais, trava.
-  // ----------------------------------------
+  const LIMITE_DEVEDOR = -50.00;
 
   if (!motoboy_id || typeof online === 'undefined') {
-    return res
-      .status(400)
-      .json({ success: false, message: 'motoboy_id e online são obrigatórios.' });
+    return res.status(400).json({ success: false, message: 'Dados faltando.' });
   }
 
   const idNum = Number(motoboy_id);
-  if (!Number.isFinite(idNum)) {
-    return res.status(400).json({ success: false, message: 'motoboy_id inválido.' });
-  }
 
   try {
-    // 1. BUSCA O USUÁRIO E O SALDO ATUAL (Passo Novo Importante)
-    const usuarioRes = await pool.query('SELECT saldo, bloqueado_ate FROM usuarios WHERE id = $1', [idNum]);
-    
-    if (usuarioRes.rows.length === 0) {
-        return res.status(404).json({ success: false, message: 'Motoboy não encontrado.' });
-    }
+    // 1. Busca saldo
+    const usuarioRes = await pool.query('SELECT saldo FROM usuarios WHERE id = $1', [idNum]);
+    if (usuarioRes.rows.length === 0) return res.status(404).json({ success: false });
 
-    const usuario = usuarioRes.rows[0];
-    const saldoAtual = parseFloat(usuario.saldo || 0);
+    const saldoAtual = parseFloat(usuarioRes.rows[0].saldo || 0);
 
-    // 2. VERIFICAÇÃO DE DÍVIDA (A Trava de Segurança)
-    // Só verificamos se ele estiver tentando ficar ONLINE
+    // 2. Trava de Dívida
     if (online && saldoAtual < LIMITE_DEVEDOR) {
-        console.log(`🚫 Bloqueio Financeiro: Motoboy ${idNum} deve R$ ${saldoAtual}`);
+        // FORÇA OFFLINE SE DEVER
+        await pool.query('UPDATE usuarios SET online = false, online_ate = NULL WHERE id = $1', [idNum]);
         
-        // Força ele a ficar offline no banco também, por garantia
-        await pool.query('UPDATE usuarios SET online_ate = NULL WHERE id = $1', [idNum]);
-
         return res.json({ 
             success: false, 
-            bloqueado_financeiro: true, // O Front deve ler isso e abrir a tela de Pix
+            bloqueado_financeiro: true, 
             saldo_devedor: saldoAtual,
-            message: `Você atingiu o limite de dívida (R$ ${saldoAtual.toFixed(2)}). Realize um pagamento para ficar online.` 
+            message: 'Limite de dívida excedido.' 
         });
     }
 
-    // 🔹 LIMPA BLOQUEIO VENCIDO (Se for bloqueio de tempo/punição)
-    await pool.query(
-      "UPDATE usuarios SET bloqueado_ate = NULL WHERE id = $1 AND bloqueado_ate < NOW()",
-      [idNum]
-    );
-
-    // Lógica Original de Atualização de Coordenadas
-    const lat =
-      latitude === null || latitude === undefined ? null : Number(latitude);
-    const lng =
-      longitude === null || longitude === undefined ? null : Number(longitude);
-    const hasValidCoords = Number.isFinite(lat) && Number.isFinite(lng);
+    // 3. ATUALIZAÇÃO DO STATUS (A CORREÇÃO ESTÁ AQUI)
+    const lat = (latitude && Number.isFinite(Number(latitude))) ? Number(latitude) : null;
+    const lng = (longitude && Number.isFinite(Number(longitude))) ? Number(longitude) : null;
 
     if (online) {
-      if (hasValidCoords) {
-        await pool.query(
-          `
+      if (lat && lng) {
+        await pool.query(`
           UPDATE usuarios SET
-            online_ate = NOW() + interval '60 seconds',
+            online = true,  -- <--- FORÇA O TRUE
+            online_ate = NOW() + interval '15 seconds', -- 15s de tolerância
             latitude = $2,
             longitude = $3
           WHERE id = $1
-        `,
-          [idNum, lat, lng]
-        );
-        console.log(
-          `✅ Motoboy ${idNum} ONLINE (coords atualizadas: ${lat}, ${lng})`
-        );
+        `, [idNum, lat, lng]);
       } else {
-        await pool.query(
-          `
+        await pool.query(`
           UPDATE usuarios SET
-            online_ate = NOW() + interval '60 seconds'
+            online = true, -- <--- FORÇA O TRUE
+            online_ate = NOW() + interval '15 seconds'
           WHERE id = $1
-        `,
-          [idNum]
-        );
-        console.log(`✅ Motoboy ${idNum} ONLINE (sem coords ou coords inválidas)`);
+        `, [idNum]);
       }
-
       return res.json({ success: true, status: 'ONLINE' });
+
     } else {
-      await pool.query('UPDATE usuarios SET online_ate = NULL WHERE id = $1', [
-        idNum,
-      ]);
-      console.log(`🔴 Motoboy ${idNum} OFFLINE`);
+      // Se mandou ficar offline
+      await pool.query('UPDATE usuarios SET online = false, online_ate = NULL WHERE id = $1', [idNum]);
       return res.json({ success: true, status: 'OFFLINE' });
     }
+
   } catch (err) {
-    console.error('Erro em /motoboy/status-online:', err && err.stack ? err.stack : err);
-    return res.status(500).json({ success: false, message: 'Erro ao atualizar status.' });
+    console.error('Erro status online:', err);
+    return res.status(500).json({ success: false });
   }
 });
 
