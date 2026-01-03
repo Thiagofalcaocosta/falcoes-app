@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   email VARCHAR(100) UNIQUE,
   senha VARCHAR(100),
   tipo VARCHAR(20),
-  telefone VARCHAR(20), UNIQUE,
+  telefone VARCHAR(20) UNIQUE,
   placa VARCHAR(20),
   modelo_moto VARCHAR(50),
   cor_moto VARCHAR(30),
