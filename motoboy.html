@@ -1281,7 +1281,7 @@ function preencherDadosAtiva(c) {
 async function verificarEstado() {
     try {
         // 1. Pergunta ao servidor se tem corrida ativa
-        const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
+        const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}?t=${Date.now()}`);
         const dadosAtiva = await resAtiva.json();
         // --- COLAR ISTO AQUI (INICIO DO BLOCO NOVO) ---
         // Se o servidor disse que não tem corrida, mas o celular lembra que tinha:
@@ -1717,8 +1717,8 @@ function criarCardCorrida(corrida) {
                 mostrarErro(data.message || 'Não foi possível aceitar a corrida.');
                 verificarEstado(); 
                 return;
+                idCorridaAtual = idCorridaSelecionada;
                 localStorage.setItem('idCorridaAtualMotoboy', idCorridaSelecionada);
-                 idCorridaAtual = idCorridaSelecionada;
             temCorridaAtiva = true;
                 
                 
