@@ -1,7 +1,7 @@
 {
   "name": "Falcões App",
   "short_name": "Falcões",
-  "start_url": "/index.html",
+  "start_url": "https://falcoes.site/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#00e640",
