@@ -1283,6 +1283,20 @@ async function verificarEstado() {
         // 1. Pergunta ao servidor se tem corrida ativa
         const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
         const dadosAtiva = await resAtiva.json();
+        // --- COLAR ISTO AQUI (INICIO DO BLOCO NOVO) ---
+        // Se o servidor disse que não tem corrida, mas o celular lembra que tinha:
+        if (!dadosAtiva.tem_corrida) {
+            const idSalvo = localStorage.getItem('idCorridaAtualMotoboy');
+            if (idSalvo) {
+                // Força o sistema a acreditar que tem corrida
+                dadosAtiva.tem_corrida = true;
+                dadosAtiva.corrida = { 
+                    status: 'aguardando_pagamento', // Força o status seguro
+                    id: idSalvo, 
+                    corrida_id: idSalvo 
+                };
+            }
+        }
 
         if (dadosAtiva.tem_corrida) {
             temCorridaAtiva = true;
@@ -1342,7 +1356,8 @@ async function verificarEstado() {
                 // O RETURN É FUNDAMENTAL: Ele impede o código de descer e buscar corridas pendentes
                 return; 
             }
-        }
+        return;
+    }
         
         // 2. SE CHEGOU AQUI, NÃO TEM CORRIDA ATIVA REAL
         // Então voltamos ao comportamento padrão de buscar corridas na lista
@@ -1698,6 +1713,7 @@ function criarCardCorrida(corrida) {
             const data = await res.json();
 
             if (!data.success) {
+                localStorage.setItem('idCorridaAtualMotoboy', idCorridaSelecionada);
                 fecharModal('modal-confirmacao');
                 mostrarErro(data.message || 'Não foi possível aceitar a corrida.');
                 verificarEstado(); 
