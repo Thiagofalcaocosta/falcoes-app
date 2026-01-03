@@ -5,13 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Falcões App</title>
     <link rel="icon" type="image/png" href="/assets/logo.png">
-    <link rel="shortcut icon" type="image/png" href="/assets/logo.png">
-<link rel="apple-touch-icon" href="/assets/logo.png">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" crossorigin="" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" crossorigin="" />
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         /* --- IDENTIDADE VISUAL FALCÕES (DARK MODE OFICIAL - PRESERVADO) --- */
@@ -1035,7 +1030,7 @@
         <div class="row-rua">
             <div class="input-rua-wrapper">
                 <input type="text" id="rua-origem" placeholder="Busque a rua..."
-                    oninput="buscarEnderecoComDelay(this.value, 'lista-origem', 'origem')" autocomplete="off">
+                    oninput="buscarEndereco(this.value, 'lista-origem', 'origem')" autocomplete="off">
                 <div id="lista-origem" class="sugestoes-lista"></div>
             </div>
             
@@ -1325,7 +1320,7 @@
 
             // Endereço do seu backend
 
-            
+            const MEU_IP = 'https://falcoes-app.onrender.com';
 
 
 
@@ -1398,73 +1393,10 @@
 const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidGhpYWdvZmFsY2FvIiwiYSI6ImNtamxtMms3cDBvdGEzZ3B2NzBkajE3NmUifQ.qTGPzR6IIc2-JetrQnB-yQ';// SEU TOKEN AQUI!
     const MEU_IP = 'https://falcoes-app.onrender.com';
     const LAT_TC = -21.6975;
-    const LON_TC = -45.25;
-    // ============================================================
-    // PASSO 2: CONFIGURAÇÃO DO SUPABASE
-    // ============================================================
-    
-    // 1. Apague o texto entre aspas e coloque a sua URL do Supabase
-    const SUPABASE_URL = 'https://acwrnvegeftebsrsjpmk.supabase.co'; 
-
-    // 2. Apague o texto entre aspas e coloque a sua chave ANON (pública)
-    const SUPABASE_KEY = 'sb_publishable_stExJN1uvaX_uCMZ_yI6tQ_mDnKxn_V'; 
-    // ============================================================
-    // PASSO 3: OUVIR MUDANÇAS (REALTIME)
-    // ============================================================
-    
-    let canalRealtime = null;
-
-    function iniciarMonitoramentoRealtime(idPedido) {
-        // Se não tiver ID, não faz nada
-        if (!idPedido) return;
-
-        console.log("🔌 Conectando ao Realtime na corrida:", idPedido);
-
-        // 1. Se já tiver um canal aberto, fecha para não duplicar
-        if (canalRealtime) supabaseClient.removeChannel(canalRealtime);
-
-        // 2. Cria o canal de escuta
-        canalRealtime = supabaseClient
-            .channel(`monitoramento-${idPedido}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',          // Queremos saber quando houver ATUALIZAÇÃO
-                    schema: 'public',
-                    table: 'corridas',        // ✅ CORRIGIDO: O nome da sua tabela é 'corridas'
-                    filter: `id=eq.${idPedido}` // Só avisa se mexerem NESSA corrida específica
-                },
-                (payload) => {
-                    console.log("⚡ O STATUS MUDOU!", payload);
-                    
-                    // O SEGREDO: Assim que o banco avisa, a gente roda sua função antiga
-                    // para atualizar a tela e tocar o som imediatamente.
-                    verificarStatus(idPedido);
-                }
-            )
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') console.log("✅ Escuta Realtime ATIVA!");
-            });
-            
-        // Chama uma vez manual só para garantir que a tela carregue os dados iniciais
-        verificarStatus(idPedido);
-    }
-
-    // Função para desligar a escuta (economizar bateria)
-    function pararRealtime() {
-        if (canalRealtime) {
-            supabaseClient.removeChannel(canalRealtime);
-            canalRealtime = null;
-            console.log("🔌 Realtime desconectado.");
-        }
-    }
-
-    // 3. Inicia a conexão
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const LON_TC = -45.25; 
 
     // Mock de usuário
-    const usuario = JSON.parse(localStorage.getItem("usuario")); 
-
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
     document.getElementById("msg-ola").innerText = "OLÁ, " + usuario.nome.split(" ")[0].toUpperCase();
 
     // Variáveis de Estado
@@ -1573,7 +1505,7 @@ document.querySelectorAll('.tela').forEach(tela => {
         // 4. Configura o botão do ADM e inicia o monitoramento com o servidor
         configurarBotaoAdm();
         if (intervaloVerificacao) clearInterval(intervaloVerificacao);
-        iniciarMonitoramentoRealtime(idPedidoAtual);
+        intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
     }
 }
 
@@ -2081,7 +2013,8 @@ document.addEventListener('click', (e) => {
             
             // Inicia contador e verificação
             iniciarContadorBusca(idPedidoAtual, 600);
-            iniciarMonitoramentoRealtime(idPedidoAtual);
+            intervaloVerificacao = setInterval(() => verificarStatus(idPedidoAtual), 3000);
+            
             showToast("Solicitação enviada. Buscando piloto...", "info");
 
         } else {
@@ -2143,7 +2076,6 @@ async function cancelarComTaxa() {
         // -----------------------------
 
         clearInterval(intervaloVerificacao);
-        pararRealtime(); // <--- ADICIONE ESSA LINHA PARA DESLIGAR O MONITOR
         localStorage.removeItem('idPedidoAtual');
         idPedidoAtual = null;
 
@@ -2760,17 +2692,6 @@ function iniciarContadorBusca(idPedido, segundosIniciais = 600) { // <--- MUDADO
         }
     }, 1000);
 }
-let timerBusca = null;
-
-function buscarEnderecoComDelay(valor, listaId, tipo) {
-    // Se o usuário digitar de novo antes de 500ms, cancela a busca anterior
-    clearTimeout(timerBusca);
-
-    // Espera 500ms (meio segundo) para buscar
-    timerBusca = setTimeout(() => {
-        buscarEndereco(valor, listaId, tipo);
-    }, 500);
-}
 
 function abrirAviso() {
     document.getElementById('modal-aviso').style.display = 'flex';
@@ -2848,29 +2769,27 @@ async function verificarStatus(id) {
         // --- Lógica de Estados ---
 
         // 🔴 CANCELADA
-        // 🔴 CANCELADA (CORREÇÃO DO LOOP)
         if (pedido.status === 'cancelada') {
             if (intervaloVerificacao) clearInterval(intervaloVerificacao);
             if (timerBuscaInterval) clearInterval(timerBuscaInterval);
             
-            // 1. FECHA O MODAL DE PAGAMENTO SE TIVER ABERTO
-            const modalPag = document.getElementById('modal-pagamento');
-            if(modalPag) {
-                modalPag.classList.remove('show');
-                modalPag.style.display = 'none';
-            }
-
-            // 2. IMPORTANTE: LIMPA A MEMÓRIA PARA NÃO ENTRAR EM LOOP
-            localStorage.removeItem('idPedidoAtual'); 
-            localStorage.removeItem('pedidoAtual');
-            localStorage.removeItem('inicioBuscaTimestamp');
-            idPedidoAtual = null; // Zera a variável global também
-
-            // 3. MOSTRA O ALERTA E DEPOIS REINICIA
-            alert("🚫 PEDIDO CANCELADO\n\n" + (pedido.motivo || "Cancelado pelo sistema ou piloto."));
+            if (statusArea) statusArea.setAttribute('style', 'background: rgba(255, 68, 68, 0.15) !important; border: 1px solid #ff4444 !important;');
+            if (statusTitulo) { statusTitulo.style.color = '#ff4444'; statusTitulo.innerText = "PEDIDO CANCELADO ❌"; }
+            if (statusDesc) statusDesc.innerText = "Esta corrida foi cancelada.";
             
-            window.location.href = 'index.html'; // Força ir para o início
-            return; 
+            if (motoboyBox) motoboyBox.style.display = 'none';
+            if (btnWpp) btnWpp.style.display = 'none';
+            if (btnTaxa) btnTaxa.style.display = 'none';
+            if (btnCancelBusca) btnCancelBusca.style.display = 'none';
+
+            const areaEstorno = document.getElementById('area-estorno-adm');
+            if(areaEstorno) areaEstorno.style.display = 'block';
+            
+            if(btnFechar) {
+                btnFechar.style.display = 'block';
+                btnFechar.innerText = "FAZER NOVO PEDIDO";
+                btnFechar.onclick = reiniciarApp;
+            }
         }
 
         // 🔵 PENDENTE (BUSCANDO - NOVO VISUAL AZUL)
