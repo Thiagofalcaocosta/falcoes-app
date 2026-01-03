@@ -2705,7 +2705,7 @@ function fecharAviso() {
 // 3. Função de Verificação de Status
 async function verificarStatus(id) {
     try {
-        const res = await fetch(`${MEU_IP}/status-pedido/${id}`);
+        const res = await fetch(`${MEU_IP}/status-pedido/${id}?t=${Date.now()}`);
         const data = await res.json();
         
         const pedido = data.pedido;
