@@ -1354,7 +1354,8 @@ function preencherDadosAtiva(c) {
         }
     }
     
-    async function verificarEstado() {
+    // SUBSTITUA A FUNÇÃO verificarEstado POR ESTA VERSÃO CORRIGIDA
+async function verificarEstado() {
     try {
         // 1. Verifica se há corrida ativa (aceita)
         const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}`);
@@ -1365,11 +1366,13 @@ function preencherDadosAtiva(c) {
             idCorridaAtual = dadosAtiva.corrida.corrida_id || dadosAtiva.corrida.id;
             const statusCorrida = dadosAtiva.corrida.status;
 
+            // Se tem corrida ativa, OBRIGATORIAMENTE PARA O SOM DA LISTA
+            pararAlerta(); 
             limparContadores();
             limparMonitoramento();
-            pararVerificacaoEstado(); // Parar o polling de lista
+            pararVerificacaoEstado(); 
 
-            // Se a corrida for liberada ou em andamento, mostra a tela ativa
+            // Se for liberada ou em andamento -> Tela Ativa
             if (statusCorrida === 'liberada' || statusCorrida === 'em_andamento') {
                 mostrarTela('ativa');
                 preencherDadosAtiva(dadosAtiva.corrida);
@@ -1382,126 +1385,73 @@ function preencherDadosAtiva(c) {
                 return;
             } 
             
-            // --- AQUI ESTÁ A MUDANÇA VISUAL (AGUARDANDO PAGAMENTO) ---
-            // ...dentro do seu if/else if principal...
+            // Se for aguardando pagamento -> Tela de Espera
+            else if (statusCorrida === 'aguardando_pagamento' || statusCorrida === 'aceita') {
+                pararMonitoramentoAtiva();
+                monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); 
 
-else if (statusCorrida === 'aguardando_pagamento' || statusCorrida === 'aceita') {
-    pararMonitoramentoAtiva();
-    monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); 
-
-    mostrarTela('lista'); 
-    const container = document.getElementById('lista-corridas');
-    
-    if (container) {
-        // --- NOVO: LÓGICA DO TEMPO (Relógio Invisível) ---
-        // 1. Salva a hora que começou a esperar
-        if (!sessionStorage.getItem('inicio_espera_pagamento')) {
-            sessionStorage.setItem('inicio_espera_pagamento', Date.now());
-        }
-
-        // 2. Calcula se já passou 5 minutos
-        const inicio = parseInt(sessionStorage.getItem('inicio_espera_pagamento'));
-        const agora = Date.now();
-        const tempoPassado = agora - inicio;
-        const cincoMinutos = 3 * 60 * 1000; // 5 minutos em milissegundos
-
-        // 3. Define se mostra o botão ou não
-        const displayBotao = tempoPassado > cincoMinutos ? 'block' : 'none';
-
-        // --- SEU HTML ORIGINAL + O BOTÃO ESCONDIDO ---
-        container.innerHTML = `
-            <div class="card-espera-gold">
-                <div class="spinner-gold"></div>
+                mostrarTela('lista'); 
+                const container = document.getElementById('lista-corridas');
                 
-                <div class="titulo-espera">
-                    AGUARDANDO LIBERAÇÃO
-                </div>
-                
-                <div class="desc-espera">
-                    O cliente está finalizando o pagamento.<br>
-                    <span style="font-size:12px; color:#aaa; display:block; margin-top:10px;">
-                        Não saia desta tela. Você será notificado assim que for 
-                        <strong style="color:#ffd700">LIBERADA</strong>.
-                    </span>
-                </div>
-
-                <div id="btn-cancelar-demora" style="display: ${displayBotao}; margin-top: 20px; border-top: 1px solid #333; padding-top: 15px; animation: fadeIn 1s;">
-                    <p style="color: #ff4444; font-size: 11px; font-weight: bold; margin-bottom: 10px;">
-                        DEMORANDO MUITO?
-                    </p>
-                    <button onclick="cancelarPorDemoraPagamento()" style="
-                        background: rgba(255, 68, 68, 0.1); 
-                        border: 1px solid #ff4444; 
-                        color: #ff4444; 
-                        padding: 12px; 
-                        width: 100%; 
-                        border-radius: 8px; 
-                        font-size: 12px; 
-                        font-weight: 900; 
-                        cursor: pointer;
-                        text-transform: uppercase;">
-                        🚫 CANCELAR E LIBERAR TELA
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-    return;
-}
-            // ---------------------------------------------------------
+                // Lógica visual do aguardando pagamento...
+                container.innerHTML = `
+                    <div class="card-espera-gold">
+                        <div class="spinner-gold"></div>
+                        <div class="titulo-espera">AGUARDANDO LIBERAÇÃO</div>
+                        <div class="desc-espera">
+                            O cliente está pagando. Aguarde a tela atualizar.
+                        </div>
+                         <button onclick="cancelarPorDemoraPagamento()" style="margin-top:20px; background:none; border:1px solid #ff4444; color:#ff4444; padding:10px; border-radius:5px;">CANCELAR (DEMORA)</button>
+                    </div>
+                `;
+                return;
+            }
         }
         
-        // 2. Não há corrida ativa ou foi cancelada/finalizada
+        // 2. Não há corrida ativa
         pararMonitoramentoAtiva();
         temCorridaAtiva = false;
         idCorridaAtual = null;
 
+        // Busca lista de pendentes
         const resLista = await fetch(`${MEU_IP}/corridas-pendentes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ motoboy_id: usuario.id })
         });
-        // ... (código anterior do fetch permanece igual)
-const dadosLista = await resLista.json();
-
-if (dadosLista.success === false && dadosLista.bloqueado) {
-    limparContadores();
-    limparMonitoramento();
-    mostrarTela('bloqueio');
-    document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
-    
-} else if (dadosLista.success === false && dadosLista.offline) {
-    document.getElementById('lista-corridas').innerHTML =
-        '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE</div>';
-    mostrarTela('lista');
-
-} else {
-    mostrarTela('lista');
-    
-    let corrida = null;
-    const container = document.getElementById('lista-corridas');
-
-    if (dadosLista.corridas && dadosLista.corridas.length > 0) {
-        corrida = dadosLista.corridas[0]; 
-        // NÃO COLOQUE pararAlerta() AQUI, senão o som para assim que a corrida chega!
-    } else {
-        // --- SE A LISTA VIER VAZIA, PARA O SOM E VIBRAÇÃO IMEDIATAMENTE ---
-        pararAlerta(); 
-        if (container) {
-            container.innerHTML = '<div style="text-align:center; color:#555; padding:30px;">Nenhuma corrida disponível.</div>';
-        }
-    }
-
-    // Mantém sua lógica de controle de exibição
-    if (corridaSendoExibida && corrida && corridaSendoExibida.corrida_id !== corrida.corrida_id) {
-        corridaSendoExibida = null;
-    } else if (!corrida && corridaSendoExibida) {
-        corridaSendoExibida = null;
-    }
-    
-    renderizarLista(corrida);
-}
         
+        const dadosLista = await resLista.json();
+
+        // BLINDAGEM: Se estiver bloqueado ou offline, PARA O SOM IMEDIATAMENTE
+        if (dadosLista.success === false) {
+            pararAlerta(); // <--- SEGURANÇA ADICIONAL
+            limparContadores();
+            limparMonitoramento();
+
+            if (dadosLista.bloqueado) {
+                mostrarTela('bloqueio');
+                document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
+            } else if (dadosLista.offline) {
+                document.getElementById('lista-corridas').innerHTML =
+                    '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE</div>';
+                mostrarTela('lista');
+            }
+            return;
+        }
+
+        // 3. Renderiza a lista (Se chegou aqui, está online e desbloqueado)
+        mostrarTela('lista');
+        const container = document.getElementById('lista-corridas');
+        
+        if (dadosLista.corridas && dadosLista.corridas.length > 0) {
+            const corrida = dadosLista.corridas[0]; 
+            // Se tiver corrida, a função renderizarLista cuida de tocar o som
+            renderizarLista(corrida);
+        } else {
+            // LISTA VAZIA = SILÊNCIO ABSOLUTO
+            pararAlerta(); // <--- AQUI É ONDE ELE CALA A BOCA
+            renderizarLista(null); // Limpa a tela
+        }
         
         if (!estadoVerificacaoInterval && !temCorridaAtiva) {
             estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
@@ -1509,7 +1459,8 @@ if (dadosLista.success === false && dadosLista.bloqueado) {
 
     } catch (err) {
         console.error("Erro ao verificar estado:", err);
-        mostrarTela('lista');
+        // EM CASO DE ERRO DE REDE, PARA O BARULHO PARA NÃO ENLOUQUECER O MOTOBOY
+        pararAlerta(); 
         if (!estadoVerificacaoInterval) {
              estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
         }
