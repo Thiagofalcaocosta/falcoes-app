@@ -1140,8 +1140,7 @@ async function enviarStatusOnline(online) {
     
     // --- SEU CÓDIGO ORIGINAL (Mantido) ---
     // Só envia se passou 60 segundos
-    if (agora - ultimoEnvioStatus < 60000) return; 
-
+if (agora - ultimoEnvioStatus < 5000) return;
     try {
         const response = await fetch(`${MEU_IP}/motoboy/status-online`, {
             method: 'POST',
