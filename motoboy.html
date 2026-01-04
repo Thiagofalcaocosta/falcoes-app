@@ -1266,32 +1266,32 @@ function preencherDadosAtiva(c) {
      *  LÓGICA DO POLLING DE ESTADO
      ***********************/
     async function verificarDisponibilidadeCorrida(corridaId) {
-        try {
-            const res = await fetch(`${MEU_IP}/status-corrida/${corridaId}`);
-            const data = await res.json();
-            // Retorna false se não for 'pendente' ou se a requisição falhar
-            return data.success && data.status === 'pendente'; 
-        } catch (err) {
-            console.error('Erro ao verificar disponibilidade:', err);
-            return true; 
-        }
+    try {
+        // ADICIONEI A VACINA AQUI EMBAIXO 👇
+        const res = await fetch(`${MEU_IP}/status-corrida/${corridaId}?t=${Date.now()}`);
+        const data = await res.json();
+        // Retorna false se não for 'pendente' ou se a requisição falhar
+        return data.success && data.status === 'pendente'; 
+    } catch (err) {
+        console.error('Erro ao verificar disponibilidade:', err);
+        return true; 
     }
+}
     
     // --- SUBSTITUA A FUNÇÃO verificarEstado POR ESTA VERSÃO BLINDADA ---
 async function verificarEstado() {
     try {
-        // 1. Pergunta ao servidor se tem corrida ativa
+        // 1. Pergunta ao servidor se tem corrida ativa (AQUI VOCÊ JÁ TINHA POSTO, TÁ CERTO)
         const resAtiva = await fetch(`${MEU_IP}/minha-corrida-atual/${usuario.id}?t=${Date.now()}`);
         const dadosAtiva = await resAtiva.json();
-        // --- COLAR ISTO AQUI (INICIO DO BLOCO NOVO) ---
+
         // Se o servidor disse que não tem corrida, mas o celular lembra que tinha:
         if (!dadosAtiva.tem_corrida) {
             const idSalvo = localStorage.getItem('idCorridaAtualMotoboy');
             if (idSalvo) {
-                // Força o sistema a acreditar que tem corrida
                 dadosAtiva.tem_corrida = true;
                 dadosAtiva.corrida = { 
-                    status: 'aguardando_pagamento', // Força o status seguro
+                    status: 'aguardando_pagamento', 
                     id: idSalvo, 
                     corrida_id: idSalvo 
                 };
@@ -1303,18 +1303,15 @@ async function verificarEstado() {
             idCorridaAtual = dadosAtiva.corrida.corrida_id || dadosAtiva.corrida.id;
             const statusCorrida = dadosAtiva.corrida.status;
 
-            // Para qualquer tentativa de buscar lista nova
             limparContadores();
             limparMonitoramento();
             pararVerificacaoEstado(); 
 
-            // CASO 1: CORRIDA JÁ LIBERADA OU EM VIAGEM (Tela Verde/Normal)
             if (statusCorrida === 'liberada' || statusCorrida === 'em_andamento') {
                 mostrarTela('ativa');
                 preencherDadosAtiva(dadosAtiva.corrida);
                 iniciarRadarCancelamento(idCorridaAtual);
                 
-                // Monitora a cada 3s para ver se finaliza
                 if (!monitoramentoAtivaInterval) {
                      pararMonitoramentoAtiva();
                      monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); 
@@ -1322,27 +1319,20 @@ async function verificarEstado() {
                 return;
             } 
             
-            // CASO 2: AGUARDANDO PAGAMENTO (TELA DOURADA FIXA)
-            // Aqui estava o erro: o sistema tentava limpar a tela. Agora forçamos o HTML.
             else if (statusCorrida === 'aguardando_pagamento' || statusCorrida === 'aceita') {
-                
-                // Mantém o loop rodando para saber quando mudar para 'liberada'
                 if (!monitoramentoAtivaInterval) {
                     pararMonitoramentoAtiva();
                     monitoramentoAtivaInterval = setInterval(verificarEstado, 3000); 
                 }
 
-                mostrarTela('lista'); // Usa a base da tela de lista, mas injeta o aviso
+                mostrarTela('lista'); 
                 const container = document.getElementById('lista-corridas');
                 
                 if (container) {
-                    // INJETA O HTML DO CARD DOURADO E TRAVA AQUI
                     container.innerHTML = `
                         <div class="card-espera-gold">
                             <div class="spinner-gold"></div>
-                            <div class="titulo-espera">
-                                AGUARDANDO LIBERAÇÃO
-                            </div>
+                            <div class="titulo-espera">AGUARDANDO LIBERAÇÃO</div>
                             <div class="desc-espera">
                                 O cliente está finalizando o pagamento.<br>
                                 <span style="font-size:12px; color:#aaa; display:block; margin-top:10px;">
@@ -1350,22 +1340,21 @@ async function verificarEstado() {
                                     <strong style="color:#ffd700">LIBERADA</strong>.
                                 </span>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 }
-                // O RETURN É FUNDAMENTAL: Ele impede o código de descer e buscar corridas pendentes
                 return; 
             }
         return;
     }
         
         // 2. SE CHEGOU AQUI, NÃO TEM CORRIDA ATIVA REAL
-        // Então voltamos ao comportamento padrão de buscar corridas na lista
         pararMonitoramentoAtiva();
         temCorridaAtiva = false;
         idCorridaAtual = null;
 
-        const resLista = await fetch(`${MEU_IP}/corridas-pendentes`, {
+        // 👇👇👇 AQUI ESTAVA O ERRO DO 1 MINUTO!!! 👇👇👇
+        // Eu adicionei ?t=${Date.now()} no final da URL
+        const resLista = await fetch(`${MEU_IP}/corridas-pendentes?t=${Date.now()}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ motoboy_id: usuario.id })
@@ -1378,8 +1367,6 @@ async function verificarEstado() {
             limparMonitoramento();
             mostrarTela('bloqueio');
             document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
-            
-        
 
         } else {
             mostrarTela('lista');
@@ -1404,7 +1391,6 @@ async function verificarEstado() {
             renderizarLista(corrida);
         }
         
-        // Mantém o loop de verificação da lista
         if (!estadoVerificacaoInterval && !temCorridaAtiva) {
             estadoVerificacaoInterval = setInterval(verificarEstado, 5000);
         }
