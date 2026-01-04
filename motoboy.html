@@ -1568,14 +1568,13 @@ function criarCardCorrida(corrida) {
     const tempoRestante = 60 - Math.ceil(parseFloat(corrida.segundos_passados || 0));
 
     if (tempoRestante > 0) {
+        tempoCalculado = 15;
+        }
         tocarAlerta();
         iniciarContador(corrida.corrida_id, tempoRestante, () => {
             verificarEstado();
         });
-    } else {
-        div.remove();
-        verificarEstado();
-    }
+
 }
 
     function renderizarLista(corrida) {
