@@ -1405,34 +1405,38 @@ async function verificarEstado() {
      *  CRIAÇÃO E RENDERIZAÇÃO DA LISTA
      ***********************/
      function iniciarContador(id, tempoInicial, onTimeout) {
-        
-        
+    let tempoRestante = tempoInicial;
+    const cardElement = document.getElementById(`card-${id}`);
+    const contadorElement = cardElement ? cardElement.querySelector('.contador-tempo') : null;
 
-        let tempoRestante = tempoInicial;
-        const cardElement = document.getElementById(`card-${id}`);
-        const contadorElement = cardElement ? cardElement.querySelector('.contador-tempo') : null;
+    if (!contadorElement) return;
 
-        if (!contadorElement) return;
+    // Garante que não tem outro timer rodando no mesmo ID para não acelerar a contagem
+    if (intervalosContadores[id]) clearInterval(intervalosContadores[id]);
 
-        const decremento = async () => {
-            if (tempoRestante <= 0) {
-    clearInterval(intervalosContadores[id]);
-    delete intervalosContadores[id];
+    const decremento = async () => {
+        // Se o tempo acabou
+        if (tempoRestante <= 0) {
+            clearInterval(intervalosContadores[id]);
+            delete intervalosContadores[id];
+            
+            contadorElement.innerText = "⌛ ATUALIZANDO...";
+            
+            // --- AQUI ESTAVA O ERRO ---
+            // Antes você chamava: iniciarContador(id, 15, onTimeout);
+            // Agora chamamos o callback para verificar o status real no servidor:
+            if (onTimeout) onTimeout(); 
+            
+            return;
+        }
 
-    // NÃO remove corrida da tela
-    // Apenas reinicia o contador visual
-    iniciarContador(id, 15, onTimeout);
-    return;
+        contadorElement.innerText = `⏳ SUA VEZ: ${tempoRestante}s`;
+        tempoRestante--;
+    };
+
+    decremento(); // Chama uma vez imediatamente para não esperar 1 seg
+    intervalosContadores[id] = setInterval(decremento, 1000);
 }
-
-
-            contadorElement.innerText = `⏳ SUA VEZ: ${tempoRestante}s`;
-            tempoRestante--;
-        };
-
-        decremento();
-        intervalosContadores[id] = setInterval(decremento, 1000);
-    }
     // --- SUBSTITUA A FUNÇÃO criarCardCorrida POR ESTA ---
 
 function criarCardCorrida(corrida) {
