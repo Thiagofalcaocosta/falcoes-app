@@ -1406,7 +1406,7 @@ async function verificarEstado() {
      ***********************/
      function iniciarContador(id, tempoInicial, onTimeout) {
         
-        limparContadores();
+        
 
         let tempoRestante = tempoInicial;
         const cardElement = document.getElementById(`card-${id}`);
@@ -1416,17 +1416,15 @@ async function verificarEstado() {
 
         const decremento = async () => {
             if (tempoRestante <= 0) {
-                clearInterval(intervalosContadores[id]);
-                delete intervalosContadores[id];
+    clearInterval(intervalosContadores[id]);
+    delete intervalosContadores[id];
 
-                // --- CRIME RESOLVIDO AQUI ---
-                // Removi o 'cardElement.remove()' -> Não apaga da tela visualmente
-                // Removi o 'fetch(.../expirar-corrida)' -> NÃO MANDA O SERVIDOR APAGAR MAIS!
-                
-                // Apenas avisa que o tempo visual acabou e pede dados novos
-                if (typeof onTimeout === 'function') onTimeout();
-                return;
-            }
+    // NÃO remove corrida da tela
+    // Apenas reinicia o contador visual
+    iniciarContador(id, 15, onTimeout);
+    return;
+}
+
 
             contadorElement.innerText = `⏳ SUA VEZ: ${tempoRestante}s`;
             tempoRestante--;
