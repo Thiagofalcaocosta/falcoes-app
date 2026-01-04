@@ -376,7 +376,7 @@ async function monitorarExpiracoes() {
     }
 
     // 2. Limpa motoboys que deixaram o tempo de 60s acabar
-    const expirados = await pool.query(`
+    /*const expirados = await pool.query(`
       DELETE FROM exposicao_corrida 
       WHERE EXTRACT(EPOCH FROM (NOW() - data_exposicao)) >= 60
       RETURNING corrida_id
@@ -388,7 +388,7 @@ async function monitorarExpiracoes() {
        if (dados.rows.length > 0) {
          await distribuirCorridaParaMotoboys(exp.corrida_id, dados.rows[0].tipo_servico);
        }
-    }
+    }*/
 
   } catch (err) {
     console.error("Erro no monitor:", err);
