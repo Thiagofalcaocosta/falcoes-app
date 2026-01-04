@@ -657,9 +657,9 @@ app.post('/corridas-pendentes', async (req, res) => {
     }
 
     // Offline (com tolerância)
-    if (!motoboy.online_ate || new Date(motoboy.online_ate) < new Date()) {
+    /*if (!motoboy.online_ate || new Date(motoboy.online_ate) < new Date()) {
       return res.json({ success: false, offline: true });
-    }
+    }*/
 
     // BUSCA A CORRIDA
     const sql = `

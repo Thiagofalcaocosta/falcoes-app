@@ -1777,9 +1777,7 @@ if (!confirm("Confirmar finalização da corrida?")) return;
         pararMonitoramentoAtiva();
         pararVerificacaoEstado();
 
-        // Forçamos o envio do FALSE ignorando a trava de 1 minuto
-    const data = JSON.stringify({ motoboy_id: usuario?.id, online: false });
-    navigator.sendBeacon(`${MEU_IP}/motoboy/status-online`, data);
+        
         
         
     });
