@@ -1419,21 +1419,11 @@ async function verificarEstado() {
                 clearInterval(intervalosContadores[id]);
                 delete intervalosContadores[id];
 
-                if (cardElement) cardElement.remove();
-
-                try {
-                    await fetch(`${MEU_IP}/expirar-corrida`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            corrida_id: id,
-                            motoboy_id: usuario.id
-                        })
-                    });
-                } catch (e) {
-                    console.error("Erro ao notificar timeout da corrida:", e);
-                }
-
+                // --- CRIME RESOLVIDO AQUI ---
+                // Removi o 'cardElement.remove()' -> Não apaga da tela visualmente
+                // Removi o 'fetch(.../expirar-corrida)' -> NÃO MANDA O SERVIDOR APAGAR MAIS!
+                
+                // Apenas avisa que o tempo visual acabou e pede dados novos
                 if (typeof onTimeout === 'function') onTimeout();
                 return;
             }
@@ -1445,7 +1435,6 @@ async function verificarEstado() {
         decremento();
         intervalosContadores[id] = setInterval(decremento, 1000);
     }
-
     // --- SUBSTITUA A FUNÇÃO criarCardCorrida POR ESTA ---
 
 function criarCardCorrida(corrida) {
@@ -1457,64 +1446,39 @@ function criarCardCorrida(corrida) {
     const ganhoLiquido = valorBruto * (1 - taxa);
     const ganhoFormatado = ganhoLiquido.toFixed(2).replace('.', ',');
 
-    // 2. Funçãozinha para tentar destacar o bairro em Neon
-    // Ela pega tudo depois da primeira vírgula e coloca na classe neon
+    // 2. Formatação de endereço (Mantida igual)
     const formatarEndereco = (texto) => {
-    if (!texto) return "--";
-
-    // --- CENÁRIO 1: TEM ITEM (Identificado pelo parênteses) ---
-    if (texto.includes('(')) {
-        const partesItem = texto.split('(');
-        let enderecoBase = partesItem[0]; // A parte da rua
-        let itemTexto = partesItem[1].replace(')', ''); // O texto do item sem o parentese final
-
-        // Formata o Bairro Neon na parte do endereço
-        const partesEnd = enderecoBase.split(',');
-        if (partesEnd.length > 1) {
-            const rua = partesEnd[0];
-            const resto = partesEnd.slice(1).join(',');
-            enderecoBase = `${rua}, <span class="bairro-neon">${resto}</span>`;
+        if (!texto) return "--";
+        if (texto.includes('(')) {
+            const partesItem = texto.split('(');
+            let enderecoBase = partesItem[0]; 
+            let itemTexto = partesItem[1].replace(')', ''); 
+            const partesEnd = enderecoBase.split(',');
+            if (partesEnd.length > 1) {
+                const rua = partesEnd[0];
+                const resto = partesEnd.slice(1).join(',');
+                enderecoBase = `${rua}, <span class="bairro-neon">${resto}</span>`;
+            }
+            const itemDestacado = `
+                <div style="margin-top: 8px; background: rgba(255, 215, 0, 0.1); border: 1px dashed #ffd700; color: #ffd700; padding: 8px; border-radius: 6px; font-weight: 900; font-size: 14px; text-transform: uppercase; display: block;">
+                    📦 ${itemTexto}
+                </div>`;
+            return enderecoBase + itemDestacado;
         }
-
-        // Cria a caixa de destaque para o ITEM
-        // O ( e ) foram removidos visualmente da caixa para ficar mais limpo,
-        // mas o GPS continua funcionando pois ele pega o endereçoBase limpo na outra função.
-        const itemDestacado = `
-            <div style="
-                margin-top: 8px;
-                background: rgba(255, 215, 0, 0.1);
-                border: 1px dashed #ffd700;
-                color: #ffd700;
-                padding: 8px;
-                border-radius: 6px;
-                font-weight: 900;
-                font-size: 14px;
-                text-transform: uppercase;
-                display: block;
-            ">
-                📦 ${itemTexto}
-            </div>
-        `;
-
-        return enderecoBase + itemDestacado;
-    }
-
-    // --- CENÁRIO 2: NÃO TEM ITEM (Endereço comum) ---
-    const partes = texto.split(',');
-    if (partes.length > 1) {
-        const rua = partes[0];
-        const resto = partes.slice(1).join(','); 
-        return `${rua}, <span class="bairro-neon">${resto}</span>`;
-    }
-    
-    return texto;
-};
+        const partes = texto.split(',');
+        if (partes.length > 1) {
+            const rua = partes[0];
+            const resto = partes.slice(1).join(','); 
+            return `${rua}, <span class="bairro-neon">${resto}</span>`;
+        }
+        return texto;
+    };
 
     const div = document.createElement('div');
     div.className = 'card-corrida';
     div.id = `card-${corrida.corrida_id}`;
 
-    // 3. O HTML NOVO (Visual Melhorado)
+    // 3. O HTML NOVO
     const htmlConteudo = `
         <div class="card-top">
             <span class="tipo-servico">${(corrida.tipo_servico || 'MOTO').toUpperCase()}</span>
@@ -1533,21 +1497,14 @@ function criarCardCorrida(corrida) {
         }
 
         <div class="rota" style="margin: 15px 0;">
-            
             <div class="box-endereco origem">
                 <span class="label-rota" style="color:#ff4444;">📍 RETIRADA (Origem)</span>
-                <div class="texto-end">
-                    ${formatarEndereco(corrida.origem)}
-                </div>
+                <div class="texto-end">${formatarEndereco(corrida.origem)}</div>
             </div>
-
             <div class="box-endereco destino">
                 <span class="label-rota" style="color:var(--neon-green);">🏁 ENTREGA (Destino)</span>
-                <div class="texto-end">
-                    ${formatarEndereco(corrida.destino)}
-                </div>
+                <div class="texto-end">${formatarEndereco(corrida.destino)}</div>
             </div>
-
         </div>
 
         <div class="contador-tempo" id="contador-${corrida.corrida_id}" style="text-align: center; margin-bottom: 15px;"></div>
@@ -1556,25 +1513,30 @@ function criarCardCorrida(corrida) {
             ACEITAR CORRIDA
         </button>
 
-        <div class="aviso-urgencia">
-            ⚡ SEJA RÁPIDO! ESSA OFERTA PODE EXPIRAR.
-        </div>
+        <div class="aviso-urgencia">⚡ SEJA RÁPIDO! ESSA OFERTA PODE EXPIRAR.</div>
     `;
     
     div.innerHTML = htmlConteudo;
     container.appendChild(div);
 
-    // Lógica do tempo (Mantida igual a original)
-    const tempoRestante = 60 - Math.ceil(parseFloat(corrida.segundos_passados || 0));
+    // --- CORREÇÃO DO LOOP INFINITO ---
+    // Pega o tempo real
+    let tempoCalculado = 60 - Math.ceil(parseFloat(corrida.segundos_passados || 0));
+    
+    // Se o tempo já estourou (é negativo), a gente inventa um tempo de 15s
+    // só para o contador rodar e chamar a atenção, SEM APAGAR A CORRIDA.
+    if (tempoCalculado <= 0) {
+        tempoCalculado = 15; 
+    }
 
-    if (tempoRestante > 0) {
-        tempoCalculado = 15;
-        }
-        tocarAlerta();
-        iniciarContador(corrida.corrida_id, tempoRestante, () => {
-            verificarEstado();
-        });
+    tocarAlerta(); // Toca o som
 
+    // Inicia o contador visual
+    iniciarContador(corrida.corrida_id, tempoCalculado, () => {
+        // Quando acabar o tempo visual, ele NÃO apaga mais. 
+        // Ele apenas recarrega a tela. Se a corrida ainda estiver lá, ela volta.
+        verificarEstado(); 
+    });
 }
 
     function renderizarLista(corrida) {
