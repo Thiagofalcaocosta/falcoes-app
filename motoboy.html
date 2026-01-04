@@ -1379,10 +1379,7 @@ async function verificarEstado() {
             mostrarTela('bloqueio');
             document.getElementById('tempo-restante').innerText = dadosLista.tempo + " min";
             
-        } else if (dadosLista.success === false && dadosLista.offline) {
-            document.getElementById('lista-corridas').innerHTML =
-                '<div style="text-align:center; color:#ff4444; padding:30px;">⚠️ VOCÊ PRECISA ESTAR ONLINE</div>';
-            mostrarTela('lista');
+        
 
         } else {
             mostrarTela('lista');
