@@ -689,14 +689,18 @@ app.post('/corridas-pendentes', async (req, res) => {
 app.post('/expirar-corrida', async (req, res) => {
   const { corrida_id, motoboy_id } = req.body;
 
+  // Se não tiver dados, retorna erro padrão (mantém a validação básica)
   if (!corrida_id || !motoboy_id) {
     return res.status(400).json({ error: 'corrida_id e motoboy_id são obrigatórios' });
   }
 
   try {
-    // ✅ Marca que já expirou para esse motoboy,
-    //    sem apagar o registro (pra não voltar pra ele)
-    await pool.query(
+    // 🛡️ BLINDAGEM ATIVADA:
+    // Comentamos a linha que alterava o banco de dados.
+    // Agora, quando um celular "velho" mandar apagar a corrida,
+    // o servidor vai ignorar o comando. A corrida continua viva!
+    
+    /* await pool.query(
       `
       UPDATE exposicao_corrida
       SET data_exposicao = NOW() - interval '120 seconds'
@@ -705,13 +709,17 @@ app.post('/expirar-corrida', async (req, res) => {
       `,
       [corrida_id, motoboy_id]
     );
+    */
 
-    console.log(`⏭️ Corrida ${corrida_id} expirou para motoboy ${motoboy_id}`);
+    console.log(`🛡️ BLINDAGEM: Ignorei pedido de expirar corrida ${corrida_id} vindo do motoboy ${motoboy_id}`);
 
+    // Mentimos para o celular dizendo que deu tudo certo, assim ele não trava.
     res.json({ success: true });
+
   } catch (err) {
     console.error('Erro em /expirar-corrida:', err);
-    res.status(500).json({ success: false });
+    // Mesmo se der erro, retornamos sucesso para não travar o app velho
+    res.json({ success: true });
   }
 });
 
