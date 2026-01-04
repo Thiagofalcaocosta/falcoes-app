@@ -637,11 +637,12 @@ app.post('/motoboy-cancelar-corrida', async (req, res) => {
 
 app.post('/corridas-pendentes', async (req, res) => {
   const { motoboy_id } = req.body;
-  const TEMPO_LIMITE_SEGUNDOS = 60;
+  const TEMPO_LIMITE_SEGUNDOS = 60; // O tempo que a corrida fica com cada um
 
   if (!motoboy_id) return res.status(400).json({ error: 'motoboy_id é obrigatório' });
 
   try {
+    // 1. Verificações básicas (Mantivemos a remoção da trava de offline para garantir a entrega)
     const motoboyResult = await pool.query(
       'SELECT categoria, online_ate, bloqueado_ate FROM usuarios WHERE id = $1',
       [motoboy_id]
@@ -650,18 +651,12 @@ app.post('/corridas-pendentes', async (req, res) => {
     if (motoboyResult.rows.length === 0) return res.json({ success: false });
     const motoboy = motoboyResult.rows[0];
 
-    // Bloqueio de 5 min
     if (motoboy.bloqueado_ate && new Date(motoboy.bloqueado_ate) > new Date()) {
       const minutos = Math.ceil((new Date(motoboy.bloqueado_ate) - new Date()) / 60000);
       return res.json({ success: false, bloqueado: true, tempo: minutos });
     }
 
-    // Offline (com tolerância)
-    /*if (!motoboy.online_ate || new Date(motoboy.online_ate) < new Date()) {
-      return res.json({ success: false, offline: true });
-    }*/
-
-    // BUSCA A CORRIDA
+    // 2. BUSCA A CORRIDA (Código Limpo)
     const sql = `
       SELECT 
         c.id AS corrida_id, c.origem, c.destino, c.valor, c.tipo_servico,
@@ -677,25 +672,8 @@ app.post('/corridas-pendentes', async (req, res) => {
 
     const result = await pool.query(sql, [motoboy_id]);
 
-    // --- A MÁGICA DO SERVIDOR AQUI ---
-    if (result.rows.length > 0) {
-        let corrida = result.rows[0];
-        let idade = parseFloat(corrida.segundos_passados);
-
-        // SE A CORRIDA ESTIVER "VELHA" (> 10s) E O MOTOBOY VIU AGORA:
-        // A gente reseta o tempo no banco de dados para ele ter a chance de aceitar.
-        if (idade > 10) {
-            console.log(`♻️ REFRESH: Corrida ${corrida.corrida_id} estava velha (${idade}s) para motoboy ${motoboy_id}. Resetando timer.`);
-            
-            await pool.query(
-                "UPDATE exposicao_corrida SET data_exposicao = NOW() WHERE corrida_id = $1 AND motoboy_id = $2",
-                [corrida.corrida_id, motoboy_id]
-            );
-
-            // Engana o retorno atual para o celular já mostrar 0s
-            corrida.segundos_passados = 0;
-        }
-    }
+    // --- REMOVI O BLOCO "if (idade > 10) ..." DAQUI --- 
+    // Agora a corrida vai envelhecer naturalmente até 60s e trocar de motoboy.
 
     return res.json({ success: true, corridas: result.rows });
 
