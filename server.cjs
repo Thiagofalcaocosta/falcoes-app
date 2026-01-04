@@ -647,6 +647,7 @@ app.post('/corridas-pendentes', async (req, res) => {
       [motoboy_id]
     );
 
+    if (motoboyResult.rows.length === 0) return res.json({ success: false });
     const motoboy = motoboyResult.rows[0];
 
     // Bloqueio de 5 min
@@ -655,14 +656,14 @@ app.post('/corridas-pendentes', async (req, res) => {
       return res.json({ success: false, bloqueado: true, tempo: minutos });
     }
 
-    // Offline
+    // Offline (com tolerância)
     if (!motoboy.online_ate || new Date(motoboy.online_ate) < new Date()) {
       return res.json({ success: false, offline: true });
     }
 
-    // BUSCA A CORRIDA QUE O SISTEMA JÁ RESERVOU PARA ELE
+    // BUSCA A CORRIDA
     const sql = `
-      SELECT
+      SELECT 
         c.id AS corrida_id, c.origem, c.destino, c.valor, c.tipo_servico,
         u.nome AS nome_cliente, u.telefone AS telefone_cliente,
         EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) AS segundos_passados
@@ -671,13 +672,31 @@ app.post('/corridas-pendentes', async (req, res) => {
       JOIN usuarios u ON u.id = c.cliente_id
       WHERE ec.motoboy_id = $1
         AND c.status = 'pendente'
-        AND EXTRACT(EPOCH FROM (NOW() - ec.data_exposicao)) < $2
       LIMIT 1
     `;
 
-    const result = await pool.query(sql, [motoboy_id, TEMPO_LIMITE_SEGUNDOS]);
+    const result = await pool.query(sql, [motoboy_id]);
 
-    // Retorna 'corridas' (plural) para bater com o código do motoboy
+    // --- A MÁGICA DO SERVIDOR AQUI ---
+    if (result.rows.length > 0) {
+        let corrida = result.rows[0];
+        let idade = parseFloat(corrida.segundos_passados);
+
+        // SE A CORRIDA ESTIVER "VELHA" (> 10s) E O MOTOBOY VIU AGORA:
+        // A gente reseta o tempo no banco de dados para ele ter a chance de aceitar.
+        if (idade > 10) {
+            console.log(`♻️ REFRESH: Corrida ${corrida.corrida_id} estava velha (${idade}s) para motoboy ${motoboy_id}. Resetando timer.`);
+            
+            await pool.query(
+                "UPDATE exposicao_corrida SET data_exposicao = NOW() WHERE corrida_id = $1 AND motoboy_id = $2",
+                [corrida.corrida_id, motoboy_id]
+            );
+
+            // Engana o retorno atual para o celular já mostrar 0s
+            corrida.segundos_passados = 0;
+        }
+    }
+
     return res.json({ success: true, corridas: result.rows });
 
   } catch (err) {
